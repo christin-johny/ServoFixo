@@ -1,3 +1,5 @@
+// backend/src/presentation/controllers/CustomerAuthController.ts
+
 import type { Request, Response } from 'express';
 import { RequestCustomerRegistrationOtpUseCase } from '../../application/use-cases/auth/RequestCustomerRegistrationOtpUseCase';
 import { VerifyCustomerRegistrationOtpUseCase } from '../../application/use-cases/auth/VerifyCustomerRegistrationOtpUseCase';
@@ -6,6 +8,7 @@ import { RequestCustomerForgotPasswordOtpUseCase } from '../../application/use-c
 import { VerifyCustomerForgotPasswordOtpUseCase } from '../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase';
 import { ErrorMessages } from '../../../../shared/types/enums/ErrorMessages';
 import { StatusCodes } from '../../../../shared/types/enums/StatusCodes';
+import { refreshCookieOptions } from '../../infrastructure/config/Cookie';
 
 export class CustomerAuthController {
   constructor(
@@ -62,10 +65,14 @@ export class CustomerAuthController {
         phone,
       });
 
+      // Set refresh token in cookie if returned
+      if (result.refreshToken) {
+        res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
+      }
+
       return res.status(StatusCodes.OK).json({
         message: 'Registration successful',
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
       });
     } catch (err: any) {
       if (err instanceof Error) {
@@ -108,10 +115,14 @@ export class CustomerAuthController {
 
       const result = await this.customerLoginUseCase.execute({ email, password });
 
+      // Set refresh token in httpOnly cookie
+      if (result.refreshToken) {
+        res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
+      }
+
       return res.status(StatusCodes.OK).json({
         message: 'Login successful',
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
       });
     } catch (err: any) {
       if (err instanceof Error && err.message === ErrorMessages.INVALID_CREDENTIALS) {

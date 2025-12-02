@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node dist/backend/src/index.js"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
@@ -13,6 +15,7 @@
     "nodemailer": "^7.0.11"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
     "@types/nodemailer": "^7.0.4",
     "concurrently": "^8.2.2"
   }

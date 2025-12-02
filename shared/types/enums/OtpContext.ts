@@ -1,5 +1,5 @@
 
 export enum OtpContext {
   Registration = 'registration',
-  Login = 'login',
+  ForgotPassword = 'forgot_password',
 }

@@ -4,38 +4,33 @@ import { Request, Response } from 'express';
 import { AdminLoginUseCase } from '../../application/use-cases/auth/AdminLoginUseCase';
 import { ErrorMessages } from '../../../../shared/types/enums/ErrorMessages';
 import { StatusCodes } from '../../../../shared/types/enums/StatusCodes';
-/**
- * AdminAuthController
- *
- * Handles HTTP requests for admin authentication.
- */
+import { refreshCookieOptions } from '../../infrastructure/config/Cookie';
+
 export class AdminAuthController {
   constructor(
     private readonly adminLoginUseCase: AdminLoginUseCase
   ) {}
 
-  /**
-   * POST /api/admin/auth/login
-   *
-   * Body: { email, password }
-   * Response: { message, accessToken, refreshToken }
-   */
   login = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { email, password } = req.body;
 
       if (!email || !password) {
-        return res.status(StatusCodes.OK).json({
+        return res.status(StatusCodes.BAD_REQUEST).json({
           error: ErrorMessages.MISSING_REQUIRED_FIELDS,
         });
       }
 
       const result = await this.adminLoginUseCase.execute({ email, password });
 
+      // Set refresh token in httpOnly cookie (do not expose in JSON)
+      if (result.refreshToken) {
+        res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
+      }
+
       return res.status(StatusCodes.OK).json({
         message: 'Admin logged in successfully',
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
       });
     } catch (err: any) {
       // Invalid credentials
