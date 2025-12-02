@@ -51,5 +51,5 @@ export class Customer {
   getId(): string { return this.id; }
   getName(): string { return this.name; }
   getEmail(): Email { return this.email; }
-  // Add more getters as needed...
+  getPassword():string{return this.password}
 }
