@@ -14,6 +14,7 @@ export class Customer {
   private readonly suspended: boolean;
   private readonly suspendReason?: string;
   private readonly additionalInfo: object; // Flexible object for extras
+  private readonly googleId?: string; // Optional, for Google Auth
   private readonly createdAt: Date;
   private readonly updatedAt: Date;
 
@@ -29,6 +30,7 @@ export class Customer {
   suspended: boolean = false,
   suspendReason?: string,
   additionalInfo: object = {},
+  googleId?: string,
   createdAt?: Date,
   updatedAt?: Date
 ) {
@@ -43,6 +45,7 @@ export class Customer {
   this.suspended = suspended;
   this.suspendReason = suspendReason;
   this.additionalInfo = additionalInfo;
+  this.googleId = googleId;
   this.createdAt = createdAt ?? new Date();
   this.updatedAt = updatedAt ?? new Date();
 }
@@ -54,5 +57,6 @@ export class Customer {
   getEmail(): Email { return this.email; }
   getPassword():string{return this.password;}
   getPhone(): Phone | undefined { return this.phone; }
+  getGoogleId(): string | undefined { return this.googleId; }
   getCreatedAt(): Date { return this.createdAt; }
 } 

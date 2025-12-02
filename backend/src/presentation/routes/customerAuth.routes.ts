@@ -13,6 +13,7 @@ import { VerifyCustomerRegistrationOtpUseCase } from '../../application/use-case
 import { CustomerLoginUseCase } from '../../application/use-cases/auth/CustomerLoginUseCase';
 import { RequestCustomerForgotPasswordOtpUseCase } from '../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase';
 import { VerifyCustomerForgotPasswordOtpUseCase } from '../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase';
+import { CustomerGoogleLoginUseCase } from '../../application/use-cases/auth/CustomerGoogleLoginUseCase';
 
 // Controller
 import { CustomerAuthController } from '../controllers/CustomerAuthController';
@@ -58,13 +59,20 @@ const verifyForgotPasswordOtpUseCase = new VerifyCustomerForgotPasswordOtpUseCas
   passwordHasher
 );
 
+const customerGoogleLoginUseCase = new CustomerGoogleLoginUseCase(
+  customerRepository,
+  jwtService,
+  process.env.GOOGLE_CLIENT_ID || 'your-google-client-id'
+);
+
 // Controller
 const customerAuthController = new CustomerAuthController(
   requestRegisterOtpUseCase,
   verifyRegisterOtpUseCase,
   customerLoginUseCase,
   requestForgotPasswordOtpUseCase,
-  verifyForgotPasswordOtpUseCase
+  verifyForgotPasswordOtpUseCase,
+  customerGoogleLoginUseCase
 );
 
 // Routes
@@ -73,5 +81,8 @@ router.post('/register/verify-otp', customerAuthController.registerVerifyOtp);
 router.post('/login', customerAuthController.login);
 router.post('/forgot-password/init-otp', customerAuthController.forgotPasswordInitOtp);
 router.post('/forgot-password/verify-otp', customerAuthController.forgotPasswordVerifyOtp);
+router.post('/google-login', customerAuthController.googleLogin);
+
+
 
 export default router;

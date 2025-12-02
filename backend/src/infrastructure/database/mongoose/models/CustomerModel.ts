@@ -11,6 +11,7 @@ export interface CustomerDocument extends Document {
   suspended: boolean;
   suspendReason?: string;
   additionalInfo: Record<string, any>;
+  googleId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,6 +39,7 @@ const CustomerSchema: Schema<CustomerDocument> = new Schema(
     suspended: { type: Boolean, default: false },
     suspendReason: { type: String },
     additionalInfo: { type: Schema.Types.Mixed, default: {} },
+    googleId: { type: String, unique: true, sparse: true },
   },
   {
     timestamps: true,

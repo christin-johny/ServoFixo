@@ -53,6 +53,7 @@ export class CustomerMongoRepository implements ICustomerRepository {
       doc.suspended,
       doc.suspendReason,
       doc.additionalInfo,
+      doc.googleId,
       doc.createdAt,
       doc.updatedAt
     );
@@ -63,14 +64,8 @@ export class CustomerMongoRepository implements ICustomerRepository {
       name: customer.getName(),
       email: customer.getEmail(),
       password: customer.getPassword(),
-      // you can extend this once you add more getters to the entity:
-      // phone: customer.getPhone(),
-      // avatarUrl: customer.getAvatarUrl(),
-      // defaultZoneId: customer.getDefaultZoneId(),
-      // addresses: customer.getAddresses(),
-      // suspended: customer.isSuspended(),
-      // suspendReason: customer.getSuspendReason(),
-      // additionalInfo: customer.getAdditionalInfo(),
+      phone: customer.getPhone(),
+      googleId: customer.getGoogleId(),
     };
   }
 }

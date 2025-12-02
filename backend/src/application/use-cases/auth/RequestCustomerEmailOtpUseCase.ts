@@ -6,6 +6,7 @@ import { IEmailService } from '../../services/IEmailService';
 import { OtpContext } from '../../../../../shared/types/enums/OtpContext';
 import { OtpLoginInitDto, AuthResponse } from '../../../../../shared/types/dto/AuthDtos';
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
+import { OtpSession } from '../../../domain/entities/OtpSession';
 
 export class RequestCustomerEmailOtpUseCase {
   private readonly otpExpiryMinutes = 5;

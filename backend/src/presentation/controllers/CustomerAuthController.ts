@@ -1,4 +1,3 @@
-// backend/src/presentation/controllers/CustomerAuthController.ts
 
 import type { Request, Response } from 'express';
 import { RequestCustomerRegistrationOtpUseCase } from '../../application/use-cases/auth/RequestCustomerRegistrationOtpUseCase';
@@ -6,6 +5,7 @@ import { VerifyCustomerRegistrationOtpUseCase } from '../../application/use-case
 import { CustomerLoginUseCase } from '../../application/use-cases/auth/CustomerLoginUseCase';
 import { RequestCustomerForgotPasswordOtpUseCase } from '../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase';
 import { VerifyCustomerForgotPasswordOtpUseCase } from '../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase';
+import { CustomerGoogleLoginUseCase } from '../../application/use-cases/auth/CustomerGoogleLoginUseCase';
 import { ErrorMessages } from '../../../../shared/types/enums/ErrorMessages';
 import { StatusCodes } from '../../../../shared/types/enums/StatusCodes';
 import { refreshCookieOptions } from '../../infrastructure/config/Cookie';
@@ -16,7 +16,8 @@ export class CustomerAuthController {
     private readonly verifyRegisterOtpUseCase: VerifyCustomerRegistrationOtpUseCase,
     private readonly customerLoginUseCase: CustomerLoginUseCase,
     private readonly requestForgotPasswordOtpUseCase: RequestCustomerForgotPasswordOtpUseCase,
-    private readonly verifyForgotPasswordOtpUseCase: VerifyCustomerForgotPasswordOtpUseCase
+    private readonly verifyForgotPasswordOtpUseCase: VerifyCustomerForgotPasswordOtpUseCase,
+    private readonly customerGoogleLoginUseCase: CustomerGoogleLoginUseCase
   ) {}
 
   // 1️⃣ Registration - init OTP
@@ -207,6 +208,37 @@ export class CustomerAuthController {
       }
 
       console.error('Customer forgot password verify OTP error:', err);
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        error: ErrorMessages.INTERNAL_ERROR,
+      });
+    }
+  };
+
+  // 6️⃣ Google Login
+  googleLogin = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const { token } = req.body;
+
+      if (!token) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          error: ErrorMessages.MISSING_REQUIRED_FIELDS,
+        });
+      }
+
+      const result = await this.customerGoogleLoginUseCase.execute({ token });
+
+      // Set refresh token in httpOnly cookie
+      if (result.refreshToken) {
+        res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
+      }
+
+      return res.status(StatusCodes.OK).json({
+        message: 'Google login successful',
+        accessToken: result.accessToken,
+        user: result.user,
+      });
+    } catch (err: any) {
+      console.error('Customer google login error:', err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });

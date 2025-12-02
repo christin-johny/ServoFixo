@@ -60,6 +60,7 @@ export class VerifyCustomerForgotPasswordOtpUseCase {
   false,       
   undefined,   
   {},          
+  undefined, // googleId
   customer.getCreatedAt(),
   new Date()
 );

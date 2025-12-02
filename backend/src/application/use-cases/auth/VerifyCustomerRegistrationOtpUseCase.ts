@@ -55,6 +55,7 @@ export class VerifyCustomerRegistrationOtpUseCase {
       false,             // suspended
       undefined,         // suspendReason
       {},                // additionalInfo
+      undefined,         // googleId
       new Date(),
       new Date()
     );
