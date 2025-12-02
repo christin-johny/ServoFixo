@@ -2,6 +2,8 @@ import type { Request, Response } from 'express';
 import { RequestCustomerRegistrationOtpUseCase } from '../../application/use-cases/auth/RequestCustomerRegistrationOtpUseCase';
 import { VerifyCustomerRegistrationOtpUseCase } from '../../application/use-cases/auth/VerifyCustomerRegistrationOtpUseCase';
 import { CustomerLoginUseCase } from '../../application/use-cases/auth/CustomerLoginUseCase';
+import { RequestCustomerForgotPasswordOtpUseCase } from '../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase';
+import { VerifyCustomerForgotPasswordOtpUseCase } from '../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase';
 import { ErrorMessages } from '../../../../shared/types/enums/ErrorMessages';
 import { StatusCodes } from '../../../../shared/types/enums/StatusCodes';
 
@@ -9,10 +11,12 @@ export class CustomerAuthController {
   constructor(
     private readonly requestRegisterOtpUseCase: RequestCustomerRegistrationOtpUseCase,
     private readonly verifyRegisterOtpUseCase: VerifyCustomerRegistrationOtpUseCase,
-    private readonly customerLoginUseCase: CustomerLoginUseCase
+    private readonly customerLoginUseCase: CustomerLoginUseCase,
+    private readonly requestForgotPasswordOtpUseCase: RequestCustomerForgotPasswordOtpUseCase,
+    private readonly verifyForgotPasswordOtpUseCase: VerifyCustomerForgotPasswordOtpUseCase
   ) {}
 
-  // 1️⃣ Registration - Step 1: send OTP
+  // 1️⃣ Registration - init OTP
   registerInitOtp = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { email } = req.body;
@@ -38,7 +42,7 @@ export class CustomerAuthController {
     }
   };
 
-  // 2️⃣ Registration - Step 2: verify OTP + create user
+  // 2️⃣ Registration - verify OTP + create user
   registerVerifyOtp = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { email, otp, sessionId, name, password, phone } = req.body;
@@ -91,7 +95,7 @@ export class CustomerAuthController {
     }
   };
 
-  // 3️⃣ Login with email + password
+  // 3️⃣ Login (email + password)
   login = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { email, password } = req.body;
@@ -117,6 +121,81 @@ export class CustomerAuthController {
       }
 
       console.error('Customer login error:', err);
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        error: ErrorMessages.INTERNAL_ERROR,
+      });
+    }
+  };
+
+  // 4️⃣ Forgot password - init OTP
+  forgotPasswordInitOtp = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          error: ErrorMessages.MISSING_REQUIRED_FIELDS,
+        });
+      }
+
+      const result = await this.requestForgotPasswordOtpUseCase.execute({ email });
+
+      return res.status(StatusCodes.OK).json(result);
+    } catch (err: any) {
+      if (err instanceof Error && err.message === ErrorMessages.CUSTOMER_NOT_FOUND) {
+        return res.status(StatusCodes.NOT_FOUND).json({
+          error: ErrorMessages.CUSTOMER_NOT_FOUND,
+        });
+      }
+
+      console.error('Customer forgot password init OTP error:', err);
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        error: ErrorMessages.INTERNAL_ERROR,
+      });
+    }
+  };
+
+  // 5️⃣ Forgot password - verify OTP + reset password
+  forgotPasswordVerifyOtp = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const { email, otp, sessionId, newPassword } = req.body;
+
+      if (!email || !otp || !sessionId || !newPassword) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          error: ErrorMessages.MISSING_REQUIRED_FIELDS,
+        });
+      }
+
+      const result = await this.verifyForgotPasswordOtpUseCase.execute({
+        email,
+        otp,
+        sessionId,
+        newPassword,
+      });
+
+      return res.status(StatusCodes.OK).json(result);
+    } catch (err: any) {
+      if (err instanceof Error) {
+        if (err.message === ErrorMessages.OTP_INVALID) {
+          return res.status(StatusCodes.UNAUTHORIZED).json({
+            error: ErrorMessages.OTP_INVALID,
+          });
+        }
+
+        if (err.message === ErrorMessages.OTP_SESSION_INVALID) {
+          return res.status(StatusCodes.UNAUTHORIZED).json({
+            error: ErrorMessages.OTP_SESSION_INVALID,
+          });
+        }
+
+        if (err.message === ErrorMessages.CUSTOMER_NOT_FOUND) {
+          return res.status(StatusCodes.NOT_FOUND).json({
+            error: ErrorMessages.CUSTOMER_NOT_FOUND,
+          });
+        }
+      }
+
+      console.error('Customer forgot password verify OTP error:', err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });

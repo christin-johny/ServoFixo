@@ -11,6 +11,8 @@ import { BcryptPasswordHasher } from '../../infrastructure/security/BcryptPasswo
 import { RequestCustomerRegistrationOtpUseCase } from '../../application/use-cases/auth/RequestCustomerRegistrationOtpUseCase';
 import { VerifyCustomerRegistrationOtpUseCase } from '../../application/use-cases/auth/VerifyCustomerRegistrationOtpUseCase';
 import { CustomerLoginUseCase } from '../../application/use-cases/auth/CustomerLoginUseCase';
+import { RequestCustomerForgotPasswordOtpUseCase } from '../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase';
+import { VerifyCustomerForgotPasswordOtpUseCase } from '../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase';
 
 // Controller
 import { CustomerAuthController } from '../controllers/CustomerAuthController';
@@ -44,16 +46,32 @@ const customerLoginUseCase = new CustomerLoginUseCase(
   jwtService
 );
 
+const requestForgotPasswordOtpUseCase = new RequestCustomerForgotPasswordOtpUseCase(
+  customerRepository,
+  otpSessionRepository,
+  emailService
+);
+
+const verifyForgotPasswordOtpUseCase = new VerifyCustomerForgotPasswordOtpUseCase(
+  customerRepository,
+  otpSessionRepository,
+  passwordHasher
+);
+
 // Controller
 const customerAuthController = new CustomerAuthController(
   requestRegisterOtpUseCase,
   verifyRegisterOtpUseCase,
-  customerLoginUseCase
+  customerLoginUseCase,
+  requestForgotPasswordOtpUseCase,
+  verifyForgotPasswordOtpUseCase
 );
 
 // Routes
 router.post('/register/init-otp', customerAuthController.registerInitOtp);
 router.post('/register/verify-otp', customerAuthController.registerVerifyOtp);
 router.post('/login', customerAuthController.login);
+router.post('/forgot-password/init-otp', customerAuthController.forgotPasswordInitOtp);
+router.post('/forgot-password/verify-otp', customerAuthController.forgotPasswordVerifyOtp);
 
 export default router;

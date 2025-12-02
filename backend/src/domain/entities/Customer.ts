@@ -17,39 +17,42 @@ export class Customer {
   private readonly createdAt: Date;
   private readonly updatedAt: Date;
 
-  constructor(
-    id: string,
-    name: string,
-    email: Email,
-    password: string,
-    phone?: Phone,
-    avatarUrl?: string,
-    defaultZoneId?: string,
-    addresses: object[] = [],
-    suspended: boolean = false,
-    suspendReason?: string,
-    additionalInfo: object = {},
-    createdAt: Date = new Date(),
-    updatedAt: Date = new Date()
-  ) {
-    this.id = id;
-    this.name = name;
-    this.phone = phone;
-    this.email = email;
-    this.password = password; // Will be hashed in use case
-    this.avatarUrl = avatarUrl;
-    this.defaultZoneId = defaultZoneId;
-    this.addresses = addresses;
-    this.suspended = suspended;
-    this.suspendReason = suspendReason;
-    this.additionalInfo = additionalInfo;
-    this.createdAt = createdAt;
-    this.updatedAt = updatedAt;
-  }
+ constructor(
+  id: string,
+  name: string,
+  email: Email,
+  password: string,
+  phone?: Phone,
+  avatarUrl?: string,
+  defaultZoneId?: string,
+  addresses: object[] = [],
+  suspended: boolean = false,
+  suspendReason?: string,
+  additionalInfo: object = {},
+  createdAt?: Date,
+  updatedAt?: Date
+) {
+  this.id = id;
+  this.name = name;
+  this.phone = phone;
+  this.email = email;
+  this.password = password;
+  this.avatarUrl = avatarUrl;
+  this.defaultZoneId = defaultZoneId;
+  this.addresses = addresses;
+  this.suspended = suspended;
+  this.suspendReason = suspendReason;
+  this.additionalInfo = additionalInfo;
+  this.createdAt = createdAt ?? new Date();
+  this.updatedAt = updatedAt ?? new Date();
+}
+
 
   // Getters for immutability (no setters – create new entity for changes)
   getId(): string { return this.id; }
   getName(): string { return this.name; }
   getEmail(): Email { return this.email; }
-  getPassword():string{return this.password}
-}
+  getPassword():string{return this.password;}
+  getPhone(): Phone | undefined { return this.phone; }
+  getCreatedAt(): Date { return this.createdAt; }
+} 
