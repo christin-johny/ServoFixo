@@ -28,7 +28,31 @@ export class Admin {
   }
 
   // Getters
-  getId(): string { return this.id; }
-  getEmail(): Email { return this.email; }
-  // Add more as needed...
+    getId(): string {
+    return this.id;
+  }
+
+  getEmail(): Email {
+    return this.email;
+  }
+
+  getPassword(): string {
+    return this.password;
+  }
+
+  getRoles(): string[] {
+    return this.roles;
+  }
+
+  getAdditionalInfo(): object {
+    return this.additionalInfo;
+  }
+
+  getCreatedAt(): Date {
+    return this.createdAt;
+  }
+
+  getUpdatedAt(): Date {
+    return this.updatedAt;
+  }
 }
