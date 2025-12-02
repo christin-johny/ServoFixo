@@ -54,12 +54,12 @@ export class VerifyCustomerForgotPasswordOtpUseCase {
   customer.getEmail(),
   hashed,
   customer.getPhone(),
-  undefined,   // avatarUrl
-  undefined,   // defaultZoneId
-  [],          // addresses
-  false,       // suspended
-  undefined,   // suspendReason
-  {},          // additionalInfo
+  undefined,   
+  undefined,   
+  [],          
+  false,       
+  undefined,   
+  {},          
   customer.getCreatedAt(),
   new Date()
 );
