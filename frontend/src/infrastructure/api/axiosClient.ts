@@ -1,6 +1,9 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import store from "../../store/store";
 import { setAccessToken, logout } from "../../store/authSlice";
+// --- Types for the refresh queue ---
+import type { AxiosRequestConfig } from "axios";
+
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
@@ -21,9 +24,10 @@ const refreshApi = axios.create({
 
 // --- Types for the refresh queue ---
 interface FailedRequest {
-  resolve: (value?: string | PromiseLike<string | null> | null) => void;
+  // match the Promise<string | null> resolve signature exactly (non-optional param)
+  resolve: (value: string | PromiseLike<string | null> | null) => void;
   reject: (error?: unknown) => void;
-  config: InternalAxiosRequestConfig; // Changed from AxiosRequestConfig
+  config: AxiosRequestConfig;
 }
 
 let isRefreshing = false;
