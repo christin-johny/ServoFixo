@@ -18,18 +18,15 @@ export class RequestCustomerRegistrationOtpUseCase {
   async execute(input: CustomerRegisterInitDto): Promise<{ message: string; sessionId: string }> {
     const { email } = input;
     const normalizedEmail = email.toLowerCase().trim();
-
-    // 1️⃣ Email must NOT be already registered
+  
     const existing = await this.customerRepository.findByEmail(normalizedEmail);
     if (existing) {
       throw new Error(ErrorMessages.EMAIL_ALREADY_EXISTS);
     }
 
-    // 2️⃣ Generate OTP + sessionId
     const otp = this.generateOtp();
     const sessionId = this.generateSessionId();
     const expiresAt = this.calculateExpiry();
-
     // 3️⃣ Save OTP session with context: Registration
     const session = new OtpSession(
       '', // Mongo will assign

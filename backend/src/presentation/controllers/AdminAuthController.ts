@@ -2,7 +2,7 @@
 
 import { Request, Response } from 'express';
 import { AdminLoginUseCase } from '../../application/use-cases/auth/AdminLoginUseCase';
-import { ErrorMessages } from '../../../../shared/types/enums/ErrorMessages';
+import { ErrorMessages }  from '../../../../shared/types/enums/ErrorMessages';
 import { StatusCodes } from '../../../../shared/types/enums/StatusCodes';
 import { refreshCookieOptions } from '../../infrastructure/config/Cookie';
 

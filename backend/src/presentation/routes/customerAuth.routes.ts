@@ -19,6 +19,12 @@ import { CustomerGoogleLoginUseCase } from '../../application/use-cases/auth/Cus
 // Controller
 import { CustomerAuthController } from '../controllers/CustomerAuthController';
 
+//tokens
+// add near other "Use cases" imports
+import { RefreshTokenUseCase } from '../../application/use-cases/auth/RefreshTokenUseCase';
+import { AuthTokenController } from '../controllers/AuthTokenController';
+
+
 const router = Router();
 
 // Dependencies
@@ -83,6 +89,12 @@ const customerAuthController = new CustomerAuthController(
   customerGoogleLoginUseCase
 );
 
+// --- reuse the generic refresh use-case & controller (mirror admin) ---
+// create RefreshTokenUseCase instance
+const refreshTokenUseCase = new RefreshTokenUseCase(jwtService);
+// create controller that will use it
+const authTokenController = new AuthTokenController(refreshTokenUseCase);
+
 // Routes
 router.post('/register/init-otp', customerAuthController.registerInitOtp);
 router.post('/register/verify-otp', customerAuthController.registerVerifyOtp);
@@ -90,6 +102,9 @@ router.post('/login', customerAuthController.login);
 router.post('/forgot-password/init-otp', customerAuthController.forgotPasswordInitOtp);
 router.post('/forgot-password/verify-otp', customerAuthController.forgotPasswordVerifyOtp);
 router.post('/google-login', customerAuthController.googleLogin);
+
+//refresh
+router.post('/refresh', authTokenController.refresh);
 
 // Passport Routes
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
