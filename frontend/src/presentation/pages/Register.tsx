@@ -1,15 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GoogleLogin } from "@react-oauth/google";
-import { useDispatch } from "react-redux";
-import api from "../../infrastructure/api/axiosClient";
-import { setAccessToken, setUser } from "../../store/authSlice";
 import { customerRegisterInitOtp } from "../../infrastructure/repositories/authRepository";
 import type { CustomerRegisterInitDto, AuthResponse } from "../../../../shared/types/dto/AuthDtos";
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -63,6 +58,7 @@ const Register: React.FC = () => {
           form: { name, phone, password }, // keep password until verify completes (transient)
         },
       });
+    
     } catch (err: any) {
       setError(err?.response?.data?.message ?? err?.message ?? "Failed to send OTP. Try again.");
     } finally {
@@ -70,33 +66,6 @@ const Register: React.FC = () => {
     }
   };
 
-  // Google login -> get id_token and call backend google endpoint.
-  const handleGoogleSuccess = async (credentialResponse: any) => {
-    const id_token = credentialResponse?.credential;
-    if (!id_token) {
-      setError("Google sign-in failed (no credential).");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const resp = await api.post("/api/customer/auth/google", { id_token });
-      const data = resp.data as AuthResponse;
-      const token = data?.token ?? null;
-      const user = (data as any)?.user ?? null;
-      if (token) {
-        dispatch(setAccessToken(token));
-        if (user) dispatch(setUser(user));
-        navigate("/dashboard");
-      } else {
-        setError(data?.message ?? "Google sign-in failed.");
-      }
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? err?.message ?? "Google sign-in failed.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -221,13 +190,20 @@ const Register: React.FC = () => {
             <div className="mt-4 text-center text-sm text-gray-500">Or Register With</div>
 
             <div className="mt-3 flex items-center justify-center">
-              <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError("Google sign-in failed")} />
+              <button
+                type="button"
+                onClick={() => window.location.href = `${import.meta.env.VITE_API_BASE }/api/customer/auth/google`}
+                className="flex items-center justify-center w-full px-4 py-2 border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-5 w-5 mr-2" />
+                Sign in with Google
+              </button>
             </div>
           </form>
         </div>
 
         {/* RIGHT: illustration (hidden on small screens) */}
-        <div className="hidden md:block md:w-1/2 bg-[url('/assets/poginpic.png')] bg-cover bg-center" role="img" aria-label="illustration" />
+        <div className="hidden md:block md:w-1/2 bg-[url('/assets/loginpic.png')] bg-cover bg-center" role="img" aria-label="illustration" />
       </div>
     </div>
   );

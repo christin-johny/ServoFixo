@@ -1,26 +1,22 @@
 
-// backend/src/domain/entities/Technician.ts
-// Import shared types (adjust path if needed)
-import { Email,Phone } from '../../../../shared/types/value-objects/ContactTypes';  // Shared Email type
+import { Email,Phone } from '../../../../shared/types/value-objects/ContactTypes';  
 
-// Technician entity (pure business object – matches ERD fields for technicians)
-// Why: Represents a technician in ServoFixo – separate from Customer/Admin as per ERD.
 export class Technician {
-  private readonly id: string; // PK, e.g., UUID
+  private readonly id: string; 
   private readonly name: string;
   private readonly phone: Phone;
-  private readonly email: Email; // Required for OTP
-  private readonly password: string; // Hashed later
+  private readonly email: Email; 
+  private readonly password: string; 
   private readonly avatarUrl: string;
   private readonly bio: string;
   private readonly experienceSummary: string;
-  private readonly categories: string[]; // e.g., ['plumbing', 'electrical']
+  private readonly categories: string[]; 
   private readonly subServices: string[];
-  private readonly zones: string[]; // FKs to zones, for Point 3
-  private readonly documents: object[]; // Array of docs (Week 2)
-  private readonly pricing: object; // Pricing info (Week 2)
-  private readonly availability: object; // Availability (Week 2)
-  private readonly verificationStatus: string; // e.g., 'pending' (Week 2)
+  private readonly zones: string[]; 
+  private readonly documents: object[]; 
+  private readonly pricing: object;
+  private readonly availability: object; 
+  private readonly verificationStatus: string; 
   private readonly verificationReason?: string;
   private readonly suspended: boolean;
   private readonly suspendReason?: string;
@@ -83,8 +79,7 @@ export class Technician {
     this.updatedAt = updatedAt;
   }
 
-  // Getters (example)
+  // Getters 
   getId(): string { return this.id; }
   getEmail(): Email { return this.email; }
-  // Add more as needed...
 }

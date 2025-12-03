@@ -30,7 +30,7 @@ const CustomerSchema: Schema<CustomerDocument> = new Schema(
     phone: { type: String },
     password: {
       type: String,
-      required: true,
+      required: false,
       default: '',  // for OTP-only login you can keep empty for now
     },
     avatarUrl: { type: String },

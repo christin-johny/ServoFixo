@@ -1,9 +1,11 @@
-import {jwtDecode} from "jwt-decode";
 
-export const decodeExp = (token: string) => {
+import { jwtDecode } from "jwt-decode";
+
+export const decodeExp = (token: string | null) => {
   try {
-    const decoded = jwtDecode<{ exp: number }>(token);
-    return decoded.exp;
+    if (!token) return null;
+    const decoded = jwtDecode<{ exp?: number }>(token);
+    return decoded?.exp ?? null;
   } catch {
     return null;
   }

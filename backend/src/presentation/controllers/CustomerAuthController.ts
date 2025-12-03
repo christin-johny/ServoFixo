@@ -216,6 +216,7 @@ export class CustomerAuthController {
 
   // 6️⃣ Google Login
   googleLogin = async (req: Request, res: Response): Promise<Response> => {
+    // Deprecated or used for manual token exchange if needed
     try {
       const { token } = req.body;
 
@@ -242,6 +243,28 @@ export class CustomerAuthController {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });
+    }
+  };
+
+  // 7️⃣ Google Login Callback (Passport)
+  googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const user = req.user as any; 
+      if (!user) {
+         res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/login?error=AuthenticationFailed`);
+         return;
+      }
+
+      //const result = await this.customerGoogleLoginUseCase.generateTokens(user);
+      const result = await this.customerLoginUseCase.execute(user);
+      if (result.refreshToken) {
+        res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
+      }
+
+      res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/dashboard`);
+    } catch (err) {
+      console.error('Google login callback error:', err);
+      res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/login?error=InternalError`);
     }
   };
 }

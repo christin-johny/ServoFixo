@@ -6,10 +6,10 @@ import store from "./store/store";
 import { setAccessToken, setUser, logout } from "./store/authSlice";
 import * as authRepo from "./infrastructure/repositories/authRepository";
 import ProtectedRoute from "./presentation/routes/ProtectedRoute";
-
+import Register from "./presentation/pages/Register";
 // --- Placeholder pages (replace with real UI components when ready) ---
 const Login = () => <div>Login page — will be replaced</div>;
-const Register = () => <div>Register page — will be replaced</div>;
+
 const VerifyOtp = () => <div>Verify OTP — will be replaced</div>;
 const Dashboard = () => <div>Dashboard — protected</div>;
 

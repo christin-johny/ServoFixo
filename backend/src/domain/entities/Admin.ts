@@ -1,10 +1,10 @@
 import { Email } from '../../../../shared/types/value-objects/ContactTypes';  // Shared Email type
 
 export class Admin {
-  private readonly id: string; // PK, e.g., UUID
-  private readonly email: Email; // Required
-  private readonly password: string; // Hashed later
-  private readonly roles: string[]; // e.g., ['super', 'support']
+  private readonly id: string; 
+  private readonly email: Email; 
+  private readonly password: string;
+  private readonly roles: string[]; 
   private readonly additionalInfo: object;
   private readonly createdAt: Date;
   private readonly updatedAt: Date;

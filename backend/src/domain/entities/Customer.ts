@@ -5,16 +5,16 @@ import { Email,Phone } from '../../../../shared/types/value-objects/ContactTypes
 export class Customer {
   private readonly id: string; 
   private readonly name: string;
-  private readonly phone?: Phone; // Optional, as per ERD
-  private readonly email: Email; // Required for OTP, using shared type
-  private readonly password: string; // Hashed in use case later
-  private readonly avatarUrl?: string; // Optional
-  private readonly defaultZoneId?: string; // FK to zones, for Point 3
-  private readonly addresses: object[]; // Array of address objects
+  private readonly phone?: Phone; 
+  private readonly email: Email; 
+  private readonly password: string; 
+  private readonly avatarUrl?: string;
+  private readonly defaultZoneId?: string; 
+  private readonly addresses: object[];
   private readonly suspended: boolean;
   private readonly suspendReason?: string;
-  private readonly additionalInfo: object; // Flexible object for extras
-  private readonly googleId?: string; // Optional, for Google Auth
+  private readonly additionalInfo: object; 
+  private readonly googleId?: string; 
   private readonly createdAt: Date;
   private readonly updatedAt: Date;
 
@@ -51,7 +51,7 @@ export class Customer {
 }
 
 
-  // Getters for immutability (no setters – create new entity for changes)
+  // Getters 
   getId(): string { return this.id; }
   getName(): string { return this.name; }
   getEmail(): Email { return this.email; }
@@ -59,4 +59,10 @@ export class Customer {
   getPhone(): Phone | undefined { return this.phone; }
   getGoogleId(): string | undefined { return this.googleId; }
   getCreatedAt(): Date { return this.createdAt; }
+  getAdditionalInfo():object{return this.additionalInfo}
+  isSuspended(): boolean {return this.suspended}
+  getSuspendReason(): string | undefined {return this.suspendReason}
+  getAddresses(): object[] {return this.addresses}
+  getAvatarUrl(): string | undefined {return this.avatarUrl}
+
 } 

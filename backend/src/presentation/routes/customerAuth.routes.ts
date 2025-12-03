@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import passport from '../../infrastructure/security/PassportConfig';
 
 // Infra
 import { CustomerMongoRepository } from '../../infrastructure/database/repositories/CustomerMongoRepository';
@@ -59,11 +60,18 @@ const verifyForgotPasswordOtpUseCase = new VerifyCustomerForgotPasswordOtpUseCas
   passwordHasher
 );
 
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+
+if (!googleClientId) {
+  throw new Error("GOOGLE_CLIENT_ID is not set in environment variables");
+}
+
 const customerGoogleLoginUseCase = new CustomerGoogleLoginUseCase(
   customerRepository,
   jwtService,
-  process.env.GOOGLE_CLIENT_ID || 'your-google-client-id'
+  googleClientId   
 );
+
 
 // Controller
 const customerAuthController = new CustomerAuthController(
@@ -82,6 +90,14 @@ router.post('/login', customerAuthController.login);
 router.post('/forgot-password/init-otp', customerAuthController.forgotPasswordInitOtp);
 router.post('/forgot-password/verify-otp', customerAuthController.forgotPasswordVerifyOtp);
 router.post('/google-login', customerAuthController.googleLogin);
+
+// Passport Routes
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { session: false, failureRedirect: '/login' }),
+  customerAuthController.googleLoginCallback
+);
 
 
 

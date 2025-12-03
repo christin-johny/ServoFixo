@@ -1,19 +1,9 @@
-// backend/src/infrastructure/database/repositories/AdminMongoRepository.ts
 
 import { IAdminRepository } from '../../../domain/repositories/IAdminRepository';
 import { Admin } from '../../../domain/entities/Admin';
 import { AdminModel, AdminDocument } from '../mongoose/models/AdminModel';
 
-/**
- * AdminMongoRepository
- *
- * Infrastructure implementation of IAdminRepository using Mongoose.
- *
- * Responsibilities:
- * - Talks to MongoDB via AdminModel.
- * - Maps Mongo documents <-> Admin entities.
- * - Returns pure Admin entities to the application layer.
- */
+
 export class AdminMongoRepository implements IAdminRepository {
   /**
    * Find admin by ID (string).
