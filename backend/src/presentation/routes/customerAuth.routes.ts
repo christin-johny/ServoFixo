@@ -113,6 +113,10 @@ router.get(
   passport.authenticate('google', { session: false, failureRedirect: '/login' }),
   customerAuthController.googleLoginCallback
 );
+//logout
+
+// after other routes
+router.post("/logout", customerAuthController.logout);
 
 
 

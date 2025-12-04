@@ -3,21 +3,21 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-  "dev": "ts-node-dev --respawn --transpile-only --poll src/index.ts",
-  "build": "tsc",
-  "start": "node dist/backend/src/index.js"
-}
-,
-  
+    "dev": "ts-node-dev --respawn --transpile-only --poll src/index.ts",
+    "build": "tsc",
+    "start": "node dist/backend/src/index.js"
+  },
   "dependencies": {
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "express": "~4.16.1",
     "google-auth-library": "^10.5.0",
+    "ioredis": "^5.8.2",
     "morgan": "~1.9.1",
     "nodemailer": "^7.0.11",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "redis": "^5.10.0"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",
