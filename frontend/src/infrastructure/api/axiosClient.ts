@@ -1,9 +1,8 @@
+// src/infrastructure/api/axiosClient.ts
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import store from "../../store/store";
 import { setAccessToken, logout } from "../../store/authSlice";
-// --- Types for the refresh queue ---
 import type { AxiosRequestConfig } from "axios";
-
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
@@ -24,7 +23,6 @@ const refreshApi = axios.create({
 
 // --- Types for the refresh queue ---
 interface FailedRequest {
-  // match the Promise<string | null> resolve signature exactly (non-optional param)
   resolve: (value: string | PromiseLike<string | null> | null) => void;
   reject: (error?: unknown) => void;
   config: AxiosRequestConfig;
@@ -43,10 +41,12 @@ const processQueue = (error: unknown, token: string | null = null): void => {
 
 // --- Request interceptor: attach access token ---
 api.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => { // Explicitly typed
+  (config: InternalAxiosRequestConfig) => {
     const token = store.getState().auth.accessToken;
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      // make sure headers object exists
+      if (!config.headers) config.headers = {};
+      (config.headers as any).Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -54,28 +54,40 @@ api.interceptors.request.use(
 );
 
 // --- Response interceptor: handle 401 -> refresh flow with queue ---
+// Also copy meaningful backend message into err.message
 api.interceptors.response.use(
   (response) => response,
   async (err: AxiosError) => {
-    const originalConfig = err.config as InternalAxiosRequestConfig & { _retry?: boolean };
-    
-    // Safety check for critical properties
-    if (!originalConfig || !err.response) {
-        return Promise.reject(err);
+    // SAFELY extract backend message and copy to err.message so UI can read it
+    try {
+      const data = err.response?.data as any;
+      const backendMessage =
+        data?.message ||
+        data?.error ||
+        data?.detail ||
+        (data?.errors && Array.isArray(data.errors) && (data.errors[0]?.msg || data.errors[0]?.message));
+      if (backendMessage && typeof backendMessage === "string") {
+        (err as any).message = backendMessage;
+      }
+    } catch (_) {
+      // ignore
     }
-    
-    // Check for 401 and ensure it's not an already retried request
+
+    const originalConfig = err.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+    if (!originalConfig || !err.response) {
+      return Promise.reject(err);
+    }
+
     if (err.response.status === 401 && !originalConfig._retry) {
       if (isRefreshing) {
-        // Queue the request until refresh finishes
         return new Promise<string | null>((resolve, reject) => {
           failedQueue.push({ resolve, reject, config: originalConfig });
         }).then((token) => {
           if (token) {
-            originalConfig.headers.Authorization = `Bearer ${token}`;
+            (originalConfig.headers as any).Authorization = `Bearer ${token}`;
           }
-          // Use 'api' instance to retry, which respects all interceptors
-          return api(originalConfig); 
+          return api(originalConfig);
         });
       }
 
@@ -83,10 +95,10 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // *** FIX: Use the dedicated refreshApi instance to prevent interceptor loop ***
+        // use refreshApi (no interceptors) to avoid loops
         const resp = await refreshApi.post("/api/customer/auth/refresh");
-        const newToken = resp?.data?.token ?? null;
-        
+        const newToken = resp?.data?.token ?? resp?.data?.accessToken ?? null;
+
         if (newToken) {
           store.dispatch(setAccessToken(newToken));
         }
@@ -94,18 +106,15 @@ api.interceptors.response.use(
         processQueue(null, newToken);
         isRefreshing = false;
 
-        // Apply the new token to the original failed request configuration
         if (newToken) {
-          originalConfig.headers.Authorization = `Bearer ${newToken}`;
+          (originalConfig.headers as any).Authorization = `Bearer ${newToken}`;
         }
-        
-        // Retry the original request
+
         return api(originalConfig);
       } catch (refreshErr) {
         processQueue(refreshErr, null);
         isRefreshing = false;
         store.dispatch(logout());
-        // Reject all queued requests and the original request
         return Promise.reject(refreshErr);
       }
     }

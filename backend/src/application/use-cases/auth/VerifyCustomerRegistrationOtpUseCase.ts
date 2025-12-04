@@ -20,7 +20,6 @@ export class VerifyCustomerRegistrationOtpUseCase {
     const { email, otp, sessionId, name, password, phone } = input;
     const normalizedEmail = email.toLowerCase().trim();
 
-    // 1️⃣ Find valid OTP session (Registration)
     const session = await this.otpSessionRepository.findValidSession(
       normalizedEmail,
       sessionId,
@@ -35,41 +34,36 @@ export class VerifyCustomerRegistrationOtpUseCase {
       throw new Error(ErrorMessages.OTP_INVALID);
     }
 
-    // 2️⃣ Mark as used
     session.markAsUsed();
     await this.otpSessionRepository.save(session);
 
-    // 3️⃣ Hash password
     const hashedPassword = await this.passwordHasher.hash(password);
 
-    // 4️⃣ Create customer entity
     const customer = new Customer(
-      '',                // id assigned by Mongo
+      '',               
       name,
       normalizedEmail,
       hashedPassword,
       phone,
-      undefined,         // avatarUrl
-      undefined,         // defaultZoneId
-      [],                // addresses
-      false,             // suspended
-      undefined,         // suspendReason
-      {},                // additionalInfo
-      undefined,         // googleId
+      undefined,         
+      undefined,         
+      [],                
+      false,             
+      undefined,        
+      {},                
+      undefined,         
       new Date(),
       new Date()
     );
 
     const savedCustomer = await this.customerRepository.create(customer);
 
-    // 5️⃣ Build JWT payload
     const payload: JwtPayload = {
       sub: savedCustomer.getId(),
       roles: ['customer'],
       type: 'customer',
     };
-
-    // 6️⃣ Tokens
+   
     const accessToken = await this.jwtService.generateAccessToken(payload);
     const refreshToken = await this.jwtService.generateRefreshToken(payload);
 

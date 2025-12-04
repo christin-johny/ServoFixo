@@ -1,13 +1,16 @@
+// src/application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase.ts
 import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepository';
 import { IOtpSessionRepository } from '../../../domain/repositories/IOtpSessionRepository';
 import { IEmailService } from '../../services/IEmailService';
 import { OtpSession } from '../../../domain/entities/OtpSession';
 import { OtpContext } from '../../../../../shared/types/enums/OtpContext';
-import {CustomerForgotPasswordInitDto,} from '../../../../../shared/types/dto/AuthDtos';
+import { CustomerForgotPasswordInitDto } from '../../../../../shared/types/dto/AuthDtos';
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 
 export class RequestCustomerForgotPasswordOtpUseCase {
   private readonly otpExpiryMinutes = 5;
+  private readonly rateLimitWindowMinutes = 60;
+  private readonly rateLimitMax = 10; // 10 per hour
 
   constructor(
     private readonly customerRepository: ICustomerRepository,
@@ -25,6 +28,23 @@ export class RequestCustomerForgotPasswordOtpUseCase {
     const customer = await this.customerRepository.findByEmail(normalizedEmail);
     if (!customer) {
       throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
+    }
+
+    // 1.5️⃣ Rate limit check: count OTP sessions in the last window
+    try {
+      const recentCount = await this.otpSessionRepository.countRecentSessions(
+        normalizedEmail,
+        this.rateLimitWindowMinutes
+      );
+      if (recentCount >= this.rateLimitMax) {
+        throw new Error('TOO_MANY_OTP_REQUESTS');
+      }
+    } catch (err) {
+      // If repository throws, propagate it
+      if ((err as Error).message === 'TOO_MANY_OTP_REQUESTS') {
+        throw err;
+      }
+      // otherwise continue (or rethrow) — we want to be-safe and surface repo errors
     }
 
     // 2️⃣ Generate OTP + sessionId

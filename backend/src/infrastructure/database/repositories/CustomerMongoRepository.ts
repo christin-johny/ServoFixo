@@ -1,4 +1,3 @@
-// backend/src/infrastructure/database/repositories/CustomerMongoRepository.ts
 
 import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepository';
 import { Customer } from '../../../domain/entities/Customer';

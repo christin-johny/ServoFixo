@@ -34,7 +34,6 @@ const emailService = new NodemailerEmailService();
 const jwtService = new JwtService();
 const passwordHasher = new BcryptPasswordHasher(10);
 
-// Use cases
 const requestRegisterOtpUseCase = new RequestCustomerRegistrationOtpUseCase(
   customerRepository,
   otpSessionRepository,
@@ -79,7 +78,6 @@ const customerGoogleLoginUseCase = new CustomerGoogleLoginUseCase(
 );
 
 
-// Controller
 const customerAuthController = new CustomerAuthController(
   requestRegisterOtpUseCase,
   verifyRegisterOtpUseCase,
@@ -89,10 +87,8 @@ const customerAuthController = new CustomerAuthController(
   customerGoogleLoginUseCase
 );
 
-// --- reuse the generic refresh use-case & controller (mirror admin) ---
-// create RefreshTokenUseCase instance
+
 const refreshTokenUseCase = new RefreshTokenUseCase(jwtService);
-// create controller that will use it
 const authTokenController = new AuthTokenController(refreshTokenUseCase);
 
 // Routes

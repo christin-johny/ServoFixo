@@ -10,7 +10,6 @@ import { ErrorMessages } from '../../../../shared/types/enums/ErrorMessages';
 import { StatusCodes } from '../../../../shared/types/enums/StatusCodes';
 import { refreshCookieOptions } from '../../infrastructure/config/Cookie';
 
-// NEW imports
 import redis from '../../infrastructure/redis/redisClient';
 import { JwtService } from '../../infrastructure/security/JwtService';
 
@@ -70,7 +69,7 @@ export class CustomerAuthController {
         phone,
       });
           
-      // If refresh token was returned by use-case, store in Redis and set cookie
+
       if (result.refreshToken) {
         try {
           // verify refresh token to get subject (user id)
@@ -170,7 +169,7 @@ export class CustomerAuthController {
 
       if (!email) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-          error: ErrorMessages.MISSING_REQUIRED_FIELDS,
+          message: ErrorMessages.MISSING_REQUIRED_FIELDS,
         });
       }
 
@@ -180,25 +179,32 @@ export class CustomerAuthController {
     } catch (err: any) {
       if (err instanceof Error && err.message === ErrorMessages.CUSTOMER_NOT_FOUND) {
         return res.status(StatusCodes.NOT_FOUND).json({
-          error: ErrorMessages.CUSTOMER_NOT_FOUND,
+          message: ErrorMessages.CUSTOMER_NOT_FOUND,
+        });
+      }
+
+      // rate-limit
+      if (err instanceof Error && err.message === 'TOO_MANY_OTP_REQUESTS') {
+        return res.status(429).json({
+          message: 'Too many OTP requests. Try again later.',
         });
       }
 
       console.error('Customer forgot password init OTP error:', err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        error: ErrorMessages.INTERNAL_ERROR,
+        message: ErrorMessages.INTERNAL_ERROR,
       });
     }
   };
 
   // 5️⃣ Forgot password - verify OTP + reset password
-  forgotPasswordVerifyOtp = async (req: Request, res: Response): Promise<Response> => {
+ forgotPasswordVerifyOtp = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { email, otp, sessionId, newPassword } = req.body;
 
       if (!email || !otp || !sessionId || !newPassword) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-          error: ErrorMessages.MISSING_REQUIRED_FIELDS,
+          message: ErrorMessages.MISSING_REQUIRED_FIELDS,
         });
       }
 
@@ -209,31 +215,33 @@ export class CustomerAuthController {
         newPassword,
       });
 
+      console.log(`Password reset successful for ${email}`);
+
       return res.status(StatusCodes.OK).json(result);
     } catch (err: any) {
       if (err instanceof Error) {
         if (err.message === ErrorMessages.OTP_INVALID) {
           return res.status(StatusCodes.UNAUTHORIZED).json({
-            error: ErrorMessages.OTP_INVALID,
+            message: ErrorMessages.OTP_INVALID,
           });
         }
 
         if (err.message === ErrorMessages.OTP_SESSION_INVALID) {
           return res.status(StatusCodes.UNAUTHORIZED).json({
-            error: ErrorMessages.OTP_SESSION_INVALID,
+            message: ErrorMessages.OTP_SESSION_INVALID,
           });
         }
 
         if (err.message === ErrorMessages.CUSTOMER_NOT_FOUND) {
           return res.status(StatusCodes.NOT_FOUND).json({
-            error: ErrorMessages.CUSTOMER_NOT_FOUND,
+            message: ErrorMessages.CUSTOMER_NOT_FOUND,
           });
         }
       }
 
       console.error('Customer forgot password verify OTP error:', err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        error: ErrorMessages.INTERNAL_ERROR,
+        message: ErrorMessages.INTERNAL_ERROR,
       });
     }
   };

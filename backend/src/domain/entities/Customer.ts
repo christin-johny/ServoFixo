@@ -1,5 +1,5 @@
 
-import { Email,Phone } from '../../../../shared/types/value-objects/ContactTypes';  // Shared Email type
+import { Email,Phone } from '../../../../shared/types/value-objects/ContactTypes';  
 
 
 export class Customer {
@@ -51,7 +51,6 @@ export class Customer {
 }
 
 
-  // Getters 
   getId(): string { return this.id; }
   getName(): string { return this.name; }
   getEmail(): Email { return this.email; }

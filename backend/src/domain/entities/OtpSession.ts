@@ -1,4 +1,3 @@
-// backend/src/domain/entities/OtpSession.ts
 
 import { OtpContext } from '../../../../shared/types/enums/OtpContext';
 

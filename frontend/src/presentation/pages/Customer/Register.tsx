@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { customerRegisterInitOtp } from "../../infrastructure/repositories/authRepository";
-import type { CustomerRegisterInitDto, AuthResponse } from "../../../../shared/types/dto/AuthDtos";
+import { customerRegisterInitOtp } from "../../../infrastructure/repositories/authRepository";
+import type { CustomerRegisterInitDto, AuthResponse } from "../../../../../shared/types/dto/AuthDtos";
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -50,16 +50,20 @@ const Register: React.FC = () => {
 
       setInfo(data?.message ?? "OTP sent. Please check your email.");
 
-      // navigate to verify page with form data so verify step can complete creation
+      const otpFlowData = {
+        email,
+        sessionId,
+        context: "registration" as const,
+        form: { name, phone, password },
+      };
+      sessionStorage.setItem("otpFlowData", JSON.stringify(otpFlowData));
+
       navigate("/verify-otp", {
-        state: {
-          email,
-          sessionId,
-          form: { name, phone, password }, // keep password until verify completes (transient)
-        },
+        state: otpFlowData,
       });
-    
+
     } catch (err: any) {
+      console.error(err)
       setError(err?.response?.data?.message ?? err?.message ?? "Failed to send OTP. Try again.");
     } finally {
       setLoading(false);
@@ -192,7 +196,7 @@ const Register: React.FC = () => {
             <div className="mt-3 flex items-center justify-center">
               <button
                 type="button"
-                onClick={() => window.location.href = `${import.meta.env.VITE_API_BASE }/api/customer/auth/google`}
+                onClick={() => window.location.href = `${import.meta.env.VITE_API_BASE}/api/customer/auth/google`}
                 className="flex items-center justify-center w-full px-4 py-2 border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-5 w-5 mr-2" />

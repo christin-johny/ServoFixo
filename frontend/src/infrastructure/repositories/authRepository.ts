@@ -8,10 +8,7 @@ import type {
   CustomerForgotPasswordVerifyDto,
 } from "../../../../shared/types/dto/AuthDtos";
 
-/**
- * Note: backend may return { token, user?, sessionId?, message? } as AuthResponse.
- * We map token -> access token in the frontend state.
- */
+
 
 export const customerLogin = async (payload: CustomerLoginRequestDto) => {
   const resp = await api.post<AuthResponse>("/api/customer/auth/login", payload);
@@ -23,6 +20,7 @@ export const customerRegisterInitOtp = (payload: CustomerRegisterInitDto) =>
 
 export const customerRegisterVerifyOtp = (payload: CustomerRegisterVerifyDto) =>
   api.post<AuthResponse>("/api/customer/auth/register/verify-otp", payload);
+
 
 export const customerForgotPasswordInit = (payload: CustomerForgotPasswordInitDto) =>
   api.post<AuthResponse>("/api/customer/auth/forgot-password/init-otp", payload);
@@ -36,4 +34,7 @@ export const refresh = async () => {
   return resp.data;
 };
 
-export const logout = async () => api.post("/api/customer/auth/logout");
+export const logout = async (): Promise<{ message?: string }> => {
+  const resp = await api.post("/api/customer/auth/logout");
+  return resp.data;
+};

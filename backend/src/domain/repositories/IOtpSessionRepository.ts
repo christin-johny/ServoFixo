@@ -6,9 +6,7 @@ import { OtpContext } from '../../../../shared/types/enums/OtpContext';
 export interface IOtpSessionRepository {
   create(session: OtpSession): Promise<OtpSession>;
 
-  /**
-   * Find a valid otp session by email + sessionId + context
-   */
+
   findValidSession(
     email: string,
     sessionId: string,

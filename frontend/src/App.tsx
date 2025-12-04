@@ -1,4 +1,4 @@
-// src/App.tsx
+// src/App.tsx (only AppInner useEffect part is changed - full file shown for clarity)
 import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Provider, useDispatch } from "react-redux";
@@ -6,11 +6,12 @@ import store from "./store/store";
 import { setAccessToken, setUser, logout } from "./store/authSlice";
 import * as authRepo from "./infrastructure/repositories/authRepository";
 import ProtectedRoute from "./presentation/routes/ProtectedRoute";
-import Register from "./presentation/pages/Register";
-// --- Placeholder pages (replace with real UI components when ready) ---
-const Login = () => <div>Login page — will be replaced</div>;
+import Register from "./presentation/pages/Customer/Register";
+import VerifyOtp from "./presentation/pages/Customer/VerifyOtp";
+import Login from './presentation/pages/Customer/CustomerLogin'
+import ForgotPassword from "./presentation/pages/Customer/ForgotPassword";
+import ForgotPasswordVerify from "./presentation/pages/Customer/ResetPassword.tsx";
 
-const VerifyOtp = () => <div>Verify OTP — will be replaced</div>;
 const Dashboard = () => <div>Dashboard — protected</div>;
 
 const AppInner: React.FC = () => {
@@ -23,7 +24,8 @@ const AppInner: React.FC = () => {
     const tryRefresh = async () => {
       try {
         const data = await authRepo.refresh(); // AuthResponse shape from shared DTOs
-        const token = (data as any).token ?? null; // backend uses `token`
+        // <-- CHANGED: support accessToken or token
+        const token = (data as any).accessToken ?? (data as any).token ?? null;
         const user = (data as any).user ?? null;
 
         if (!aborted) {
@@ -85,6 +87,10 @@ const AppInner: React.FC = () => {
             </ProtectedRoute>
           }
         />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/forgot-password/verify" element={<ForgotPasswordVerify />} />
+
+
       </Routes>
     </BrowserRouter>
   );
