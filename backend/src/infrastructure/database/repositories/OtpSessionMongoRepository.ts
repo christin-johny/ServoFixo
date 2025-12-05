@@ -44,7 +44,7 @@ async countRecentSessions(email: string, minutes: number): Promise<number> {
   const since = new Date(Date.now() - minutes * 60 * 1000);
   // Adjust the query to match your schema fields; common fields: email, context, createdAt, used
   try {
-    return await this.model.countDocuments({
+    return await OtpSessionModel.countDocuments({
       email: email,
       context: OtpContext.ForgotPassword,
       createdAt: { $gte: since },

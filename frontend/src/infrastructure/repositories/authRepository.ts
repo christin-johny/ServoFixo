@@ -28,13 +28,21 @@ export const customerForgotPasswordInit = (payload: CustomerForgotPasswordInitDt
 export const customerForgotPasswordVerify = (payload: CustomerForgotPasswordVerifyDto) =>
   api.post<AuthResponse>("/api/customer/auth/forgot-password/verify-otp", payload);
 
-// refresh uses cookie (httpOnly) server-side; response shape is AuthResponse (token)
+// inside src/infrastructure/repositories/authRepository.ts (replace existing refresh)
 export const refresh = async () => {
-  const resp = await api.post<AuthResponse>("/api/customer/auth/refresh");
-  return resp.data;
+  // prefer shared endpoint
+  try {
+    const resp = await api.post<AuthResponse>("/api/auth/refresh");
+    return resp.data;
+  } catch (err) {
+    // fallback to customer refresh to preserve compatibility
+    const resp = await api.post<AuthResponse>("/api/customer/auth/refresh");
+    return resp.data;
+  }
 };
 
-export const logout = async (): Promise<{ message?: string }> => {
+
+export const  customerLogout = async (): Promise<{ message?: string }> => {
   const resp = await api.post("/api/customer/auth/logout");
   return resp.data;
 };

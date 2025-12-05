@@ -1,6 +1,5 @@
 // server/controllers/AuthTokenController.ts
 import type { Request, Response } from "express";
-import redis from '../../infrastructure/redis/redisClient';
 import { refreshCookieOptions } from "../../infrastructure/config/Cookie";
 import { RefreshTokenUseCase } from "../../application/use-cases/auth/RefreshTokenUseCase";
 

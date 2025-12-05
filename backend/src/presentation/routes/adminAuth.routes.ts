@@ -36,5 +36,5 @@ const authTokenController = new AuthTokenController(refreshTokenUseCase);
 // Routes
 router.post('/login', adminAuthController.login);
 router.post('/refresh', authTokenController.refresh);
-
+router.post('/logout', adminAuthController.logout);
 export default router;

@@ -1,45 +1,48 @@
+// src/presentation/pages/Customer/VerifyOtp.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import { ZodError, z } from "zod";
 import { setAccessToken, setUser } from "../../../store/authSlice";
 import * as authRepo from "../../../infrastructure/repositories/authRepository";
+import { Lock, Eye, EyeOff } from "lucide-react";
+import { usePasswordStrength } from "../../components/PasswordStrength/usePasswordStrength";
+import PasswordStrength from "../../components/PasswordStrength/PasswordStrength";
 
 const OTP_LENGTH = 6;
-// OTP expiry (3 minutes)
 const OTP_EXPIRY_SECONDS = 180;
-// Resend allowed after 60s
 const RESEND_DELAY_SECONDS = 60;
 
-const STORAGE_KEY = "otpFlowData"; // new standard
-const LEGACY_REG_KEY = "registrationData"; // fallback for older flows
+const STORAGE_KEY = "otpFlowData";
+const LEGACY_REG_KEY = "registrationData";
+
+/** password validation schema (authoritative) */
+const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .max(100, "Password is too long")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character");
 
 const VerifyOtp: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Read state from location (preferred)
   const state = (location.state || {}) as any;
-
-  // Try sessionStorage fallback(s)
   const storageRaw = typeof window !== "undefined" ? sessionStorage.getItem(STORAGE_KEY) : null;
   const legacyRaw = typeof window !== "undefined" ? sessionStorage.getItem(LEGACY_REG_KEY) : null;
-
   const storageParsed = storageRaw ? JSON.parse(storageRaw as string) : null;
   const legacyParsed = legacyRaw ? JSON.parse(legacyRaw as string) : null;
 
-  // Determine context robustly:
-  // - If location.state.context provided, use it.
-  // - Else if storageParsed has context, use it.
-  // - Else if legacyParsed exists assume registration.
-  // - Fallback to 'registration' for safety.
   const context =
     (state.context as string) ??
     (storageParsed?.context as string) ??
     (legacyParsed ? "registration" : undefined) ??
     "registration";
 
-  // Determine email/sessionId/form fields from state OR storage/legacy
   const email = state.email ?? storageParsed?.email ?? legacyParsed?.email ?? "";
   const sessionId = state.sessionId ?? storageParsed?.sessionId ?? legacyParsed?.sessionId ?? "";
   const form = state.form ?? storageParsed?.form ?? legacyParsed ?? {};
@@ -48,28 +51,35 @@ const VerifyOtp: React.FC = () => {
   const passwordFromState = state.password ?? form?.password ?? "";
   const phoneFromState = state.phone ?? form?.phone ?? "";
 
-  // OTP inputs
+  // OTP boxes
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Two timers: expiry (180s) and resend delay (60s)
   const [expiryTimer, setExpiryTimer] = useState<number>(OTP_EXPIRY_SECONDS);
   const [resendTimer, setResendTimer] = useState<number>(RESEND_DELAY_SECONDS);
   const [resending, setResending] = useState(false);
 
-  // Forgot password specific inputs
+  // Forgot password fields
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Single interval to tick both timers every second
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+
+  // reuse hook for fast checks
+  const { checks } = usePasswordStrength(newPassword);
+
+  // timers
   useEffect(() => {
     const t = window.setInterval(() => {
-      setExpiryTimer((prev) => (prev > 0 ? prev - 1 : 0));
-      setResendTimer((prev) => (prev > 0 ? prev - 1 : 0));
+      setExpiryTimer((p) => (p > 0 ? p - 1 : 0));
+      setResendTimer((p) => (p > 0 ? p - 1 : 0));
     }, 1000);
-
     return () => clearInterval(t);
   }, []);
 
@@ -105,6 +115,64 @@ const VerifyOtp: React.FC = () => {
     }
   };
 
+  // Map the first failing rule to the same messages used in Zod schema
+  const firstPasswordFailureMessage = (): string | undefined => {
+    if (!newPassword) return undefined;
+    if (newPassword.length < 8) return "Password must be at least 8 characters";
+    if (newPassword.length > 100) return "Password is too long";
+    if (!checks.uppercase) return "Password must contain at least one uppercase letter";
+    if (!checks.lowercase) return "Password must contain at least one lowercase letter";
+    if (!checks.number) return "Password must contain at least one number";
+    if (!checks.special) return "Password must contain at least one special character";
+    return undefined;
+  };
+
+  // handle password typing with fast client-side feedback
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setNewPassword(val);
+
+    if (passwordTouched) {
+      const fail = firstPasswordFailureMessage();
+      if (fail) {
+        setPasswordError(fail);
+      } else {
+        // final defensive Zod parse (keeps messages consistent)
+        try {
+          passwordSchema.parse(val);
+          setPasswordError(null);
+        } catch (err) {
+          if (err instanceof ZodError) {
+            setPasswordError(err.issues?.[0]?.message ?? (err as any).errors?.[0]?.message);
+          } else {
+            setPasswordError("Invalid password");
+          }
+        }
+      }
+    }
+
+    // check match
+    if (confirmNewPassword && val !== confirmNewPassword) {
+      setConfirmError("Passwords do not match");
+    } else if (confirmNewPassword) {
+      setConfirmError(null);
+    }
+  };
+
+  const handleConfirmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setConfirmNewPassword(val);
+    if (val !== newPassword) {
+      setConfirmError("Passwords do not match");
+    } else {
+      setConfirmError(null);
+    }
+  };
+
+  // helper to extract server or Zod error safely
+  const extractServerMsg = (err: any) =>
+    err?.response?.data?.message ?? err?.response?.data?.error ?? err?.message ?? "Verification failed";
+
   const verifyOtp = async () => {
     const code = otp.join("");
     if (code.length !== OTP_LENGTH) {
@@ -112,14 +180,28 @@ const VerifyOtp: React.FC = () => {
       return;
     }
 
-    // If forgot-password flow, ensure new password is valid
     if (context === "forgot_password") {
-      if (!newPassword || newPassword.length < 6) {
-        setError("Password must be at least 6 characters.");
+      setPasswordTouched(true);
+      const fail = firstPasswordFailureMessage();
+      if (fail) {
+        setPasswordError(fail);
         return;
       }
+      // final authoritative parse
+      try {
+        passwordSchema.parse(newPassword);
+        setPasswordError(null);
+      } catch (err) {
+        if (err instanceof ZodError) {
+          setPasswordError(err.issues?.[0]?.message ?? (err as any).errors?.[0]?.message);
+        } else {
+          setPasswordError("Invalid password");
+        }
+        return;
+      }
+
       if (newPassword !== confirmNewPassword) {
-        setError("Passwords do not match.");
+        setConfirmError("Passwords do not match.");
         return;
       }
     }
@@ -129,7 +211,6 @@ const VerifyOtp: React.FC = () => {
       setError(null);
 
       if (context === "registration") {
-        // Keep previous behaviour unchanged
         if (!nameFromState || !passwordFromState) {
           setError("Missing registration details. Please restart registration.");
           return;
@@ -149,7 +230,6 @@ const VerifyOtp: React.FC = () => {
         if (access) dispatch(setAccessToken(access));
         if (data.user) dispatch(setUser(data.user));
 
-        // cleanup any stored data
         try {
           sessionStorage.removeItem(STORAGE_KEY);
           sessionStorage.removeItem(LEGACY_REG_KEY);
@@ -157,7 +237,6 @@ const VerifyOtp: React.FC = () => {
 
         navigate("/dashboard");
       } else {
-        // forgot_password — send otp + newPassword in same request
         const resp = await authRepo.customerForgotPasswordVerify({
           email,
           otp: code,
@@ -166,7 +245,6 @@ const VerifyOtp: React.FC = () => {
         });
 
         const data = resp as any;
-        // no auto-login, navigate to login with success message (from backend if present)
         try {
           sessionStorage.removeItem(STORAGE_KEY);
           sessionStorage.removeItem("forgotResetHandoff");
@@ -177,12 +255,7 @@ const VerifyOtp: React.FC = () => {
         });
       }
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        err?.message ||
-        "Verification failed";
-      setError(msg);
+      setError(extractServerMsg(err));
     } finally {
       setLoading(false);
     }
@@ -199,39 +272,35 @@ const VerifyOtp: React.FC = () => {
       } else {
         await authRepo.customerForgotPasswordInit({ email });
       }
-      // Reset timers on resend: new otp issued
       setExpiryTimer(OTP_EXPIRY_SECONDS);
       setResendTimer(RESEND_DELAY_SECONDS);
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? err?.message ?? "Failed to resend OTP";
-      setError(msg);
+      setError(extractServerMsg(err));
     } finally {
       setResending(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white p-4">
-      <div className="bg-white rounded-3xl shadow-xl w-full max-w-md p-8 text-center border border-gray-200">
-        {/* Logo */}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-8 text-center border border-gray-200">
         <div className="flex justify-center mb-4">
           <img src="/assets/logo.png" alt="Servofixo" className="h-12 object-contain" />
         </div>
 
         <h2 className="text-2xl font-semibold mb-6">
-          {context === "registration" ? "Enter OTP" : "Enter OTP & Reset Password"}
+          {context === "registration" ? "Enter OTP" : "Reset Password"}
         </h2>
 
-        <p className="text-sm text-gray-500 mb-4">OTP sent to <strong>{email}</strong></p>
+        <p className="text-sm text-gray-500 mb-6">OTP sent to <strong>{email}</strong></p>
 
-        {/* OTP boxes */}
-        <div className="flex justify-center gap-3 mb-4">
+        <div className="flex justify-center gap-3 mb-6">
           {Array.from({ length: OTP_LENGTH }).map((_, i) => (
             <input
               key={i}
               ref={(el) => (inputsRef.current[i] = el)}
               maxLength={1}
-              className="w-12 h-12 bg-gray-200 text-center text-xl rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-12 h-12 bg-gray-50 border border-gray-300 text-center text-xl rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
               value={otp[i]}
               onChange={(e) => handleChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(e, i)}
@@ -240,59 +309,73 @@ const VerifyOtp: React.FC = () => {
           ))}
         </div>
 
-        {/* For forgot password: new password inputs */}
         {context === "forgot_password" && (
-          <div className="space-y-3 mb-4">
-            <div className="flex items-center bg-gray-100 rounded-full px-4 py-3">
-              <input
-                placeholder="Enter new password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="bg-transparent outline-none w-full text-gray-700"
-                aria-label="New Password"
-                type="password"
-              />
+          <div className="space-y-4 mb-6 text-left">
+            <div>
+              <div className={`flex items-center bg-gray-50 border rounded-lg px-4 py-3 transition-all ${passwordTouched && passwordError ? "border-red-300 bg-red-50" : "border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200"}`}>
+                <Lock className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
+                <input
+                  placeholder="New Password"
+                  value={newPassword}
+                  onChange={handlePasswordChange}
+                  onBlur={() => setPasswordTouched(true)}
+                  className="bg-transparent outline-none w-full text-gray-900 placeholder-gray-400"
+                  aria-label="New Password"
+                  type={showNewPassword ? "text" : "password"}
+                />
+                <button type="button" onClick={() => setShowNewPassword((s) => !s)} className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none">
+                  {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {passwordTouched && passwordError && (<p className="mt-1 text-xs text-red-600">{passwordError}</p>)}
+              {/* reuse the PasswordStrength component for visuals */}
+              <PasswordStrength password={newPassword} />
             </div>
 
-            <div className="flex items-center bg-gray-100 rounded-full px-4 py-3">
-              <input
-                placeholder="Re-enter new password"
-                value={confirmNewPassword}
-                onChange={(e) => setConfirmNewPassword(e.target.value)}
-                className="bg-transparent outline-none w-full text-gray-700"
-                aria-label="Confirm New Password"
-                type="password"
-              />
+            <div>
+              <div className={`flex items-center bg-gray-50 border rounded-lg px-4 py-3 transition-all ${confirmError ? "border-red-300 bg-red-50" : "border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200"}`}>
+                <Lock className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
+                <input
+                  placeholder="Re-enter new password"
+                  value={confirmNewPassword}
+                  onChange={handleConfirmChange}
+                  className="bg-transparent outline-none w-full text-gray-900 placeholder-gray-400"
+                  aria-label="Confirm New Password"
+                  type={showConfirmPassword ? "text" : "password"}
+                />
+                <button type="button" onClick={() => setShowConfirmPassword((s) => !s)} className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none">
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {confirmError && (<p className="mt-1 text-xs text-red-600">{confirmError}</p>)}
             </div>
           </div>
         )}
 
-        {/* Error */}
         {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
 
-        {/* Resend OTP */}
         <div className="text-right pr-2 mb-4">
-          <button
-            onClick={resendOtp}
-            disabled={resendTimer > 0 || resending}
-            className={`text-sm ${resendTimer === 0 ? "text-blue-600 underline" : "text-gray-400"}`}
-          >
+          <button onClick={resendOtp} disabled={resendTimer > 0 || resending} className={`text-sm ${resendTimer === 0 ? "text-blue-600 underline" : "text-gray-400"}`}>
             {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : resending ? "Resending..." : "Resend OTP"}
           </button>
         </div>
 
-        {/* Verify Button */}
-        <button
-          onClick={verifyOtp}
-          disabled={loading}
-          className="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-700 transition disabled:opacity-60"
-        >
-          {loading ? "Verifying..." : "Verify OTP"}
+        <button onClick={verifyOtp} disabled={loading} className={`w-full rounded-lg py-3 text-white font-semibold transition-all ${loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-sm hover:shadow-md"}`}>
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Verifying...
+            </span>
+          ) : (
+            "Verify OTP"
+          )}
         </button>
 
-        {/* Countdown */}
-        <p className="text-sm mt-5">
-          OTP expires in: <span className="text-red-600">{expiryTimer} seconds</span>
+        <p className="text-sm mt-5 text-gray-500">
+          OTP expires in: <span className="text-red-600 font-medium">{expiryTimer} seconds</span>
         </p>
       </div>
     </div>

@@ -14,4 +14,6 @@ export interface IOtpSessionRepository {
   ): Promise<OtpSession | null>;
 
   save(session: OtpSession): Promise<OtpSession>;
+
+  countRecentSessions(email: string, minutes: number): Promise<number>;
 }

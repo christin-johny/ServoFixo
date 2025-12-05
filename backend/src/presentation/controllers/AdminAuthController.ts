@@ -1,5 +1,5 @@
 // backend/src/presentation/controllers/AdminAuthController.ts
-
+import redis from '../../infrastructure/redis/redisClient';
 import { Request, Response } from 'express';
 import { AdminLoginUseCase } from '../../application/use-cases/auth/AdminLoginUseCase';
 import { ErrorMessages }  from '../../../../shared/types/enums/ErrorMessages';
@@ -45,4 +45,31 @@ export class AdminAuthController {
       });
     }
   };
+
+  logout = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const refreshToken = req.cookies?.refreshToken as string | undefined;
+
+    // Clear cookie regardless (best-effort)
+    res.clearCookie('refreshToken', { path: refreshCookieOptions.path ?? '/' });
+
+    if (refreshToken) {
+      try {
+        // delete the redis key where tokens are stored: refresh:<token>
+        const redisKey = `refresh:${refreshToken}`;
+        await redis.del(redisKey);
+      } catch (redisErr) {
+        // don't fail the whole request on Redis error — log and continue
+        console.error('Error deleting refresh token from Redis (admin logout):', redisErr);
+      }
+    }
+
+    return res.status(StatusCodes.OK).json({ message: 'Logged out successfully' });
+  } catch (err) {
+    console.error('Admin logout error:', err);
+    // still clear cookie as a fallback
+    res.clearCookie('refreshToken', { path: refreshCookieOptions.path ?? '/' });
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
+  }
+};
 }
