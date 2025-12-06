@@ -1,19 +1,15 @@
 // src/App.tsx
-import React, { useEffect, useState, Suspense, lazy } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Provider, useDispatch } from "react-redux";
 import store from "./store/store";
 import { setAccessToken, setUser, logout } from "./store/authSlice";
 import * as authRepo from "./infrastructure/repositories/authRepository";
-import RoleProtectedRoute from "./presentation/routes/RoleProtectedRoute";
 import AdminRoutes from "./presentation/routes/AdminRoutes";
 import CustomerRoutes from "./presentation/routes/CustomerRoutes";
 import TechnicianRoutes from "./presentation/routes/TechnicianRoutes";
 import LoaderFallback from "./presentation/components/LoaderFallback";
 import { parseJwt } from "./utils/jwt";
-
-// Lazy-load the public AdminLogin page (so bundle split stays)
-const AdminLogin = lazy(() => import("./presentation/pages/Admin/AdminLogin"));
 
 const AppInner: React.FC = () => {
   const dispatch = useDispatch();
@@ -71,38 +67,21 @@ const AppInner: React.FC = () => {
       <Routes>
         <Route path="/" element={<Navigate to="/customer" replace />} />
 
-        {/* Public admin login (must be reachable without auth) */}
+        {/* Admin area - auth routes handled within AdminRoutes */}
         <Route
-          path="/admin/login"
+          path="/admin/*"
           element={
             <Suspense fallback={<LoaderFallback />}>
-              <AdminLogin />
+              <AdminRoutes />
             </Suspense>
           }
         />
 
-        {/* Protected admin area (everything under /admin/* except /admin/login) */}
-        <Route
-          path="/admin/*"
-          element={
-            <RoleProtectedRoute requiredRole="admin" redirectTo="/admin/login">
-              <AdminRoutes />
-            </RoleProtectedRoute>
-          }
-        />
-
-        {/* Customer area */}
+        {/* Customer area - auth and protected routes handled within CustomerRoutes */}
         <Route path="/customer/*" element={<CustomerRoutes />} />
 
-        {/* Protected technician area */}
-        <Route
-          path="/technician/*"
-          element={
-            <RoleProtectedRoute requiredRole="technician" redirectTo="/tech/login">
-              <TechnicianRoutes />
-            </RoleProtectedRoute>
-          }
-        />
+        {/* Technician area - auth and protected routes handled within TechnicianRoutes */}
+        <Route path="/technician/*" element={<TechnicianRoutes />} />
 
         {/* fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

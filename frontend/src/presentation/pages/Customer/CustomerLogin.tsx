@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { ZodError, z } from "zod";
 import { customerLogin } from "../../../infrastructure/repositories/authRepository";
-import { setAccessToken } from "../../../store/authSlice";
+import { setAccessToken, setUser } from "../../../store/authSlice";
+import { parseJwt } from "../../../utils/jwt";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { usePasswordStrength } from "../../components/PasswordStrength/usePasswordStrength";
 
@@ -96,6 +97,18 @@ const CustomerLogin: React.FC = () => {
 
       if (token) {
         dispatch(setAccessToken(token));
+        
+        // Decode JWT and set user info
+        const payload = parseJwt(token);
+        if (payload) {
+          dispatch(
+            setUser({
+              id: payload.sub,
+              role: Array.isArray(payload.roles) ? payload.roles[0] : payload.roles,
+              email: payload.email,
+            })
+          );
+        }
       }
 
       setLoading(false);

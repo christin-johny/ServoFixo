@@ -3,6 +3,8 @@ import React, { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import LoaderFallback from "../components/LoaderFallback";
 import LogoutButton from "../components/Customer/LogoutButton";
+import AuthGuard from "./AuthGuard";
+import RoleProtectedRoute from "./RoleProtectedRoute";
 
 // lazy imports (or keep your current lazies)
 const CustomerLogin = lazy(() => import("../pages/Customer/CustomerLogin"));
@@ -21,13 +23,49 @@ const CustomerHomeStub: React.FC = () => (
 const CustomerRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
     <Routes>
-      {/* NOTE: these are relative to /customer/* mounted in App.tsx */}
-      <Route path="login" element={<CustomerLogin />} />
-      <Route path="register" element={<CustomerRegister />} />
-      <Route path="verify-otp" element={<VerifyOtp />} />
-      <Route path="forgot-password" element={<ForgotPassword />} />
-      {/* index -> /customer */}
-      <Route index element={<CustomerHomeStub />} />
+      {/* Public auth routes - wrapped with AuthGuard to prevent logged-in users */}
+      <Route
+        path="login"
+        element={
+          <AuthGuard>
+            <CustomerLogin />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path="register"
+        element={
+          <AuthGuard>
+            <CustomerRegister />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path="verify-otp"
+        element={
+          <AuthGuard>
+            <VerifyOtp />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path="forgot-password"
+        element={
+          <AuthGuard>
+            <ForgotPassword />
+          </AuthGuard>
+        }
+      />
+
+      {/* Protected routes - require customer role */}
+      <Route
+        index
+        element={
+          <RoleProtectedRoute requiredRole="customer" redirectTo="/customer/login">
+            <CustomerHomeStub />
+          </RoleProtectedRoute>
+        }
+      />
     </Routes>
   </Suspense>
 );

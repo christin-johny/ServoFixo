@@ -2,15 +2,35 @@
 import React, { Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import LoaderFallback from "../components/LoaderFallback";
+import AuthGuard from "./AuthGuard";
+import RoleProtectedRoute from "./RoleProtectedRoute";
 
-// const TechLogin = lazy(() => import("../pages/Technician/TechnicianLogin" /* optional */));
-// const TechDashboard = lazy(() => import("../pages/Technician/TechnicianDashboard" /* optional */));
+// Placeholder components - implement these when ready
+const TechLogin: React.FC = () => <div className="p-6">Technician Login (implement)</div>;
+const TechDashboard: React.FC = () => <div className="p-6">Technician Dashboard (implement)</div>;
 
 const TechnicianRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
     <Routes>
-      <Route path="/login" element={<div>Technician Login (implement)</div>} />
-      <Route path="/" element={<div>Technician Dashboard (implement)</div>} />
+      {/* Public auth route - wrapped with AuthGuard */}
+      <Route
+        path="login"
+        element={
+          <AuthGuard>
+            <TechLogin />
+          </AuthGuard>
+        }
+      />
+
+      {/* Protected routes - require technician role */}
+      <Route
+        index
+        element={
+          <RoleProtectedRoute requiredRole="technician" redirectTo="/technician/login">
+            <TechDashboard />
+          </RoleProtectedRoute>
+        }
+      />
     </Routes>
   </Suspense>
 );
