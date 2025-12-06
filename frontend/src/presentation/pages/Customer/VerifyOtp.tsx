@@ -235,7 +235,7 @@ const VerifyOtp: React.FC = () => {
           sessionStorage.removeItem(LEGACY_REG_KEY);
         } catch (_) {}
 
-        navigate("/dashboard");
+        navigate("/customer");
       } else {
         const resp = await authRepo.customerForgotPasswordVerify({
           email,
@@ -250,7 +250,7 @@ const VerifyOtp: React.FC = () => {
           sessionStorage.removeItem("forgotResetHandoff");
         } catch (_) {}
 
-        navigate("/login", {
+        navigate("/customer/login", {
           state: { successMessage: data?.message ?? "Password reset successful. Please login." },
         });
       }

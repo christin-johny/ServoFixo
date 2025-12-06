@@ -57,20 +57,22 @@ const AdminLogin: React.FC = () => {
 
       if (token) {
         dispatch(setAccessToken(token));
-        // populate user from server if available, else decode token
         if (user) {
           dispatch(setUser(user));
         } else {
           const payload = parseJwt(token);
           dispatch(setUser({ id: payload?.sub, role: Array.isArray(payload?.roles) ? payload?.roles[0] : payload?.roles }));
         }
-        navigate("/admin/dashboard");
+        // go to admin index/dashboard
+        navigate("/admin", { replace: true });
       } else {
         setError("No token received from server");
       }
+
     } catch (err: any) {
+      console.log(err)
       setError(err?.message ?? "Login failed");
-      console.error("Admin login error:", err);
+
     } finally {
       setLoading(false);
     }

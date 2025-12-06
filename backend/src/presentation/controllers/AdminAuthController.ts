@@ -2,14 +2,13 @@
 import redis from '../../infrastructure/redis/redisClient';
 import { Request, Response } from 'express';
 import { AdminLoginUseCase } from '../../application/use-cases/auth/AdminLoginUseCase';
-import { ErrorMessages }  from '../../../../shared/types/enums/ErrorMessages';
+import { ErrorMessages,SuccessMessages,ErrorCodes } from '../../../../shared/types/enums/ErrorMessages';
+
 import { StatusCodes } from '../../../../shared/types/enums/StatusCodes';
 import { refreshCookieOptions } from '../../infrastructure/config/Cookie';
 
 export class AdminAuthController {
-  constructor(
-    private readonly adminLoginUseCase: AdminLoginUseCase
-  ) {}
+  constructor(private readonly adminLoginUseCase: AdminLoginUseCase) {}
 
   login = async (req: Request, res: Response): Promise<Response> => {
     try {
@@ -17,7 +16,8 @@ export class AdminAuthController {
 
       if (!email || !password) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-          error: ErrorMessages.MISSING_REQUIRED_FIELDS,
+          message: ErrorMessages.MISSING_REQUIRED_FIELDS,
+          errorCode: ErrorCodes.VALIDATION,
         });
       }
 
@@ -29,47 +29,54 @@ export class AdminAuthController {
       }
 
       return res.status(StatusCodes.OK).json({
-        message: 'Admin logged in successfully',
+        message: SuccessMessages.LOGIN_SUCCESS,
         accessToken: result.accessToken,
       });
     } catch (err: any) {
-      // Invalid credentials
+      // Invalid credentials path (use enum message)
       if (err instanceof Error && err.message === ErrorMessages.INVALID_CREDENTIALS) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({ error: ErrorMessages.INVALID_CREDENTIALS });
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+          message: ErrorMessages.INVALID_CREDENTIALS,
+          errorCode: ErrorCodes.INVALID_CREDENTIALS,
+        });
       }
 
       console.error('Admin login error:', err);
 
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        error: ErrorMessages.INTERNAL_ERROR,
+        message: ErrorMessages.INTERNAL_ERROR,
+        errorCode: ErrorCodes.INTERNAL,
       });
     }
   };
 
   logout = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const refreshToken = req.cookies?.refreshToken as string | undefined;
+    try {
+      const refreshToken = req.cookies?.refreshToken as string | undefined;
 
-    // Clear cookie regardless (best-effort)
-    res.clearCookie('refreshToken', { path: refreshCookieOptions.path ?? '/' });
+      // Clear cookie using same path used when creating it (best-effort)
+      res.clearCookie('refreshToken', { path: refreshCookieOptions.path ?? '/' });
 
-    if (refreshToken) {
-      try {
-        // delete the redis key where tokens are stored: refresh:<token>
-        const redisKey = `refresh:${refreshToken}`;
-        await redis.del(redisKey);
-      } catch (redisErr) {
-        // don't fail the whole request on Redis error — log and continue
-        console.error('Error deleting refresh token from Redis (admin logout):', redisErr);
+      if (refreshToken) {
+        try {
+          const redisKey = `refresh:${refreshToken}`;
+          await redis.del(redisKey);
+        } catch (redisErr) {
+          console.error('Error deleting refresh token from Redis (admin logout):', redisErr);
+        }
       }
-    }
 
-    return res.status(StatusCodes.OK).json({ message: 'Logged out successfully' });
-  } catch (err) {
-    console.error('Admin logout error:', err);
-    // still clear cookie as a fallback
-    res.clearCookie('refreshToken', { path: refreshCookieOptions.path ?? '/' });
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
-  }
-};
+      return res.status(StatusCodes.OK).json({
+        message: SuccessMessages.LOGOUT_SUCCESS,
+      });
+    } catch (err) {
+      console.error('Admin logout error:', err);
+      // still clear cookie as a fallback
+      res.clearCookie('refreshToken', { path: refreshCookieOptions.path ?? '/' });
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: ErrorMessages.INTERNAL_ERROR,
+        errorCode: ErrorCodes.INTERNAL,
+      });
+    }
+  };
 }

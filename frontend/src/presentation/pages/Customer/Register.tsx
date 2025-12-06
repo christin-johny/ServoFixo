@@ -200,7 +200,7 @@ const Register: React.FC = () => {
       };
       sessionStorage.setItem("otpFlowData", JSON.stringify(otpFlowData));
 
-      navigate("/verify-otp", { state: otpFlowData });
+      navigate("/customer/verify-otp", { state: otpFlowData });
     } catch (err: any) {
       console.error(err);
       setError(err?.response?.data?.message ?? err?.message ?? "Failed to send OTP. Try again.");
@@ -388,7 +388,7 @@ const Register: React.FC = () => {
 
             <div className="text-center text-sm text-gray-500">
               Already have Account :{" "}
-              <button type="button" className="text-blue-600 hover:underline" onClick={() => navigate("/login")}>
+              <button type="button" className="text-blue-600 hover:underline" onClick={() => navigate("/customer/login")}>
                 Login
               </button>
             </div>

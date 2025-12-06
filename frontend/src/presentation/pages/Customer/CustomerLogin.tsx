@@ -99,7 +99,7 @@ const CustomerLogin: React.FC = () => {
       }
 
       setLoading(false);
-      navigate("/");
+      navigate("/customer");
     } catch (err: unknown) {
       setLoading(false);
       let serverMsg = "Login failed. Try again.";
@@ -269,7 +269,7 @@ const CustomerLogin: React.FC = () => {
             </div>
 
             <div className="flex justify-end">
-              <a href="/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline">
+              <a href="/customer/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline">
                 Forgot password?
               </a>
             </div>
@@ -296,7 +296,7 @@ const CustomerLogin: React.FC = () => {
 
             <div className="text-center text-sm text-gray-600">
               No Account yet?{" "}
-              <button type="button" className="font-semibold text-blue-600 hover:text-blue-700 hover:underline" onClick={() => navigate("/register")}>
+              <button type="button" className="font-semibold text-blue-600 hover:text-blue-700 hover:underline" onClick={() => navigate("/customer/register")}>
                 Register
               </button>
             </div>

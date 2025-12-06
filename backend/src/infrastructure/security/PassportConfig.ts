@@ -66,8 +66,11 @@ const googleCallbackUrl = process.env.GOOGLE_CALLBACK_URL ?? `${process.env.BACK
             customer = await customerRepository.create(newCustomer);
           }
 
+
           return done(null, customer);
         } catch (error) {
+          console.error('[PASSPORT:VERIFY] error', error);
+
           return done(error, undefined);
         }
       }

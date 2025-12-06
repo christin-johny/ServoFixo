@@ -287,65 +287,87 @@ export class CustomerAuthController {
     }
   };
 
-  // 7️⃣ Google Login Callback (Passport)
-  googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const user = req.user as any; 
-      if (!user) {
-         res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/login?error=AuthenticationFailed`);
-         return;
-      }
-
-      //const result = await this.customerGoogleLoginUseCase.generateTokens(user);
-      const result = await this.customerLoginUseCase.execute(user);
-      if (result.refreshToken) {
-        try {
-          const jwtService = new JwtService();
-          const payload = await jwtService.verifyRefreshToken(result.refreshToken);
-          const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
-          await redis.set(`refresh:${result.refreshToken}`, String(payload.sub), "EX", ttlSeconds);
-        } catch (err) {
-          console.error("Failed to store refresh token in redis (googleLoginCallback):", err);
-        }
-
-        res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
-      }
-
-      res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/dashboard`);
-    } catch (err) {
-      console.error('Google login callback error:', err);
-      res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/login?error=InternalError`);
+// 7️⃣ Google Login Callback (Passport)
+googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
+  try {
+    console.log('[GOOGLE CALLBACK CONTROLLER] hit');
+    const user = req.user as any;
+    if (!user) {
+      console.warn('[GOOGLE CALLBACK CONTROLLER] no user on req; redirecting to login');
+      res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/login?error=AuthenticationFailed`);
+      return;
     }
-  };
 
-  // inside CustomerAuthController (or a small AuthController)
+    console.log('[GOOGLE CALLBACK CONTROLLER] req.user id:', user._id ?? user.id ?? user.getId?.());
+
+    // Use the Google-specific use-case (it handles token generation)
+    // The use-case accepts either { token } or { customer } per the updated implementation
+    const result = await this.customerGoogleLoginUseCase.execute({ customer: user });
+
+    if (!result || !result.accessToken || !result.refreshToken) {
+      console.error('[GOOGLE CALLBACK CONTROLLER] googleLoginUseCase returned no tokens:', result);
+      // fallback: redirect to login with error
+      res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/login?error=AuthenticationFailed`);
+      return;
+    }
+
+    console.log('[GOOGLE CALLBACK CONTROLLER] tokens generated for user:', result.user?.id);
+
+    // If refresh token present, store it in Redis and set cookie
+    if (result.refreshToken) {
+      try {
+        const jwtService = new JwtService();
+        const payload = await jwtService.verifyRefreshToken(result.refreshToken);
+        const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
+        await redis.set(`refresh:${result.refreshToken}`, String(payload.sub), "EX", ttlSeconds);
+        console.log('[GOOGLE CALLBACK CONTROLLER] refresh token stored in redis for sub:', payload.sub);
+      } catch (err) {
+        console.error("Failed to store refresh token in redis (googleLoginCallback):", err);
+      }
+
+      // set refresh cookie (uses your refreshCookieOptions imported at top)
+      res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
+      console.log('[GOOGLE CALLBACK CONTROLLER] refresh cookie set');
+    }
+
+    // Redirect the user to dashboard (frontend will either read accessToken from query OR call /refresh)
+    // We keep the redirect simple so frontend can call /refresh with credentials: 'include' if it prefers cookie-based exchange.
+    // If you want to pass access token in query (less secure), you could include ?accessToken=...
+    res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/dashboard`);
+  } catch (err: any) {
+    console.error('Google login callback error:', err);
+    res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/login?error=InternalError`);
+  }
+};
+
+
+// Replace your current logout implementation with this:
 logout = async (req: Request, res: Response): Promise<Response> => {
   try {
     const refreshToken = req.cookies?.refreshToken as string | undefined;
 
     if (refreshToken) {
       try {
-        // Delete refresh token entry from Redis
+        // Delete refresh token entry from Redis (if used)
         await redis.del(`refresh:${refreshToken}`);
       } catch (err) {
         console.error("Failed to delete refresh token from redis (logout):", err);
-        // continue — we still clear cookie client-side
+        // continue — we still clear cookie
       }
     }
 
-    // Clear cookie (manual header, matches how we set cookie earlier)
-    const clearParts = [
-      `refreshToken=; Path=/; Max-Age=0; HttpOnly; SameSite=None`
-    ];
-    if (process.env.NODE_ENV === "production") clearParts[0] += "; Secure";
-    res.setHeader("Set-Cookie", clearParts.join("; "));
+    // Use same options used when setting the cookie.
+    // This must match refreshCookieOptions exactly (path, domain, sameSite, secure).
+    // IMPORTANT: pass the same object reference values or same shape.
+    res.clearCookie("refreshToken", refreshCookieOptions);
 
-    // Optionally return a message
+    // Return JSON; frontend should clear client-side state and redirect.
     return res.status(200).json({ message: "Logged out" });
   } catch (err) {
     console.error("Logout error:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 }

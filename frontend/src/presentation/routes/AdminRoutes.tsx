@@ -1,17 +1,19 @@
-// temp debug AdminRoutes.tsx
+// src/presentation/routes/AdminRoutes.tsx
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import LoaderFallback from "../components/LoaderFallback";
-
-// TEMP INLINE STUBS — replace with your real lazy imports after test
-const AdminLogin = () => <div style={{padding:20}}>ADMIN LOGIN STUB — Hello 👋</div>;
-const AdminDashboard = () => <div style={{padding:20}}>ADMIN DASHBOARD STUB</div>;
+import AdminLogin from "../pages/Admin/AdminLogin"; // if you prefer lazy, rewrap in lazy/Suspense
+import AdminDashboard from "../pages/Admin/AdminDashboard";
 
 const AdminRoutes: React.FC = () => (
   <React.Suspense fallback={<LoaderFallback />}>
     <Routes>
-      <Route path="login" element={<AdminLogin />} />
-      <Route path="" element={<AdminDashboard />} />
+      {/* index -> /admin  (protected) */}
+      <Route index element={<AdminDashboard />} />
+      {/* explicit dashboard route -> /admin/dashboard */}
+      <Route path="dashboard" element={<AdminDashboard />} />
+      {/* optional: keep a fallback within admin area */}
+      <Route path="*" element={<Navigate to="/admin" replace />} />
     </Routes>
   </React.Suspense>
 );

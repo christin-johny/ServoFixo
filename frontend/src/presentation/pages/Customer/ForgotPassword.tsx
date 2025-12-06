@@ -77,7 +77,7 @@ const ForgotPassword: React.FC = () => {
       sessionStorage.setItem("otpFlowData", JSON.stringify(otpFlowData));
 
       setInfo(resp.data?.message ?? "OTP sent. Check your email.");
-      navigate("/verify-otp", { state: otpFlowData });
+      navigate("/customer/verify-otp", { state: otpFlowData });
     } catch (err: any) {
       console.error(err);
       const serverMsg = err?.response?.data?.message ?? err?.message ?? "Failed to send OTP. Try again.";
@@ -168,7 +168,7 @@ const ForgotPassword: React.FC = () => {
 
           <div className="text-center text-sm text-gray-500">
             Remember your password?{" "}
-            <button type="button" className="text-blue-600 hover:underline" onClick={() => navigate("/login")}>
+            <button type="button" className="text-blue-600 hover:underline" onClick={() => navigate("/customer/login")}>
               Login
             </button>
           </div>

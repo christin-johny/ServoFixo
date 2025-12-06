@@ -25,8 +25,9 @@ const RoleProtectedRoute: React.FC<Props> = ({ children, requiredRole, redirectT
   const hasRole = required.some((r) => userRoles.includes(r));
 
   if (!hasRole) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={redirectTo ?? "/"} replace />;
   }
+
 
   return children;
 };
