@@ -1,8 +1,6 @@
-
-import { Technician } from '../entities/Technician';
+import { Technician } from "../entities/Technician";
 
 export interface ITechnicianRepository {
- 
   findById(id: string): Promise<Technician | null>;
 
   findByEmail(email: string): Promise<Technician | null>;

@@ -29,8 +29,6 @@ const AdminLayout: React.FC = () => {
           </button>
           <span className="text-lg font-bold text-gray-800">Admin Panel</span>
         </header>
-
-        {/* Content Area */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-8">
           <div className="mx-auto max-w-7xl">
             <Outlet />
