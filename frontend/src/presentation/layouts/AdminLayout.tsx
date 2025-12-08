@@ -15,10 +15,10 @@ const AdminLayout: React.FC = () => {
         onClose={() => setSidebarOpen(false)} 
       />
 
-      {/* MARGIN INCREASED TO 300px */}
-      <div className="flex flex-1 flex-col h-full lg:ml-[300px] transition-all duration-300">
+      {/* Match this margin with sidebar width: 260px */}
+      <div className="flex flex-1 flex-col h-full lg:ml-[260px] transition-all duration-300">
         
-        {/* Mobile Header - Taller (h-20) */}
+        {/* Mobile Header */}
         <header className="flex h-20 items-center border-b bg-white px-8 shadow-sm lg:hidden shrink-0 z-20">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -30,7 +30,7 @@ const AdminLayout: React.FC = () => {
           <span className="text-2xl font-bold text-gray-800">Admin</span>
         </header>
 
-        {/* Content Area - Extra Spacious Padding (p-10) */}
+        {/* Content Area */}
         <main className="flex-1 overflow-hidden p-6 lg:p-10">
           <div className="h-full w-full flex flex-col max-w-[2400px] mx-auto">
             <Outlet />

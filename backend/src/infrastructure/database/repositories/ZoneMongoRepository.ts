@@ -5,9 +5,17 @@ import { ZoneModel, IZoneDocument } from '../mongoose/models/ZoneModel';
 export class ZoneMongoRepository implements IZoneRepository {
   
   async create(zone: Zone): Promise<Zone> {
-    const persistenceData = this.toPersistence(zone);
-    const doc = await ZoneModel.create(persistenceData);
-    return this.toEntity(doc);
+    try {
+      const persistenceData = this.toPersistence(zone);
+      const doc = await ZoneModel.create(persistenceData);
+      return this.toEntity(doc);
+    } catch (err: any) {
+      // ✅ Catch GeoJSON Validation Errors (e.g., Self-intersecting polygons)
+      if (err.code === 16755 || (err.message && err.message.includes("Loop is not valid"))) {
+        throw new Error('Invalid Zone Shape: The boundaries cannot cross each other. Please draw a simple loop.');
+      }
+      throw err;
+    }
   }
 
   async findAll(): Promise<Zone[]> {
@@ -22,7 +30,14 @@ export class ZoneMongoRepository implements IZoneRepository {
   }
 
   async findByName(name: string): Promise<Zone | null> {
-    const doc = await ZoneModel.findOne({ name }).exec();
+    // Escape special characters to prevent regex errors
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    // Create a case-insensitive regex for exact match (^...$)
+    const doc = await ZoneModel.findOne({ 
+      name: { $regex: new RegExp(`^${escapedName}$`, 'i') } 
+    }).exec();
+
     if (!doc) return null;
     return this.toEntity(doc);
   }
@@ -31,14 +46,22 @@ export class ZoneMongoRepository implements IZoneRepository {
     const persistenceData = this.toPersistence(zone);
     const { _id, ...updateData } = persistenceData as any;
 
-    const doc = await ZoneModel.findByIdAndUpdate(
-      zone.getId(),
-      updateData,
-      { new: true }
-    ).exec();
+    try {
+      const doc = await ZoneModel.findByIdAndUpdate(
+        zone.getId(),
+        updateData,
+        { new: true }
+      ).exec();
 
-    if (!doc) throw new Error('Zone not found for update');
-    return this.toEntity(doc);
+      if (!doc) throw new Error('Zone not found for update');
+      return this.toEntity(doc);
+    } catch (err: any) {
+      // ✅ Catch GeoJSON Validation Errors during update
+      if (err.code === 16755 || (err.message && err.message.includes("Loop is not valid"))) {
+        throw new Error('Invalid Zone Shape: The boundaries cannot cross each other. Please draw a simple loop.');
+      }
+      throw err;
+    }
   }
 
   async delete(id: string): Promise<boolean> {
@@ -83,11 +106,10 @@ export class ZoneMongoRepository implements IZoneRepository {
 
     if (ring.length < 3) {
        // A polygon needs at least 3 points. Return as is, let Mongoose/Controller validation handle the error if needed.
-       // Or handle gracefully.
     } else {
       const first = ring[0];
       
-      // 3. Find if the polygon closes prematurely (The specific bug you had)
+      // 3. Find if the polygon closes prematurely
       // If the start point appears again in the middle, we cut off the "tail"
       let closingIndex = -1;
       // Start searching from index 2 to allow at least a minimal triangle shape

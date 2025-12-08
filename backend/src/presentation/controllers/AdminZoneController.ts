@@ -14,9 +14,9 @@ export class AdminZoneController {
     private readonly editZoneUseCase: EditZoneUseCase
   ) {}
 
+  // 1. CREATE
   create = async (req: Request, res: Response): Promise<Response> => {
     try {
-      // ✅ NEW: Destructure isActive
       const { name, description, boundaries, isActive } = req.body;
 
       if (!name || !boundaries || !Array.isArray(boundaries) || boundaries.length < 3) {
@@ -29,7 +29,7 @@ export class AdminZoneController {
         name,
         description,
         boundaries,
-        isActive, // ✅ NEW: Pass it to Use Case
+        isActive,
       });
 
       return res.status(StatusCodes.CREATED).json({
@@ -38,15 +38,22 @@ export class AdminZoneController {
       });
     } catch (err: any) {
       console.error('Create zone error:', err);
+      
+      // Handle Duplicate Name
       if (err.message === 'Zone with this name already exists') {
         return res.status(StatusCodes.CONFLICT).json({ error: err.message });
       }
+
+      // ✅ NEW: Handle Invalid Polygon Shape
+      if (err.message && err.message.includes('Invalid Zone Shape')) {
+        return res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
+      }
+
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });
     }
   };
-
 
   // 2. GET ALL
   getAll = async (req: Request, res: Response): Promise<Response> => {
@@ -104,12 +111,20 @@ export class AdminZoneController {
       });
     } catch (err: any) {
       console.error('Update zone error:', err);
+      
       if (err.message === 'Zone not found') {
         return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
       }
+      
       if (err.message === 'Zone with this name already exists') {
         return res.status(StatusCodes.CONFLICT).json({ error: err.message });
       }
+
+      // ✅ NEW: Handle Invalid Polygon Shape during Update
+      if (err.message && err.message.includes('Invalid Zone Shape')) {
+        return res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
+      }
+
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });
