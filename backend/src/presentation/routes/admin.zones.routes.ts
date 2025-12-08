@@ -4,7 +4,7 @@ import { CreateZoneUseCase } from '../../application/use-cases/zones/CreateZoneU
 import { GetAllZonesUseCase } from '../../application/use-cases/zones/GetAllZonesUseCase';
 import { DeleteZoneUseCase } from '../../application/use-cases/zones/DeleteZoneUseCase';
 import { EditZoneUseCase } from '../../application/use-cases/zones/EditZoneUseCase'; // <--- Import
-import { AdminZoneController } from '../controllers/AdminZoneController';
+import { AdminZoneController } from '../../presentation/controllers/Admin/AdminZoneController';
 import { JwtService } from '../../infrastructure/security/JwtService';
 import { makeAdminAuthMiddleware } from '../middlewares/adminAuth.middleware';
 

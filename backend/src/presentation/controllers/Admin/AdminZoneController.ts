@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { CreateZoneUseCase } from '../../application/use-cases/zones/CreateZoneUseCase';
-import { GetAllZonesUseCase } from '../../application/use-cases/zones/GetAllZonesUseCase';
-import { DeleteZoneUseCase } from '../../application/use-cases/zones/DeleteZoneUseCase';
-import { EditZoneUseCase } from '../../application/use-cases/zones/EditZoneUseCase';
-import { StatusCodes } from '../../../../shared/types/enums/StatusCodes';
-import { ErrorMessages } from '../../../../shared/types/enums/ErrorMessages';
+import { CreateZoneUseCase } from '../../../application/use-cases/zones/CreateZoneUseCase';
+import { GetAllZonesUseCase } from '../../../application/use-cases/zones/GetAllZonesUseCase';
+import { DeleteZoneUseCase } from '../../../application/use-cases/zones/DeleteZoneUseCase';
+import { EditZoneUseCase } from '../../../application/use-cases/zones/EditZoneUseCase';
+import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
+import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 
 export class AdminZoneController {
   constructor(

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { AdminAuthController } from '../controllers/AdminAuthController';
+import { AdminAuthController } from '../controllers/Admin/AdminAuthController';
 
 // Infrastructure
 import { AdminMongoRepository } from '../../infrastructure/database/repositories/AdminMongoRepository';

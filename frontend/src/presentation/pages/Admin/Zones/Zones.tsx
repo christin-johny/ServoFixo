@@ -173,7 +173,9 @@ const Zones: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end shrink-0 border-b border-gray-200 pb-4 gap-4 sm:gap-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Zone Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+            <MapPin className="text-blue-600" />  Zone Management
+          </h1>
           <p className="text-sm text-gray-500 mt-1">Manage operational areas and service boundaries.</p>
         </div>
 
@@ -264,6 +266,13 @@ const Zones: React.FC = () => {
                     />
                   </button>
                 </div>
+                <div className="text-sm text-gray-500 bg-gray-50 p-2 rounded">
+              <span className="font-medium text-gray-700">Map Actions:</span>
+              <ul className="list-disc ml-4 mt-1 space-y-1">
+                <li>Click map to add/change points.</li>
+                <li>Drag markers to adjust area.</li>
+              </ul>
+            </div>
               </div>
 
               <div className="flex gap-3 mt-auto pt-2">

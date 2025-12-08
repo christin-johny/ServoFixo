@@ -7,6 +7,7 @@ import AuthGuard from "./AuthGuard";
 import RoleProtectedRoute from "./RoleProtectedRoute";
 import AdminLayout from "../layouts/AdminLayout"; // <--- Default import
 import Zones from "../pages/Admin/Zones/Zones";
+import Services from "../pages/Admin/Services/Services";
 const AdminRoutes: React.FC = () => (
   <React.Suspense fallback={<LoaderFallback />}>
     <Routes>
@@ -35,7 +36,7 @@ const AdminRoutes: React.FC = () => (
         <Route path="customers" element={<div>Customers Module</div>} />
         <Route path="zones" element={<Zones />} />
         <Route path="payments" element={<div>Payments Module</div>} />
-        <Route path="services" element={<div>Services  Module</div>} />
+        <Route path="services" element={<Services/>} />
         <Route path="disputes" element={<div>Disputes Module</div>} />
         <Route path="reports" element={<div>Reports Module</div>} />
         <Route path="settings" element={<div>Settings Module</div>} />
