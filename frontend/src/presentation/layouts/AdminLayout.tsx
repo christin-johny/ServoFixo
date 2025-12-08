@@ -1,3 +1,4 @@
+// frontend/src/presentation/layouts/AdminLayout.tsx
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import AdminSidebar from '../components/Admin/AdminSidebar';
@@ -9,28 +10,29 @@ const AdminLayout: React.FC = () => {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gray-50">
       
-      {/* Sidebar */}
       <AdminSidebar 
         isOpen={isSidebarOpen} 
         onClose={() => setSidebarOpen(false)} 
       />
 
-      {/* Main Content */}
-      <div className="flex flex-1 flex-col h-full lg:ml-[260px] transition-all duration-300">
+      {/* MARGIN INCREASED TO 300px */}
+      <div className="flex flex-1 flex-col h-full lg:ml-[300px] transition-all duration-300">
         
-        {/* Mobile Header */}
-        <header className="flex h-16 items-center border-b bg-white px-4 shadow-sm lg:hidden shrink-0">
+        {/* Mobile Header - Taller (h-20) */}
+        <header className="flex h-20 items-center border-b bg-white px-8 shadow-sm lg:hidden shrink-0 z-20">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="mr-4 rounded-md p-2 text-gray-600 hover:bg-gray-100"
+            className="mr-6 rounded-xl p-3 text-gray-600 hover:bg-gray-100 transition-colors"
             aria-label="Open sidebar"
           >
-            <Menu size={24} />
+            <Menu size={32} />
           </button>
-          <span className="text-lg font-bold text-gray-800">Admin Panel</span>
+          <span className="text-2xl font-bold text-gray-800">Admin</span>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
-          <div className="mx-auto max-w-7xl">
+
+        {/* Content Area - Extra Spacious Padding (p-10) */}
+        <main className="flex-1 overflow-hidden p-6 lg:p-10">
+          <div className="h-full w-full flex flex-col max-w-[2400px] mx-auto">
             <Outlet />
           </div>
         </main>

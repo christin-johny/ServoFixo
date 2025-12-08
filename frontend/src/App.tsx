@@ -1,4 +1,3 @@
-// src/App.tsx
 import React, { useEffect, useState, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Provider, useDispatch } from "react-redux";
@@ -10,6 +9,10 @@ import CustomerRoutes from "./presentation/routes/CustomerRoutes";
 import TechnicianRoutes from "./presentation/routes/TechnicianRoutes";
 import LoaderFallback from "./presentation/components/LoaderFallback";
 import { parseJwt } from "./utils/jwt";
+
+// ✅ 1. Import Notification Context & Container
+import { NotificationProvider } from "./presentation/contexts/NotificationContext";
+import ToastContainer from "../src/presentation/components/Notifications/ToastContainer";
 
 const AppInner: React.FC = () => {
   const dispatch = useDispatch();
@@ -67,7 +70,7 @@ const AppInner: React.FC = () => {
       <Routes>
         <Route path="/" element={<Navigate to="/customer" replace />} />
 
-        {/* Admin area - auth routes handled within AdminRoutes */}
+        {/* Admin area */}
         <Route
           path="/admin/*"
           element={
@@ -77,10 +80,10 @@ const AppInner: React.FC = () => {
           }
         />
 
-        {/* Customer area - auth and protected routes handled within CustomerRoutes */}
+        {/* Customer area */}
         <Route path="/customer/*" element={<CustomerRoutes />} />
 
-        {/* Technician area - auth and protected routes handled within TechnicianRoutes */}
+        {/* Technician area */}
         <Route path="/technician/*" element={<TechnicianRoutes />} />
 
         {/* fallback */}
@@ -92,7 +95,12 @@ const AppInner: React.FC = () => {
 
 const App: React.FC = () => (
   <Provider store={store}>
-    <AppInner />
+    {/* ✅ 2. Wrap the app with NotificationProvider */}
+    <NotificationProvider>
+      <AppInner />
+      {/* ✅ 3. Place ToastContainer here so notifications render on top */}
+      <ToastContainer />
+    </NotificationProvider>
   </Provider>
 );
 
