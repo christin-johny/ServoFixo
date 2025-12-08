@@ -9,13 +9,13 @@ import {
   Users, 
   CheckCircle, 
   MapPin, 
-  CreditCard, 
-  MessageSquare, 
+  CreditCard,
   FileText, 
   Settings, 
   ChevronDown, 
   ChevronRight,
-  X
+  X,
+  Layers // ✅ Added Icon for Services
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -50,7 +50,10 @@ const MENU_CONFIG: MenuSection[] = [
   },
   { 
     sectionLabel: 'Operations', 
-    items: [{ label: 'Zones', icon: MapPin, path: '/admin/zones' }] 
+    items: [
+      { label: 'Zones', icon: MapPin, path: '/admin/zones' },
+      { label: 'Services', icon: Layers, path: '/admin/services' } 
+    ] 
   },
   { 
     sectionLabel: 'Finance', 
@@ -93,133 +96,132 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
         aria-hidden="true"
       />
 
-<aside
-  className={cn(
-    "fixed top-0 left-0 z-50 h-screen w-[260px] bg-[#1f2233] text-white transition-transform duration-300 lg:translate-x-0 flex flex-col shadow-xl",
-    isOpen ? "translate-x-0" : "-translate-x-full"
-  )}
-  aria-label="Admin sidebar"
->
-  {/* Header */}
-  <div className="flex h-20 shrink-0 items-center px-6 border-b border-gray-700/50">
-    <h1 className="text-2xl font-bold tracking-wide">ServoFixo</h1>
-    <button 
-      onClick={onClose}
-      className="absolute right-4 top-6 text-gray-400 hover:text-white lg:hidden"
-    >
-      <X size={26} />
-    </button>
-  </div>
-
-  {/* Nav */}
-  <nav
-    className={cn(
-      "flex-1 overflow-y-auto px-4 py-6 space-y-6",
-      "[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
-      "lg:[&::-webkit-scrollbar]:w-1.5 lg:[&::-webkit-scrollbar-track]:bg-transparent lg:[&::-webkit-scrollbar-thumb]:bg-gray-600/30 lg:[&::-webkit-scrollbar-thumb]:rounded-full"
-    )}
-  >
-    {MENU_CONFIG.map((section, idx) => (
-      <div key={idx}>
-        {section.sectionLabel && (
-          <div className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
-            {section.sectionLabel}
-          </div>
+      <aside
+        className={cn(
+          "fixed top-0 left-0 z-50 h-screen w-[260px] bg-[#1f2233] text-white transition-transform duration-300 lg:translate-x-0 flex flex-col shadow-xl",
+          isOpen ? "translate-x-0" : "-translate-x-full"
         )}
+        aria-label="Admin sidebar"
+      >
+        {/* Header */}
+        <div className="flex h-20 shrink-0 items-center px-6 border-b border-gray-700/50">
+          <h1 className="text-2xl font-bold tracking-wide">ServoFixo</h1>
+          <button 
+            onClick={onClose}
+            className="absolute right-4 top-6 text-gray-400 hover:text-white lg:hidden"
+          >
+            <X size={26} />
+          </button>
+        </div>
 
-        <ul className="space-y-1.5">
-          {section.items.map((item) => {
-            const hasChildren = !!item.children;
-            const isExpanded = expandedGroups[item.label] || isGroupActive(item.children);
+        {/* Nav */}
+        <nav
+          className={cn(
+            "flex-1 overflow-y-auto px-4 py-6 space-y-6",
+            "[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
+            "lg:[&::-webkit-scrollbar]:w-1.5 lg:[&::-webkit-scrollbar-track]:bg-transparent lg:[&::-webkit-scrollbar-thumb]:bg-gray-600/30 lg:[&::-webkit-scrollbar-thumb]:rounded-full"
+          )}
+        >
+          {MENU_CONFIG.map((section, idx) => (
+            <div key={idx}>
+              {section.sectionLabel && (
+                <div className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  {section.sectionLabel}
+                </div>
+              )}
 
-            if (hasChildren) {
-              return (
-                <li key={item.label}>
-                  <button
-                    onClick={() => toggleGroup(item.label)}
-                    className={cn(
-                      "flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-200 hover:bg-white/10",
-                      isGroupActive(item.children) ? "text-white bg-white/5" : "text-gray-300"
-                    )}
-                  >
-                    <div className="flex items-center gap-4">
-                      <item.icon size={20} className="text-gray-400" />
-                      <span>{item.label}</span>
-                    </div>
-                    {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                  </button>
+              <ul className="space-y-1.5">
+                {section.items.map((item) => {
+                  const hasChildren = !!item.children;
+                  const isExpanded = expandedGroups[item.label] || isGroupActive(item.children);
 
-                  {isExpanded && (
-                    <ul className="mt-2 space-y-1 pl-6">
-                      {item.children!.map((child) => (
-                        <li key={child.path}>
-                          <NavLink
-                            to={child.path}
-                            onClick={() => window.innerWidth < 1024 && onClose()}
-                            className={({ isActive }) =>
-                              cn(
-                                "flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all border-l-2 ml-1",
-                                isActive
-                                  ? "border-blue-500 bg-white/10 text-white"
-                                  : "border-transparent text-gray-400 hover:text-white hover:bg-white/5"
-                              )
-                            }
-                          >
-                            {({ isActive }) => (
-                              <>
-                                <child.icon size={16} className={cn(isActive ? "text-blue-400" : "text-gray-400")} />
-                                <span>{child.label}</span>
-                              </>
-                            )}
-                          </NavLink>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              );
-            }
+                  if (hasChildren) {
+                    return (
+                      <li key={item.label}>
+                        <button
+                          onClick={() => toggleGroup(item.label)}
+                          className={cn(
+                            "flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-200 hover:bg-white/10",
+                            isGroupActive(item.children) ? "text-white bg-white/5" : "text-gray-300"
+                          )}
+                        >
+                          <div className="flex items-center gap-4">
+                            <item.icon size={20} className="text-gray-400" />
+                            <span>{item.label}</span>
+                          </div>
+                          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                        </button>
 
-            return (
-              <li key={item.path}>
-                <NavLink
-                  to={item.path!}
-                  onClick={() => window.innerWidth < 1024 && onClose()}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-4 rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-200",
-                      isActive
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-900/30"
-                        : "text-gray-300 hover:bg-white/10 hover:text-white"
-                    )
+                        {isExpanded && (
+                          <ul className="mt-2 space-y-1 pl-6">
+                            {item.children!.map((child) => (
+                              <li key={child.path}>
+                                <NavLink
+                                  to={child.path}
+                                  onClick={() => window.innerWidth < 1024 && onClose()}
+                                  className={({ isActive }) =>
+                                    cn(
+                                      "flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all border-l-2 ml-1",
+                                      isActive
+                                        ? "border-blue-500 bg-white/10 text-white"
+                                        : "border-transparent text-gray-400 hover:text-white hover:bg-white/5"
+                                    )
+                                  }
+                                >
+                                  {({ isActive }) => (
+                                    <>
+                                      <child.icon size={16} className={cn(isActive ? "text-blue-400" : "text-gray-400")} />
+                                      <span>{child.label}</span>
+                                    </>
+                                  )}
+                                </NavLink>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </li>
+                    );
                   }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <item.icon
-                        size={20}
-                        className={cn(isActive ? "text-white" : "text-gray-400")}
-                      />
-                      <span>{item.label}</span>
-                    </>
-                  )}
-                </NavLink>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    ))}
-  </nav>
 
-  {/* Footer */}
-  <div className="border-t border-gray-700/50 p-4 bg-[#1f2233]">
-    <div className="w-full text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors p-2 text-sm">
-      <AdminLogoutButton />
-    </div>
-  </div>
-</aside>
+                  return (
+                    <li key={item.path}>
+                      <NavLink
+                        to={item.path!}
+                        onClick={() => window.innerWidth < 1024 && onClose()}
+                        className={({ isActive }) =>
+                          cn(
+                            "flex items-center gap-4 rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-200",
+                            isActive
+                              ? "bg-blue-600 text-white shadow-lg shadow-blue-900/30"
+                              : "text-gray-300 hover:bg-white/10 hover:text-white"
+                          )
+                        }
+                      >
+                        {({ isActive }) => (
+                          <>
+                            <item.icon
+                              size={20}
+                              className={cn(isActive ? "text-white" : "text-gray-400")}
+                            />
+                            <span>{item.label}</span>
+                          </>
+                        )}
+                      </NavLink>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
 
+        {/* Footer */}
+        <div className="border-t border-gray-700/50 p-4 bg-[#1f2233]">
+          <div className="w-full text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors p-2 text-sm">
+            <AdminLogoutButton />
+          </div>
+        </div>
+      </aside>
     </>
   );
 };

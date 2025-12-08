@@ -1,12 +1,9 @@
-// backend/src/application/use-cases/zones/GetAllZonesUseCase.ts
-
-import { IZoneRepository } from '../../../domain/repositories/IZoneRepository';
-import { Zone } from '../../../domain/entities/Zone';
+import { IZoneRepository, ZoneQueryParams, PaginatedZones } from '../../../domain/repositories/IZoneRepository';
 
 export class GetAllZonesUseCase {
   constructor(private readonly zoneRepository: IZoneRepository) {}
 
-  async execute(): Promise<Zone[]> {
-    return this.zoneRepository.findAll();
+  async execute(params: ZoneQueryParams): Promise<PaginatedZones> {
+    return this.zoneRepository.findAll(params);
   }
 }

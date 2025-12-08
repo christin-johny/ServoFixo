@@ -215,7 +215,6 @@ export class CustomerAuthController {
         newPassword,
       });
 
-      console.log(`Password reset successful for ${email}`);
 
       return res.status(StatusCodes.OK).json(result);
     } catch (err: any) {
@@ -290,7 +289,7 @@ export class CustomerAuthController {
 // 7️⃣ Google Login Callback (Passport)
 googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('[GOOGLE CALLBACK CONTROLLER] hit');
+
     const user = req.user as any;
     if (!user) {
       console.warn('[GOOGLE CALLBACK CONTROLLER] no user on req; redirecting to login');
@@ -298,7 +297,6 @@ googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    console.log('[GOOGLE CALLBACK CONTROLLER] req.user id:', user._id ?? user.id ?? user.getId?.());
 
     // Use the Google-specific use-case (it handles token generation)
     // The use-case accepts either { token } or { customer } per the updated implementation

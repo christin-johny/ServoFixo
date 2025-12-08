@@ -1,11 +1,24 @@
 import api from "../api/axiosClient";
 import type { Zone, CreateZoneDTO, UpdateZoneDTO } from "../../domain/types/Zone";
 
-export const getZones = async (): Promise<Zone[]> => {
-  const response = await api.get("/api/admin/zones");
+export interface ZoneQueryParams {
+  page: number;
+  limit: number;
+  search: string;
+  isActive?: string;
+}
+
+export interface PaginatedResponse {
+  data: Zone[];
+  total: number;
+  currentPage: number;
+  totalPages: number;
+}
+
+export const getZones = async (params: ZoneQueryParams): Promise<PaginatedResponse> => {
+  const response = await api.get("/api/admin/zones", { params });
   return response.data;
 };
-
 export const createZone = async (data: CreateZoneDTO): Promise<Zone> => {
   const response = await api.post("/api/admin/zones", data);
   return response.data.zone;

@@ -35,6 +35,7 @@ const AdminRoutes: React.FC = () => (
         <Route path="customers" element={<div>Customers Module</div>} />
         <Route path="zones" element={<Zones />} />
         <Route path="payments" element={<div>Payments Module</div>} />
+        <Route path="services" element={<div>Services  Module</div>} />
         <Route path="disputes" element={<div>Disputes Module</div>} />
         <Route path="reports" element={<div>Reports Module</div>} />
         <Route path="settings" element={<div>Settings Module</div>} />

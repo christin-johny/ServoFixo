@@ -55,11 +55,25 @@ export class AdminZoneController {
     }
   };
 
-  // 2. GET ALL
   getAll = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const zones = await this.getAllZonesUseCase.execute();
-      return res.status(StatusCodes.OK).json(zones);
+      // Extract Query Params with defaults
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = req.query.search as string | undefined;
+      
+      let isActive: boolean | undefined;
+      if (req.query.isActive === 'true') isActive = true;
+      if (req.query.isActive === 'false') isActive = false;
+
+      const result = await this.getAllZonesUseCase.execute({ 
+        page, 
+        limit, 
+        search, 
+        isActive 
+      });
+
+      return res.status(StatusCodes.OK).json(result);
     } catch (err) {
       console.error('Get all zones error:', err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

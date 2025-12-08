@@ -1,9 +1,12 @@
-import { IZoneRepository } from '../../../domain/repositories/IZoneRepository';
-import { Zone } from '../../../domain/entities/Zone';
-import { ZoneModel, IZoneDocument } from '../mongoose/models/ZoneModel';
+import {
+  IZoneRepository,
+  ZoneQueryParams,
+  PaginatedZones,
+} from "../../../domain/repositories/IZoneRepository";
+import { Zone } from "../../../domain/entities/Zone";
+import { ZoneModel, IZoneDocument } from "../mongoose/models/ZoneModel";
 
 export class ZoneMongoRepository implements IZoneRepository {
-  
   async create(zone: Zone): Promise<Zone> {
     try {
       const persistenceData = this.toPersistence(zone);
@@ -11,16 +14,16 @@ export class ZoneMongoRepository implements IZoneRepository {
       return this.toEntity(doc);
     } catch (err: any) {
       // ✅ Catch GeoJSON Validation Errors (e.g., Self-intersecting polygons)
-      if (err.code === 16755 || (err.message && err.message.includes("Loop is not valid"))) {
-        throw new Error('Invalid Zone Shape: The boundaries cannot cross each other. Please draw a simple loop.');
+      if (
+        err.code === 16755 ||
+        (err.message && err.message.includes("Loop is not valid"))
+      ) {
+        throw new Error(
+          "Invalid Zone Shape: The boundaries cannot cross each other. Please draw a simple loop."
+        );
       }
       throw err;
     }
-  }
-
-  async findAll(): Promise<Zone[]> {
-    const docs = await ZoneModel.find().exec();
-    return docs.map((doc) => this.toEntity(doc));
   }
 
   async findById(id: string): Promise<Zone | null> {
@@ -31,11 +34,11 @@ export class ZoneMongoRepository implements IZoneRepository {
 
   async findByName(name: string): Promise<Zone | null> {
     // Escape special characters to prevent regex errors
-    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
     // Create a case-insensitive regex for exact match (^...$)
-    const doc = await ZoneModel.findOne({ 
-      name: { $regex: new RegExp(`^${escapedName}$`, 'i') } 
+    const doc = await ZoneModel.findOne({
+      name: { $regex: new RegExp(`^${escapedName}$`, "i") },
     }).exec();
 
     if (!doc) return null;
@@ -47,18 +50,21 @@ export class ZoneMongoRepository implements IZoneRepository {
     const { _id, ...updateData } = persistenceData as any;
 
     try {
-      const doc = await ZoneModel.findByIdAndUpdate(
-        zone.getId(),
-        updateData,
-        { new: true }
-      ).exec();
+      const doc = await ZoneModel.findByIdAndUpdate(zone.getId(), updateData, {
+        new: true,
+      }).exec();
 
-      if (!doc) throw new Error('Zone not found for update');
+      if (!doc) throw new Error("Zone not found for update");
       return this.toEntity(doc);
     } catch (err: any) {
       // ✅ Catch GeoJSON Validation Errors during update
-      if (err.code === 16755 || (err.message && err.message.includes("Loop is not valid"))) {
-        throw new Error('Invalid Zone Shape: The boundaries cannot cross each other. Please draw a simple loop.');
+      if (
+        err.code === 16755 ||
+        (err.message && err.message.includes("Loop is not valid"))
+      ) {
+        throw new Error(
+          "Invalid Zone Shape: The boundaries cannot cross each other. Please draw a simple loop."
+        );
       }
       throw err;
     }
@@ -73,7 +79,7 @@ export class ZoneMongoRepository implements IZoneRepository {
   private toEntity(doc: IZoneDocument): Zone {
     const points = doc.location.coordinates[0].map((p: number[]) => ({
       lng: p[0],
-      lat: p[1]
+      lat: p[1],
     }));
 
     return new Zone(
@@ -87,14 +93,11 @@ export class ZoneMongoRepository implements IZoneRepository {
       doc.updatedAt
     );
   }
-
-  // 🔄 Mapper: Domain Entity -> Mongo Doc Structure
-  // ✅ FIX: Added robust cleaning logic to prevent "Duplicate vertices" errors
   private toPersistence(zone: Zone) {
     const points = zone.getBoundaries();
-    
+
     // 1. Convert to [lng, lat]
-    let ring = points.map(p => [p.lng, p.lat]);
+    let ring = points.map((p) => [p.lng, p.lat]);
 
     // 2. Remove adjacent duplicates (e.g. clicking same spot twice)
     ring = ring.filter((point, index) => {
@@ -105,10 +108,10 @@ export class ZoneMongoRepository implements IZoneRepository {
     });
 
     if (ring.length < 3) {
-       // A polygon needs at least 3 points. Return as is, let Mongoose/Controller validation handle the error if needed.
+      // A polygon needs at least 3 points. Return as is, let Mongoose/Controller validation handle the error if needed.
     } else {
       const first = ring[0];
-      
+
       // 3. Find if the polygon closes prematurely
       // If the start point appears again in the middle, we cut off the "tail"
       let closingIndex = -1;
@@ -136,9 +139,47 @@ export class ZoneMongoRepository implements IZoneRepository {
       isActive: zone.getIsActive(),
       additionalInfo: zone.getAdditionalInfo(),
       location: {
-        type: 'Polygon',
-        coordinates: [ring]
-      }
+        type: "Polygon",
+        coordinates: [ring],
+      },
+    };
+  }
+
+  // ... create, findById, etc.
+
+  async findAll(params: ZoneQueryParams): Promise<PaginatedZones> {
+    const { page, limit, search, isActive } = params;
+    const skip = (page - 1) * limit;
+
+    // Build Query
+    const query: any = {};
+
+    if (isActive !== undefined) {
+      query.isActive = isActive;
+    }
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } }, // Case insensitive
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Run Query & Count in parallel
+    const [docs, total] = await Promise.all([
+      ZoneModel.find(query)
+        .sort({ createdAt: -1 }) // Newest first
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      ZoneModel.countDocuments(query).exec(),
+    ]);
+
+    return {
+      data: docs.map((doc) => this.toEntity(doc)),
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
     };
   }
 }
