@@ -9,8 +9,6 @@ import CustomerRoutes from "./presentation/routes/CustomerRoutes";
 import TechnicianRoutes from "./presentation/routes/TechnicianRoutes";
 import LoaderFallback from "./presentation/components/LoaderFallback";
 import { parseJwt } from "./utils/jwt";
-
-// ✅ 1. Import Notification Context & Container
 import { NotificationProvider } from "./presentation/contexts/NotificationContext";
 import ToastContainer from "../src/presentation/components/Notifications/ToastContainer";
 
@@ -69,8 +67,6 @@ const AppInner: React.FC = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/customer" replace />} />
-
-        {/* Admin area */}
         <Route
           path="/admin/*"
           element={
@@ -80,13 +76,8 @@ const AppInner: React.FC = () => {
           }
         />
 
-        {/* Customer area */}
         <Route path="/customer/*" element={<CustomerRoutes />} />
-
-        {/* Technician area */}
         <Route path="/technician/*" element={<TechnicianRoutes />} />
-
-        {/* fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
@@ -95,10 +86,8 @@ const AppInner: React.FC = () => {
 
 const App: React.FC = () => (
   <Provider store={store}>
-    {/* ✅ 2. Wrap the app with NotificationProvider */}
     <NotificationProvider>
       <AppInner />
-      {/* ✅ 3. Place ToastContainer here so notifications render on top */}
       <ToastContainer />
     </NotificationProvider>
   </Provider>

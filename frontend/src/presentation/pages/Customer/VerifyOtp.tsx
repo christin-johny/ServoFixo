@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { ZodError, z } from "zod";
 import { setAccessToken, setUser } from "../../../store/authSlice";
 import * as authRepo from "../../../infrastructure/repositories/authRepository";
+import { parseJwt } from "../../../utils/jwt";
 import { Lock, Eye, EyeOff } from "lucide-react";
 import { usePasswordStrength } from "../../components/PasswordStrength/usePasswordStrength";
 import PasswordStrength from "../../components/PasswordStrength/PasswordStrength";
@@ -227,15 +228,34 @@ const VerifyOtp: React.FC = () => {
 
         const data = resp as any;
         const access = data?.accessToken ?? data?.token;
-        if (access) dispatch(setAccessToken(access));
-        if (data.user) dispatch(setUser(data.user));
-
+        
+        // Cleanup session storage
         try {
           sessionStorage.removeItem(STORAGE_KEY);
           sessionStorage.removeItem(LEGACY_REG_KEY);
         } catch (_) {}
 
-        navigate("/customer");
+        if (access) {
+          // Token returned in response - update Redux and navigate
+          dispatch(setAccessToken(access));
+          
+          // Backend doesn't return user object, so decode JWT to get user info
+          if (data.user) {
+            dispatch(setUser(data.user));
+          } else {
+            const payload = parseJwt(access);
+            if (payload) {
+              dispatch(setUser({
+                id: payload.sub,
+                role: Array.isArray(payload.roles) ? payload.roles[0] : (payload.role ?? "customer"),
+              }));
+            }
+          }
+          navigate("/customer");
+        } else {
+          // Token not in response (cookie-only flow) - hard redirect to trigger App.tsx refresh
+          window.location.href = "/customer";
+        }
       } else {
         const resp = await authRepo.customerForgotPasswordVerify({
           email,

@@ -56,7 +56,7 @@ const Zones: React.FC = () => {
       setLoading(true);
       const result = await zoneRepo.getZones({
         page,
-        limit: 4,
+        limit:4,
         search: debouncedSearch,
         isActive: filterStatus
       });

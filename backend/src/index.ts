@@ -9,7 +9,6 @@ import passport from "./infrastructure/security/PassportConfig";
 
 const app = express();
 
-// Parse JSON
 app.use(express.json());
 app.use(cookieParser());
 
@@ -17,7 +16,7 @@ const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
 
 const corsOptions = {
   origin: FRONTEND_ORIGIN,
-  credentials: true, 
+  credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 };
@@ -30,30 +29,21 @@ app.get("/health", (req, res) => {
   res.json({ status: "OK", message: "Server running" });
 });
 
-// --- IMPORTS ---
-// ✅ Admin: Single entry point now
 import adminRoutes from "./presentation/routes/admin";
 
-// Customer & Technician (Keep as is for now)
 import customerAuthRoutes from "./presentation/routes/customer/auth.routes";
 import technicianAuthRoutes from "./presentation/routes/technician/auth.routes";
 import customerRoutes from "./presentation/routes/customer/index";
 import technicianRoutes from "./presentation/routes/technician/index.ts";
 
-// --- ROUTES ---
-
-// ✅ Admin Module (Includes /auth, /zones, /categories, /dashboard)
 app.use("/api/admin", adminRoutes);
 
-// Customer Module
 app.use("/api/customer/auth", customerAuthRoutes);
 app.use("/api/customer", customerRoutes);
 
-// Technician Module
 app.use("/api/technician/auth", technicianAuthRoutes);
 app.use("/api/technician", technicianRoutes);
 
-// --- SERVER START ---
 export const startServer = async () => {
   await connectDatabase();
 
