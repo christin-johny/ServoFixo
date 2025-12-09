@@ -1,9 +1,9 @@
 // backend/src/presentation/routes/technician.routes.ts
 
 import { Router } from 'express';
-import { JwtService } from '../../infrastructure/security/JwtService';
-import { makeTechnicianAuthMiddleware } from '../middlewares/technicianAuth.middleware';
-import { StatusCodes } from '../../../../shared/types/enums/StatusCodes';
+import { JwtService } from '../../../infrastructure/security/JwtService';
+import { makeTechnicianAuthMiddleware } from '../../middlewares/technicianAuth.middleware';
+import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
 
 const router = Router();
 

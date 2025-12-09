@@ -1,9 +1,9 @@
 // backend/src/presentation/routes/technicianAuth.routes.ts
 
 import { Router } from 'express';
-import { JwtService } from '../../infrastructure/security/JwtService';
-import { RefreshTokenUseCase } from '../../application/use-cases/auth/RefreshTokenUseCase';
-import { AuthTokenController } from '../controllers/AuthTokenController';
+import { JwtService } from '../../../infrastructure/security/JwtService';
+import { RefreshTokenUseCase } from '../../../application/use-cases/auth/RefreshTokenUseCase';
+import { AuthTokenController } from '../../controllers/AuthTokenController';
 
 const router = Router();
 

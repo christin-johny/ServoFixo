@@ -1,9 +1,9 @@
 // backend/src/presentation/routes/customer.routes.ts
 
 import { Router } from 'express';
-import { JwtService } from '../../infrastructure/security/JwtService';
-import { makeCustomerAuthMiddleware } from '../middlewares/customerAuth.middleware';
-import { StatusCodes } from '../../../../shared/types/enums/StatusCodes';
+import { JwtService } from '../../../infrastructure/security/JwtService';
+import { makeCustomerAuthMiddleware } from '../../middlewares/customerAuth.middleware';
+import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
 
 const router = Router();
 

@@ -75,7 +75,6 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
         </div>
       </div>
 
-      {/* --- Expanded Section (Services List Placeholder) --- */}
       {/* We will implement the sub-services loading here in the next step */}
       {isExpanded && (
         <div className="border-t border-gray-100 bg-gray-50/50 p-4 animate-in slide-in-from-top-2 duration-200">

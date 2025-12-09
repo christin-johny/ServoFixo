@@ -2,30 +2,30 @@
 
 
 import { Router } from 'express';
-import passport from '../../infrastructure/security/PassportConfig';
+import passport from '../../../infrastructure/security/PassportConfig';
 
 // Infra
-import { CustomerMongoRepository } from '../../infrastructure/database/repositories/CustomerMongoRepository';
-import { OtpSessionMongoRepository } from '../../infrastructure/database/repositories/OtpSessionMongoRepository';
-import { NodemailerEmailService } from '../../infrastructure/email/NodemailerEmailService';
-import { JwtService } from '../../infrastructure/security/JwtService';
-import { BcryptPasswordHasher } from '../../infrastructure/security/BcryptPasswordHasher';
+import { CustomerMongoRepository } from '../../../infrastructure/database/repositories/CustomerMongoRepository';
+import { OtpSessionMongoRepository } from '../../../infrastructure/database/repositories/OtpSessionMongoRepository';
+import { NodemailerEmailService } from '../../../infrastructure/email/NodemailerEmailService';
+import { JwtService } from '../../../infrastructure/security/JwtService';
+import { BcryptPasswordHasher } from '../../../infrastructure/security/BcryptPasswordHasher';
 
 // Use cases
-import { RequestCustomerRegistrationOtpUseCase } from '../../application/use-cases/auth/RequestCustomerRegistrationOtpUseCase';
-import { VerifyCustomerRegistrationOtpUseCase } from '../../application/use-cases/auth/VerifyCustomerRegistrationOtpUseCase';
-import { CustomerLoginUseCase } from '../../application/use-cases/auth/CustomerLoginUseCase';
-import { RequestCustomerForgotPasswordOtpUseCase } from '../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase';
-import { VerifyCustomerForgotPasswordOtpUseCase } from '../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase';
-import { CustomerGoogleLoginUseCase } from '../../application/use-cases/auth/CustomerGoogleLoginUseCase';
+import { RequestCustomerRegistrationOtpUseCase } from '../../../application/use-cases/auth/RequestCustomerRegistrationOtpUseCase';
+import { VerifyCustomerRegistrationOtpUseCase } from '../../../application/use-cases/auth/VerifyCustomerRegistrationOtpUseCase';
+import { CustomerLoginUseCase } from '../../../application/use-cases/auth/CustomerLoginUseCase';
+import { RequestCustomerForgotPasswordOtpUseCase } from '../../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase';
+import { VerifyCustomerForgotPasswordOtpUseCase } from '../../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase';
+import { CustomerGoogleLoginUseCase } from '../../../application/use-cases/auth/CustomerGoogleLoginUseCase';
 
 // Controller
-import { CustomerAuthController } from '../controllers/CustomerAuthController';
+import { CustomerAuthController } from '../../controllers/CustomerAuthController';
 
 //tokens
 // add near other "Use cases" imports
-import { RefreshTokenUseCase } from '../../application/use-cases/auth/RefreshTokenUseCase';
-import { AuthTokenController } from '../controllers/AuthTokenController';
+import { RefreshTokenUseCase } from '../../../application/use-cases/auth/RefreshTokenUseCase';
+import { AuthTokenController } from '../../controllers/AuthTokenController';
 
 
 const router = Router();

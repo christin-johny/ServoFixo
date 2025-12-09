@@ -32,13 +32,13 @@ app.get("/health", (req, res) => {
 
 // --- IMPORTS ---
 // ✅ Admin: Single entry point now
-import adminRoutes from "./presentation/routes/admin.routes";
+import adminRoutes from "./presentation/routes/admin";
 
 // Customer & Technician (Keep as is for now)
-import customerAuthRoutes from "./presentation/routes/customerAuth.routes";
-import technicianAuthRoutes from "./presentation/routes/technicianAuth.routes";
-import customerRoutes from "./presentation/routes/customer.routes";
-import technicianRoutes from "./presentation/routes/technician.routes";
+import customerAuthRoutes from "./presentation/routes/customer/auth.routes";
+import technicianAuthRoutes from "./presentation/routes/technician/auth.routes";
+import customerRoutes from "./presentation/routes/customer/index";
+import technicianRoutes from "./presentation/routes/technician/index.ts";
 
 // --- ROUTES ---
 
