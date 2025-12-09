@@ -4,16 +4,16 @@ import { GetAllServiceItemsUseCase } from '../../../application/use-cases/servic
 import { DeleteServiceItemUseCase } from '../../../application/use-cases/service-items/DeleteServiceItemUseCase';
 import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
+import { EditServiceItemUseCase } from '../../../application/use-cases/service-items/EditServiceItemUseCase'; 
 
 export class AdminServiceItemController {
   constructor(
     private readonly createUseCase: CreateServiceItemUseCase,
     private readonly getAllUseCase: GetAllServiceItemsUseCase,
-    private readonly deleteUseCase: DeleteServiceItemUseCase
-    // We will add EditUseCase later
+    private readonly deleteUseCase: DeleteServiceItemUseCase,
+    private readonly editUseCase: EditServiceItemUseCase
   ) {}
 
-  // 1. CREATE
   create = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { categoryId, name, description, basePrice, specifications, isActive } = req.body;
@@ -52,11 +52,11 @@ export class AdminServiceItemController {
         serviceItem
       });
     } catch (err: any) {
-      console.error('Create Service Item error:', err);
-      if (err.message.includes('already exists')) {
-        return res.status(StatusCodes.CONFLICT).json({ error: err.message });
+      if (err.code === 11000) {
+        return res.status(StatusCodes.CONFLICT).json({ error: "A service with this name already exists." });
       }
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
+
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err.message || ErrorMessages.INTERNAL_ERROR });
     }
   };
 
@@ -96,4 +96,61 @@ export class AdminServiceItemController {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
     }
   };
+
+  update = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { id } = req.params;
+    const { categoryId, name, description, basePrice, specifications, isActive, imagesToDelete } = req.body;
+    const files = req.files as Express.Multer.File[];
+
+    // Parse Specifications
+    let parsedSpecs = [];
+    try { parsedSpecs = specifications ? JSON.parse(specifications) : []; } 
+    catch (e) { return res.status(StatusCodes.BAD_REQUEST).json({ error: "Invalid specs" }); }
+
+    // ✅ Parse Images To Delete
+    let parsedDeleteList: string[] = [];
+    try {
+      parsedDeleteList = imagesToDelete ? JSON.parse(imagesToDelete) : [];
+    } catch (e) {
+      // If it's not JSON, it might be a single string or empty
+      parsedDeleteList = []; 
+    }
+
+    const updatedService = await this.editUseCase.execute({
+      id,
+      categoryId,
+      name,
+      description,
+      basePrice: Number(basePrice),
+      specifications: parsedSpecs,
+      isActive: isActive === 'true',
+      newImageFiles: files ? files.map(f => ({
+        buffer: f.buffer,
+        originalName: f.originalname,
+        mimeType: f.mimetype
+      })) : [],
+      imagesToDelete: parsedDeleteList 
+    });
+
+    return res.status(StatusCodes.OK).json({ message: "Service updated", serviceItem: updatedService });
+  } catch (err: any) {
+     // 1. Check for Manual Duplicate Error
+      if (err.message.includes("already exists")) {
+        return res.status(StatusCodes.CONFLICT).json({ error: err.message });
+      }
+
+      // 2. Check for MongoDB Duplicate Key Error
+      if (err.code === 11000) {
+        return res.status(StatusCodes.CONFLICT).json({ error: "A service with this name already exists." });
+      }
+
+      if (err.message === "Service Item not found") {
+        return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
+      }
+
+      // 3. Send the ACTUAL error message instead of generic "Internal Error"
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err.message });
+  }
+}
 }

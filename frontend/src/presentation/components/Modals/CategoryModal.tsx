@@ -1,18 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { X, UploadCloud, Image as ImageIcon, Power, Loader2, Save } from "lucide-react";
-import { z } from "zod";
 import type { ServiceCategory } from "../../../domain/types/ServiceCategory";
 
-// --- Validation Schema ---
-const categorySchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters"),
-  description: z.string().min(5, "Description must be at least 5 characters"),
-});
+// ✅ Import the Reusable Schema
+import { categorySchema } from "../../validation/serviceCatalog";
 
 interface CategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (formData: FormData) => Promise<void>; // We pass FormData, not JSON
+  onSave: (formData: FormData) => Promise<void>;
   initialData?: ServiceCategory | null;
   isLoading: boolean;
 }
@@ -62,12 +58,11 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file type
+      // Manual File Type/Size Check (React specific)
       if (!file.type.startsWith("image/")) {
         setErrors((prev) => ({ ...prev, file: "Please select a valid image file (JPG, PNG)." }));
         return;
       }
-      // Check file size (e.g., 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setErrors((prev) => ({ ...prev, file: "Image size should be less than 5MB." }));
         return;
@@ -80,22 +75,23 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
   };
 
   const handleSubmit = async () => {
-    // 1. Zod Validation
+    setErrors({});
+
+    // 1. Zod Validation (Using Shared Schema)
     const result = categorySchema.safeParse({ name, description });
     
-    // 2. Custom File Validation
-    let fileError = "";
-    if (!initialData && !selectedFile) {
-      fileError = "Category image is required.";
+    if (!result.success) {
+      const formattedErrors = result.error.flatten().fieldErrors;
+      setErrors({
+        name: formattedErrors.name?.[0],
+        description: formattedErrors.description?.[0],
+      });
+      return;
     }
 
-    if (!result.success || fileError) {
-      const fieldErrors = result.success ? {} : result.error.flatten().fieldErrors;
-      setErrors({
-        name: fieldErrors.name?.[0],
-        description: fieldErrors.description?.[0],
-        file: fileError || undefined,
-      });
+    // 2. Custom File Validation (Required only for new categories)
+    if (!initialData && !selectedFile) {
+      setErrors(prev => ({ ...prev, file: "Please upload a category icon." }));
       return;
     }
 
@@ -104,6 +100,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
     formData.append("name", name);
     formData.append("description", description);
     formData.append("isActive", String(isActive));
+    
     if (selectedFile) {
       formData.append("image", selectedFile);
     }

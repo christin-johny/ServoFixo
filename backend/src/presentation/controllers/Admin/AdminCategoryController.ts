@@ -14,10 +14,8 @@ export class AdminCategoryController {
     private readonly deleteUseCase: DeleteCategoryUseCase
   ) {}
 
-  // 1. CREATE
   create = async (req: Request, res: Response): Promise<Response> => {
     try {
-      // req.body contains text fields, req.file contains the image
       const { name, description, isActive } = req.body;
       const file = req.file;
 
@@ -30,7 +28,7 @@ export class AdminCategoryController {
       const category = await this.createUseCase.execute({
         name,
         description,
-        isActive: isActive === 'true', // Multer sends boolean as string
+        isActive: isActive === 'true', 
         imageFile: {
           buffer: file.buffer,
           originalName: file.originalname,
@@ -51,7 +49,6 @@ export class AdminCategoryController {
     }
   };
 
-  // 2. GET ALL
   getAll = async (req: Request, res: Response): Promise<Response> => {
     try {
       const page = parseInt(req.query.page as string) || 1;
@@ -70,12 +67,11 @@ export class AdminCategoryController {
     }
   };
 
-  // 3. UPDATE
   update = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
       const { name, description, isActive } = req.body;
-      const file = req.file; // File is optional on update
+      const file = req.file; 
 
       const category = await this.editUseCase.execute({
         id,
@@ -101,7 +97,6 @@ export class AdminCategoryController {
     }
   };
 
-  // 4. DELETE
   delete = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;

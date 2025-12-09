@@ -1,5 +1,5 @@
-// --- 1. Imports: Shared Infrastructure ---
-import { S3ImageService } from '../storage/S3ImageService';
+
+import { S3ImageService } from '../storage/S3ImageService'; 
 
 // --- 2. Imports: Zone Module ---
 import { ZoneMongoRepository } from '../database/repositories/ZoneMongoRepository';
@@ -17,14 +17,15 @@ import { EditCategoryUseCase } from '../../application/use-cases/service-categor
 import { DeleteCategoryUseCase } from '../../application/use-cases/service-categories/DeleteCategoryUseCase';
 import { AdminCategoryController } from '../../presentation/controllers/Admin/AdminCategoryController';
 
-
+// --- 4. Imports: Service Item Module ---
 import { ServiceItemMongoRepository } from '../database/repositories/ServiceItemMongoRepository';
 import { CreateServiceItemUseCase } from '../../application/use-cases/service-items/CreateServiceItemUseCase';
 import { GetAllServiceItemsUseCase } from '../../application/use-cases/service-items/GetAllServiceItemsUseCase';
 import { DeleteServiceItemUseCase } from '../../application/use-cases/service-items/DeleteServiceItemUseCase';
+import { EditServiceItemUseCase } from '../../application/use-cases/service-items/EditServiceItemUseCase';
 import { AdminServiceItemController } from '../../presentation/controllers/Admin/AdminServiceItemController';
 
-// A. SHARED SERVICES
+
 const imageService = new S3ImageService();
 
 // B. ZONE MODULE WIRING
@@ -57,16 +58,18 @@ export const adminCategoryController = new AdminCategoryController(
   deleteCategoryUseCase
 );
 
-
-
+// D. SERVICE ITEM MODULE WIRING
 const serviceItemRepo = new ServiceItemMongoRepository();
 
 const createServiceItemUseCase = new CreateServiceItemUseCase(serviceItemRepo, imageService);
 const getAllServiceItemsUseCase = new GetAllServiceItemsUseCase(serviceItemRepo);
 const deleteServiceItemUseCase = new DeleteServiceItemUseCase(serviceItemRepo, imageService);
+// ✅ Initialize Edit Use Case
+const editServiceItemUseCase = new EditServiceItemUseCase(serviceItemRepo, imageService);
 
 export const adminServiceItemController = new AdminServiceItemController(
   createServiceItemUseCase,
   getAllServiceItemsUseCase,
-  deleteServiceItemUseCase
+  deleteServiceItemUseCase,
+  editServiceItemUseCase // ✅ Pass it to the controller
 );

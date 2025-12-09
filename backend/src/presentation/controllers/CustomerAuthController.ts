@@ -309,7 +309,6 @@ googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    console.log('[GOOGLE CALLBACK CONTROLLER] tokens generated for user:', result.user?.id);
 
     // If refresh token present, store it in Redis and set cookie
     if (result.refreshToken) {

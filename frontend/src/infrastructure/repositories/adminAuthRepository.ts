@@ -1,4 +1,3 @@
-// src/infrastructure/repositories/adminAuthRepository.ts
 import api from "../api/axiosClient";
 
 export const adminLogin = async (payload: { email: string; password: string }) => {
