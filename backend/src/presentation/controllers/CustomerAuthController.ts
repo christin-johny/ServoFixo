@@ -317,14 +317,12 @@ googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
         const payload = await jwtService.verifyRefreshToken(result.refreshToken);
         const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
         await redis.set(`refresh:${result.refreshToken}`, String(payload.sub), "EX", ttlSeconds);
-        console.log('[GOOGLE CALLBACK CONTROLLER] refresh token stored in redis for sub:', payload.sub);
       } catch (err) {
         console.error("Failed to store refresh token in redis (googleLoginCallback):", err);
       }
 
       // set refresh cookie (uses your refreshCookieOptions imported at top)
       res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
-      console.log('[GOOGLE CALLBACK CONTROLLER] refresh cookie set');
     }
 
     // Redirect the user to dashboard (frontend will either read accessToken from query OR call /refresh)

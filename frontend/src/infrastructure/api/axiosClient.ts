@@ -1,25 +1,23 @@
 // src/infrastructure/api/axiosClient.ts
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import axios from "axios";
 import store from "../../store/store";
 import { setAccessToken, logout } from "../../store/authSlice";
-import type { AxiosRequestConfig } from "axios";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
-// primary api instance
+// primary api instance (TypeScript infers the type automatically)
 const api = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
 
-// refresh instance without attached interceptors to avoid loops
+// refresh instance
 const refreshApi = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
 });
 
-// Preferred refresh endpoints (shared first)
 const REFRESH_ENDPOINTS = [
   "/api/auth/refresh",
   "/api/admin/auth/refresh",
@@ -30,7 +28,7 @@ const REFRESH_ENDPOINTS = [
 interface FailedRequest {
   resolve: (value: string | PromiseLike<string | null> | null) => void;
   reject: (error?: unknown) => void;
-  config: AxiosRequestConfig;
+  config: any; // Using 'any' to avoid import errors for AxiosRequestConfig
 }
 
 let isRefreshing = false;
@@ -44,14 +42,9 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
-/**
- * Build a normalized error object for consistent handling across the app.
- * If interceptor already overwrote err.message with backend message, it will be used.
- */
-const normalizeAxiosError = (error: AxiosError | any) => {
+const normalizeAxiosError = (error: any) => {
   const data = error?.response?.data ?? error?.data ?? null;
 
-  // backend message extraction
   const backendMessage =
     data?.message ||
     data?.error ||
@@ -68,31 +61,29 @@ const normalizeAxiosError = (error: AxiosError | any) => {
   };
 };
 
-// attach access token to requests
+// Request Interceptor
+// @ts-ignore: handling strict config type mismatch
 api.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  (config: any) => {
     const token = store.getState().auth.accessToken;
     if (token) {
-      // ensure headers object exists and has correct type for axios (avoid TS2322)
       if (!config.headers) {
-        config.headers = {} as any;
+        config.headers = {};
       }
-
-      (config.headers as any).Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(normalizeAxiosError(error))
+  (error: any) => Promise.reject(normalizeAxiosError(error))
 );
 
-// response interceptor -> refresh flow + message override
+// Response Interceptor
 api.interceptors.response.use(
-  (response) => response,
-  async (err: AxiosError | any) => {
-    // 1) If backend returned a JSON message/error, override axios default err.message
+  (response: any) => response,
+  async (err: any) => {
     if (err && err.response && err.response.data) {
       try {
-        const data = err.response.data as any;
+        const data = err.response.data;
         const backendMessage =
           data?.message ||
           data?.error ||
@@ -100,31 +91,25 @@ api.interceptors.response.use(
           (Array.isArray(data?.errors) && (data.errors[0]?.msg || data.errors[0]?.message));
 
         if (backendMessage && typeof backendMessage === "string") {
-          // override runtime message so components using err.message get backend text
-          (err as any).message = backendMessage;
+          err.message = backendMessage;
         }
-      } catch (_) {
-        // ignore extraction errors — we'll still normalize below
-      }
+      } catch (_) { /* ignore */ }
     }
 
-    const originalConfig = err.config as InternalAxiosRequestConfig & {
-      _retry?: boolean;
-    };
+    const originalConfig = err.config;
 
-    // If there is no config or no response (network / unknown), return normalized error
     if (!originalConfig || !err.response) {
       return Promise.reject(normalizeAxiosError(err));
     }
 
-    // --- 401 refresh token flow (unchanged logic) ---
+    // 401 Refresh Flow
     if (err.response.status === 401 && !originalConfig._retry) {
       if (isRefreshing) {
         return new Promise<string | null>((resolve, reject) => {
           failedQueue.push({ resolve, reject, config: originalConfig });
         })
           .then((token) => {
-            if (token) (originalConfig.headers as any).Authorization = `Bearer ${token}`;
+            if (token) originalConfig.headers.Authorization = `Bearer ${token}`;
             return api(originalConfig);
           })
           .catch((e) => Promise.reject(normalizeAxiosError(e)));
@@ -147,23 +132,20 @@ api.interceptors.response.use(
       }
 
       if (!newToken) {
-        // fail queued requests and logout
         processQueue(lastError ?? err, null);
         isRefreshing = false;
         store.dispatch(logout());
         return Promise.reject(normalizeAxiosError(lastError ?? err));
       }
 
-      // update store and retry queued requests
       store.dispatch(setAccessToken(newToken));
       processQueue(null, newToken);
       isRefreshing = false;
 
-      (originalConfig.headers as any).Authorization = `Bearer ${newToken}`;
+      originalConfig.headers.Authorization = `Bearer ${newToken}`;
       return api(originalConfig);
     }
 
-    // default: reject with normalized error
     return Promise.reject(normalizeAxiosError(err));
   }
 );

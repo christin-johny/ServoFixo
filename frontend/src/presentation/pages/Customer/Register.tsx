@@ -183,7 +183,9 @@ const Register: React.FC = () => {
     try {
       const payload: CustomerRegisterInitDto = { email: formData.email };
       const resp = await customerRegisterInitOtp(payload);
-      const data = resp.data as AuthResponse;
+      
+      // ✅ FIXED: Removed 'resp.data as AuthResponse'. 'resp' is already the data.
+      const data = resp as unknown as AuthResponse; // Double cast for safety if types are strict
       const sessionId = data?.sessionId ?? null;
 
       setInfo(data?.message ?? "OTP sent. Please check your email.");

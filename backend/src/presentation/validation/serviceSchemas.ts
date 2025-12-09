@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+// --- Shared Rules ---
 const nameRule = z.string()
     .min(3, "Name must be at least 3 characters")
     .max(50, "Name cannot exceed 50 characters")
@@ -17,9 +18,10 @@ export const createCategorySchema = z.object({
   body: z.object({
     name: nameRule,
     description: descriptionRule,
-    // Convert "true"/"false" string to boolean
+    // ✅ FIX: Use 'invalid_type_error' instead of 'errorMap'
     isActive: z.enum(["true", "false"], { 
-        errorMap: () => ({ message: "Status must be 'true' or 'false'" }) 
+        invalid_type_error: "Status must be 'true' or 'false'",
+        required_error: "Status is required"
     }).transform((val) => val === "true"),
   }),
 });
@@ -44,7 +46,7 @@ export const createServiceItemSchema = z.object({
         const parsed = JSON.parse(str);
         if (!Array.isArray(parsed)) throw new Error("Not an array");
         // Validate inside the array
-        const isValid = parsed.every(item => item.title && item.value);
+        const isValid = parsed.every((item: any) => item.title && item.value);
         if (!isValid) throw new Error("Invalid specs");
         return parsed;
       } catch (e) {
@@ -56,6 +58,9 @@ export const createServiceItemSchema = z.object({
       }
     }),
 
-    isActive: z.enum(["true", "false"]).transform((val) => val === "true"),
+    // ✅ FIX: Same fix here for enum validation
+    isActive: z.enum(["true", "false"], { 
+        invalid_type_error: "Status must be 'true' or 'false'" 
+    }).transform((val) => val === "true"),
   }),
 });

@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { ZodObject, ZodError } from 'zod';
+import { AnyZodObject, ZodError } from 'zod';
 import { StatusCodes } from '../../../../shared/types/enums/StatusCodes';
 
-export const validateRequest = (schema: ZodObject) => {
+export const validateRequest = (schema: AnyZodObject) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Validate Body, Query, and Params
@@ -12,14 +12,14 @@ export const validateRequest = (schema: ZodObject) => {
         params: req.params,
       });
 
-      // Special Check: Files (Zod has trouble with Multer's req.file structure directly in schema)
-      // We manually check if files exist for routes that require them
+      // Special Check: Files
       if (req.originalUrl.includes('/categories') && req.method === 'POST' && !req.file) {
          throw new Error("Category image is required.");
       }
       
       if (req.originalUrl.includes('/services') && req.method === 'POST') {
-         const files = req.files as Express.Multer.File[];
+         // Cast to any to safely check length without complex Multer types
+         const files = req.files as any;
          if (!files || files.length === 0) {
             throw new Error("At least one service image is required.");
          }
@@ -28,8 +28,8 @@ export const validateRequest = (schema: ZodObject) => {
       next();
     } catch (error: any) {
       if (error instanceof ZodError) {
-        // Format Zod errors into a readable string
-        const errorMessage = error.errors.map((e) => e.message).join('. ');
+        // ✅ FIX: Explicitly type 'e' as any to avoid TS7006 and TS2339
+        const errorMessage = error.errors.map((e: any) => e.message).join('. ');
         return res.status(StatusCodes.BAD_REQUEST).json({ error: errorMessage });
       }
       return res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });

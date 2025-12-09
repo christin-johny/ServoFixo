@@ -7,6 +7,10 @@
     "module": "ESNext",
     "types": ["vite/client"],
     "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["../backend/src/shared/*"] 
+    },
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -24,5 +28,8 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": [
+    "src", 
+    "../backend/src/shared" // 👈 Add the actual path to your shared folder here
+  ]
 }

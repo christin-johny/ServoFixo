@@ -66,7 +66,9 @@ const ForgotPassword: React.FC = () => {
     setLoading(true);
     try {
       const resp = await authRepo.customerForgotPasswordInit({ email });
-      const sessionId = resp.data?.sessionId ?? (resp as any).sessionId ?? null;
+      
+      // ✅ FIXED: Removed 'resp.data?.sessionId'. Access directly or cast to any if type is loose.
+      const sessionId = (resp as any).sessionId ?? null;
 
       const otpFlowData = {
         email,
@@ -76,7 +78,9 @@ const ForgotPassword: React.FC = () => {
 
       sessionStorage.setItem("otpFlowData", JSON.stringify(otpFlowData));
 
-      setInfo(resp.data?.message ?? "OTP sent. Check your email.");
+      // ✅ FIXED: Removed 'resp.data?.message'. Access 'resp.message' directly.
+      setInfo(resp.message ?? "OTP sent. Check your email.");
+      
       navigate("/customer/verify-otp", { state: otpFlowData });
     } catch (err: any) {
       console.error(err);

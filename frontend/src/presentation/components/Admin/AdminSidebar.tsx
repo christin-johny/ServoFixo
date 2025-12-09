@@ -1,4 +1,3 @@
-// frontend/src/presentation/components/Admin/AdminSidebar.tsx
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
@@ -15,7 +14,7 @@ import {
   ChevronDown, 
   ChevronRight,
   X,
-  Layers // ✅ Added Icon for Services
+  Layers 
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -159,7 +158,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
                                 <NavLink
                                   to={child.path}
                                   onClick={() => window.innerWidth < 1024 && onClose()}
-                                  className={({ isActive }) =>
+                                  // ✅ FIXED: Explicitly typed 'isActive'
+                                  className={({ isActive }: { isActive: boolean }) =>
                                     cn(
                                       "flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all border-l-2 ml-1",
                                       isActive
@@ -168,7 +168,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
                                     )
                                   }
                                 >
-                                  {({ isActive }) => (
+                                  {({ isActive }: { isActive: boolean }) => (
                                     <>
                                       <child.icon size={16} className={cn(isActive ? "text-blue-400" : "text-gray-400")} />
                                       <span>{child.label}</span>
@@ -188,7 +188,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
                       <NavLink
                         to={item.path!}
                         onClick={() => window.innerWidth < 1024 && onClose()}
-                        className={({ isActive }) =>
+                        // ✅ FIXED: Explicitly typed 'isActive'
+                        className={({ isActive }: { isActive: boolean }) =>
                           cn(
                             "flex items-center gap-4 rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-200",
                             isActive
@@ -197,7 +198,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
                           )
                         }
                       >
-                        {({ isActive }) => (
+                        {({ isActive }: { isActive: boolean }) => (
                           <>
                             <item.icon
                               size={20}

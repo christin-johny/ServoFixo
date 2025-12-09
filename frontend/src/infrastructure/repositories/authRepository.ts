@@ -1,4 +1,5 @@
 import api from "../api/axiosClient";
+
 import type {
   CustomerLoginRequestDto,
   AuthResponse,
@@ -8,41 +9,59 @@ import type {
   CustomerForgotPasswordVerifyDto,
 } from "../../../../shared/types/dto/AuthDtos";
 
-
-
-export const customerLogin = async (payload: CustomerLoginRequestDto) => {
-  const resp = await api.post<AuthResponse>("/api/customer/auth/login", payload);
+// --- 1. Login ---
+export const customerLogin = async (payload: CustomerLoginRequestDto): Promise<AuthResponse> => {
+  // ✅ REMOVED <AuthResponse>
+  const resp = await api.post("/api/customer/auth/login", payload);
   return resp.data;
 };
 
-export const customerRegisterInitOtp = (payload: CustomerRegisterInitDto) =>
-  api.post<AuthResponse>("/api/customer/auth/register/init-otp", payload);
+// --- 2. Registration ---
 
-export const customerRegisterVerifyOtp = (payload: CustomerRegisterVerifyDto) =>
-  api.post<AuthResponse>("/api/customer/auth/register/verify-otp", payload);
+export const customerRegisterInitOtp = async (payload: CustomerRegisterInitDto): Promise<AuthResponse> => {
+  // ✅ REMOVED <AuthResponse>
+  const resp = await api.post("/api/customer/auth/register/init-otp", payload);
+  return resp.data;
+};
 
+export const customerRegisterVerifyOtp = async (payload: CustomerRegisterVerifyDto): Promise<AuthResponse> => {
+  // ✅ REMOVED <AuthResponse>
+  const resp = await api.post("/api/customer/auth/register/verify-otp", payload);
+  return resp.data;
+};
 
-export const customerForgotPasswordInit = (payload: CustomerForgotPasswordInitDto) =>
-  api.post<AuthResponse>("/api/customer/auth/forgot-password/init-otp", payload);
+// --- 3. Forgot Password ---
 
-export const customerForgotPasswordVerify = (payload: CustomerForgotPasswordVerifyDto) =>
-  api.post<AuthResponse>("/api/customer/auth/forgot-password/verify-otp", payload);
+export const customerForgotPasswordInit = async (payload: CustomerForgotPasswordInitDto): Promise<AuthResponse> => {
+  // ✅ REMOVED <AuthResponse>
+  const resp = await api.post("/api/customer/auth/forgot-password/init-otp", payload);
+  return resp.data;
+};
 
-// inside src/infrastructure/repositories/authRepository.ts (replace existing refresh)
-export const refresh = async () => {
-  // prefer shared endpoint
+export const customerForgotPasswordVerify = async (payload: CustomerForgotPasswordVerifyDto): Promise<AuthResponse> => {
+  // ✅ REMOVED <AuthResponse>
+  const resp = await api.post("/api/customer/auth/forgot-password/verify-otp", payload);
+  return resp.data;
+};
+
+// --- 4. Refresh Token ---
+
+export const refresh = async (): Promise<AuthResponse> => {
   try {
-    const resp = await api.post<AuthResponse>("/api/auth/refresh");
+    // ✅ REMOVED <AuthResponse>
+    const resp = await api.post("/api/auth/refresh");
     return resp.data;
   } catch (err) {
-    // fallback to customer refresh to preserve compatibility
-    const resp = await api.post<AuthResponse>("/api/customer/auth/refresh");
+    // ✅ REMOVED <AuthResponse>
+    const resp = await api.post("/api/customer/auth/refresh");
     return resp.data;
   }
 };
 
+// --- 5. Logout ---
 
-export const  customerLogout = async (): Promise<{ message?: string }> => {
+export const customerLogout = async (): Promise<{ message?: string }> => {
+  // ✅ REMOVED <{ message?: string }>
   const resp = await api.post("/api/customer/auth/logout");
   return resp.data;
 };
