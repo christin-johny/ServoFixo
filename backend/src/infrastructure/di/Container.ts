@@ -1,4 +1,3 @@
-
 import { S3ImageService } from '../storage/S3ImageService'; 
 
 // --- 2. Imports: Zone Module ---
@@ -15,6 +14,8 @@ import { CreateCategoryUseCase } from '../../application/use-cases/service-categ
 import { GetAllCategoriesUseCase } from '../../application/use-cases/service-categories/GetAllCategoriesUseCase';
 import { EditCategoryUseCase } from '../../application/use-cases/service-categories/EditCategoryUseCase';
 import { DeleteCategoryUseCase } from '../../application/use-cases/service-categories/DeleteCategoryUseCase';
+// ✅ Import Toggle Use Case
+import { ToggleCategoryStatusUseCase } from '../../application/use-cases/service-categories/ToggleCategoryStatus';
 import { AdminCategoryController } from '../../presentation/controllers/Admin/AdminCategoryController';
 
 // --- 4. Imports: Service Item Module ---
@@ -23,6 +24,8 @@ import { CreateServiceItemUseCase } from '../../application/use-cases/service-it
 import { GetAllServiceItemsUseCase } from '../../application/use-cases/service-items/GetAllServiceItemsUseCase';
 import { DeleteServiceItemUseCase } from '../../application/use-cases/service-items/DeleteServiceItemUseCase';
 import { EditServiceItemUseCase } from '../../application/use-cases/service-items/EditServiceItemUseCase';
+// ✅ Import Toggle Use Case
+import { ToggleServiceItemStatusUseCase } from '../../application/use-cases/service-items/ToggleServiceItemStatus';
 import { AdminServiceItemController } from '../../presentation/controllers/Admin/AdminServiceItemController';
 
 // --- 5. Imports: Customer Module ---
@@ -31,7 +34,7 @@ import { GetAllCustomersUseCase } from '../../application/use-cases/customer/Get
 import { AdminCustomerController } from '../../presentation/controllers/Admin/AdminCustomerController';
 import { UpdateCustomerUseCase } from '../../application/use-cases/customer/UpdateCustomerUseCase'; 
 import { GetCustomerByIdUseCase } from '../../application/use-cases/customer/GetCustomerByIdUseCase';
-import {DeleteCustomerUseCase} from '../../application/use-cases/customer/DeleteCustomerUseCase'
+import { DeleteCustomerUseCase } from '../../application/use-cases/customer/DeleteCustomerUseCase';
 
 const imageService = new S3ImageService();
 
@@ -56,13 +59,19 @@ const categoryRepo = new ServiceCategoryMongoRepository();
 const createCategoryUseCase = new CreateCategoryUseCase(categoryRepo, imageService);
 const getAllCategoriesUseCase = new GetAllCategoriesUseCase(categoryRepo);
 const editCategoryUseCase = new EditCategoryUseCase(categoryRepo, imageService);
-const deleteCategoryUseCase = new DeleteCategoryUseCase(categoryRepo, imageService);
+
+// ✅ FIX: Removed imageService (Soft Delete doesn't delete S3 images)
+const deleteCategoryUseCase = new DeleteCategoryUseCase(categoryRepo); 
+
+// ✅ NEW: Instantiate Toggle Use Case
+const toggleCategoryStatusUseCase = new ToggleCategoryStatusUseCase(categoryRepo);
 
 export const adminCategoryController = new AdminCategoryController(
   createCategoryUseCase,
   getAllCategoriesUseCase,
   editCategoryUseCase,
-  deleteCategoryUseCase
+  deleteCategoryUseCase,
+  toggleCategoryStatusUseCase 
 );
 
 // D. SERVICE ITEM MODULE WIRING
@@ -70,27 +79,30 @@ const serviceItemRepo = new ServiceItemMongoRepository();
 
 const createServiceItemUseCase = new CreateServiceItemUseCase(serviceItemRepo, imageService);
 const getAllServiceItemsUseCase = new GetAllServiceItemsUseCase(serviceItemRepo);
-const deleteServiceItemUseCase = new DeleteServiceItemUseCase(serviceItemRepo, imageService);
+
+// ✅ FIX: Removed imageService (Soft Delete)
+const deleteServiceItemUseCase = new DeleteServiceItemUseCase(serviceItemRepo);
 const editServiceItemUseCase = new EditServiceItemUseCase(serviceItemRepo, imageService);
+
+// ✅ NEW: Instantiate Toggle Use Case
+const toggleServiceItemStatusUseCase = new ToggleServiceItemStatusUseCase(serviceItemRepo);
 
 export const adminServiceItemController = new AdminServiceItemController(
   createServiceItemUseCase,
   getAllServiceItemsUseCase,
   deleteServiceItemUseCase,
-  editServiceItemUseCase // ✅ Pass it to the controller
+  editServiceItemUseCase,
+  toggleServiceItemStatusUseCase // ✅ Injected
 );
-
-
 
 // E. CUSTOMER MODULE WIRING
 const customerRepo = new CustomerMongoRepository();
 
 const getAllCustomersUseCase = new GetAllCustomersUseCase(customerRepo);
-// NOTE: We'll implement UpdateCustomerUseCase later, but initialize its placeholder here
 const updateCustomerUseCase = new UpdateCustomerUseCase(customerRepo); 
+const getCustomerByIdUseCase = new GetCustomerByIdUseCase(customerRepo); 
+const deleteCustomerUseCase = new DeleteCustomerUseCase(customerRepo);
 
-const getCustomerByIdUseCase = new GetCustomerByIdUseCase(customerRepo); // ✅ Instantiate new Use Case
-const deleteCustomerUseCase = new DeleteCustomerUseCase(customerRepo)
 export const adminCustomerController = new AdminCustomerController(
     customerRepo, 
     getAllCustomersUseCase,
@@ -98,5 +110,3 @@ export const adminCustomerController = new AdminCustomerController(
     getCustomerByIdUseCase,
     deleteCustomerUseCase
 );
-
-

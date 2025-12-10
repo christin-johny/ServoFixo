@@ -21,4 +21,7 @@ export interface IServiceCategoryRepository {
   findByName(name: string): Promise<ServiceCategory | null>;
   update(category: ServiceCategory): Promise<ServiceCategory>;
   delete(id: string): Promise<boolean>;
+
+  // ✅ FIX: Added missing toggleStatus method
+  toggleStatus(id: string, isActive: boolean): Promise<boolean>;
 }

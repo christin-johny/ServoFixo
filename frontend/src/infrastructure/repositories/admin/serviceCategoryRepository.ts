@@ -34,6 +34,11 @@ export const updateCategory = async (id: string, formData: FormData): Promise<Se
   return response.data.category;
 };
 
+// ✅ NEW: Lightweight Toggle Function
+export const toggleCategoryStatus = async (id: string, isActive: boolean): Promise<void> => {
+  await api.patch(`/api/admin/categories/${id}/toggle`, { isActive });
+};
+
 export const deleteCategory = async (id: string): Promise<void> => {
   await api.delete(`/api/admin/categories/${id}`);
 };

@@ -4,7 +4,6 @@ import { CustomerModel, CustomerDocument } from '../mongoose/models/CustomerMode
 import { HydratedDocument } from 'mongoose';
 
 export class CustomerMongoRepository implements ICustomerRepository {
-  // ... (existing findById, findByEmail, findByPhone, create, update methods remain the same) ...
 
   async findById(id: string): Promise<Customer | null> {
     const doc = await CustomerModel.findById(id).exec();
@@ -81,9 +80,16 @@ export class CustomerMongoRepository implements ICustomerRepository {
     };
   }
 
-  // ✅ FIX 2: Corrected Delete Method (Use CustomerModel, not this.model)
-  async delete(id: string): Promise<void> {
-    await CustomerModel.findByIdAndUpdate(id, { isDeleted: true }).exec();
+ async delete(id: string): Promise<boolean> {
+    // We use findByIdAndUpdate to perform a Soft Delete
+    const result = await CustomerModel.findByIdAndUpdate(
+      id, 
+      { isDeleted: true }, 
+      { new: true }
+    ).exec();
+
+    // Return true if a document was found and updated, false otherwise
+    return !!result;
   }
 
   // 🔽 Helpers (remain the same)

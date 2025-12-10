@@ -1,17 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { User, ShoppingBag, MapPin, Loader2, ChevronLeft, Edit2, Trash2 } from 'lucide-react'; // ✅ Added Trash2
+import { User, ShoppingBag, MapPin, Loader2, ChevronLeft, Edit2, Trash2, XCircle, Mail, Phone, Calendar, Shield, Clock } from 'lucide-react';
 
 import { useNotification } from '../../../hooks/useNotification';
 import type { CustomerDto } from '../../../../domain/types/AdminCustomerDtos';
-import CustomerEditModal from '../../../components/Admin/customer/CustomerEditModal'; 
+import CustomerEditModal from '../../../components/Admin/customer/CustomerEditModal';
 import * as customerService from '../../../../infrastructure/repositories/admin/customerService';
-// ✅ Import ConfirmModal (Adjust path if necessary based on your folder structure)
-import ConfirmModal from '../../../components/Admin/Modals/ConfirmModal'; 
+import ConfirmModal from '../../../components/Admin/Modals/ConfirmModal';
 
-// Define tabs
 const TABS = [
-    { key: 'profile', icon: User, label: 'Profile Details' },
+    { key: 'profile', icon: User, label: 'Overview' },
     { key: 'orders', icon: ShoppingBag, label: 'Orders' },
     { key: 'addresses', icon: MapPin, label: 'Addresses' },
 ];
@@ -27,15 +25,10 @@ const AdminCustomerProfilePage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-    // ✅ NEW STATE: Delete Modal
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-
-    // Tab State: uses URL hash (e.g., #orders) for persistence
     const [activeTab, setActiveTab] = useState(TABS[0].key);
 
-    // --- Fetch Logic ---
     const fetchCustomer = useCallback(async () => {
         if (!customerId) return;
         setLoading(true);
@@ -53,39 +46,30 @@ const AdminCustomerProfilePage: React.FC = () => {
 
     useEffect(() => {
         fetchCustomer();
-
-        // Set active tab based on URL hash
         const hash = location.hash.substring(1);
         if (hash && TABS.some(tab => tab.key === hash)) {
             setActiveTab(hash);
         }
     }, [fetchCustomer, location.hash]);
 
-    // Handler to change tab and update URL hash
     const handleTabChange = (tabKey: string) => {
         setActiveTab(tabKey);
         navigate({ hash: tabKey }, { replace: true });
     };
 
-    // Handler for successful edit modal update
     const handleEditSuccess = () => {
         setIsEditModalOpen(false);
-        fetchCustomer(); 
+        fetchCustomer();
     }
 
-    // ✅ NEW HANDLER: Confirm Delete
     const handleConfirmDelete = async () => {
         if (!customer) return;
         setIsDeleting(true);
         try {
-            // Call the delete service
             await customerService.deleteCustomer(customer.id);
-            
             showSuccess(`Customer ${customer.name} has been deleted.`);
             setIsDeleteModalOpen(false);
-            
-            // 🚀 Redirect back to the main list because this profile is now gone
-            navigate('/admin/customers'); 
+            navigate('/admin/customers');
         } catch (error: any) {
             showError("Failed to delete customer. Please try again.");
         } finally {
@@ -93,126 +77,141 @@ const AdminCustomerProfilePage: React.FC = () => {
         }
     };
 
-
-    // --- Render States ---
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-full min-h-[300px]">
-                <Loader2 className="animate-spin h-8 w-8 text-indigo-500" />
-                <span className="ml-3 text-gray-600">Loading Customer Profile...</span>
+            <div className="flex flex-col items-center justify-center h-full bg-gray-50">
+                <Loader2 className="animate-spin h-10 w-10 text-blue-600 mb-3" />
+                <span className="text-sm text-gray-500 font-medium">Loading Profile...</span>
             </div>
         );
     }
 
     if (error || !customer) {
         return (
-            <div className="flex flex-col items-center justify-center h-full min-h-[300px] p-10 text-red-600 bg-red-50 rounded-xl">
-                <XCircle className="h-8 w-8 mb-3" />
-                <p className="text-lg font-semibold">Error Loading Profile</p>
-                <p className="text-sm text-red-500 mt-1">{error || "Customer not found."}</p>
-                <button
-                    onClick={() => navigate(-1)}
-                    className="mt-4 text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center"
-                >
-                    <ChevronLeft size={16} className="mr-1" /> Back to List
-                </button>
+            <div className="flex flex-col items-center justify-center h-full p-6 text-center bg-gray-50">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 max-w-sm w-full">
+                    <div className="bg-red-50 p-3 rounded-full w-fit mx-auto mb-4">
+                        <XCircle className="h-8 w-8 text-red-500" />
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900">Profile Not Found</h3>
+                    <p className="text-sm text-gray-500 mt-2">{error || "Customer data is unavailable."}</p>
+                    <button onClick={() => navigate('/admin/customers')} className="mt-6 w-full flex justify-center items-center gap-2 text-white bg-blue-600 hover:bg-blue-700 font-semibold px-4 py-2.5 rounded-xl transition-colors">
+                        <ChevronLeft size={18} /> Back to Customers
+                    </button>
+                </div>
             </div>
         );
     }
 
-
-    // --- Main Render ---
     return (
-        <div className="flex flex-col gap-6 p-4">
+        <div className="flex flex-col h-full w-full bg-gray-50/50">
 
-            {/* Header and Actions */}
-            <div className="flex items-center justify-between border-b border-gray-200 pb-4">
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
-                    >
-                        <ChevronLeft size={20} />
-                    </button>
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
-                            <User className="text-indigo-600 h-7 w-7" />
-                            {customer.name}
-                        </h1>
-                        <p className="text-sm text-gray-500 mt-0.5">Customer ID: {customer.id}</p>
-                    </div>
-                    <span
-                        className={`text-xs font-semibold px-2.5 py-1 rounded-full border 
-              ${customer.suspended
-                                ? 'bg-red-100 text-red-700 border-red-300'
-                                : 'bg-green-100 text-green-700 border-green-300'}`}
-                    >
-                        {customer.suspended ? 'Suspended' : 'Active'}
-                    </span>
-                </div>
-
-                <div className="flex gap-3">
-                    {/* ✅ DELETE BUTTON */}
+            {/* Top Navigation Bar */}
+            <div className="bg-white border-b border-gray-200 px-4 py-3 sm:px-6 flex items-center justify-between sticky top-0 z-10">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors font-medium text-sm"
+                >
+                    <ChevronLeft size={20} /> <span className="hidden sm:inline">Back</span>
+                </button>
+                <div className="flex gap-2">
                     <button
                         onClick={() => setIsDeleteModalOpen(true)}
-                        className="flex items-center gap-2 bg-white border border-red-200 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 hover:border-red-300 transition-all text-sm font-semibold shadow-sm"
+                        className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        title="Delete User"
                     >
-                        <Trash2 size={16} /> Delete
+                        <Trash2 size={20} />
                     </button>
-
-                    {/* EDIT BUTTON */}
                     <button
                         onClick={() => setIsEditModalOpen(true)}
-                        className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 shadow-md transition-all text-sm font-semibold"
+                        className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                        title="Edit User"
                     >
-                        <Edit2 size={16} /> Edit Profile
+                        <Edit2 size={20} />
                     </button>
                 </div>
             </div>
 
-            {/* Tabs Navigation */}
-            <nav className="flex space-x-2 border-b border-gray-200">
-                {TABS.map((tab) => (
-                    <button
-                        key={tab.key}
-                        onClick={() => handleTabChange(tab.key)}
-                        className={`
-              flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors
-              ${activeTab === tab.key
-                                ? 'border-b-2 border-indigo-600 text-indigo-700 bg-indigo-50/50'
-                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                            }
-            `}
-                    >
-                        <tab.icon size={18} />
-                        {tab.label}
-                    </button>
-                ))}
-            </nav>
+            {/* ✅ FIXED: Use raw CSS classes to hide scrollbars reliably across all browsers */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="max-w-5xl mx-auto space-y-6">
 
-            {/* Tabs Content Area */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 min-h-[500px]">
-                {/* Render content based on activeTab */}
-                {activeTab === 'profile' && <ProfileDetails customer={customer} />}
-                {activeTab === 'orders' && <OrdersList customerId={customerId} />}
-                {activeTab === 'addresses' && <AddressesList customerId={customerId} />}
+                    {/* 1. Identity Card */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-blue-50 to-indigo-50 -z-0"></div>
+
+                        <div className="relative z-10 h-24 w-24 rounded-full bg-white p-1.5 shadow-sm border border-gray-100">
+                            <div className="h-full w-full rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-3xl font-bold">
+                                {customer.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className={`absolute bottom-1 right-1 h-5 w-5 rounded-full border-2 border-white ${customer.suspended ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                        </div>
+
+                        <div className="relative z-10 flex-1 min-w-0 pt-2">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">{customer.name}</h1>
+                            <div className="flex flex-wrap justify-center sm:justify-start items-center gap-3 mt-2 text-sm text-gray-500">
+                                <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600">ID: {customer.id.slice(-6)}</span>
+                                <span className="flex items-center gap-1">
+                                    {customer.suspended
+                                        ? <Shield size={14} className="text-red-500" />
+                                        : <Shield size={14} className="text-green-500" />
+                                    }
+                                    {customer.suspended ? 'Account Suspended' : 'Verified Account'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 2. Tabs & Content Wrapper */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+
+                        {/* Tabs: Hidden Scrollbar here as well */}
+                        <div className="border-b border-gray-200 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                            <div className="flex px-4 sm:px-6 space-x-6">
+                                {TABS.map((tab) => (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => handleTabChange(tab.key)}
+                                        className={`
+                                            flex items-center gap-2 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap
+                                            ${activeTab === tab.key
+                                                ? 'border-blue-600 text-blue-600'
+                                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
+                                        `}
+                                    >
+                                        <tab.icon size={18} />
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Tab Panels */}
+                        <div className="p-6">
+                            {activeTab === 'profile' && <ProfileDetails customer={customer} />}
+                            
+                            {activeTab === 'orders' && <OrdersList customerId={customerId || ""} />}
+                            {activeTab === 'addresses' && <AddressesList customerId={customerId || ""} />}
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            {/* Edit Modal */}
+            {/* Modals */}
             <CustomerEditModal
                 isOpen={isEditModalOpen}
                 onClose={() => setIsEditModalOpen(false)}
-                customerData={customer} 
+                customerData={customer}
                 onUpdateSuccess={handleEditSuccess}
             />
 
-            {/* ✅ DELETE CONFIRM MODAL */}
             <ConfirmModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleConfirmDelete}
                 title="Delete Customer Account"
-                message={`Are you sure you want to delete ${customer?.name}? This action effectively removes them from the system.`}
+                message={`Are you sure you want to delete ${customer.name}? This will permanently remove their data.`}
                 confirmText="Delete Account"
                 isLoading={isDeleting}
             />
@@ -222,23 +221,64 @@ const AdminCustomerProfilePage: React.FC = () => {
 
 export default AdminCustomerProfilePage;
 
-
-// --- Stubbed Sub-Components ---
+// --- Sub-Components ---
 
 const ProfileDetails: React.FC<{ customer: CustomerDto }> = ({ customer }) => (
-    <div className="space-y-4">
-        <h3 className="text-lg font-bold text-gray-800">Basic Information</h3>
-        <p className="text-sm">Name: <span className="font-semibold text-gray-900">{customer.name}</span></p>
-        <p className="text-sm">Email: <span className="font-semibold text-gray-900">{customer.email}</span></p>
-        <p className="text-sm">Phone: <span className="font-semibold text-gray-900">{customer.phone || 'N/A'}</span></p>
-        <p className="text-sm">Member Since: <span className="font-semibold text-gray-900">{new Date(customer.createdAt).toLocaleDateString()}</span></p>
+    <div>
+        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6">Contact Information</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="p-2 bg-white rounded-lg border border-gray-200 text-blue-600"><Mail size={20} /></div>
+                <div className="min-w-0">
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Email Address</p>
+                    <p className="text-sm sm:text-base font-bold text-gray-900 truncate">{customer.email}</p>
+                </div>
+            </div>
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="p-2 bg-white rounded-lg border border-gray-200 text-green-600"><Phone size={20} /></div>
+                <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Phone Number</p>
+                    <p className="text-sm sm:text-base font-bold text-gray-900">{customer.phone || 'Not Provided'}</p>
+                </div>
+            </div>
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="p-2 bg-white rounded-lg border border-gray-200 text-purple-600"><Calendar size={20} /></div>
+                <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Member Since</p>
+                    <p className="text-sm sm:text-base font-bold text-gray-900">
+                        {new Date(customer.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                </div>
+            </div>
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="p-2 bg-white rounded-lg border border-gray-200 text-orange-600"><Clock size={20} /></div>
+                <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Last Updated</p>
+                    <p className="text-sm sm:text-base font-bold text-gray-900">
+                        {new Date(customer.updatedAt).toLocaleDateString()}
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 );
 
-const OrdersList: React.FC<{ customerId: string }> = ({ customerId }) => (
-    <div className="text-gray-500">No orders yet</div>
+const OrdersList: React.FC<{ customerId: string }> = () => (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="bg-gray-50 p-4 rounded-full mb-4">
+            <ShoppingBag size={32} className="text-gray-300" />
+        </div>
+        <h4 className="text-gray-900 font-semibold">No Orders Yet</h4>
+        <p className="text-sm text-gray-500 max-w-xs mt-1">This customer hasn't placed any service requests yet.</p>
+    </div>
 );
 
-const AddressesList: React.FC<{ customerId: string }> = ({ customerId }) => (
-    <div className="text-gray-500">no address yet</div>
+const AddressesList: React.FC<{ customerId: string }> = () => (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="bg-gray-50 p-4 rounded-full mb-4">
+            <MapPin size={32} className="text-gray-300" />
+        </div>
+        <h4 className="text-gray-900 font-semibold">No Addresses Saved</h4>
+        <p className="text-sm text-gray-500 max-w-xs mt-1">There are no saved addresses associated with this account.</p>
+    </div>
 );

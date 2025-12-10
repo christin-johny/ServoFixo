@@ -5,6 +5,7 @@ export interface IServiceCategoryDocument extends Document {
   description: string;
   iconUrl: string;
   isActive: boolean;
+  isDeleted: boolean; 
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,11 +16,11 @@ const ServiceCategorySchema: Schema = new Schema(
     description: { type: String, required: true },
     iconUrl: { type: String, required: true },
     isActive: { type: Boolean, default: true },
+    isDeleted: { type: Boolean, default: false }, 
   },
   { timestamps: true }
 );
 
-// Index for fast search
 ServiceCategorySchema.index({ name: 'text' });
 
 export const ServiceCategoryModel = mongoose.model<IServiceCategoryDocument>(

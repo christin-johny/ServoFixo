@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Search, Filter, Layers, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
+import { Plus, Search, Layers, ChevronLeft, ChevronRight, RefreshCw, Filter } from "lucide-react";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { useNotification } from "../../../hooks/useNotification";
 
@@ -20,12 +20,10 @@ import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
 // Helper to extract the exact message from Backend
 const getErrorMessage = (error: any): string => {
   if (error.response && error.response.data) {
-    // Check for "error" key (standard) or "message" key (sometimes used)
     return error.response.data.error || error.response.data.message || "Unknown server error";
   }
   return error.message || "Network error";
 };
-
 
 const Services: React.FC = () => {
     const { showSuccess, showError } = useNotification();
@@ -40,27 +38,26 @@ const Services: React.FC = () => {
     const [filterStatus, setFilterStatus] = useState("");
     const debouncedSearch = useDebounce(search, 500);
 
-    // --- Service Item State (For the Expanded View) ---
+    // --- Service Item State ---
     const [expandedId, setExpandedId] = useState<string | null>(null);
-    const [servicesMap, setServicesMap] = useState<{ [key: string]: ServiceItem[] }>({}); // Cache services by categoryId
+    const [servicesMap, setServicesMap] = useState<{ [key: string]: ServiceItem[] }>({});
     const [loadingServices, setLoadingServices] = useState(false);
 
     // --- Modal State ---
     const [isCatModalOpen, setIsCatModalOpen] = useState(false);
     const [editingCategory, setEditingCategory] = useState<ServiceCategory | null>(null);
 
-    const [isServiceModalOpen, setIsServiceModalOpen] = useState(false); // ✅ Service Modal
-    const [editingService, setEditingService] = useState<ServiceItem | null>(null); // ✅ Edit Service
-    const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null); // ✅ Which category are we adding to?
+    const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+    const [editingService, setEditingService] = useState<ServiceItem | null>(null);
+    const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // --- Delete State ---
     const [deleteId, setDeleteId] = useState<string | null>(null);
-    const [deleteType, setDeleteType] = useState<"CATEGORY" | "SERVICE" | null>(null); // ✅ Track what we are deleting
+    const [deleteType, setDeleteType] = useState<"CATEGORY" | "SERVICE" | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    
     // 1. Load Categories
     useEffect(() => {
         loadCategories();
@@ -93,7 +90,6 @@ const Services: React.FC = () => {
     const loadServicesForCategory = async (catId: string) => {
         try {
             setLoadingServices(true);
-            // Fetch ALL services for this category (no pagination for sub-list for now)
             const result = await serviceRepo.getServices({ categoryId: catId, page: 1, limit: 100 });
             setServicesMap(prev => ({ ...prev, [catId]: result.data }));
         } catch (err) {
@@ -103,7 +99,7 @@ const Services: React.FC = () => {
         }
     };
 
-    // --- Handlers: Category ---
+    // --- Handlers ---
     const handleSaveCategory = async (formData: FormData) => {
         try {
             setIsSubmitting(true);
@@ -124,7 +120,19 @@ const Services: React.FC = () => {
         }
     };
 
-    // --- Handlers: Service Item ---
+    const handleToggleCategoryStatus = async (e: React.MouseEvent, category: ServiceCategory) => {
+        e.stopPropagation(); 
+        try {
+            const newStatus = !category.isActive;
+            await categoryRepo.toggleCategoryStatus(category._id, newStatus);
+            showSuccess(`Category ${category.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
+            loadCategories();
+        } catch (err: any) {
+             console.error(err);
+             showError("Failed to update status. " + getErrorMessage(err));
+        }
+    };
+
     const handleAddService = (catId: string) => {
         setEditingService(null);
         setActiveCategoryId(catId);
@@ -137,7 +145,7 @@ const Services: React.FC = () => {
         setIsServiceModalOpen(true);
     };
 
-const handleSaveService = async (formData: FormData) => {
+    const handleSaveService = async (formData: FormData) => {
         try {
             setIsSubmitting(true);
             if (editingService) {
@@ -147,19 +155,29 @@ const handleSaveService = async (formData: FormData) => {
                 await serviceRepo.createService(formData);
                 showSuccess("Service item added successfully");
             }
-            
             setIsServiceModalOpen(false);
             if (activeCategoryId) loadServicesForCategory(activeCategoryId);
         } catch (err: any) {
-            // ✅ USE THE HELPER HERE
             const msg = getErrorMessage(err);
             showError(msg); 
         } finally {
             setIsSubmitting(false);
         }
     };
-    // --- Handlers: Delete ---
-    const confirmDeleteCategory = (id: string) => {
+
+    const handleToggleServiceStatus = async (service: ServiceItem) => {
+        try {
+            const newStatus = !service.isActive;
+            await serviceRepo.toggleServiceStatus(service._id, newStatus);
+            showSuccess(`Service ${service.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
+            if (expandedId) loadServicesForCategory(expandedId);
+        } catch (err: any) {
+             showError("Failed to update status");
+        }
+    };
+
+    const confirmDeleteCategory = (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
         setDeleteId(id);
         setDeleteType("CATEGORY");
     };
@@ -173,7 +191,6 @@ const handleSaveService = async (formData: FormData) => {
         if (!deleteId || !deleteType) return;
         try {
             setIsDeleting(true);
-
             if (deleteType === "CATEGORY") {
                 await categoryRepo.deleteCategory(deleteId);
                 showSuccess("Category deleted");
@@ -182,7 +199,6 @@ const handleSaveService = async (formData: FormData) => {
             } else {
                 await serviceRepo.deleteService(deleteId);
                 showSuccess("Service deleted");
-                // Refresh the list of the currently expanded category
                 if (expandedId) loadServicesForCategory(expandedId);
             }
             setDeleteId(null);
@@ -195,47 +211,71 @@ const handleSaveService = async (formData: FormData) => {
     };
 
     return (
-        <div className="h-full flex flex-col gap-6 overflow-hidden">
-            {/* Header & Filters (Same as before) */}
+        <div className="h-full flex flex-col gap-4 sm:gap-6 overflow-hidden">
+            {/* Header & Filters */}
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end shrink-0 border-b border-gray-200 pb-4 gap-4 sm:gap-0">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-                        <Layers className="text-blue-600" /> Service Catalog
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+                        <Layers className="text-blue-600 w-6 h-6 sm:w-8 sm:h-8" /> Service Catalog
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage categories and service items.</p>
+                    <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage categories and service items.</p>
                 </div>
-                <button onClick={() => { setEditingCategory(null); setIsCatModalOpen(true); }} className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 shadow-sm font-bold text-sm">
+                <button onClick={() => { setEditingCategory(null); setIsCatModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 shadow-sm font-bold text-sm transition-colors">
                     <Plus size={18} /> New Category
                 </button>
             </div>
 
-            {/* Filter Bar */}
-            <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row gap-4 justify-between items-center shrink-0">
-                <div className="flex gap-3 w-full sm:w-auto flex-1 max-w-2xl">
+{/* Responsive Filter Bar */}
+            <div className="bg-white p-3 sm:p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-3 justify-between items-center shrink-0">
+                
+                {/* Search and Select Group */}
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1 max-w-3xl">
+                    
+                    {/* Search Input */}
                     <div className="relative flex-1">
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
                             value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                             placeholder="Search categories..."
-                            className="w-full pl-10 pr-4 h-11 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:blue-500 bg-gray-50/50 focus:bg-white"
+                            className="w-full pl-10 pr-4 h-10 sm:h-11 text-sm font-medium text-gray-700 placeholder:text-gray-400 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-gray-50/30 focus:bg-white transition-all"
                         />
                     </div>
-                    <div className="relative w-40 shrink-0">
-                        <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }} className="w-full h-11 pl-4 pr-10 text-sm border border-gray-200 rounded-xl bg-gray-50/50 appearance-none cursor-pointer">
+
+                    {/* ✅ STATUS DROPDOWN WITH FILTER ICON */}
+                    <div className="relative w-full sm:w-48 shrink-0">
+                        <select 
+                            value={filterStatus} 
+                            onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }} 
+                            className="
+                                w-full h-10 sm:h-11 
+                                pl-4 pr-10 
+                                text-sm font-medium text-gray-700 
+                                bg-white border border-gray-200 rounded-xl 
+                                appearance-none 
+                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 
+                                cursor-pointer transition-all hover:border-gray-300
+                            "
+                        >
                             <option value="">All Status</option>
-                            <option value="true">Active</option>
-                            <option value="false">Inactive</option>
+                            <option value="true">Active Only</option>
+                            <option value="false">Inactive Only</option>
                         </select>
-                        <Filter size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        
+                        {/* Custom Filter Icon */}
+                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                            <Filter size={16} />
+                        </div>
                     </div>
                 </div>
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:block">
+
+                {/* Total Count (Hidden on mobile to save space) */}
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden md:block">
                     {total === 0 ? "No Categories" : `Showing ${categories.length} of ${total}`}
                 </span>
             </div>
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto pr-1 -mr-1 pb-4">
+            {/* Content List */}
+            <div className="flex-1 overflow-y-auto pr-1 -mr-1 pb-4 scrollbar-thin scrollbar-thumb-gray-200">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center h-64 text-gray-400 gap-3"><RefreshCw size={32} className="animate-spin opacity-20" /><p className="text-sm font-medium">Loading...</p></div>
                 ) : (
@@ -246,10 +286,10 @@ const handleSaveService = async (formData: FormData) => {
                                 category={cat}
                                 isExpanded={expandedId === cat._id}
                                 onToggleExpand={() => setExpandedId(expandedId === cat._id ? null : cat._id)}
-                                onEdit={() => { setEditingCategory(cat); setIsCatModalOpen(true); }}
-                                onDelete={() => confirmDeleteCategory(cat._id)}
-
-                                // ✅ Props for Sub-Services
+                                onEdit={(e) => { e.stopPropagation(); setEditingCategory(cat); setIsCatModalOpen(true); }}
+                                onDelete={(e) => confirmDeleteCategory(e, cat._id)}
+                                onToggleStatus={(e) => handleToggleCategoryStatus(e, cat)} 
+                                onToggleServiceStatus={handleToggleServiceStatus}
                                 services={servicesMap[cat._id] || []}
                                 isLoadingServices={expandedId === cat._id && loadingServices}
                                 onAddService={() => handleAddService(cat._id)}
@@ -261,29 +301,28 @@ const handleSaveService = async (formData: FormData) => {
                 )}
             </div>
 
-            {/* Pagination Footer (Same as before) */}
+            {/* Pagination */}
             {totalPages > 1 && (
                 <div className="flex justify-between items-center pt-4 border-t border-gray-200 shrink-0">
-                    <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="flex items-center gap-1 px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-50"><ChevronLeft size={16} /> Previous</button>
-                    <span className="text-sm font-medium text-gray-500">Page {page} of {totalPages}</span>
-                    <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="flex items-center gap-1 px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-50">Next <ChevronRight size={16} /></button>
+                    <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="flex items-center gap-1 px-3 sm:px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-50 transition-colors"><ChevronLeft size={16} /> <span className="hidden sm:inline">Previous</span></button>
+                    <span className="text-xs sm:text-sm font-medium text-gray-500">Page {page} of {totalPages}</span>
+                    <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="flex items-center gap-1 px-3 sm:px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-50 transition-colors"><span className="hidden sm:inline">Next</span> <ChevronRight size={16} /></button>
                 </div>
             )}
 
-            {/* --- Modals --- */}
+            {/* Modals */}
             <CategoryModal
                 isOpen={isCatModalOpen} onClose={() => setIsCatModalOpen(false)}
                 onSave={handleSaveCategory} initialData={editingCategory} isLoading={isSubmitting}
             />
 
-            {/* ✅ New Service Modal */}
             {activeCategoryId && (
                 <ServiceItemModal
                     isOpen={isServiceModalOpen}
                     onClose={() => setIsServiceModalOpen(false)}
                     onSave={handleSaveService}
                     categoryId={activeCategoryId}
-                    initialData={editingService} // <--- Crucial for Edit Mode
+                    initialData={editingService}
                     isLoading={isSubmitting}
                 />
             )}
@@ -292,7 +331,7 @@ const handleSaveService = async (formData: FormData) => {
                 isOpen={!!deleteId} onClose={() => { setDeleteId(null); setDeleteType(null); }}
                 onConfirm={executeDelete} isLoading={isDeleting}
                 title={deleteType === "CATEGORY" ? "Delete Category" : "Delete Service"}
-                message={deleteType === "CATEGORY" ? "Delete this category and all its services?" : "Permanently delete this service item?"}
+                message={deleteType === "CATEGORY" ? "Delete this category and all its services? (Archived)" : "Permanently delete this service item?"}
                 confirmText="Delete"
             />
         </div>

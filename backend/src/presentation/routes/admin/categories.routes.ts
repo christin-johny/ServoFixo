@@ -23,5 +23,6 @@ router.put(
 );
 
 router.delete('/:id', adminCategoryController.delete);
+router.patch('/:id/toggle', (req, res) => adminCategoryController.toggleStatus(req, res));
 
 export default router;

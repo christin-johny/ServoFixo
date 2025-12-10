@@ -24,8 +24,7 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
     const { page, limit, search, categoryId, isActive } = params;
     const skip = (page - 1) * limit;
 
-    // Build Query
-    const query: any = {};
+    const query: any = { isDeleted: { $ne: true } };
 
     if (categoryId) {
       query.categoryId = new mongoose.Types.ObjectId(categoryId);
@@ -42,7 +41,6 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
       ];
     }
 
-    // Execute Query + Count
     const [docs, total] = await Promise.all([
       ServiceItemModel.find(query)
         .sort({ createdAt: -1 })
@@ -62,7 +60,11 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
 
   async findById(id: string): Promise<ServiceItem | null> {
     if (!mongoose.isValidObjectId(id)) return null;
-    const doc = await ServiceItemModel.findById(id).exec();
+    const doc = await ServiceItemModel.findOne({ 
+        _id: id, 
+        isDeleted: { $ne: true } 
+    }).exec();
+    
     return doc ? this.toEntity(doc) : null;
   }
 
@@ -70,7 +72,8 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
     const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const doc = await ServiceItemModel.findOne({ 
       categoryId: new mongoose.Types.ObjectId(categoryId),
-      name: { $regex: new RegExp(`^${escapedName}$`, 'i') } 
+      name: { $regex: new RegExp(`^${escapedName}$`, 'i') },
+      isDeleted: { $ne: true }
     }).exec();
     
     return doc ? this.toEntity(doc) : null;
@@ -94,12 +97,17 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
     return this.toEntity(doc);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await ServiceItemModel.findByIdAndDelete(id).exec();
+  // ✅ NEW METHOD: Lightweight Status Toggle
+  async toggleStatus(id: string, isActive: boolean): Promise<boolean> {
+    const result = await ServiceItemModel.findByIdAndUpdate(id, { isActive }).exec();
     return !!result;
   }
 
-  // Helper: Convert Mongo Doc to Domain Entity
+  async delete(id: string): Promise<boolean> {
+    const result = await ServiceItemModel.findByIdAndUpdate(id, { isDeleted: true }).exec();
+    return !!result;
+  }
+
   private toEntity(doc: IServiceItemDocument): ServiceItem {
     return new ServiceItem(
       doc._id.toString(),

@@ -3,6 +3,8 @@ import { CreateCategoryUseCase } from '../../../application/use-cases/service-ca
 import { GetAllCategoriesUseCase } from '../../../application/use-cases/service-categories/GetAllCategoriesUseCase';
 import { EditCategoryUseCase } from '../../../application/use-cases/service-categories/EditCategoryUseCase';
 import { DeleteCategoryUseCase } from '../../../application/use-cases/service-categories/DeleteCategoryUseCase';
+// ✅ Import the new Use Case
+import { ToggleCategoryStatusUseCase } from '../../../application/use-cases/service-categories/ToggleCategoryStatus';
 import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 
@@ -11,7 +13,9 @@ export class AdminCategoryController {
     private readonly createUseCase: CreateCategoryUseCase,
     private readonly getAllUseCase: GetAllCategoriesUseCase,
     private readonly editUseCase: EditCategoryUseCase,
-    private readonly deleteUseCase: DeleteCategoryUseCase
+    private readonly deleteUseCase: DeleteCategoryUseCase,
+    // ✅ Inject Toggle Use Case
+    private readonly toggleStatusUseCase: ToggleCategoryStatusUseCase
   ) {}
 
   create = async (req: Request, res: Response): Promise<Response> => {
@@ -91,6 +95,24 @@ export class AdminCategoryController {
       if (err.message === 'Category not found') return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
       if (err.message.includes('already exists')) return res.status(StatusCodes.CONFLICT).json({ error: err.message });
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
+    }
+  };
+
+  // ✅ NEW: Toggle Status Handler
+  toggleStatus = async (req: Request, res: Response): Promise<Response> => {
+    try {
+        const { id } = req.params;
+        const { isActive } = req.body; // Expecting simple JSON: { isActive: true }
+
+        if (typeof isActive !== 'boolean') {
+            return res.status(StatusCodes.BAD_REQUEST).json({ error: "isActive must be a boolean" });
+        }
+
+        await this.toggleStatusUseCase.execute(id, isActive);
+        return res.status(StatusCodes.OK).json({ message: `Category status updated to ${isActive}` });
+    } catch (err: any) {
+        if (err.message.includes('not found')) return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
     }
   };
 

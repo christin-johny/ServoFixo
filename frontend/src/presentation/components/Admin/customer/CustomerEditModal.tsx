@@ -5,24 +5,52 @@ import { updateCustomer } from '../../../../infrastructure/repositories/admin/cu
 import { Loader2, User, X } from 'lucide-react';
 import { CustomerEditSchema, type CustomerEditForm } from '../../../validation/customerSchemas';
 
-const StyledInput = ({ label, error, ...props }: any) => (
+// ✅ MATCHING ZONES STYLE: Input
+interface StyledInputProps extends React.ComponentProps<'input'> {
+    label: string;
+    error?: string;
+}
+
+const StyledInput = ({ label, error, className, ...props }: StyledInputProps) => (
     <div className="space-y-1">
         <label className="text-sm font-medium text-gray-700">{label}</label>
         <input
             {...props}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 outline-none placeholder:text-gray-400 
-                ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-100'}`
+            className={`w-full px-3 h-10 border rounded-lg focus:ring-2 outline-none transition-all placeholder:text-gray-400
+                ${error 
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-100' 
+                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-100'
+                } ${className || ''}`
             }
         />
         {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
 );
-const PrimaryButton = ({ children, ...props }: any) => (
-    <button {...props} className="flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition duration-150 disabled:bg-indigo-400 disabled:cursor-not-allowed">
+
+// ✅ MATCHING ZONES STYLE: Primary Button (Save)
+interface ButtonProps extends React.ComponentProps<'button'> {
+    children: React.ReactNode;
+}
+
+const PrimaryButton = ({ children, className, ...props }: ButtonProps) => (
+    <button 
+        {...props} 
+        className={`flex justify-center items-center gap-2 h-10 px-4 rounded-lg text-sm font-bold text-white transition-all shadow-sm bg-blue-600 hover:bg-blue-700 hover:shadow-md disabled:bg-blue-400 disabled:cursor-not-allowed ${className || ''}`}
+    >
         {children}
     </button>
 );
 
+// ✅ MATCHING ZONES STYLE: Secondary Button (Cancel)
+const SecondaryButton = ({ children, className, ...props }: ButtonProps) => (
+    <button 
+        {...props} 
+        type="button"
+        className={`px-4 h-10 flex justify-center items-center bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-50 hover:border-gray-300 transition-colors ${className || ''}`}
+    >
+        {children}
+    </button>
+);
 
 interface CustomerEditModalProps {
     isOpen: boolean;
@@ -38,17 +66,20 @@ const CustomerEditModal: React.FC<CustomerEditModalProps> = ({
     onUpdateSuccess,
 }) => {
     const { showSuccess, showError } = useNotification();
+    
     const [formData, setFormData] = useState<CustomerEditForm>({
         name: '',
         email: '',
         phone: null,
         suspended: false,
     });
+    
     const [loading, setLoading] = useState(false);
     const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
 
+    // Reset form when modal opens or customer changes
     useEffect(() => {
-        if (customerData) {
+        if (isOpen && customerData) {
             setFormData({
                 name: customerData.name,
                 email: customerData.email,
@@ -57,7 +88,7 @@ const CustomerEditModal: React.FC<CustomerEditModalProps> = ({
             });
             setValidationErrors({});
         }
-    }, [customerData]);
+    }, [customerData, isOpen]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -97,34 +128,29 @@ const CustomerEditModal: React.FC<CustomerEditModalProps> = ({
                 }
             });
             setValidationErrors(fieldErrors);
-            return; // 🛑 STOP API CALL
+            return;
         }
 
         setLoading(true);
         try {
-            // Use the validated data from result.data
             const payload: CustomerUpdatePayload = {
                 name: result.data.name,
                 email: result.data.email,
                 suspended: result.data.suspended,
-                // Send undefined if phone is null/empty, as the API expects
                 phone: result.data.phone || undefined,
             };
 
             await updateCustomer(customerData.id, payload);
 
-            // Success notification (Centralized in Modal)
             showSuccess(`Customer ${customerData.name}'s profile updated successfully.`);
             onUpdateSuccess();
+            onClose();
 
         } catch (error: any) {
-            // Handle server-side errors (409 Conflict, 404 Not Found)
-            // Extracts detailed message if available
-            const serverMessage = error?.response?.data?.message || error?.message;
+            const serverMessage = error?.response?.data?.message || error?.message || '';
 
-            // Provide user-friendly feedback on server errors
-            if (serverMessage.includes('Email is already registered') || serverMessage.includes('Phone number is already registered')) {
-                showError(serverMessage); // Show specific uniqueness error
+            if (serverMessage.includes('Email is already registered') || serverMessage.includes('Phone number')) {
+                showError(serverMessage);
             } else {
                 showError("Failed to save changes. Please try again.");
             }
@@ -133,37 +159,37 @@ const CustomerEditModal: React.FC<CustomerEditModalProps> = ({
         }
     };
 
-    // --- Modal Structure ---
     if (!isOpen) return null;
 
-    // Check if any validation error is present to disable button
     const hasErrors = Object.keys(validationErrors).length > 0;
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-600 bg-opacity-75 transition-opacity duration-300 flex items-center justify-center p-4">
+        <div 
+            className="fixed inset-0 z-50 overflow-y-auto bg-gray-600 bg-opacity-75 transition-opacity duration-300 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+        >
             <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full transform transition-all duration-300 scale-100 opacity-100">
 
-                {/* Modal Header */}
-                {/* ... (JSX for header remains the same) ... */}
+                {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-gray-200">
                     <h3 className="text-xl font-semibold text-gray-900 flex items-center">
-                        <User className="mr-3 h-6 w-6 text-indigo-600" />
+                        <User className="mr-3 h-6 w-6 text-blue-600" />
                         Edit Customer: {customerData?.name || 'Loading...'}
                     </h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
                         <X className="h-6 w-6" />
                     </button>
                 </div>
 
-                {/* Modal Body (Form) */}
+                {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
-
                     <StyledInput
                         label="Full Name"
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        error={validationErrors.name} // ✅ Pass error
+                        error={validationErrors.name}
                         required
                     />
 
@@ -172,7 +198,7 @@ const CustomerEditModal: React.FC<CustomerEditModalProps> = ({
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        error={validationErrors.email} // ✅ Pass error
+                        error={validationErrors.email}
                         type="email"
                         required
                     />
@@ -180,45 +206,49 @@ const CustomerEditModal: React.FC<CustomerEditModalProps> = ({
                     <StyledInput
                         label="Phone Number (Optional)"
                         name="phone"
-                        // Display null as empty string
-                        value={formData.phone === null ? '' : formData.phone}
+                        value={formData.phone ?? ''}
                         onChange={handleChange}
-                        error={validationErrors.phone} // ✅ Pass error
+                        error={validationErrors.phone}
                         type="tel"
                     />
 
-                    {/* Account Status Toggle (Consistent with planned UI) */}
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-                        {/* ... (Toggle JSX remains the same) ... */}
+                    {/* Status Toggle */}
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                         <label className="text-sm font-medium text-gray-700">
                             Account Status:
                         </label>
                         <div className="flex items-center space-x-3">
-                            <span className={`text-sm font-semibold ${formData.suspended ? 'text-red-600' : 'text-green-600'}`}>
+                            <span className={`text-sm font-semibold transition-colors ${formData.suspended ? 'text-red-600' : 'text-green-600'}`}>
                                 {formData.suspended ? 'Suspended' : 'Active'}
                             </span>
                             <button
                                 type="button"
                                 onClick={handleStatusToggle}
-                                className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${formData.suspended ? 'bg-red-500 focus:ring-red-500' : 'bg-green-500 focus:ring-green-500'
-                                    }`}
+                                className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                                    formData.suspended ? 'bg-red-500 focus:ring-red-500' : 'bg-green-500 focus:ring-green-500'
+                                }`}
                                 role="switch"
                                 aria-checked={!formData.suspended}
                             >
                                 <span
                                     aria-hidden="true"
-                                    className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 ${formData.suspended ? 'translate-x-5' : 'translate-x-0'
-                                        }`}
+                                    className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 ${
+                                        formData.suspended ? 'translate-x-5' : 'translate-x-0'
+                                    }`}
                                 />
                             </button>
                         </div>
                     </div>
 
-                    {/* Submit Button */}
-                    <div className="pt-4 flex justify-end">
+                    {/* Footer / Submit */}
+                    <div className="pt-4 flex justify-end gap-3">
+                        <SecondaryButton onClick={onClose}>
+                            Cancel
+                        </SecondaryButton>
+                        
                         <PrimaryButton
                             type="submit"
-                            disabled={loading || hasErrors} // ✅ Disable if loading or if validation errors exist
+                            disabled={loading || hasErrors}
                         >
                             {loading ? <Loader2 className="animate-spin mr-2 h-5 w-5" /> : 'Save Changes'}
                         </PrimaryButton>

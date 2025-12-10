@@ -1,5 +1,3 @@
-// backend/src/infrastructure/database/mongoose/models/ZoneModel.ts
-
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IZoneDocument extends Document {
@@ -10,6 +8,7 @@ export interface IZoneDocument extends Document {
     coordinates: number[][][];
   };
   isActive: boolean;
+  isDeleted: boolean;
   additionalInfo: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
@@ -32,6 +31,7 @@ const ZoneSchema: Schema<IZoneDocument> = new Schema(
       },
     },
     isActive: { type: Boolean, default: true },
+    isDeleted: { type: Boolean, default: false }, 
     additionalInfo: { type: Schema.Types.Mixed, default: {} }, 
   },
   {

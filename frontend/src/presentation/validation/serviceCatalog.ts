@@ -12,7 +12,7 @@ const nameRule = z.string()
     
 const descriptionRule = z.string()
     .min(10, "Description must be at least 10 characters")
-    .max(500, "Description is too long")
+    .max(1500, "Description is too long")
     .trim();
 
 const priceRule = z.number({ invalid_type_error: "Price must be a valid number" })

@@ -6,9 +6,10 @@ export interface IServiceItemDocument extends Document {
   name: string;
   description: string;
   basePrice: number;
-  specifications: { title: string; value: string }[]; // ✅ Array of Objects
-  imageUrls: string[]; // ✅ Array of Strings
+  specifications: { title: string; value: string }[]; 
+  imageUrls: string[]; 
   isActive: boolean;
+  isDeleted: boolean; // ✅ Added soft delete flag to interface
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,7 +31,7 @@ const ServiceItemSchema: Schema = new Schema(
       {
         title: { type: String, required: true },
         value: { type: String, required: true },
-        _id: false // Disable auto-ID for these sub-objects to save space
+        _id: false 
       }
     ],
 
@@ -38,6 +39,7 @@ const ServiceItemSchema: Schema = new Schema(
     imageUrls: [{ type: String }],
 
     isActive: { type: Boolean, default: true },
+    isDeleted: { type: Boolean, default: false }, // ✅ Added soft delete flag to Schema
   },
   { timestamps: true }
 );

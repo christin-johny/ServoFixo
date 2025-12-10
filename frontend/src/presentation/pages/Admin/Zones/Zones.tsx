@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Plus, Trash2, MapPin, Save, XCircle, Edit2, Power,
-  Search, Filter, ChevronLeft, ChevronRight
+  Search, Filter, ChevronLeft, ChevronRight, ToggleLeft, ToggleRight
 } from "lucide-react";
 import { z } from "zod";
 import ZoneMap from "../../../components/Admin/Maps/ZoneMap";
@@ -30,7 +30,7 @@ const Zones: React.FC = () => {
   // --- Filter & Pagination State ---
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>(""); // "" = All
+  const [filterStatus, setFilterStatus] = useState<string>("");
   const debouncedSearch = useDebounce(search, 500);
 
   // --- UI State ---
@@ -57,16 +57,16 @@ const Zones: React.FC = () => {
       setLoading(true);
       const result = await zoneRepo.getZones({
         page,
-        limit:4,
+        limit: 4,
         search: debouncedSearch,
         isActive: filterStatus
       });
       setZones(result.data);
       setTotalZones(result.total);
       setTotalPages(result.totalPages);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      showError(err?.message ??"Failed to load zones list.");
+      showError(err?.message ?? "Failed to load zones list.");
     } finally {
       setLoading(false);
     }
@@ -130,7 +130,7 @@ const Zones: React.FC = () => {
         await zoneRepo.updateZone(payload);
         showSuccess("Zone updated successfully");
       } else {
-        await zoneRepo.createZone({ name: validName, description: zoneDesc, boundaries: zonePoints, isActive: zoneIsActive });
+        await zoneRepo.createZone({ name: validName, description: zoneDesc, boundaries: zonePoints });
         showSuccess("New zone created successfully");
       }
       await loadZones();
@@ -138,6 +138,29 @@ const Zones: React.FC = () => {
     } catch (err: any) {
       const errMsg = getErrorMessage(err);
       setError(errMsg);
+    }
+  };
+
+  // ✅ NEW HANDLER: Quick Toggle Status
+  const handleToggleStatus = async (zone: Zone) => {
+    const newStatus = !zone.isActive;
+    const zoneId = zone.id || zone._id;
+    if (!zoneId) return;
+
+    try {
+      // Use existing updateZone logic but only change isActive
+      const payload: UpdateZoneDTO = {
+        id: zoneId,
+        name: zone.name,
+        description: zone.description,
+        boundaries: zone.boundaries,
+        isActive: newStatus // Toggle Logic
+      };
+      await zoneRepo.updateZone(payload);
+      showSuccess(`Zone ${zone.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
+      await loadZones(); // Refresh list
+    } catch (err: any) {
+      showError("Failed to update status");
     }
   };
 
@@ -151,7 +174,6 @@ const Zones: React.FC = () => {
     setIsDeleting(true);
     try {
       await zoneRepo.deleteZone(zoneToDelete);
-      // Refresh logic: if last item on page deleted, go back
       if (zones.length === 1 && page > 1) {
         setPage(prev => prev - 1);
       } else {
@@ -229,8 +251,8 @@ const Zones: React.FC = () => {
                     }}
                     placeholder="e.g. North Bangalore"
                     className={`w-full px-3 h-10 text-sm border rounded-lg focus:ring-2 outline-none transition-all placeholder:text-gray-400 ${error && (error.includes("Name") || error.includes("character") || error.includes("letter"))
-                        ? "border-red-300 focus:border-red-500 focus:ring-red-500/10"
-                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-500/10"
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-500/10"
+                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500/10"
                       }`}
                   />
                 </div>
@@ -267,12 +289,12 @@ const Zones: React.FC = () => {
                   </button>
                 </div>
                 <div className="text-sm text-gray-500 bg-gray-50 p-2 rounded">
-              <span className="font-medium text-gray-700">Map Actions:</span>
-              <ul className="list-disc ml-4 mt-1 space-y-1">
-                <li>Click map to add/change points.</li>
-                <li>Drag markers to adjust area.</li>
-              </ul>
-            </div>
+                  <span className="font-medium text-gray-700">Map Actions:</span>
+                  <ul className="list-disc ml-4 mt-1 space-y-1">
+                    <li>Click map to add/change points.</li>
+                    <li>Drag markers to adjust area.</li>
+                  </ul>
+                </div>
               </div>
 
               <div className="flex gap-3 mt-auto pt-2">
@@ -332,14 +354,14 @@ const Zones: React.FC = () => {
 
               {/* Scrollable List */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] max-h-[400px] lg:max-h-none">
-              {loading ? (
-                <div className="h-full flex items-center justify-center text-gray-400 text-sm">Loading...</div>
-              ) : zones.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-gray-400 p-8 text-center">
-                  <MapPin size={32} className="mb-2 opacity-30" />
-                  <p className="text-sm font-medium">No zones match your search.</p>
-                </div>
-              ) : (
+                {loading ? (
+                  <div className="h-full flex items-center justify-center text-gray-400 text-sm">Loading...</div>
+                ) : zones.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-gray-400 p-8 text-center">
+                    <MapPin size={32} className="mb-2 opacity-30" />
+                    <p className="text-sm font-medium">No zones match your search.</p>
+                  </div>
+                ) : (
                   zones.map((zone) => (
                     <div key={zone.id || zone._id} className="group p-4 rounded-xl bg-white border border-gray-100 hover:border-blue-300 hover:shadow-md transition-all cursor-default relative">
                       <div className={`absolute left-0 top-3 bottom-3 w-1 rounded-r-full ${zone.isActive ? "bg-green-500" : "bg-gray-300"}`} />
@@ -352,6 +374,18 @@ const Zones: React.FC = () => {
                           <p className="text-sm text-gray-500 truncate mt-0.5">{zone.description || "No description provided"}</p>
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {/* ✅ NEW TOGGLE BUTTON */}
+                          <button
+                            onClick={() => handleToggleStatus(zone)}
+                            className={`p-2 rounded-lg transition-colors ${zone.isActive
+                                ? 'text-green-600 hover:bg-green-50'
+                                : 'text-red-500 hover:bg-red-50'
+                              }`}
+                            title={zone.isActive ? "Deactivate" : "Activate"}
+                          >
+                            {zone.isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+                          </button>
+
                           <button onClick={() => handleEditZone(zone)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"><Edit2 size={18} /></button>
                           <button onClick={() => requestDelete(zone.id || zone._id!)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={18} /></button>
                         </div>
@@ -416,7 +450,7 @@ const Zones: React.FC = () => {
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={confirmDelete}
         title="Delete Zone"
-        message="Are you sure you want to delete this zone permanently? This action cannot be undone."
+        message="Are you sure you want to delete this zone?"
         confirmText="Delete Zone"
         isLoading={isDeleting}
       />

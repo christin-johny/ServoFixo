@@ -20,8 +20,7 @@ export class ServiceCategoryMongoRepository implements IServiceCategoryRepositor
     const { page, limit, search, isActive } = params;
     const skip = (page - 1) * limit;
 
-    // Build Query
-    const query: any = {};
+    const query: any = { isDeleted: { $ne: true } };
 
     if (isActive !== undefined) {
       query.isActive = isActive;
@@ -29,15 +28,14 @@ export class ServiceCategoryMongoRepository implements IServiceCategoryRepositor
 
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: 'i' } }, // Case insensitive
+        { name: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } }
       ];
     }
 
-    // Execute Query + Count in parallel
     const [docs, total] = await Promise.all([
       ServiceCategoryModel.find(query)
-        .sort({ createdAt: -1 }) // Newest first
+        .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .exec(),
@@ -53,7 +51,7 @@ export class ServiceCategoryMongoRepository implements IServiceCategoryRepositor
   }
 
   async findById(id: string): Promise<ServiceCategory | null> {
-    const doc = await ServiceCategoryModel.findById(id).exec();
+    const doc = await ServiceCategoryModel.findOne({ _id: id, isDeleted: { $ne: true } }).exec();
     if (!doc) return null;
     return this.toEntity(doc);
   }
@@ -61,7 +59,8 @@ export class ServiceCategoryMongoRepository implements IServiceCategoryRepositor
   async findByName(name: string): Promise<ServiceCategory | null> {
     const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const doc = await ServiceCategoryModel.findOne({ 
-      name: { $regex: new RegExp(`^${escapedName}$`, 'i') } 
+      name: { $regex: new RegExp(`^${escapedName}$`, 'i') },
+      isDeleted: { $ne: true }
     }).exec();
     
     if (!doc) return null;
@@ -84,12 +83,17 @@ export class ServiceCategoryMongoRepository implements IServiceCategoryRepositor
     return this.toEntity(doc);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await ServiceCategoryModel.findByIdAndDelete(id).exec();
+  // ✅ NEW METHOD: Lightweight Status Toggle
+  async toggleStatus(id: string, isActive: boolean): Promise<boolean> {
+    const result = await ServiceCategoryModel.findByIdAndUpdate(id, { isActive }).exec();
     return !!result;
   }
 
-  // Helper: Convert Mongo Doc to Domain Entity
+  async delete(id: string): Promise<boolean> {
+    const result = await ServiceCategoryModel.findByIdAndUpdate(id, { isDeleted: true }).exec();
+    return !!result;
+  }
+
   private toEntity(doc: IServiceCategoryDocument): ServiceCategory {
     return new ServiceCategory(
       doc._id.toString(),

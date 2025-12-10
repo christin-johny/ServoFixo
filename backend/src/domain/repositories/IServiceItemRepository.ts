@@ -22,4 +22,5 @@ export interface IServiceItemRepository {
   findByNameAndCategory(name: string, categoryId: string): Promise<ServiceItem | null>;
   update(serviceItem: ServiceItem): Promise<ServiceItem>;
   delete(id: string): Promise<boolean>;
+toggleStatus(id: string, isActive: boolean): Promise<boolean>;
 }

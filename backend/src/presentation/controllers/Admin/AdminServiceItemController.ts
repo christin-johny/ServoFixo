@@ -5,27 +5,28 @@ import { DeleteServiceItemUseCase } from '../../../application/use-cases/service
 import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 import { EditServiceItemUseCase } from '../../../application/use-cases/service-items/EditServiceItemUseCase'; 
+// ✅ Import Toggle Use Case
+import { ToggleServiceItemStatusUseCase } from '../../../application/use-cases/service-items/ToggleServiceItemStatus';
 
 export class AdminServiceItemController {
   constructor(
     private readonly createUseCase: CreateServiceItemUseCase,
     private readonly getAllUseCase: GetAllServiceItemsUseCase,
     private readonly deleteUseCase: DeleteServiceItemUseCase,
-    private readonly editUseCase: EditServiceItemUseCase
+    private readonly editUseCase: EditServiceItemUseCase,
+    // ✅ Inject Toggle Use Case
+    private readonly toggleStatusUseCase: ToggleServiceItemStatusUseCase
   ) {}
 
   create = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { categoryId, name, description, basePrice, specifications, isActive } = req.body;
-      
-      // req.files is an array because of upload.array()
       const files = req.files as Express.Multer.File[]; 
 
       if (!files || files.length === 0) {
         return res.status(StatusCodes.BAD_REQUEST).json({ error: "At least one image is required." });
       }
 
-      // Parse specifications (FormData sends it as a string)
       let parsedSpecs = [];
       try {
         parsedSpecs = specifications ? JSON.parse(specifications) : [];
@@ -55,18 +56,16 @@ export class AdminServiceItemController {
       if (err.code === 11000) {
         return res.status(StatusCodes.CONFLICT).json({ error: "A service with this name already exists." });
       }
-
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err.message || ErrorMessages.INTERNAL_ERROR });
     }
   };
 
-  // 2. GET ALL (With Filters)
   getAll = async (req: Request, res: Response): Promise<Response> => {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       const search = req.query.search as string | undefined;
-      const categoryId = req.query.categoryId as string | undefined; // Filter by Category
+      const categoryId = req.query.categoryId as string | undefined;
       
       let isActive: boolean | undefined;
       if (req.query.isActive === 'true') isActive = true;
@@ -82,7 +81,6 @@ export class AdminServiceItemController {
     }
   };
 
-  // 3. DELETE
   delete = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
@@ -97,59 +95,68 @@ export class AdminServiceItemController {
   };
 
   update = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const { id } = req.params;
-    const { categoryId, name, description, basePrice, specifications, isActive, imagesToDelete } = req.body;
-    const files = req.files as Express.Multer.File[];
-
-    // Parse Specifications
-    let parsedSpecs = [];
-    try { parsedSpecs = specifications ? JSON.parse(specifications) : []; } 
-    catch (e) { return res.status(StatusCodes.BAD_REQUEST).json({ error: "Invalid specs" }); }
-
-    // ✅ Parse Images To Delete
-    let parsedDeleteList: string[] = [];
     try {
-      parsedDeleteList = imagesToDelete ? JSON.parse(imagesToDelete) : [];
-    } catch (e) {
-      // If it's not JSON, it might be a single string or empty
-      parsedDeleteList = []; 
+      const { id } = req.params;
+      const { categoryId, name, description, basePrice, specifications, isActive, imagesToDelete } = req.body;
+      const files = req.files as Express.Multer.File[];
+
+      let parsedSpecs = [];
+      try { parsedSpecs = specifications ? JSON.parse(specifications) : []; } 
+      catch (e) { return res.status(StatusCodes.BAD_REQUEST).json({ error: "Invalid specs" }); }
+
+      let parsedDeleteList: string[] = [];
+      try {
+        parsedDeleteList = imagesToDelete ? JSON.parse(imagesToDelete) : [];
+      } catch (e) {
+        parsedDeleteList = []; 
+      }
+
+      const updatedService = await this.editUseCase.execute({
+        id,
+        categoryId,
+        name,
+        description,
+        basePrice: Number(basePrice),
+        specifications: parsedSpecs,
+        isActive: isActive === 'true',
+        newImageFiles: files ? files.map(f => ({
+          buffer: f.buffer,
+          originalName: f.originalname,
+          mimeType: f.mimetype
+        })) : [],
+        imagesToDelete: parsedDeleteList 
+      });
+
+      return res.status(StatusCodes.OK).json({ message: "Service updated", serviceItem: updatedService });
+    } catch (err: any) {
+        if (err.message.includes("already exists")) {
+          return res.status(StatusCodes.CONFLICT).json({ error: err.message });
+        }
+        if (err.code === 11000) {
+          return res.status(StatusCodes.CONFLICT).json({ error: "A service with this name already exists." });
+        }
+        if (err.message === "Service Item not found") {
+          return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
+        }
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err.message });
     }
+  };
 
-    const updatedService = await this.editUseCase.execute({
-      id,
-      categoryId,
-      name,
-      description,
-      basePrice: Number(basePrice),
-      specifications: parsedSpecs,
-      isActive: isActive === 'true',
-      newImageFiles: files ? files.map(f => ({
-        buffer: f.buffer,
-        originalName: f.originalname,
-        mimeType: f.mimetype
-      })) : [],
-      imagesToDelete: parsedDeleteList 
-    });
+  // ✅ NEW: Toggle Status Handler
+  toggleStatus = async (req: Request, res: Response): Promise<Response> => {
+    try {
+        const { id } = req.params;
+        const { isActive } = req.body;
 
-    return res.status(StatusCodes.OK).json({ message: "Service updated", serviceItem: updatedService });
-  } catch (err: any) {
-     // 1. Check for Manual Duplicate Error
-      if (err.message.includes("already exists")) {
-        return res.status(StatusCodes.CONFLICT).json({ error: err.message });
-      }
+        if (typeof isActive !== 'boolean') {
+            return res.status(StatusCodes.BAD_REQUEST).json({ error: "isActive must be a boolean" });
+        }
 
-      // 2. Check for MongoDB Duplicate Key Error
-      if (err.code === 11000) {
-        return res.status(StatusCodes.CONFLICT).json({ error: "A service with this name already exists." });
-      }
-
-      if (err.message === "Service Item not found") {
-        return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
-      }
-
-      // 3. Send the ACTUAL error message instead of generic "Internal Error"
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err.message });
-  }
-}
+        await this.toggleStatusUseCase.execute(id, isActive);
+        return res.status(StatusCodes.OK).json({ message: `Service status updated to ${isActive}` });
+    } catch (err: any) {
+        if (err.message.includes('not found')) return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
+    }
+  };
 }

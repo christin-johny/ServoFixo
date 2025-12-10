@@ -13,7 +13,6 @@ export class ZoneMongoRepository implements IZoneRepository {
       const doc = await ZoneModel.create(persistenceData);
       return this.toEntity(doc);
     } catch (err: any) {
-      // ✅ Catch GeoJSON Validation Errors (e.g., Self-intersecting polygons)
       if (
         err.code === 16755 ||
         (err.message && err.message.includes("Loop is not valid"))
@@ -27,18 +26,19 @@ export class ZoneMongoRepository implements IZoneRepository {
   }
 
   async findById(id: string): Promise<Zone | null> {
-    const doc = await ZoneModel.findById(id).exec();
+    // ✅ FIX: Ensure we don't fetch a soft-deleted zone by ID
+    const doc = await ZoneModel.findOne({ _id: id, isDeleted: { $ne: true } }).exec();
     if (!doc) return null;
     return this.toEntity(doc);
   }
 
   async findByName(name: string): Promise<Zone | null> {
-    // Escape special characters to prevent regex errors
     const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-    // Create a case-insensitive regex for exact match (^...$)
+    // ✅ FIX: Ensure uniqueness check ignores deleted zones
     const doc = await ZoneModel.findOne({
       name: { $regex: new RegExp(`^${escapedName}$`, "i") },
+      isDeleted: { $ne: true }
     }).exec();
 
     if (!doc) return null;
@@ -57,7 +57,6 @@ export class ZoneMongoRepository implements IZoneRepository {
       if (!doc) throw new Error("Zone not found for update");
       return this.toEntity(doc);
     } catch (err: any) {
-      // ✅ Catch GeoJSON Validation Errors during update
       if (
         err.code === 16755 ||
         (err.message && err.message.includes("Loop is not valid"))
@@ -70,8 +69,10 @@ export class ZoneMongoRepository implements IZoneRepository {
     }
   }
 
+  // ✅ UPDATED: Soft Delete Implementation
   async delete(id: string): Promise<boolean> {
-    const result = await ZoneModel.findByIdAndDelete(id).exec();
+    // Instead of deleting, we set isDeleted to true
+    const result = await ZoneModel.findByIdAndUpdate(id, { isDeleted: true }).exec();
     return !!result;
   }
 
@@ -93,29 +94,22 @@ export class ZoneMongoRepository implements IZoneRepository {
       doc.updatedAt
     );
   }
+
   private toPersistence(zone: Zone) {
     const points = zone.getBoundaries();
-
-    // 1. Convert to [lng, lat]
     let ring = points.map((p) => [p.lng, p.lat]);
 
-    // 2. Remove adjacent duplicates (e.g. clicking same spot twice)
     ring = ring.filter((point, index) => {
       if (index === 0) return true;
       const prev = ring[index - 1];
-      // Keep point only if it's different from the previous one
       return point[0] !== prev[0] || point[1] !== prev[1];
     });
 
     if (ring.length < 3) {
-      // A polygon needs at least 3 points. Return as is, let Mongoose/Controller validation handle the error if needed.
+      // Handle <3 points case
     } else {
       const first = ring[0];
-
-      // 3. Find if the polygon closes prematurely
-      // If the start point appears again in the middle, we cut off the "tail"
       let closingIndex = -1;
-      // Start searching from index 2 to allow at least a minimal triangle shape
       for (let i = 2; i < ring.length; i++) {
         if (ring[i][0] === first[0] && ring[i][1] === first[1]) {
           closingIndex = i;
@@ -124,11 +118,8 @@ export class ZoneMongoRepository implements IZoneRepository {
       }
 
       if (closingIndex !== -1) {
-        // We found a loop! Truncate everything after this closing point.
-        // This removes the "tail" that causes the invalid loop error.
         ring = ring.slice(0, closingIndex + 1);
       } else {
-        // It's not closed yet, so we close it manually
         ring.push(first);
       }
     }
@@ -145,14 +136,12 @@ export class ZoneMongoRepository implements IZoneRepository {
     };
   }
 
-  // ... create, findById, etc.
-
   async findAll(params: ZoneQueryParams): Promise<PaginatedZones> {
     const { page, limit, search, isActive } = params;
     const skip = (page - 1) * limit;
 
-    // Build Query
-    const query: any = {};
+    // ✅ FIX: Base query filters out soft-deleted items
+    const query: any = { isDeleted: { $ne: true } };
 
     if (isActive !== undefined) {
       query.isActive = isActive;
@@ -160,15 +149,14 @@ export class ZoneMongoRepository implements IZoneRepository {
 
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: "i" } }, // Case insensitive
+        { name: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
       ];
     }
 
-    // Run Query & Count in parallel
     const [docs, total] = await Promise.all([
       ZoneModel.find(query)
-        .sort({ createdAt: -1 }) // Newest first
+        .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .exec(),

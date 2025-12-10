@@ -10,7 +10,7 @@ const nameRule = z.string()
 
 const descriptionRule = z.string()
     .min(10, "Description must be at least 10 characters")
-    .max(500, "Description cannot exceed 500 chars")
+    .max(1500, "Description cannot exceed 500 chars")
     .trim();
 
 // --- 1. Create Category Request ---

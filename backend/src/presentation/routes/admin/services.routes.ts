@@ -28,4 +28,6 @@ router.put(
 // 4. Delete Service (DELETE /:id)
 router.delete('/:id', adminServiceItemController.delete);
 
+router.patch('/:id/toggle', (req, res) => adminServiceItemController.toggleStatus(req, res));
+
 export default router;
