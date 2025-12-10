@@ -1,5 +1,5 @@
-import api from "../api/axiosClient";
-import type { ServiceItem } from "../../domain/types/ServiceItem";
+import api from "../../api/axiosClient";
+import type { ServiceItem } from "../../../domain/types/ServiceItem";
 
 export interface ServiceQueryParams {
   page: number;

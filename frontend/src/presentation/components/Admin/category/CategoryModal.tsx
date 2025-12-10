@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { X, UploadCloud, Image as ImageIcon, Power, Loader2, Save } from "lucide-react";
-import type { ServiceCategory } from "../../../domain/types/ServiceCategory";
+import type { ServiceCategory } from "../../../../domain/types/ServiceCategory";
 
 // ✅ Import the Reusable Schema
-import { categorySchema } from "../../validation/serviceCatalog";
+import { categorySchema } from "../../../validation/serviceCatalog";
 
 interface CategoryModalProps {
   isOpen: boolean;

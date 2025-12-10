@@ -4,18 +4,18 @@ import { useDebounce } from "../../../hooks/useDebounce";
 import { useNotification } from "../../../hooks/useNotification";
 
 // Repositories
-import * as categoryRepo from "../../../../infrastructure/repositories/serviceCategoryRepository";
-import * as serviceRepo from "../../../../infrastructure/repositories/serviceItemRepository";
+import * as categoryRepo from "../../../../infrastructure/repositories/admin/serviceCategoryRepository";
+import * as serviceRepo from "../../../../infrastructure/repositories/admin/serviceItemRepository";
 
 // Types
 import type { ServiceCategory } from "../../../../domain/types/ServiceCategory";
 import type { ServiceItem } from "../../../../domain/types/ServiceItem";
 
 // Components
-import CategoryCard from "../../../components/Admin/CategoryCard";
-import CategoryModal from "../../../components/Modals/CategoryModal";
-import ServiceItemModal from "../../../components/Modals/ServiceItemModal"; // ✅ New Modal
-import ConfirmModal from "../../../components/Modals/ConfirmModal";
+import CategoryCard from "../../../components/Admin/category/CategoryCard";
+import CategoryModal from "../../../components/Admin/category/CategoryModal";
+import ServiceItemModal from "../../../components/Admin/Modals/ServiceItemModal";
+import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
 
 // Helper to extract the exact message from Backend
 const getErrorMessage = (error: any): string => {

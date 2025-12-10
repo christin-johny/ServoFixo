@@ -5,11 +5,11 @@ import {
   Search, Filter, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { z } from "zod";
-import ZoneMap from "../../../components/Maps/ZoneMap";
-import * as zoneRepo from "../../../../infrastructure/repositories/zoneRepository";
+import ZoneMap from "../../../components/Admin/Maps/ZoneMap";
+import * as zoneRepo from "../../../../infrastructure/repositories/admin/zoneRepository";
 import type { Zone, UpdateZoneDTO } from "../../../../domain/types/Zone";
 import { useNotification } from "../../../hooks/useNotification";
-import ConfirmModal from "../../../components/Modals/ConfirmModal";
+import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
 import { useDebounce } from "../../../hooks/useDebounce";
 
 const zoneNameSchema = z
@@ -66,7 +66,7 @@ const Zones: React.FC = () => {
       setTotalPages(result.totalPages);
     } catch (err) {
       console.error(err);
-      showError(err?.message ??,"Failed to load zones list.");
+      showError(err?.message ??"Failed to load zones list.");
     } finally {
       setLoading(false);
     }
@@ -130,7 +130,6 @@ const Zones: React.FC = () => {
         await zoneRepo.updateZone(payload);
         showSuccess("Zone updated successfully");
       } else {
-        // @ts-expect-error
         await zoneRepo.createZone({ name: validName, description: zoneDesc, boundaries: zonePoints, isActive: zoneIsActive });
         showSuccess("New zone created successfully");
       }

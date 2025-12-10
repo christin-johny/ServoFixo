@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, TileLayer, Polygon, Marker, useMapEvents, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import type { Zone } from "../../../domain/types/Zone";
+import type { Zone } from "../../../../domain/types/Zone";
 
 // Fix Leaflet icons
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";

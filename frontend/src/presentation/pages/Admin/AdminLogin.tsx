@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { z } from "zod";
-import { adminLogin } from "../../../infrastructure/repositories/adminAuthRepository";
+import { adminLogin } from "../../../infrastructure/repositories/admin/adminAuthRepository";
 import { setAccessToken, setUser } from "../../../store/authSlice";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { parseJwt } from "../../../utils/jwt";

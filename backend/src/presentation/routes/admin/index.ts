@@ -27,5 +27,5 @@ router.get("/dashboard", adminAuth, (req, res) => {
 router.use("/zones",adminAuth, adminZonesRoutes);
 router.use("/categories",adminAuth, adminCategoryRoutes);
 router.use('/services', adminAuth, serviceItemRoutes);
-router.use('/customer', adminAuth, adminCustomerRoutes);
+router.use('/customers', adminAuth, adminCustomerRoutes);
 export default router;

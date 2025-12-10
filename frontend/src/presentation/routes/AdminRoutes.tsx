@@ -8,6 +8,7 @@ import RoleProtectedRoute from "./RoleProtectedRoute";
 import AdminLayout from "../layouts/AdminLayout"; // <--- Default import
 import Zones from "../pages/Admin/Zones/Zones";
 import Services from "../pages/Admin/Services/Services";
+import Customers from '../pages/Admin/customers/AdminCustomersPage';
 const AdminRoutes: React.FC = () => (
   <React.Suspense fallback={<LoaderFallback />}>
     <Routes>
@@ -33,7 +34,7 @@ const AdminRoutes: React.FC = () => (
         {/* Placeholder Routes */}
         <Route path="bookings/*" element={<div>Bookings Module</div>} />
         <Route path="technicians/*" element={<div>Technicians Module</div>} />
-        <Route path="customers" element={<div>Customers Module</div>} />
+        <Route path="customers" element={<Customers/>} />
         <Route path="zones" element={<Zones />} />
         <Route path="payments" element={<div>Payments Module</div>} />
         <Route path="services" element={<Services/>} />

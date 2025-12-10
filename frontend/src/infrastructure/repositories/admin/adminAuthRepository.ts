@@ -1,4 +1,4 @@
-import api from "../api/axiosClient";
+import api from "../../api/axiosClient";
 
 export const adminLogin = async (payload: { email: string; password: string }) => {
   const resp = await api.post("/api/admin/auth/login", payload);

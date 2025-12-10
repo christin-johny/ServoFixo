@@ -1,7 +1,7 @@
 import React from "react";
 import { Edit2, Trash2, ChevronDown, Plus, Package, Clock, Shield } from "lucide-react";
-import type { ServiceCategory } from "../../../domain/types/ServiceCategory";
-import type { ServiceItem } from "../../../domain/types/ServiceItem";
+import type { ServiceCategory } from "../../../../domain/types/ServiceCategory";
+import type { ServiceItem } from "../../../../domain/types/ServiceItem";
 
 interface CategoryCardProps {
   category: ServiceCategory;

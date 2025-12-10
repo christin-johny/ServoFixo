@@ -2,8 +2,8 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { adminLogout } from "../../../infrastructure/repositories/adminAuthRepository";
-import { logout } from "../../../store/authSlice";
+import { adminLogout } from "../../../../infrastructure/repositories/admin/adminAuthRepository";
+import { logout } from "../../../../store/authSlice";
 
 const AdminLogoutButton: React.FC<{ redirectTo?: string }> = ({ redirectTo = "/admin/login" }) => {
   const dispatch = useDispatch();

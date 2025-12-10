@@ -1,5 +1,5 @@
-import api from "../api/axiosClient";
-import type { ServiceCategory } from "../../domain/types/ServiceCategory";
+import api from "../../api/axiosClient";
+import type { ServiceCategory } from "../../../domain/types/ServiceCategory";
 
 export interface CategoryQueryParams {
   page: number;

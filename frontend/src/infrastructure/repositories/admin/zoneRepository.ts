@@ -1,5 +1,5 @@
-import api from "../api/axiosClient";
-import type { Zone, CreateZoneDTO, UpdateZoneDTO } from "../../domain/types/Zone";
+import api from "../../api/axiosClient";
+import type { Zone, CreateZoneDTO, UpdateZoneDTO } from "../../../domain/types/Zone";
 
 export interface ZoneQueryParams {
   page: number;

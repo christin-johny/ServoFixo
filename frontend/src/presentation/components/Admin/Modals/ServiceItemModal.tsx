@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, UploadCloud, Plus, Trash2, Loader2, Save, Power, Info } from "lucide-react";
-import type { ServiceSpecification, ServiceItem } from "../../../domain/types/ServiceItem";
-import { serviceItemSchema } from "../../validation/serviceCatalog"; 
+import type { ServiceSpecification, ServiceItem } from "../../../../domain/types/ServiceItem";
+import { serviceItemSchema } from "../../../validation/serviceCatalog"; 
 
 interface ServiceItemModalProps {
   isOpen: boolean;

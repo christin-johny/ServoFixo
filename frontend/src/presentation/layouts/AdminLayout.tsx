@@ -1,7 +1,7 @@
 // frontend/src/presentation/layouts/AdminLayout.tsx
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import AdminSidebar from '../components/Admin/AdminSidebar';
+import AdminSidebar from '../components/Admin/sidebar/AdminSidebar';
 import { Menu } from 'lucide-react';
 
 const AdminLayout: React.FC = () => {
