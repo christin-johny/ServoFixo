@@ -41,7 +41,6 @@ export class AdminCategoryController {
         category
       });
     } catch (err: any) {
-      console.error('Create category error:', err);
       if (err.message === 'Category with this name already exists') {
         return res.status(StatusCodes.CONFLICT).json({ error: err.message });
       }
@@ -62,7 +61,6 @@ export class AdminCategoryController {
       const result = await this.getAllUseCase.execute({ page, limit, search, isActive });
       return res.status(StatusCodes.OK).json(result);
     } catch (err) {
-      console.error('Get categories error:', err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
     }
   };
@@ -90,7 +88,6 @@ export class AdminCategoryController {
         category
       });
     } catch (err: any) {
-      console.error('Update category error:', err);
       if (err.message === 'Category not found') return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
       if (err.message.includes('already exists')) return res.status(StatusCodes.CONFLICT).json({ error: err.message });
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
@@ -103,7 +100,6 @@ export class AdminCategoryController {
       await this.deleteUseCase.execute(id);
       return res.status(StatusCodes.OK).json({ message: 'Category deleted successfully' });
     } catch (err: any) {
-      console.error('Delete category error:', err);
       if (err.message === 'Category not found') return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
     }

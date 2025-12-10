@@ -83,7 +83,6 @@ const ForgotPassword: React.FC = () => {
       
       navigate("/customer/verify-otp", { state: otpFlowData });
     } catch (err: any) {
-      console.error(err);
       const serverMsg = err?.response?.data?.message ?? err?.message ?? "Failed to send OTP. Try again.";
       setError(serverMsg);
     } finally {

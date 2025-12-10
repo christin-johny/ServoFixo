@@ -70,7 +70,6 @@ const AdminLogin: React.FC = () => {
       }
 
     } catch (err: any) {
-      console.log(err)
       setError(err?.message ?? "Login failed");
 
     } finally {

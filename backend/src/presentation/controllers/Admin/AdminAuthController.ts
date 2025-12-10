@@ -41,7 +41,6 @@ export class AdminAuthController {
         });
       }
 
-      console.error('Admin login error:', err);
 
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         message: ErrorMessages.INTERNAL_ERROR,
@@ -70,8 +69,6 @@ export class AdminAuthController {
         message: SuccessMessages.LOGOUT_SUCCESS,
       });
     } catch (err) {
-      console.error('Admin logout error:', err);
-      // still clear cookie as a fallback
       res.clearCookie('refreshToken', { path: refreshCookieOptions.path ?? '/' });
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         message: ErrorMessages.INTERNAL_ERROR,

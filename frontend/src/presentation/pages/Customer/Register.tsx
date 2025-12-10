@@ -204,7 +204,6 @@ const Register: React.FC = () => {
 
       navigate("/customer/verify-otp", { state: otpFlowData });
     } catch (err: any) {
-      console.error(err);
       setError(err?.response?.data?.message ?? err?.message ?? "Failed to send OTP. Try again.");
     } finally {
       setLoading(false);

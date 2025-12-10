@@ -20,6 +20,8 @@ export enum ErrorMessages {
   MISSING_REQUIRED_FIELDS = "Missing required fields",
 
   INTERNAL_ERROR = "Internal server error",
+  INVALID_QUERY = 'Invalid Query parameters',
+  INVALID_DATA = 'Invalid request data provided'
 }
 
 // OPTIONAL: machine-readable error codes

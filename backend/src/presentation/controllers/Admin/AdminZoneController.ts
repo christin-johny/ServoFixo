@@ -37,7 +37,6 @@ export class AdminZoneController {
         zone,
       });
     } catch (err: any) {
-      console.error('Create zone error:', err);
       
       // Handle Duplicate Name
       if (err.message === 'Zone with this name already exists') {
@@ -75,7 +74,6 @@ export class AdminZoneController {
 
       return res.status(StatusCodes.OK).json(result);
     } catch (err) {
-      console.error('Get all zones error:', err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });
@@ -89,7 +87,6 @@ export class AdminZoneController {
       await this.deleteZoneUseCase.execute(id);
       return res.status(StatusCodes.OK).json({ message: 'Zone deleted successfully' });
     } catch (err: any) {
-      console.error('Delete zone error:', err);
       if (err.message === 'Zone not found or could not be deleted') {
         return res.status(StatusCodes.NOT_FOUND).json({ error: 'Zone not found' });
       }
@@ -124,7 +121,6 @@ export class AdminZoneController {
         zone: updatedZone,
       });
     } catch (err: any) {
-      console.error('Update zone error:', err);
       
       if (err.message === 'Zone not found') {
         return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });

@@ -5,15 +5,6 @@ import { IJwtService } from '../../application/services/IJwtService';
 import { ErrorMessages } from '../../../../shared/types/enums/ErrorMessages';
 import { StatusCodes } from '../../../../shared/types/enums/StatusCodes';
 
-/**
- * Factory that creates an Express middleware for protecting admin routes.
- *
- * It:
- * - Reads Authorization: Bearer <token>
- * - Verifies access token via IJwtService
- * - Ensures payload.type === 'admin'
- * - Attaches payload to req.user
- */
 export function makeAdminAuthMiddleware(jwtService: IJwtService) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -33,7 +24,6 @@ export function makeAdminAuthMiddleware(jwtService: IJwtService) {
         });
       }
 
-      // 1️⃣ Verify token
       const payload = await jwtService.verifyAccessToken(token);
 
       // 2️⃣ Ensure this is an admin token
@@ -50,8 +40,6 @@ export function makeAdminAuthMiddleware(jwtService: IJwtService) {
       // 4️⃣ Pass control to the next handler
       return next();
     } catch (err) {
-      console.error('Admin auth middleware error:', err);
-
       return res.status(StatusCodes.UNAUTHORIZED).json({
         error: ErrorMessages.UNAUTHORIZED,
       });

@@ -25,6 +25,11 @@ import { DeleteServiceItemUseCase } from '../../application/use-cases/service-it
 import { EditServiceItemUseCase } from '../../application/use-cases/service-items/EditServiceItemUseCase';
 import { AdminServiceItemController } from '../../presentation/controllers/Admin/AdminServiceItemController';
 
+// --- 5. Imports: Customer Module ---
+import { CustomerMongoRepository } from '../database/repositories/CustomerMongoRepository';
+import { GetAllCustomersUseCase } from '../../application/use-cases/customer/GetAllCustomersUseCase';
+import { AdminCustomerController } from '../../presentation/controllers/Admin/AdminCustomerController';
+import { UpdateCustomerUseCase } from '../../application/use-cases/customer/UpdateCustomerUseCase'; 
 
 const imageService = new S3ImageService();
 
@@ -64,7 +69,6 @@ const serviceItemRepo = new ServiceItemMongoRepository();
 const createServiceItemUseCase = new CreateServiceItemUseCase(serviceItemRepo, imageService);
 const getAllServiceItemsUseCase = new GetAllServiceItemsUseCase(serviceItemRepo);
 const deleteServiceItemUseCase = new DeleteServiceItemUseCase(serviceItemRepo, imageService);
-// ✅ Initialize Edit Use Case
 const editServiceItemUseCase = new EditServiceItemUseCase(serviceItemRepo, imageService);
 
 export const adminServiceItemController = new AdminServiceItemController(
@@ -73,3 +77,20 @@ export const adminServiceItemController = new AdminServiceItemController(
   deleteServiceItemUseCase,
   editServiceItemUseCase // ✅ Pass it to the controller
 );
+
+
+
+// E. CUSTOMER MODULE WIRING
+const customerRepo = new CustomerMongoRepository();
+
+const getAllCustomersUseCase = new GetAllCustomersUseCase(customerRepo);
+// NOTE: We'll implement UpdateCustomerUseCase later, but initialize its placeholder here
+const updateCustomerUseCase = new UpdateCustomerUseCase(customerRepo); 
+
+export const adminCustomerController = new AdminCustomerController(
+    customerRepo, 
+    getAllCustomersUseCase,
+    updateCustomerUseCase
+);
+
+

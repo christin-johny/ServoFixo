@@ -42,7 +42,6 @@ export class CustomerAuthController {
         });
       }
 
-      console.error('Customer register init OTP error:', err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });
@@ -109,7 +108,6 @@ export class CustomerAuthController {
         }
       }
 
-      console.error('Customer register verify OTP error:', err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });
@@ -155,7 +153,6 @@ export class CustomerAuthController {
         });
       }
 
-      console.error('Customer login error:', err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });
@@ -190,7 +187,6 @@ export class CustomerAuthController {
         });
       }
 
-      console.error('Customer forgot password init OTP error:', err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         message: ErrorMessages.INTERNAL_ERROR,
       });
@@ -238,7 +234,6 @@ export class CustomerAuthController {
         }
       }
 
-      console.error('Customer forgot password verify OTP error:', err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         message: ErrorMessages.INTERNAL_ERROR,
       });
@@ -279,7 +274,6 @@ export class CustomerAuthController {
         user: result.user,
       });
     } catch (err: any) {
-      console.error('Customer google login error:', err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });
@@ -292,7 +286,6 @@ googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
 
     const user = req.user as any;
     if (!user) {
-      console.warn('[GOOGLE CALLBACK CONTROLLER] no user on req; redirecting to login');
       res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/login?error=AuthenticationFailed`);
       return;
     }
@@ -303,7 +296,6 @@ googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
     const result = await this.customerGoogleLoginUseCase.execute({ customer: user });
 
     if (!result || !result.accessToken || !result.refreshToken) {
-      console.error('[GOOGLE CALLBACK CONTROLLER] googleLoginUseCase returned no tokens:', result);
       // fallback: redirect to login with error
       res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/login?error=AuthenticationFailed`);
       return;
@@ -330,7 +322,6 @@ googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
     // If you want to pass access token in query (less secure), you could include ?accessToken=...
     res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/dashboard`);
   } catch (err: any) {
-    console.error('Google login callback error:', err);
     res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/login?error=InternalError`);
   }
 };
@@ -347,7 +338,7 @@ logout = async (req: Request, res: Response): Promise<Response> => {
         await redis.del(`refresh:${refreshToken}`);
       } catch (err) {
         console.error("Failed to delete refresh token from redis (logout):", err);
-        // continue — we still clear cookie
+
       }
     }
 
@@ -359,7 +350,6 @@ logout = async (req: Request, res: Response): Promise<Response> => {
     // Return JSON; frontend should clear client-side state and redirect.
     return res.status(200).json({ message: "Logged out" });
   } catch (err) {
-    console.error("Logout error:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

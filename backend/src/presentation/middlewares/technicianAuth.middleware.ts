@@ -48,7 +48,7 @@ export function makeTechnicianAuthMiddleware(jwtService: IJwtService) {
 
       return next();
     } catch (err) {
-      console.error('Technician auth middleware error:', err);
+     
 
       return res.status(StatusCodes.UNAUTHORIZED).json({
         error: ErrorMessages.UNAUTHORIZED,

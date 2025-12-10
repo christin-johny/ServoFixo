@@ -123,7 +123,6 @@ const CustomerLogin: React.FC = () => {
         serverMsg = err.message;
       }
       setError(serverMsg);
-      console.error("Login error:", err);
     }
   };
 

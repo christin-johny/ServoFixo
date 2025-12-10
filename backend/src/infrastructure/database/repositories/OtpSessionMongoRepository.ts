@@ -50,7 +50,6 @@ async countRecentSessions(email: string, minutes: number): Promise<number> {
       createdAt: { $gte: since },
     }).exec();
   } catch (err) {
-    console.error('OtpSessionMongoRepository.countRecentSessions error:', err);
     throw err;
   }
 }

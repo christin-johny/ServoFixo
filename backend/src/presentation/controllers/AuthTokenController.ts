@@ -26,8 +26,6 @@ export class AuthTokenController {
         accessToken: result.accessToken,
       });
     } catch (err: any) {
-      console.error("Refresh token error:", err);
-      // Ensure cookie is cleared on failure
       res.clearCookie("refreshToken", { path: refreshCookieOptions.path || "/" });
       return res.status(401).json({ error: "Unauthorized" });
     }

@@ -48,8 +48,6 @@ export function makeCustomerAuthMiddleware(jwtService: IJwtService) {
 
       return next();
     } catch (err) {
-      console.error('Customer auth middleware error:', err);
-
       return res.status(StatusCodes.UNAUTHORIZED).json({
         error: ErrorMessages.UNAUTHORIZED,
       });

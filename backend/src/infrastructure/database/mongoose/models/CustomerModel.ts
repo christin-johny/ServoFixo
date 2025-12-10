@@ -8,7 +8,7 @@ export interface CustomerDocument extends Document {
   avatarUrl?: string;
   defaultZoneId?: string;
   addresses: any[];
-  suspended: boolean;
+  suspended: boolean; 
   suspendReason?: string;
   additionalInfo: Record<string, any>;
   googleId?: string;
@@ -27,11 +27,15 @@ const CustomerSchema: Schema<CustomerDocument> = new Schema(
       lowercase: true,
       trim: true,
     },
-    phone: { type: String },
+    phone: { 
+      type: String,
+      unique: true,  
+      sparse: true    
+    },
     password: {
       type: String,
       required: false,
-      default: '',  
+      default: '', 
     },
     avatarUrl: { type: String },
     defaultZoneId: { type: String },

@@ -63,5 +63,5 @@ export class Customer {
   getSuspendReason(): string | undefined {return this.suspendReason}
   getAddresses(): object[] {return this.addresses}
   getAvatarUrl(): string | undefined {return this.avatarUrl}
-
+  getDefaultZoneId():string | undefined {return this.defaultZoneId}
 } 

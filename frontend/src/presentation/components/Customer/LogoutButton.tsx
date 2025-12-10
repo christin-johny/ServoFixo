@@ -11,7 +11,7 @@ const LogoutButton: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await customerLogout(); // server should invalidate session/token
+      await customerLogout(); 
     } catch (err) {
       console.warn("Logout request failed (still clearing client state):", err);
     } finally {

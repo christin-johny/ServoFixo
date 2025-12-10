@@ -16,7 +16,6 @@ const AdminLogoutButton: React.FC<{ redirectTo?: string }> = ({ redirectTo = "/a
       // best-effort call; even if it fails, clear client state
       await adminLogout();
     } catch (err) {
-      // ignore server errors
       console.warn("Logout request failed", err);
     } finally {
       dispatch(logout());

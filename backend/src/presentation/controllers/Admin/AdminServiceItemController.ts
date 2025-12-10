@@ -78,7 +78,6 @@ export class AdminServiceItemController {
       
       return res.status(StatusCodes.OK).json(result);
     } catch (err) {
-      console.error('Get Service Items error:', err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
     }
   };

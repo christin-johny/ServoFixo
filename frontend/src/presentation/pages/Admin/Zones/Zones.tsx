@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { useEffect, useState } from "react";
 import {
   Plus, Trash2, MapPin, Save, XCircle, Edit2, Power,
@@ -65,7 +66,7 @@ const Zones: React.FC = () => {
       setTotalPages(result.totalPages);
     } catch (err) {
       console.error(err);
-      showError("Failed to load zones list.");
+      showError(err?.message ??,"Failed to load zones list.");
     } finally {
       setLoading(false);
     }
@@ -129,7 +130,7 @@ const Zones: React.FC = () => {
         await zoneRepo.updateZone(payload);
         showSuccess("Zone updated successfully");
       } else {
-        // @ts-ignore
+        // @ts-expect-error
         await zoneRepo.createZone({ name: validName, description: zoneDesc, boundaries: zonePoints, isActive: zoneIsActive });
         showSuccess("New zone created successfully");
       }
