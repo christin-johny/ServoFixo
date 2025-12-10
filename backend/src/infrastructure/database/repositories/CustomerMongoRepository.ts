@@ -4,14 +4,14 @@ import { CustomerModel, CustomerDocument } from '../mongoose/models/CustomerMode
 import { HydratedDocument } from 'mongoose';
 
 export class CustomerMongoRepository implements ICustomerRepository {
-  // ... (existing findById, findByEmail, create, update methods) ...
+  // ... (existing findById, findByEmail, findByPhone, create, update methods remain the same) ...
 
   async findById(id: string): Promise<Customer | null> {
     const doc = await CustomerModel.findById(id).exec();
     if (!doc) return null;
     return this.toEntity(doc);
   }
-
+  
   async findByEmail(email: string): Promise<Customer | null> {
     const normalizedEmail = email.toLowerCase().trim();
     const doc = await CustomerModel.findOne({ email: normalizedEmail }).exec();
@@ -19,7 +19,6 @@ export class CustomerMongoRepository implements ICustomerRepository {
     return this.toEntity(doc);
   }
 
-  // ✅ ADDED METHOD 1: Find By Phone
   async findByPhone(phone: string): Promise<Customer | null> {
     const doc = await CustomerModel.findOne({ phone: phone }).exec();
     if (!doc) return null;
@@ -34,26 +33,25 @@ export class CustomerMongoRepository implements ICustomerRepository {
 
   async update(customer: Customer): Promise<Customer> {
     const data = this.toPersistence(customer);
-
     const doc = await CustomerModel.findByIdAndUpdate(
       customer.getId(),
       data,
       { new: true }
     ).exec();
-
     if (!doc) return customer;
-
     return this.toEntity(doc);
   }
 
-  // ✅ ADDED METHOD 2: Admin Pagination, Filtering, and Search
+  // ✅ UPDATED METHOD: Admin Pagination with Soft Delete Check
   async findAllPaginated(
     page: number,
     limit: number,
     filters: CustomerFilterParams
   ): Promise<PaginatedResult<Customer>> {
     const skip = (page - 1) * limit;
-    const query: any = {};
+    
+    // ✅ FIX 1: Filter out deleted customers by default
+    const query: any = { isDeleted: false };
 
     if (filters.suspended !== undefined) {
       query.suspended = filters.suspended;
@@ -61,7 +59,6 @@ export class CustomerMongoRepository implements ICustomerRepository {
 
     if (filters.search) {
       const searchRegex = new RegExp(filters.search, 'i');
-      // Search across name, email, and phone fields
       query.$or = [
         { name: searchRegex },
         { email: searchRegex },
@@ -74,7 +71,6 @@ export class CustomerMongoRepository implements ICustomerRepository {
       CustomerModel.countDocuments(query),
     ]);
     
-    // Map documents to entities
     const customers = docs.map(doc => this.toEntity(doc as HydratedDocument<CustomerDocument>));
 
     return {
@@ -85,10 +81,13 @@ export class CustomerMongoRepository implements ICustomerRepository {
     };
   }
 
-  // 🔽 Helpers
+  // ✅ FIX 2: Corrected Delete Method (Use CustomerModel, not this.model)
+  async delete(id: string): Promise<void> {
+    await CustomerModel.findByIdAndUpdate(id, { isDeleted: true }).exec();
+  }
 
+  // 🔽 Helpers (remain the same)
   private toEntity(doc: CustomerDocument): Customer {
-    // We ensure that toEntity handles the new suspended field correctly
     return new Customer(
       doc._id.toString(),
       doc.name,
@@ -98,7 +97,7 @@ export class CustomerMongoRepository implements ICustomerRepository {
       doc.avatarUrl,
       doc.defaultZoneId,
       doc.addresses,
-      doc.suspended, // Ensure this property is passed
+      doc.suspended,
       doc.suspendReason,
       doc.additionalInfo,
       doc.googleId,
@@ -108,16 +107,13 @@ export class CustomerMongoRepository implements ICustomerRepository {
   }
 
   private toPersistence(customer: Customer) {
-    // Add all updatable fields to toPersistence
     return {
       name: customer.getName(),
       email: customer.getEmail(),
       password: customer.getPassword(),
       phone: customer.getPhone(),
       googleId: customer.getGoogleId(),
-      suspended: customer.isSuspended(), // Make sure suspended status can be saved
-      // Note: We need to update toPersistence to handle all fields that the Admin might edit, 
-      // but for now, we focus on the ones used for authentication and status.
+      suspended: customer.isSuspended(),
     };
   }
 }

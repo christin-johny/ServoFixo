@@ -9,6 +9,9 @@ import AdminLayout from "../layouts/AdminLayout"; // <--- Default import
 import Zones from "../pages/Admin/Zones/Zones";
 import Services from "../pages/Admin/Services/Services";
 import Customers from '../pages/Admin/customers/AdminCustomersPage';
+import AdminCustomerProfilePage from "../pages/Admin/customers/AdminCustomerProfilePage";
+
+
 const AdminRoutes: React.FC = () => (
   <React.Suspense fallback={<LoaderFallback />}>
     <Routes>
@@ -30,14 +33,17 @@ const AdminRoutes: React.FC = () => (
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
-        
+
         {/* Placeholder Routes */}
         <Route path="bookings/*" element={<div>Bookings Module</div>} />
         <Route path="technicians/*" element={<div>Technicians Module</div>} />
-        <Route path="customers" element={<Customers/>} />
+        <Route path="customers/*">
+          <Route index element={<Customers />} />
+          <Route path=":customerId" element={<AdminCustomerProfilePage />} />
+        </Route>
         <Route path="zones" element={<Zones />} />
         <Route path="payments" element={<div>Payments Module</div>} />
-        <Route path="services" element={<Services/>} />
+        <Route path="services" element={<Services />} />
         <Route path="disputes" element={<div>Disputes Module</div>} />
         <Route path="reports" element={<div>Reports Module</div>} />
         <Route path="settings" element={<div>Settings Module</div>} />

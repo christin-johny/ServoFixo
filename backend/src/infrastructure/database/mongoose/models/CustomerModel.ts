@@ -14,6 +14,7 @@ export interface CustomerDocument extends Document {
   googleId?: string;
   createdAt: Date;
   updatedAt: Date;
+  isDeleted:boolean;
 }
 
 const CustomerSchema: Schema<CustomerDocument> = new Schema(
@@ -44,6 +45,7 @@ const CustomerSchema: Schema<CustomerDocument> = new Schema(
     suspendReason: { type: String },
     additionalInfo: { type: Schema.Types.Mixed, default: {} },
     googleId: { type: String, unique: true, sparse: true },
+    isDeleted: { type: Boolean, default: false },
   },
   {
     timestamps: true,

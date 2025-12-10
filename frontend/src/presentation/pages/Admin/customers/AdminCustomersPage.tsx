@@ -115,7 +115,7 @@ const AdminCustomersPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end shrink-0 border-b border-gray-200 pb-4 gap-4 sm:gap-0">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            <User className="text-indigo-600" />  Customer Management
+            <User className="text-blue-600" /> Customer Management
           </h1>
           <p className="text-sm text-gray-500 mt-1">View, search, and manage customer accounts and status.</p>
         </div>
@@ -175,12 +175,10 @@ const AdminCustomersPage: React.FC = () => {
               <p className="text-sm font-medium">No customers match your search or filters.</p>
             </div>
           ) : (
-            /* We render the Table Component here */
             <CustomerListTable 
-                customers={customers}
-                // Hook up the table actions to the main page handlers
+                customers={customers} 
                 onEdit={handleStartEdit} 
-                onView={(customer) => navigate(`/admin/customers/${customer.id}`)}
+                onView={(customer) => navigate(`/admin/customers/${customer.id}`)} 
                 onToggleStatus={handleToggleStatus}
             />
           )}

@@ -4,9 +4,10 @@ import type { CustomerDto } from '../../../../domain/types/AdminCustomerDtos';
 
 interface CustomerListTableProps {
   customers: CustomerDto[];
-  onEdit: (id: string) => void;
-  onView: (id: string) => void;
-  onToggleStatus: (id: string, currentStatus: boolean) => void;
+  onEdit: (customer: CustomerDto) => void; 
+  // 🚨 FIX: Change type to expect the full CustomerDto object
+  onView: (customer: CustomerDto) => void; 
+  onToggleStatus: (customer: CustomerDto) => void;
 }
 
 const CustomerListTable: React.FC<CustomerListTableProps> = ({
@@ -15,6 +16,7 @@ const CustomerListTable: React.FC<CustomerListTableProps> = ({
   onView,
   onToggleStatus,
 }) => {
+  
   if (customers.length === 0) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md text-center text-gray-500">
@@ -69,6 +71,7 @@ const CustomerListTable: React.FC<CustomerListTableProps> = ({
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {customers.map((customer) => (
+            
             <tr key={customer.id}>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                 {customer.name}
@@ -86,7 +89,7 @@ const CustomerListTable: React.FC<CustomerListTableProps> = ({
                 
                 {/* 1. View Profile Button (Navigates to Hub) */}
                 <button
-                  onClick={() => onView(customer.id)}
+                  onClick={() => onView(customer)}
                   title="View Profile Hub"
                   className="text-indigo-600 hover:text-indigo-900 p-2 transition duration-150"
                 >
@@ -95,7 +98,7 @@ const CustomerListTable: React.FC<CustomerListTableProps> = ({
 
                 {/* 2. Edit Button (Opens Modal) */}
                 <button
-                  onClick={() => onEdit(customer.id)}
+                  onClick={() => onEdit(customer)}
                   title="Edit Details"
                   className="text-blue-600 hover:text-blue-900 p-2 ml-2 transition duration-150"
                 >
@@ -104,7 +107,7 @@ const CustomerListTable: React.FC<CustomerListTableProps> = ({
                 
                 {/* 3. Status Toggle Button (Industrial Standard - Quick Action) */}
                 <button
-                  onClick={() => onToggleStatus(customer.id, customer.suspended)}
+                  onClick={() => onToggleStatus(customer)}
                   title={customer.suspended ? 'Activate Account' : 'Suspend Account'}
                   className={`p-2 ml-2 transition duration-150 rounded-md ${
                     customer.suspended 

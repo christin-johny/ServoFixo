@@ -30,6 +30,8 @@ import { CustomerMongoRepository } from '../database/repositories/CustomerMongoR
 import { GetAllCustomersUseCase } from '../../application/use-cases/customer/GetAllCustomersUseCase';
 import { AdminCustomerController } from '../../presentation/controllers/Admin/AdminCustomerController';
 import { UpdateCustomerUseCase } from '../../application/use-cases/customer/UpdateCustomerUseCase'; 
+import { GetCustomerByIdUseCase } from '../../application/use-cases/customer/GetCustomerByIdUseCase';
+import {DeleteCustomerUseCase} from '../../application/use-cases/customer/DeleteCustomerUseCase'
 
 const imageService = new S3ImageService();
 
@@ -87,10 +89,14 @@ const getAllCustomersUseCase = new GetAllCustomersUseCase(customerRepo);
 // NOTE: We'll implement UpdateCustomerUseCase later, but initialize its placeholder here
 const updateCustomerUseCase = new UpdateCustomerUseCase(customerRepo); 
 
+const getCustomerByIdUseCase = new GetCustomerByIdUseCase(customerRepo); // ✅ Instantiate new Use Case
+const deleteCustomerUseCase = new DeleteCustomerUseCase(customerRepo)
 export const adminCustomerController = new AdminCustomerController(
     customerRepo, 
     getAllCustomersUseCase,
-    updateCustomerUseCase
+    updateCustomerUseCase,
+    getCustomerByIdUseCase,
+    deleteCustomerUseCase
 );
 
 

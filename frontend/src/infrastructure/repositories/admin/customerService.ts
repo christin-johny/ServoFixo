@@ -60,4 +60,22 @@ export const updateCustomer = async (id: string, payload: CustomerUpdatePayload)
     }
 };
 
-// ⚠️ We will not implement delete or create as they are currently de-prioritized.
+export const getCustomerById = async (id: string): Promise<CustomerDto> => {
+    try {
+        const response = await api.get(`/api/admin/customers/${id}`);
+        // Assuming the backend returns the Customer DTO directly
+        return response.data; 
+        
+    } catch (error) {
+        console.error(`CustomerService: Error fetching customer ${id}:`, error);
+        throw error;
+    }
+};
+export const deleteCustomer = async (id: string): Promise<void> => {
+    try {
+        await api.delete(`/api/admin/customers/${id}`);
+    } catch (error) {
+        console.error(`Error deleting customer ${id}:`, error);
+        throw error;
+    }
+};
