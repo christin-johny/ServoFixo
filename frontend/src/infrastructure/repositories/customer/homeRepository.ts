@@ -15,7 +15,7 @@ export const getPopularServices = async (): Promise<ServiceItem[]> => {
   return response.data.data;
 };
 
-// 3. Fetch Services by Category (for "Appliances" & "Salon" sections)
+
 export const getServicesByCategory = async (categoryId: string): Promise<ServiceItem[]> => {
   const response = await api.get(`/api/customer/services?categoryId=${categoryId}&isActive=true`);
   return response.data.data;

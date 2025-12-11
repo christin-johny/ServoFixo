@@ -281,7 +281,7 @@ const CustomerLogin: React.FC = () => {
             </div>
 
             <div className="flex justify-end">
-              <a href="/customer/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline">
+              <a href="/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline">
                 Forgot password?
               </a>
             </div>
@@ -308,7 +308,7 @@ const CustomerLogin: React.FC = () => {
 
             <div className="text-center text-sm text-gray-600">
               No Account yet?{" "}
-              <button type="button" className="font-semibold text-blue-600 hover:text-blue-700 hover:underline" onClick={() => navigate("/customer/register")}>
+              <button type="button" className="font-semibold text-blue-600 hover:text-blue-700 hover:underline" onClick={() => navigate("/register")}>
                 Register
               </button>
             </div>

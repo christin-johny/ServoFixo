@@ -22,7 +22,9 @@ const AppInner: React.FC = () => {
     const tryRefresh = async () => {
       try {
         const data = await authRepo.refresh();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const token = (data as any).accessToken ?? (data as any).token ?? null;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const user = (data as any).user ?? null;
 
         if (!aborted) {
@@ -66,7 +68,8 @@ const AppInner: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/customer" replace />} />
+        
+        {/* 1. Admin Routes (Keep Isolated) */}
         <Route
           path="/admin/*"
           element={
@@ -76,9 +79,13 @@ const AppInner: React.FC = () => {
           }
         />
 
-        <Route path="/customer/*" element={<CustomerRoutes />} />
+        {/* 2. Technician Routes (Keep Isolated) */}
         <Route path="/technician/*" element={<TechnicianRoutes />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+
+        {/* 3. Customer Routes (Now at Root) */}
+        {/* This MUST be last because "/*" catches everything else */}
+        <Route path="/*" element={<CustomerRoutes />} />
+
       </Routes>
     </BrowserRouter>
   );

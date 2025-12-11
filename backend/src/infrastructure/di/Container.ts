@@ -55,7 +55,7 @@ import { BcryptPasswordHasher } from '../security/BcryptPasswordHasher';     // 
 import { JwtService } from '../security/JwtService'
 import { RefreshTokenUseCase } from '../../application/use-cases/auth/RefreshTokenUseCase';
 import { AuthTokenController } from '../../presentation/controllers/AuthTokenController';
-
+import { CustomerCategoryController } from '../../presentation/controllers/Customer/CustomerCategoryController';
 const imageService = new S3ImageService();
 
 // B. ZONE MODULE WIRING
@@ -164,9 +164,12 @@ export const customerAuthController = new CustomerAuthController(
 // H. CUSTOMER SERVICE MODULE (Home Page)
 // =================================================================
 const getMostBookedUseCase = new GetMostBookedServicesUseCase(serviceItemRepo);
-
+export const customerCategoryController = new CustomerCategoryController(
+  getAllCategoriesUseCase // We reuse the Admin Use Case
+);
 export const customerServiceController = new CustomerServiceController(
-  getMostBookedUseCase
+  getMostBookedUseCase,
+  getAllServiceItemsUseCase
 );
 
 // =================================================================

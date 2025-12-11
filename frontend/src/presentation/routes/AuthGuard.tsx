@@ -26,7 +26,7 @@ const AuthGuard: React.FC<Props> = ({ children }) => {
         return <Navigate to="/technician" replace />;
       case "customer":
       default:
-        return <Navigate to="/customer" replace />;
+        return <Navigate to="/" replace />;
     }
   }
 

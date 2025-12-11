@@ -85,7 +85,7 @@ const ForgotPassword: React.FC = () => {
       // ✅ FIXED: Removed 'resp.data?.message'. Access 'resp.message' directly.
       setInfo(resp.message ?? "OTP sent. Check your email.");
       
-      navigate("/customer/verify-otp", { state: otpFlowData });
+      navigate("/verify-otp", { state: otpFlowData });
     } catch (err: any) {
       const serverMsg = err?.response?.data?.message ?? err?.message ?? "Failed to send OTP. Try again.";
       setError(serverMsg);
@@ -175,7 +175,7 @@ const ForgotPassword: React.FC = () => {
 
           <div className="text-center text-sm text-gray-500">
             Remember your password?{" "}
-            <button type="button" className="text-blue-600 hover:underline" onClick={() => navigate("/customer/login")}>
+            <button type="button" className="text-blue-600 hover:underline" onClick={() => navigate("/login")}>
               Login
             </button>
           </div>

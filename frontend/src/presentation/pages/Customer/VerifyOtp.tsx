@@ -14,7 +14,6 @@ const OTP_EXPIRY_SECONDS = 180;
 const RESEND_DELAY_SECONDS = 60;
 
 const STORAGE_KEY = "otpFlowData";
-const LEGACY_REG_KEY = "registrationData";
 
 /** Type Definition for State passing */
 interface OtpFlowState {
@@ -44,21 +43,17 @@ const VerifyOtp: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // --- 1. Safe State Extraction ---
+  // --- 1. Clean State Extraction (No Legacy) ---
   const state = location.state as OtpFlowState | null;
   const storageRaw = typeof window !== "undefined" ? sessionStorage.getItem(STORAGE_KEY) : null;
   const storageParsed = storageRaw ? (JSON.parse(storageRaw) as OtpFlowState) : null;
   
-  // Legacy fallback (optional, can be removed if you cleaned up Register.tsx)
-  const legacyRaw = typeof window !== "undefined" ? sessionStorage.getItem(LEGACY_REG_KEY) : null;
-  const legacyParsed = legacyRaw ? JSON.parse(legacyRaw) : null;
-
-  // Prioritize: location.state -> sessionStorage -> defaults
-  const context = state?.context ?? storageParsed?.context ?? (legacyParsed ? "registration" : "registration");
-  const email = state?.email ?? storageParsed?.email ?? legacyParsed?.email ?? "";
-  const sessionId = state?.sessionId ?? storageParsed?.sessionId ?? legacyParsed?.sessionId ?? "";
+  // Prioritize: location.state -> sessionStorage -> Default to 'registration'
+  const context = state?.context ?? storageParsed?.context ?? "registration";
+  const email = state?.email ?? storageParsed?.email ?? "";
+  const sessionId = state?.sessionId ?? storageParsed?.sessionId ?? "";
   
-  const form = state?.form ?? storageParsed?.form ?? legacyParsed ?? {};
+  const form = state?.form ?? storageParsed?.form ?? {};
   const nameFromState = form.name ?? "";
   const passwordFromState = form.password ?? "";
   const phoneFromState = form.phone ?? "";
@@ -182,6 +177,7 @@ const VerifyOtp: React.FC = () => {
   // Helper to extract error message safely
   const extractServerMsg = (err: unknown) => {
     if (err && typeof err === 'object' && 'response' in err) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const resp = (err as any).response?.data;
         return resp?.message ?? resp?.error ?? (err as any).message ?? "Verification failed";
     }
@@ -246,7 +242,6 @@ const VerifyOtp: React.FC = () => {
         // Cleanup storage on success
         try {
           sessionStorage.removeItem(STORAGE_KEY);
-          sessionStorage.removeItem(LEGACY_REG_KEY);
         } catch (_) {}
 
         if (access) {
@@ -263,10 +258,11 @@ const VerifyOtp: React.FC = () => {
               }));
             }
           }
-          navigate("/customer");
+          // ✅ Updated Redirect to Root
+          navigate("/");
         } else {
-          // Fallback if no token (cookie-only flow)
-          window.location.href = "/customer";
+          // ✅ Updated Fallback Redirect
+          window.location.href = "/";
         }
       } else {
         // FORGOT PASSWORD FLOW
@@ -284,7 +280,8 @@ const VerifyOtp: React.FC = () => {
           sessionStorage.removeItem("forgotResetHandoff");
         } catch (_) {}
 
-        navigate("/customer/login", {
+        // Redirect to Login (which is now at /login)
+        navigate("/login", {
           state: { successMessage: data?.message ?? "Password reset successful. Please login." },
         });
       }

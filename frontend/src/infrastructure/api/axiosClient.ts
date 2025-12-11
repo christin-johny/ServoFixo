@@ -1,34 +1,32 @@
 // src/infrastructure/api/axiosClient.ts
 import axios from "axios";
+import type { AxiosRequestConfig, AxiosError } from "axios";
 import store from "../../store/store";
 import { setAccessToken, logout } from "../../store/authSlice";
+import { REFRESH_ENDPOINTS } from "../config/authConfig";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
-// primary api instance (TypeScript infers the type automatically)
+// --- 1. Primary Instance (With Interceptors) ---
 const api = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
 
-// refresh instance
-const refreshApi = axios.create({
+// --- 2. Refresh Instance (No Interceptors) ---
+// We export this so authRepository can use it directly
+export const refreshApi = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
+  headers: { "Content-Type": "application/json" },
 });
 
-const REFRESH_ENDPOINTS = [
-  "/api/auth/refresh",
-  "/api/admin/auth/refresh",
-  "/api/customer/auth/refresh",
-  "/api/technician/auth/refresh",
-];
-
+// --- 3. Queue Mechanism for Concurrency ---
 interface FailedRequest {
   resolve: (value: string | PromiseLike<string | null> | null) => void;
   reject: (error?: unknown) => void;
-  config: any; // Using 'any' to avoid import errors for AxiosRequestConfig
+  config: AxiosRequestConfig;
 }
 
 let isRefreshing = false;
@@ -42,111 +40,92 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
-const normalizeAxiosError = (error: any) => {
-  const data = error?.response?.data ?? error?.data ?? null;
-
-  const backendMessage =
-    data?.message ||
-    data?.error ||
-    data?.detail ||
-    (Array.isArray(data?.errors) && (data.errors[0]?.msg || data.errors[0]?.message));
-
-  const message = (typeof backendMessage === "string" && backendMessage) || error?.message || "Request failed";
-
-  return {
-    message,
-    status: error?.response?.status ?? null,
-    data,
-    original: error,
-  };
-};
-
-// Request Interceptor
-// @ts-ignore: handling strict config type mismatch
+// --- 4. Request Interceptor ---
 api.interceptors.request.use(
-  (config: any) => {
+  (config) => {
     const token = store.getState().auth.accessToken;
-    if (token) {
-      if (!config.headers) {
-        config.headers = {};
-      }
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error: any) => Promise.reject(normalizeAxiosError(error))
+  (error) => Promise.reject(error)
 );
 
-// Response Interceptor
+// --- 5. Response Interceptor ---
 api.interceptors.response.use(
-  (response: any) => response,
-  async (err: any) => {
-    if (err && err.response && err.response.data) {
-      try {
-        const data = err.response.data;
-        const backendMessage =
-          data?.message ||
-          data?.error ||
-          data?.detail ||
-          (Array.isArray(data?.errors) && (data.errors[0]?.msg || data.errors[0]?.message));
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalConfig = error.config as AxiosRequestConfig & { _retry?: boolean };
 
-        if (backendMessage && typeof backendMessage === "string") {
-          err.message = backendMessage;
-        }
-      } catch (_) { /* ignore */ }
+    // If no response (network error) or no config, reject immediately
+    if (!error.response || !originalConfig) {
+      return Promise.reject(error);
     }
 
-    const originalConfig = err.config;
-
-    if (!originalConfig || !err.response) {
-      return Promise.reject(normalizeAxiosError(err));
-    }
-
-    // 401 Refresh Flow
-    if (err.response.status === 401 && !originalConfig._retry) {
+    // Handle 401 Unauthorized (and ensure we haven't already retried)
+    if (error.response.status === 401 && !originalConfig._retry) {
+      
+      // A. If already refreshing, queue this request
       if (isRefreshing) {
         return new Promise<string | null>((resolve, reject) => {
           failedQueue.push({ resolve, reject, config: originalConfig });
         })
           .then((token) => {
-            if (token) originalConfig.headers.Authorization = `Bearer ${token}`;
+            if (token && originalConfig.headers) {
+              originalConfig.headers.Authorization = `Bearer ${token}`;
+            }
             return api(originalConfig);
           })
-          .catch((e) => Promise.reject(normalizeAxiosError(e)));
+          .catch((err) => Promise.reject(err));
       }
 
+      // B. Start Refresh Flow
       originalConfig._retry = true;
       isRefreshing = true;
 
-      let newToken: string | null = null;
-      let lastError: unknown = null;
+      try {
+        let newToken: string | null = null;
 
-      for (const ep of REFRESH_ENDPOINTS) {
-        try {
-          const resp = await refreshApi.post(ep);
-          newToken = resp?.data?.accessToken ?? resp?.data?.token ?? null;
-          if (newToken) break;
-        } catch (e) {
-          lastError = e;
+        // Loop through all possible refresh endpoints
+        for (const endpoint of REFRESH_ENDPOINTS) {
+          try {
+            // Use refreshApi (clean instance) to avoid circular interceptors
+            const resp = await refreshApi.post(endpoint);
+            // Support different response structures
+            newToken = resp.data?.accessToken || resp.data?.token || null;
+            
+            if (newToken) break; // Found a working endpoint
+          } catch (e) {
+            // Continue to next endpoint
+          }
         }
-      }
 
-      if (!newToken) {
-        processQueue(lastError ?? err, null);
+        if (!newToken) {
+          throw new Error("Refresh failed on all endpoints");
+        }
+
+        // Success: Update Store & Process Queue
+        store.dispatch(setAccessToken(newToken));
+        processQueue(null, newToken);
+        
+        // Retry Original Request
+        if (originalConfig.headers) {
+          originalConfig.headers.Authorization = `Bearer ${newToken}`;
+        }
+        return api(originalConfig);
+
+      } catch (refreshError) {
+        // Fatal: Refresh failed (Token expired or reused)
+        processQueue(refreshError, null);
+        store.dispatch(logout()); // Hard Logout
+        return Promise.reject(refreshError);
+      } finally {
         isRefreshing = false;
-        store.dispatch(logout());
-        return Promise.reject(normalizeAxiosError(lastError ?? err));
       }
-
-      store.dispatch(setAccessToken(newToken));
-      processQueue(null, newToken);
-      isRefreshing = false;
-
-      originalConfig.headers.Authorization = `Bearer ${newToken}`;
-      return api(originalConfig);
     }
 
-    return Promise.reject(normalizeAxiosError(err));
+    return Promise.reject(error);
   }
 );
 

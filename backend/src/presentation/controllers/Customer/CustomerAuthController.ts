@@ -23,7 +23,6 @@ export class CustomerAuthController {
     private readonly customerGoogleLoginUseCase: CustomerGoogleLoginUseCase
   ) {}
 
-  // 1️⃣ Registration - init OTP
   registerInitOtp = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { email } = req.body;
@@ -48,7 +47,6 @@ export class CustomerAuthController {
     }
   };
 
-  // 2️⃣ Registration - verify OTP + create user
   registerVerifyOtp = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { email, otp, sessionId, name, password, phone } = req.body;
@@ -71,7 +69,6 @@ export class CustomerAuthController {
 
       if (result.refreshToken) {
         try {
-          // verify refresh token to get subject (user id)
           const jwtService = new JwtService();
           const payload = await jwtService.verifyRefreshToken(result.refreshToken);
           const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
@@ -320,7 +317,7 @@ googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
     // Redirect the user to dashboard (frontend will either read accessToken from query OR call /refresh)
     // We keep the redirect simple so frontend can call /refresh with credentials: 'include' if it prefers cookie-based exchange.
     // If you want to pass access token in query (less secure), you could include ?accessToken=...
-    res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/dashboard`);
+    res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}`);
   } catch (err: any) {
     res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/login?error=InternalError`);
   }
