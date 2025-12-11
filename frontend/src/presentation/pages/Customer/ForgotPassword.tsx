@@ -1,5 +1,5 @@
 // src/presentation/pages/Customer/ForgotPassword.tsx
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { z, ZodError } from "zod";
 import * as authRepo from "../../../infrastructure/repositories/authRepository";
@@ -11,6 +11,10 @@ const forgotPasswordSchema = z.object({
 
 const ForgotPassword: React.FC = () => {
   const navigate = useNavigate();
+  useEffect(() => {
+    sessionStorage.removeItem("otpFlowData");
+  }, []);
+
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

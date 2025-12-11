@@ -107,6 +107,17 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
     const result = await ServiceItemModel.findByIdAndUpdate(id, { isDeleted: true }).exec();
     return !!result;
   }
+  async findMostBooked(limit: number): Promise<ServiceItem[]> {
+    const docs = await ServiceItemModel.find({ 
+      isDeleted: { $ne: true }, 
+      isActive: true 
+    })
+    .sort({ bookingCount: -1 }) // Sort Descending (Highest first)
+    .limit(limit)
+    .exec();
+
+    return docs.map(doc => this.toEntity(doc));
+  }
 
   private toEntity(doc: IServiceItemDocument): ServiceItem {
     return new ServiceItem(

@@ -1,17 +1,17 @@
 // server/controllers/CustomerAuthController.ts
 import type { Request, Response } from 'express';
-import { RequestCustomerRegistrationOtpUseCase } from '../../application/use-cases/auth/RequestCustomerRegistrationOtpUseCase';
-import { VerifyCustomerRegistrationOtpUseCase } from '../../application/use-cases/auth/VerifyCustomerRegistrationOtpUseCase';
-import { CustomerLoginUseCase } from '../../application/use-cases/auth/CustomerLoginUseCase';
-import { RequestCustomerForgotPasswordOtpUseCase } from '../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase';
-import { VerifyCustomerForgotPasswordOtpUseCase } from '../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase';
-import { CustomerGoogleLoginUseCase } from '../../application/use-cases/auth/CustomerGoogleLoginUseCase';
-import { ErrorMessages } from '../../../../shared/types/enums/ErrorMessages';
-import { StatusCodes } from '../../../../shared/types/enums/StatusCodes';
-import { refreshCookieOptions } from '../../infrastructure/config/Cookie';
+import { RequestCustomerRegistrationOtpUseCase } from '../../../application/use-cases/auth/RequestCustomerRegistrationOtpUseCase';
+import { VerifyCustomerRegistrationOtpUseCase } from '../../../application/use-cases/auth/VerifyCustomerRegistrationOtpUseCase';
+import { CustomerLoginUseCase } from '../../../application/use-cases/auth/CustomerLoginUseCase';
+import { RequestCustomerForgotPasswordOtpUseCase } from '../../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase';
+import { VerifyCustomerForgotPasswordOtpUseCase } from '../../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase';
+import { CustomerGoogleLoginUseCase } from '../../../application/use-cases/auth/CustomerGoogleLoginUseCase';
+import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
+import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
+import { refreshCookieOptions } from '../../../infrastructure/config/Cookie';
 
-import redis from '../../infrastructure/redis/redisClient';
-import { JwtService } from '../../infrastructure/security/JwtService';
+import redis from '../../../infrastructure/redis/redisClient';
+import { JwtService } from '../../../infrastructure/security/JwtService';
 
 export class CustomerAuthController {
   constructor(

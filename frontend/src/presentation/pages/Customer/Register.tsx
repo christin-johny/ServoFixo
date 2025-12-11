@@ -1,5 +1,5 @@
 // src/presentation/pages/Customer/Register.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ZodError, z } from "zod";
 import { customerRegisterInitOtp } from "../../../infrastructure/repositories/authRepository";
@@ -31,7 +31,10 @@ const registerSchema = z
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-
+  useEffect(() => {
+    sessionStorage.removeItem("otpFlowData");
+    sessionStorage.removeItem("registrationData");
+  }, []);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -183,7 +186,7 @@ const Register: React.FC = () => {
     try {
       const payload: CustomerRegisterInitDto = { email: formData.email };
       const resp = await customerRegisterInitOtp(payload);
-      
+
       // ✅ FIXED: Removed 'resp.data as AuthResponse'. 'resp' is already the data.
       const data = resp as unknown as AuthResponse; // Double cast for safety if types are strict
       const sessionId = data?.sessionId ?? null;

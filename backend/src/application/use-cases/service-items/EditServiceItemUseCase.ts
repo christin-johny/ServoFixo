@@ -25,18 +25,14 @@ export class EditServiceItemUseCase {
     const service = await this.serviceRepo.findById(request.id);
     if (!service) throw new Error("Service Item not found");
 
-    // 1. Check duplicates... (Existing logic)
-
-    // 2. ✅ DELETE Requested Images (S3 + Entity)
     if (request.imagesToDelete && request.imagesToDelete.length > 0) {
       const deletePromises = request.imagesToDelete.map(async (url) => {
         await this.imageService.deleteImage(url); // Remove from S3
-        service.removeImage(url); // Remove from Entity
+        service.removeImage(url);
       });
       await Promise.all(deletePromises);
     }
 
-    // 3. Upload NEW images (Existing logic)
     if (request.newImageFiles.length > 0) {
       const uploadPromises = request.newImageFiles.map(file => 
         this.imageService.uploadImage(file.buffer, file.originalName, file.mimeType)
@@ -45,7 +41,6 @@ export class EditServiceItemUseCase {
       service.addImages(newUrls);
     }
 
-    // 4. Update Details (Existing logic)
     service.updateDetails(
       request.name,
       request.description,

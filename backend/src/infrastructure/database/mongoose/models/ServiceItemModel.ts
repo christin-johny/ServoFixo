@@ -9,7 +9,9 @@ export interface IServiceItemDocument extends Document {
   specifications: { title: string; value: string }[]; 
   imageUrls: string[]; 
   isActive: boolean;
-  isDeleted: boolean; // ✅ Added soft delete flag to interface
+  isDeleted: boolean;
+  // ✅ NEW FIELD: To track popularity
+  bookingCount: number; 
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,7 +28,6 @@ const ServiceItemSchema: Schema = new Schema(
     description: { type: String, required: true },
     basePrice: { type: Number, required: true, min: 0 },
     
-    // ✅ Store specifications as a list
     specifications: [
       {
         title: { type: String, required: true },
@@ -35,11 +36,13 @@ const ServiceItemSchema: Schema = new Schema(
       }
     ],
 
-    // ✅ Store multiple image URLs
     imageUrls: [{ type: String }],
 
     isActive: { type: Boolean, default: true },
-    isDeleted: { type: Boolean, default: false }, // ✅ Added soft delete flag to Schema
+    isDeleted: { type: Boolean, default: false },
+    
+    // ✅ NEW FIELD: Default 0, Indexed for fast sorting (-1 = Descending)
+    bookingCount: { type: Number, default: 0, index: -1 } 
   },
   { timestamps: true }
 );

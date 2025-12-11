@@ -32,17 +32,16 @@ app.get("/health", (req, res) => {
 import adminRoutes from "./presentation/routes/admin";
 
 import customerAuthRoutes from "./presentation/routes/customer/auth.routes";
-import technicianAuthRoutes from "./presentation/routes/technician/auth.routes";
+//import technicianAuthRoutes from "./presentation/routes/technician/auth.routes";
 import customerRoutes from "./presentation/routes/customer/index";
-import technicianRoutes from "./presentation/routes/technician/index.ts";
+//
 
 app.use("/api/admin", adminRoutes);
 
-app.use("/api/customer/auth", customerAuthRoutes);
 app.use("/api/customer", customerRoutes);
 
-app.use("/api/technician/auth", technicianAuthRoutes);
-app.use("/api/technician", technicianRoutes);
+// app.use("/api/technician/auth", technicianAuthRoutes);
+// app.use("/api/technician", technicianRoutes);
 
 export const startServer = async () => {
   await connectDatabase();

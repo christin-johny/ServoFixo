@@ -36,6 +36,26 @@ import { UpdateCustomerUseCase } from '../../application/use-cases/customer/Upda
 import { GetCustomerByIdUseCase } from '../../application/use-cases/customer/GetCustomerByIdUseCase';
 import { DeleteCustomerUseCase } from '../../application/use-cases/customer/DeleteCustomerUseCase';
 
+// --- 6. Imports: Customer Auth & Services ---
+import { CustomerServiceController } from '../../presentation/controllers/Customer/CustomerServiceController';
+import { GetMostBookedServicesUseCase } from '../../application/use-cases/service-items/GetMostBookedServicesUseCase';
+
+import { CustomerAuthController } from '../../presentation/controllers/Customer/CustomerAuthController';
+import { RequestCustomerRegistrationOtpUseCase } from '../../application/use-cases/auth/RequestCustomerRegistrationOtpUseCase';
+import { VerifyCustomerRegistrationOtpUseCase } from '../../application/use-cases/auth/VerifyCustomerRegistrationOtpUseCase';
+import { CustomerLoginUseCase } from '../../application/use-cases/auth/CustomerLoginUseCase';
+import { RequestCustomerForgotPasswordOtpUseCase } from '../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase';
+import { VerifyCustomerForgotPasswordOtpUseCase } from '../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase';
+import { CustomerGoogleLoginUseCase } from '../../application/use-cases/auth/CustomerGoogleLoginUseCase';
+
+// --- 7. Imports: Infrastructure Services ---
+import { OtpSessionMongoRepository } from '../database/repositories/OtpSessionMongoRepository';
+import { NodemailerEmailService } from '../email/NodemailerEmailService'; // Adjust path if needed
+import { BcryptPasswordHasher } from '../security/BcryptPasswordHasher';     // Adjust path if needed
+import { JwtService } from '../security/JwtService'
+import { RefreshTokenUseCase } from '../../application/use-cases/auth/RefreshTokenUseCase';
+import { AuthTokenController } from '../../presentation/controllers/AuthTokenController';
+
 const imageService = new S3ImageService();
 
 // B. ZONE MODULE WIRING
@@ -110,3 +130,47 @@ export const adminCustomerController = new AdminCustomerController(
     getCustomerByIdUseCase,
     deleteCustomerUseCase
 );
+
+// =================================================================
+// F. INFRASTRUCTURE SERVICES
+// =================================================================
+const otpSessionRepo = new OtpSessionMongoRepository();
+const emailService = new NodemailerEmailService(); 
+const passwordHasher = new BcryptPasswordHasher();
+const jwtService = new JwtService();
+
+
+// =================================================================
+// G. CUSTOMER AUTH MODULE
+// =================================================================
+const reqRegOtpUseCase = new RequestCustomerRegistrationOtpUseCase(customerRepo, otpSessionRepo, emailService);
+const verRegOtpUseCase = new VerifyCustomerRegistrationOtpUseCase(customerRepo, otpSessionRepo, passwordHasher, jwtService);
+const custLoginUseCase = new CustomerLoginUseCase(customerRepo, passwordHasher, jwtService);
+const reqForgotOtpUseCase = new RequestCustomerForgotPasswordOtpUseCase(customerRepo, otpSessionRepo, emailService);
+const verForgotOtpUseCase = new VerifyCustomerForgotPasswordOtpUseCase(customerRepo, otpSessionRepo, passwordHasher);
+const googleLoginUseCase = new CustomerGoogleLoginUseCase(customerRepo, jwtService, process.env.GOOGLE_CLIENT_ID || '');
+
+export const customerAuthController = new CustomerAuthController(
+  reqRegOtpUseCase,
+  verRegOtpUseCase,
+  custLoginUseCase,
+  reqForgotOtpUseCase,
+  verForgotOtpUseCase,
+  googleLoginUseCase
+);
+
+
+// =================================================================
+// H. CUSTOMER SERVICE MODULE (Home Page)
+// =================================================================
+const getMostBookedUseCase = new GetMostBookedServicesUseCase(serviceItemRepo);
+
+export const customerServiceController = new CustomerServiceController(
+  getMostBookedUseCase
+);
+
+// =================================================================
+// I. TOKEN MANAGEMENT
+// =================================================================
+const refreshTokenUseCase = new RefreshTokenUseCase(jwtService);
+export const authTokenController = new AuthTokenController(refreshTokenUseCase);

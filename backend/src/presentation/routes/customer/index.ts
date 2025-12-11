@@ -1,28 +1,38 @@
-// backend/src/presentation/routes/customer.routes.ts
-
 import { Router } from 'express';
 import { JwtService } from '../../../infrastructure/security/JwtService';
 import { makeCustomerAuthMiddleware } from '../../middlewares/customerAuth.middleware';
 import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
 
+// --- Import Sub-Routers ---
+import authRoutes from './auth.routes';       // ✅ Import Auth
+import serviceRoutes from './service.routes'; // ✅ Import Services
+
 const router = Router();
 
-// Shared JwtService instance
+// Shared Middleware
 const jwtService = new JwtService();
-
-// Customer auth middleware instance
 const customerAuth = makeCustomerAuthMiddleware(jwtService);
 
+// =================================================================
+// 1. MOUNT SUB-MODULES
+// =================================================================
+
+// Auth Routes -> /api/customer/auth/*
+router.use('/auth', authRoutes);
+
+// Service Routes -> /api/customer/services/*
+router.use('/services', serviceRoutes);
+
+
+// =================================================================
+// 2. DIRECT ROUTES (e.g. Profile)
+// =================================================================
+
 /**
- * Example protected route:
  * GET /api/customer/me
- *
- * Requires:
- * - Authorization: Bearer <accessToken> of type 'customer'
  */
 router.get('/me', customerAuth, (req, res) => {
-  const user = (req as any).user; // { sub, roles, type }
-
+  const user = (req as any).user; 
   return res.status(StatusCodes.OK).json({
     message: 'Customer profile placeholder',
     user,

@@ -1,4 +1,3 @@
-// src/presentation/pages/Customer/VerifyOtp.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -17,7 +16,20 @@ const RESEND_DELAY_SECONDS = 60;
 const STORAGE_KEY = "otpFlowData";
 const LEGACY_REG_KEY = "registrationData";
 
-/** password validation schema (authoritative) */
+/** Type Definition for State passing */
+interface OtpFlowState {
+  email: string;
+  sessionId: string;
+  context: "registration" | "forgot_password" | "login";
+  form?: {
+    name?: string;
+    phone?: string;
+    password?: string;
+  };
+  successMessage?: string;
+}
+
+/** Password validation schema (authoritative) */
 const passwordSchema = z
   .string()
   .min(8, "Password must be at least 8 characters")
@@ -32,27 +44,26 @@ const VerifyOtp: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const state = (location.state || {}) as any;
+  // --- 1. Safe State Extraction ---
+  const state = location.state as OtpFlowState | null;
   const storageRaw = typeof window !== "undefined" ? sessionStorage.getItem(STORAGE_KEY) : null;
+  const storageParsed = storageRaw ? (JSON.parse(storageRaw) as OtpFlowState) : null;
+  
+  // Legacy fallback (optional, can be removed if you cleaned up Register.tsx)
   const legacyRaw = typeof window !== "undefined" ? sessionStorage.getItem(LEGACY_REG_KEY) : null;
-  const storageParsed = storageRaw ? JSON.parse(storageRaw as string) : null;
-  const legacyParsed = legacyRaw ? JSON.parse(legacyRaw as string) : null;
+  const legacyParsed = legacyRaw ? JSON.parse(legacyRaw) : null;
 
-  const context =
-    (state.context as string) ??
-    (storageParsed?.context as string) ??
-    (legacyParsed ? "registration" : undefined) ??
-    "registration";
+  // Prioritize: location.state -> sessionStorage -> defaults
+  const context = state?.context ?? storageParsed?.context ?? (legacyParsed ? "registration" : "registration");
+  const email = state?.email ?? storageParsed?.email ?? legacyParsed?.email ?? "";
+  const sessionId = state?.sessionId ?? storageParsed?.sessionId ?? legacyParsed?.sessionId ?? "";
+  
+  const form = state?.form ?? storageParsed?.form ?? legacyParsed ?? {};
+  const nameFromState = form.name ?? "";
+  const passwordFromState = form.password ?? "";
+  const phoneFromState = form.phone ?? "";
 
-  const email = state.email ?? storageParsed?.email ?? legacyParsed?.email ?? "";
-  const sessionId = state.sessionId ?? storageParsed?.sessionId ?? legacyParsed?.sessionId ?? "";
-  const form = state.form ?? storageParsed?.form ?? legacyParsed ?? {};
-
-  const nameFromState = state.name ?? form?.name ?? "";
-  const passwordFromState = state.password ?? form?.password ?? "";
-  const phoneFromState = state.phone ?? form?.phone ?? "";
-
-  // OTP boxes
+  // --- 2. Component State ---
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +73,7 @@ const VerifyOtp: React.FC = () => {
   const [resendTimer, setResendTimer] = useState<number>(RESEND_DELAY_SECONDS);
   const [resending, setResending] = useState(false);
 
-  // Forgot password fields
+  // Forgot Password Fields
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -72,10 +83,10 @@ const VerifyOtp: React.FC = () => {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
 
-  // reuse hook for fast checks
+  // Password Strength Hook
   const { checks } = usePasswordStrength(newPassword);
 
-  // timers
+  // --- 3. Effects ---
   useEffect(() => {
     const t = window.setInterval(() => {
       setExpiryTimer((p) => (p > 0 ? p - 1 : 0));
@@ -85,9 +96,11 @@ const VerifyOtp: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // Auto-focus first input
     inputsRef.current[0]?.focus();
   }, []);
 
+  // --- 4. Handlers ---
   const handleChange = (i: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
     const next = [...otp];
@@ -116,7 +129,6 @@ const VerifyOtp: React.FC = () => {
     }
   };
 
-  // Map the first failing rule to the same messages used in Zod schema
   const firstPasswordFailureMessage = (): string | undefined => {
     if (!newPassword) return undefined;
     if (newPassword.length < 8) return "Password must be at least 8 characters";
@@ -128,7 +140,6 @@ const VerifyOtp: React.FC = () => {
     return undefined;
   };
 
-  // handle password typing with fast client-side feedback
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setNewPassword(val);
@@ -138,7 +149,6 @@ const VerifyOtp: React.FC = () => {
       if (fail) {
         setPasswordError(fail);
       } else {
-        // final defensive Zod parse (keeps messages consistent)
         try {
           passwordSchema.parse(val);
           setPasswordError(null);
@@ -152,7 +162,6 @@ const VerifyOtp: React.FC = () => {
       }
     }
 
-    // check match
     if (confirmNewPassword && val !== confirmNewPassword) {
       setConfirmError("Passwords do not match");
     } else if (confirmNewPassword) {
@@ -170,9 +179,14 @@ const VerifyOtp: React.FC = () => {
     }
   };
 
-  // helper to extract server or Zod error safely
-  const extractServerMsg = (err: any) =>
-    err?.response?.data?.message ?? err?.response?.data?.error ?? err?.message ?? "Verification failed";
+  // Helper to extract error message safely
+  const extractServerMsg = (err: unknown) => {
+    if (err && typeof err === 'object' && 'response' in err) {
+        const resp = (err as any).response?.data;
+        return resp?.message ?? resp?.error ?? (err as any).message ?? "Verification failed";
+    }
+    return (err as Error)?.message ?? "Verification failed";
+  };
 
   const verifyOtp = async () => {
     const code = otp.join("");
@@ -188,7 +202,6 @@ const VerifyOtp: React.FC = () => {
         setPasswordError(fail);
         return;
       }
-      // final authoritative parse
       try {
         passwordSchema.parse(newPassword);
         setPasswordError(null);
@@ -226,20 +239,19 @@ const VerifyOtp: React.FC = () => {
           phone: phoneFromState,
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data = resp as any;
         const access = data?.accessToken ?? data?.token;
         
-        // Cleanup session storage
+        // Cleanup storage on success
         try {
           sessionStorage.removeItem(STORAGE_KEY);
           sessionStorage.removeItem(LEGACY_REG_KEY);
         } catch (_) {}
 
         if (access) {
-          // Token returned in response - update Redux and navigate
           dispatch(setAccessToken(access));
           
-          // Backend doesn't return user object, so decode JWT to get user info
           if (data.user) {
             dispatch(setUser(data.user));
           } else {
@@ -253,10 +265,11 @@ const VerifyOtp: React.FC = () => {
           }
           navigate("/customer");
         } else {
-          // Token not in response (cookie-only flow) - hard redirect to trigger App.tsx refresh
+          // Fallback if no token (cookie-only flow)
           window.location.href = "/customer";
         }
       } else {
+        // FORGOT PASSWORD FLOW
         const resp = await authRepo.customerForgotPasswordVerify({
           email,
           otp: code,
@@ -264,6 +277,7 @@ const VerifyOtp: React.FC = () => {
           newPassword,
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data = resp as any;
         try {
           sessionStorage.removeItem(STORAGE_KEY);
@@ -274,7 +288,7 @@ const VerifyOtp: React.FC = () => {
           state: { successMessage: data?.message ?? "Password reset successful. Please login." },
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(extractServerMsg(err));
     } finally {
       setLoading(false);
@@ -294,7 +308,7 @@ const VerifyOtp: React.FC = () => {
       }
       setExpiryTimer(OTP_EXPIRY_SECONDS);
       setResendTimer(RESEND_DELAY_SECONDS);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(extractServerMsg(err));
     } finally {
       setResending(false);
@@ -348,7 +362,7 @@ const VerifyOtp: React.FC = () => {
                 </button>
               </div>
               {passwordTouched && passwordError && (<p className="mt-1 text-xs text-red-600">{passwordError}</p>)}
-              {/* reuse the PasswordStrength component for visuals */}
+              
               <PasswordStrength password={newPassword} />
             </div>
 

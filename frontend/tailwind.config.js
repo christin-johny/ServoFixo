@@ -1,4 +1,3 @@
-// frontend/tailwind.config.js   ← MUST be .js (not .ts) for now
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -7,12 +6,15 @@ export default {
   ],
   theme: {
     extend: {
-      colors: {
-        primary: "#2563eb",
-        "primary-dark": "#1d4ed8",
-        success: "#10b981",
-        "success-dark": "#059669",
+      keyframes: {
+        'slide-in-left': {
+          '0%': { transform: 'translateX(-100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        }
       },
+      animation: {
+        'slide-in-left': 'slide-in-left 0.3s ease-out forwards',
+      }
     },
   },
   plugins: [],

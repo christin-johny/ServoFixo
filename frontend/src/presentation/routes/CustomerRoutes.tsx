@@ -2,28 +2,23 @@
 import React, { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import LoaderFallback from "../components/LoaderFallback";
-import LogoutButton from "../components/Customer/LogoutButton";
 import AuthGuard from "./AuthGuard";
 import RoleProtectedRoute from "./RoleProtectedRoute";
+import CustomerHome from "../pages/Customer/Home/CustomerHome";
 
-// lazy imports (or keep your current lazies)
+// lazy imports
 const CustomerLogin = lazy(() => import("../pages/Customer/CustomerLogin"));
 const CustomerRegister = lazy(() => import("../pages/Customer/Register"));
 const VerifyOtp = lazy(() => import("../pages/Customer/VerifyOtp"));
 const ForgotPassword = lazy(() => import("../pages/Customer/ForgotPassword"));
 
-// Add other customer pages as needed (dashboard, profile, etc.)
-const CustomerHomeStub: React.FC = () => (
-  <div className="p-6">
-    <h2 className="text-2xl font-semibold">Customer Home (stub)</h2>
-    <LogoutButton />
-  </div>
-);
+// ✅ FIX: Removed the CustomerHomeStub with 'p-6' padding. 
+// We will use CustomerHome directly in the route below.
 
 const CustomerRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
     <Routes>
-      {/* Public auth routes - wrapped with AuthGuard to prevent logged-in users */}
+      {/* Public auth routes */}
       <Route
         path="login"
         element={
@@ -57,15 +52,24 @@ const CustomerRoutes: React.FC = () => (
         }
       />
 
-      {/* Protected routes - require customer role */}
+      {/* Protected routes */}
       <Route
         index
         element={
           <RoleProtectedRoute requiredRole="customer" redirectTo="/customer/login">
-            <CustomerHomeStub />
+            {/* ✅ FIX: Use component directly to allow full-width layout */}
+            <CustomerHome />
+            
+            {/* If you wanted a specific wrapper for other pages, do it here, 
+                but Home usually needs to be full width. */}
           </RoleProtectedRoute>
         }
       />
+      
+      {/* Example: If you add a profile page later that NEEDS padding, wrap only that component
+      <Route path="profile" element={ <div className="p-6"><CustomerProfile /></div> } /> 
+      */}
+
     </Routes>
   </Suspense>
 );

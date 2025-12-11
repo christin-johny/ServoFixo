@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only --poll src/index.ts",
+    "dev": "ts-node-dev --respawn --transpile-only --poll src/app.ts",
     "build": "tsc",
-    "start": "node dist/backend/src/index.js"
+    "start": "node dist/backend/src/app.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.946.0",
