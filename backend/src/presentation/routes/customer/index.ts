@@ -14,10 +14,8 @@ const jwtService = new JwtService();
 const customerAuth = makeCustomerAuthMiddleware(jwtService);
 
 
-// Auth Routes -> /api/customer/auth/*
 router.use('/auth', authRoutes);
 
-// Service Routes -> /api/customer/services/*
 router.use('/services', serviceRoutes);
 
 router.use('/categories', categoryRoutes);

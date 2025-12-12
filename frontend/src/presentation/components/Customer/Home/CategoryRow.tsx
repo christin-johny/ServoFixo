@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import ServiceCard from './ServiceCard';
 import * as homeRepo from '../../../../infrastructure/repositories/customer/homeRepository';
 import type { ServiceCategory } from '../../../../domain/types/ServiceCategory';
 import type { ServiceItem } from '../../../../domain/types/ServiceItem';
+import { useNavigate } from 'react-router-dom';
 
 interface CategoryRowProps {
   category: ServiceCategory;
@@ -11,6 +13,7 @@ interface CategoryRowProps {
 const CategoryRow: React.FC<CategoryRowProps> = ({ category }) => {
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate()
 
   useEffect(() => {
     let mounted = true;
@@ -42,6 +45,10 @@ const CategoryRow: React.FC<CategoryRowProps> = ({ category }) => {
         <div className="flex items-center gap-3">
             <h3 className="text-xl md:text-2xl font-bold text-gray-900">{category.name}</h3>
         </div>
+        
+        <button className="text-sm font-semibold text-blue-600 flex items-center gap-1 hover:gap-2 transition-all"onClick={()=>{navigate(`/services?categoryId=${category._id}`)}}>
+          See All <ArrowRight size={16} />
+        </button>
       </div>
 
       <div className="

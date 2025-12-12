@@ -9,7 +9,6 @@ import {
 
 const router = Router();
 
-// --- Auth Routes ---
 router.post('/register/init-otp', customerAuthController.registerInitOtp);
 router.post('/register/verify-otp', customerAuthController.registerVerifyOtp);
 router.post('/login', customerAuthController.login);
@@ -17,7 +16,6 @@ router.post('/forgot-password/init-otp', customerAuthController.forgotPasswordIn
 router.post('/forgot-password/verify-otp', customerAuthController.forgotPasswordVerifyOtp);
 router.post('/google-login', customerAuthController.googleLogin);
 
-// --- Token Management ---
 router.post('/refresh', authTokenController.refresh);
 router.post("/logout", customerAuthController.logout);
 

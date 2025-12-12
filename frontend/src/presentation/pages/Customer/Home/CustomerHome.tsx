@@ -108,7 +108,6 @@ const CustomerHome: React.FC = () => {
                     <CategoryCardStrip
                         categories={categories}
                         loading={pageLoading}
-                        scrollToSection={scrollToSection}
                     />
 
                     {/* Hero Banner */}

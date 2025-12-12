@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import {MapPin, Search, Bell, User, ChevronDown, Menu, X, LogIn, LogOut,Home, Briefcase, Info, ChevronRight} from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { MapPin, Search, Bell, User, ChevronDown, Menu, X, LogIn, LogOut, Home, Briefcase, Info, ChevronRight } from "lucide-react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../../../../store/store";
 import { logout } from "../../../../store/authSlice";
@@ -11,7 +11,7 @@ const useCurrentUser = () => {
     return {
         name: profile?.name || "Guest User",
         email: profile?.email || "Welcome to ServoFixo",
-        phone: profile?.phone ||'N/A',
+        phone: profile?.phone || 'N/A',
         avatarUrl: profile?.avatarUrl,
     };
 };
@@ -20,6 +20,7 @@ const Navbar: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const dispatch = useDispatch();
+    const [searchParams] = useSearchParams();
 
     const { accessToken } = useSelector((state: RootState) => state.auth);
     const isLoggedIn = !!accessToken;
@@ -29,6 +30,18 @@ const Navbar: React.FC = () => {
     const [query, setQuery] = useState("");
     const drawerRef = useRef<HTMLDivElement | null>(null);
 
+    // --- 1. SYNC SEARCH INPUT WITH URL ---
+    // If user navigates to /services?search=ac, fill the input box
+    useEffect(() => {
+        const urlSearch = searchParams.get('search');
+        if (location.pathname === '/services' && urlSearch) {
+            setQuery(urlSearch);
+        } else if (location.pathname !== '/services') {
+            setQuery(''); // Clear input if we leave the services page
+        }
+    }, [searchParams, location.pathname]);
+
+    // --- DRAWER OUTSIDE CLICK HANDLER ---
     useEffect(() => {
         function onKey(e: KeyboardEvent) {
             if (e.key === "Escape") setDrawerOpen(false);
@@ -46,10 +59,16 @@ const Navbar: React.FC = () => {
         };
     }, [drawerOpen]);
 
+    // --- 2. UPDATED SEARCH HANDLER ---
     const handleSearch = (e?: React.FormEvent) => {
         e?.preventDefault();
         if (query.trim()) {
-            navigate(`/search?q=${encodeURIComponent(query)}`);
+            // Redirect to Listing Page with search param
+            navigate(`/services?search=${encodeURIComponent(query)}`);
+            setDrawerOpen(false);
+        } else {
+            // If empty, go to services without filter
+            navigate('/services');
             setDrawerOpen(false);
         }
     };
@@ -161,7 +180,6 @@ const Navbar: React.FC = () => {
             {/* --- STYLED MOBILE DRAWER --- */}
 
             {drawerOpen && (
-                // ✅ FIX 1: Increased Z-Index to z-[100] to cover BottomNav (which is z-50)
                 <div className="fixed inset-0 z-[100]">
 
                     {/* Overlay */}
@@ -208,7 +226,6 @@ const Navbar: React.FC = () => {
                         </div>
 
                         {/* 2. Scrollable Menu Items */}
-                        {/* ✅ FIX 2: Added pb-20 to ensure content isn't cut off on small screens */}
                         <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1 pb-20">
                             <DrawerItem icon={Home} label="Home" onClick={() => { navigate("/"); setDrawerOpen(false); }} active={isActive('/')} />
                             <DrawerItem icon={Briefcase} label="Services" onClick={() => { navigate("/services"); setDrawerOpen(false); }} active={isActive('/services')} />
@@ -251,7 +268,7 @@ const Navbar: React.FC = () => {
     );
 };
 
-
+// Sub-components (Unchanged mostly)
 const SearchBar = ({ query, setQuery, onSubmit, className = "" }: any) => (
     <form onSubmit={onSubmit} className={`flex items-center gap-3 bg-[#F3F4F6] rounded-full px-4 py-2.5 transition-all focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:bg-white focus-within:shadow-md ${className}`}>
         <Search size={18} className="text-gray-400 flex-shrink-0" />

@@ -57,7 +57,7 @@ import { RefreshTokenUseCase } from "../../application/use-cases/auth/RefreshTok
 import { AuthTokenController } from "../../presentation/controllers/AuthTokenController";
 import { CustomerCategoryController } from "../../presentation/controllers/Customer/CustomerCategoryController";
 import { CustomerProfileController } from "../../presentation/controllers/Customer/CustomerProfileController";
-
+import { GetServiceListingUseCase } from "../../application/use-cases/service-items/GetServiceListingUseCase";
 
 const imageService = new S3ImageService();
 
@@ -208,12 +208,14 @@ export const customerAuthController = new CustomerAuthController(
 // H. CUSTOMER SERVICE MODULE (Home Page)
 // =================================================================
 const getMostBookedUseCase = new GetMostBookedServicesUseCase(serviceItemRepo);
+
+const getServiceListingUseCase = new GetServiceListingUseCase(serviceItemRepo);
 export const customerCategoryController = new CustomerCategoryController(
   getAllCategoriesUseCase // We reuse the Admin Use Case
 );
 export const customerServiceController = new CustomerServiceController(
   getMostBookedUseCase,
-  getAllServiceItemsUseCase
+  getServiceListingUseCase
 );
 
 // =================================================================

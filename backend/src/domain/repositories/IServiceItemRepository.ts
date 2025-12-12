@@ -15,6 +15,8 @@ export interface ServiceFilters {
   maxPrice?: number;
   isActive?: boolean;
   sortBy?: 'price_asc' | 'price_desc' | 'newest' | 'popular';
+  page?: number; 
+  limit?: number;
 }
 
 export interface PaginatedServiceItems {

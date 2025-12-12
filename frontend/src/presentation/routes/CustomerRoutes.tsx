@@ -10,7 +10,7 @@ const CustomerLogin = lazy(() => import("../pages/Customer/CustomerLogin"));
 const CustomerRegister = lazy(() => import("../pages/Customer/Register"));
 const VerifyOtp = lazy(() => import("../pages/Customer/VerifyOtp"));
 const ForgotPassword = lazy(() => import("../pages/Customer/ForgotPassword"));
-
+const ServiceListing = lazy(() => import("../pages/Customer/Listing/ServiceListing"));
 // Placeholder for future Profile page
 // const CustomerProfile = lazy(() => import("../pages/Customer/Profile"));
 
@@ -22,6 +22,7 @@ const CustomerRoutes: React.FC = () => (
       <Route index element={<CustomerHome />} />
 
       <Route path="home" element={<Navigate to="/" replace />} />
+      <Route path="services" element={<ServiceListing />} />
 
       {/* --- AUTH ROUTES (Guests Only) --- */}
       <Route

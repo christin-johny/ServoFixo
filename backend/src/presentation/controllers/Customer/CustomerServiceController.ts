@@ -1,13 +1,15 @@
 import { Request, Response } from 'express';
 import { GetMostBookedServicesUseCase } from '../../../application/use-cases/service-items/GetMostBookedServicesUseCase';
-import { GetAllServiceItemsUseCase } from '../../../application/use-cases/service-items/GetAllServiceItemsUseCase'; // ✅ Import this
+// 👇 CHANGE 1: Import the new Use Case
+import { GetServiceListingUseCase } from '../../../application/use-cases/service-items/GetServiceListingUseCase'; 
 import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 
 export class CustomerServiceController {
   constructor(
     private readonly getMostBookedUseCase: GetMostBookedServicesUseCase,
-    private readonly getAllServiceItemsUseCase: GetAllServiceItemsUseCase 
+    // 👇 CHANGE 2: Inject the new Use Case
+    private readonly getServiceListingUseCase: GetServiceListingUseCase 
   ) {}
 
   getMostBooked = async (req: Request, res: Response): Promise<Response> => {
@@ -23,22 +25,34 @@ export class CustomerServiceController {
     }
   };
 
+  // 👇 CHANGE 3: Update this method to handle advanced filters
   getAll = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const search = req.query.search as string;
-      const categoryId = req.query.categoryId as string; 
-
-      const result = await this.getAllServiceItemsUseCase.execute({
-        page,
-        limit,
-        search,
+      // Extract all possible query params
+      const { 
+        search, 
         categoryId, 
-        isActive: true 
-      });
+        minPrice, 
+        maxPrice, 
+        sort 
+      } = req.query;
 
-      return res.status(StatusCodes.OK).json(result);
+      const filters = {
+        searchTerm: search as string,
+        categoryId: categoryId as string,
+        minPrice: minPrice ? Number(minPrice) : undefined,
+        maxPrice: maxPrice ? Number(maxPrice) : undefined,
+        sortBy: sort as any, // 'price_asc' | 'price_desc' | etc.
+        isActive: true // Always enforce this for customers
+      };
+
+      const services = await this.getServiceListingUseCase.execute(filters);
+
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        count: services.length,
+        data: services
+      });
     } catch (error) {
       console.error('Error fetching services:', error);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
