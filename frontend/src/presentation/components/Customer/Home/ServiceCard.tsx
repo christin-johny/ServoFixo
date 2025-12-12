@@ -1,6 +1,6 @@
 import React from 'react';
 import { Star } from 'lucide-react';
-import type { ServiceItem } from '../../../../../domain/types/ServiceItem';
+import type { ServiceItem } from '../../../../domain/types/ServiceItem';
 
 interface ServiceCardProps {
   service: ServiceItem;
@@ -11,37 +11,39 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onClick }) => {
   return (
     <div 
       onClick={onClick}
-      className="min-w-[200px] w-[200px] md:min-w-[240px] md:w-[240px] bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden shrink-0 group cursor-pointer hover:shadow-lg transition-all"
+      //Kept the fixed widths for horizontal scrolling context, improved hover shadow
+      className="min-w-[200px] w-[200px] md:min-w-[240px] md:w-[240px] bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden shrink-0 group cursor-pointer hover:shadow-md hover:border-blue-100 transition-all duration-300"
     >
       {/* Image Section */}
-      <div className="h-28 md:h-36 bg-gray-100 relative overflow-hidden">
+      <div className="h-32 md:h-40 bg-gray-50 relative overflow-hidden">
         <img 
           src={service.imageUrls[0] || '/assets/service-placeholder.png'} 
           alt={service.name} 
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
         />
-        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 shadow-sm">
-          <Star size={10} className="text-yellow-500 fill-yellow-500" /> 4.8
+        {/* Rating pill with slightly better contrast */}
+        <div className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm text-gray-700">
+          <Star size={10} className="text-yellow-400 fill-yellow-400" /> 4.8
         </div>
       </div>
 
       {/* Content Section */}
-      <div className="p-3 md:p-4">
-        <h4 className="text-sm md:text-base font-bold text-gray-900 line-clamp-1">
-          {service.name}
-        </h4>
-        <p className="text-[10px] md:text-xs text-gray-500 line-clamp-2 mt-1 h-8">
-          {service.description}
-        </p>
+      <div className="p-4 flex flex-col h-[130px] justify-between">
+        <div>
+            <h4 className="text-[15px] md:text-base font-bold text-gray-900 line-clamp-1 leading-tight group-hover:text-blue-600 transition-colors">
+            {service.name}
+            </h4>
+            <p className="text-xs text-gray-500 line-clamp-2 mt-1.5 leading-relaxed">
+            {service.description}
+            </p>
+        </div>
         
-        {/* Price & Add Button */}
-        <div className="flex justify-between items-center mt-3 pt-3 border-t border-dashed border-gray-100">
-          <div className="flex flex-col">
-             <span className="text-sm md:text-base font-bold text-gray-900">₹{service.basePrice}</span>
-          </div>
-          <button className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-600 hover:text-white transition-all">
-            ADD
-          </button>
+        {/* Redesigned Price Section (No Button) */}
+        <div className="mt-3 flex items-baseline gap-1.5">
+            <span className="text-[11px] text-gray-400 font-medium uppercase tracking-wider">from</span>
+            <span className="text-lg md:text-xl font-extrabold text-blue-600">
+              ₹{service.basePrice}
+            </span>
         </div>
       </div>
     </div>

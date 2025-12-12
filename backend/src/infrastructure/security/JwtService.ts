@@ -19,7 +19,7 @@ export class JwtService implements IJwtService {
     this.accessExpiresIn =
       (process.env.JWT_ACCESS_EXPIRES_IN as SignOptions['expiresIn']) || '15m';
     this.refreshExpiresIn =
-      (process.env.JWT_REFRESH_EXPIRES_IN as SignOptions['expiresIn']) || '7d';
+      (process.env.JWT_REFRESH_EXPIRES_IN as SignOptions['expiresIn']) || '5d';
   }
 
   async generateAccessToken(payload: JwtPayload): Promise<string> {
@@ -44,7 +44,6 @@ export class JwtService implements IJwtService {
     try {
       const decoded = jwt.verify(token, this.refreshSecret) as jwt.JwtPayload;
 
-      // Map the generic jwt.JwtPayload to our JwtPayload shape
       const payload: JwtPayload = {
         sub: String(decoded.sub),
         roles: Array.isArray(decoded.roles)
@@ -54,10 +53,11 @@ export class JwtService implements IJwtService {
       };
 
       return payload;
-    } catch (err) {
+    } catch (err: any) {
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
   }
+
   async verifyAccessToken(token: string): Promise<JwtPayload> {
     try {
       const decoded = jwt.verify(token, this.accessSecret) as jwt.JwtPayload;
@@ -71,7 +71,7 @@ export class JwtService implements IJwtService {
       };
 
       return payload;
-    } catch (err) {
+    } catch (err: any) {
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
   }

@@ -8,7 +8,7 @@ const nameRule = z.string()
     // 1. Must start with a letter (Capital or small)
     .regex(/^[a-zA-Z]/, "Name must start with a letter")
     // 2. Can only contain letters, numbers, spaces, and hyphens
-    .regex(/^[a-zA-Z0-9\s-]+$/, "Name can only contain letters, numbers, spaces, and hyphens");
+    .regex(/^[a-zA-Z0-9\s-/()]+$/, "Name can only contain letters, numbers, spaces, and hyphens");
     
 const descriptionRule = z.string()
     .min(10, "Description must be at least 10 characters")

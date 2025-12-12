@@ -6,7 +6,7 @@ const nameRule = z.string()
     .max(50, "Name cannot exceed 50 characters")
     .trim()
     .regex(/^[a-zA-Z]/, "Name must start with a letter")
-    .regex(/^[a-zA-Z0-9\s-]+$/, "Name contains invalid characters");
+    .regex(/^[a-zA-Z0-9\s-/()]+$/, "Name contains invalid characters");
 
 const descriptionRule = z.string()
     .min(10, "Description must be at least 10 characters")

@@ -118,7 +118,7 @@ const Navbar: React.FC = () => {
                 <div className="hidden md:flex items-center h-20 justify-between gap-6">
                     <div className="flex items-center gap-8 lg:gap-12">
                         <div className="flex-shrink-0 cursor-pointer" onClick={() => navigate("/")}>
-                            <img src="/assets/logo.png" alt="ServoFixo" className="h-9 w-auto object-contain" />
+                            <img src="/assets/logo.png" alt="ServoFixo" className="h-12 w-auto object-contain" />
                         </div>
                         <nav className="flex items-center gap-6">
                             <NavLink label="Home" path="/" active={isActive("/")} onClick={() => navigate("/")} />
@@ -152,7 +152,7 @@ const Navbar: React.FC = () => {
                                     </button>
                                 </>
                             ) : (
-                                <button onClick={() => navigate("/login")} className="flex items-center gap-2 bg-gray-900 hover:bg-black text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all">
+                                <button onClick={() => navigate("/login")} className="flex items-center gap-2 bg-blue-600 hover:bg-black text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all">
                                     <LogIn size={16} /> <span>Login</span>
                                 </button>
                             )}

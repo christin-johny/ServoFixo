@@ -2,25 +2,3 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ✅ FIX: Reset default browser margin/padding */
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow-x: hidden; /* Prevent horizontal scrollbars */
-}
-
-#root {
-  width: 100%;
-  height: 100%;
-}
-
-/* Optional: Hide scrollbar for category strip */
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
-}
-.scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}

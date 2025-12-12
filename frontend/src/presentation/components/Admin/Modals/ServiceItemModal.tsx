@@ -8,7 +8,7 @@ interface ServiceItemModalProps {
   onClose: () => void;
   onSave: (formData: FormData) => Promise<void>;
   categoryId: string;
-  initialData?: ServiceItem | null; // ✅ Data for Editing
+  initialData?: ServiceItem | null; 
   isLoading: boolean;
 }
 
@@ -20,7 +20,7 @@ const ServiceItemModal: React.FC<ServiceItemModalProps> = ({
   initialData,
   isLoading,
 }) => {
-  // --- Form State ---
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [basePrice, setBasePrice] = useState<string>("");
@@ -28,19 +28,17 @@ const ServiceItemModal: React.FC<ServiceItemModalProps> = ({
   
   const [specs, setSpecs] = useState<ServiceSpecification[]>([{ title: "", value: "" }]);
   
-  // --- Image Handling State ---
+
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
-  const [existingImages, setExistingImages] = useState<string[]>([]); // Visible existing images
-  const [imagesToDelete, setImagesToDelete] = useState<string[]>([]); // ✅ Track images to delete
-
+  const [existingImages, setExistingImages] = useState<string[]>([]); 
+  const [imagesToDelete, setImagesToDelete] = useState<string[]>([]); 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // --- Reset / Pre-fill Logic ---
+  
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
-        // Edit Mode: Pre-fill
         setName(initialData.name);
         setDescription(initialData.description);
         setBasePrice(String(initialData.basePrice));
@@ -48,7 +46,6 @@ const ServiceItemModal: React.FC<ServiceItemModalProps> = ({
         setSpecs(initialData.specifications.length > 0 ? initialData.specifications : [{ title: "", value: "" }]);
         setExistingImages(initialData.imageUrls || []);
       } else {
-        // Create Mode: Reset
         setName("");
         setDescription("");
         setBasePrice("");
@@ -56,7 +53,6 @@ const ServiceItemModal: React.FC<ServiceItemModalProps> = ({
         setSpecs([{ title: "", value: "" }]);
         setExistingImages([]);
       }
-      // Always reset these
       setSelectedFiles([]);
       setNewPreviews([]);
       setImagesToDelete([]);
@@ -64,44 +60,47 @@ const ServiceItemModal: React.FC<ServiceItemModalProps> = ({
     }
   }, [isOpen, initialData]);
 
-  // Clean up object URLs to prevent memory leaks
   useEffect(() => {
     return () => newPreviews.forEach(url => URL.revokeObjectURL(url));
   }, [newPreviews]);
 
-  // --- Handlers: Files ---
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; 
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-     if (e.target.files) {
-        const files = Array.from(e.target.files);
-        // Validate total count (Visible Existing + New)
-        const totalImages = existingImages.length + selectedFiles.length + files.length;
-        
-        if (totalImages > 5) {
-            setErrors(prev => ({...prev, files: "Max 5 images allowed total."}));
-            return;
-        }
-        
-        const previews = files.map(f => URL.createObjectURL(f));
-        setSelectedFiles(prev => [...prev, ...files]);
-        setNewPreviews(prev => [...prev, ...previews]);
-        setErrors(prev => ({...prev, files: ""}));
-     }
-  }
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+
+      const hasLargeFile = files.some(file => file.size > MAX_FILE_SIZE);
+      if (hasLargeFile) {
+        setErrors(prev => ({ ...prev, files: "Files should be less than 5MB in size." }));
+        e.target.value = ""; 
+        return;
+      }
+
+      const totalImages = existingImages.length + selectedFiles.length + files.length;
+      
+      if (totalImages > 5) {
+        setErrors(prev => ({ ...prev, files: "Max 5 images allowed total." }));
+        return;
+      }
+    
+      const previews = files.map(f => URL.createObjectURL(f));
+      setSelectedFiles(prev => [...prev, ...files]);
+      setNewPreviews(prev => [...prev, ...previews]);
+      setErrors(prev => ({ ...prev, files: "" })); 
+    }
+  };
 
   const removeNewFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
     setNewPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
-  // ✅ Remove Existing Image (Adds to delete list)
   const removeExistingImage = (index: number) => {
     const urlToRemove = existingImages[index];
-    setImagesToDelete(prev => [...prev, urlToRemove]); // Mark for deletion
-    setExistingImages(prev => prev.filter((_, i) => i !== index)); // Hide from UI
+    setImagesToDelete(prev => [...prev, urlToRemove]);
+    setExistingImages(prev => prev.filter((_, i) => i !== index)); 
   };
-
-  // --- Handlers: Specifications ---
   const updateSpec = (index: number, field: keyof ServiceSpecification, value: string) => {
     const newSpecs = [...specs];
     newSpecs[index][field] = value;
@@ -110,11 +109,8 @@ const ServiceItemModal: React.FC<ServiceItemModalProps> = ({
   const addSpecRow = () => setSpecs([...specs, { title: "", value: "" }]);
   const removeSpecRow = (index: number) => setSpecs(specs.filter((_, i) => i !== index));
 
-  // --- Submit Handler ---
   const handleSubmit = async () => {
     setErrors({});
-    
-    // 1. Zod Validation (Name, Desc, Price)
     const priceNum = parseFloat(basePrice);
     const result = serviceItemSchema.safeParse({ name, description, basePrice: priceNum });
 
@@ -125,9 +121,6 @@ const ServiceItemModal: React.FC<ServiceItemModalProps> = ({
       if (newErrors.description) newErrors.description = newErrors.description[0];
       if (newErrors.basePrice) newErrors.basePrice = newErrors.basePrice[0];
     }
-
-    // 2. Image Validation Logic
-    // Must have at least one image remaining (Existing or New)
     const totalRemainingImages = existingImages.length + selectedFiles.length;
 
     if (totalRemainingImages === 0) {
@@ -139,7 +132,6 @@ const ServiceItemModal: React.FC<ServiceItemModalProps> = ({
       return;
     }
 
-    // 3. Prepare FormData
     const formData = new FormData();
     formData.append("categoryId", categoryId);
     formData.append("name", name);

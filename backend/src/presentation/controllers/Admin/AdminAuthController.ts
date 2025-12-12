@@ -53,8 +53,7 @@ export class AdminAuthController {
     try {
       const refreshToken = req.cookies?.refreshToken as string | undefined;
 
-      // Clear cookie using same path used when creating it (best-effort)
-      res.clearCookie('refreshToken', { path: refreshCookieOptions.path ?? '/' });
+      res.clearCookie("refreshToken", refreshCookieOptions);
 
       if (refreshToken) {
         try {

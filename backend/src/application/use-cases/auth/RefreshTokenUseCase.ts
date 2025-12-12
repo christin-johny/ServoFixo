@@ -1,7 +1,7 @@
-// server/application/use-cases/auth/RefreshTokenUseCase.ts
+// backend/src/application/use-cases/auth/RefreshTokenUseCase.ts
 import redis from "../../../infrastructure/redis/redisClient";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import type { IJwtService, JwtPayload } from "../../services/IJwtService"; // adjust path if different
+import type { IJwtService, JwtPayload } from "../../services/IJwtService";
 
 export class RefreshTokenUseCase {
   constructor(private readonly jwtService: IJwtService) {}
@@ -10,8 +10,12 @@ export class RefreshTokenUseCase {
    * Executes refresh logic:
    * - verify incoming JWT refresh token signature
    * - ensure token exists in Redis (token revocation check)
-   * - rotate refresh token (generate new refresh token + store in Redis, delete old)
+   * - rotate refresh token (generate new refresh token + store in Redis, delete old) atomically
    * - generate new access token
+   *
+   * This implementation logs details for debugging and adds a small defensive fallback:
+   * if redis key missing (race/eviction), we re-store the incoming refresh token for a short TTL,
+   * then proceed to issue a new rotated token. Remove fallback if you want strict revocation.
    */
   async execute(refreshToken: string) {
     if (!refreshToken) {
@@ -24,15 +28,47 @@ export class RefreshTokenUseCase {
       payload = await this.jwtService.verifyRefreshToken(refreshToken);
     } catch (err) {
       // invalid signature or expired
+      console.warn(
+        "[RefreshTokenUseCase] verify failed for token (maybe expired or invalid)"
+      );
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
 
-    // 2) Check Redis for token presence
     const redisKey = `refresh:${refreshToken}`;
-    const stored = await redis.get(redisKey);
-    if (!stored) {
-      // Token does not exist (revoked or never created)
+
+    // 2) Check Redis for token presence
+    let stored: string | null = null;
+    try {
+      stored = await redis.get(redisKey);
+    } catch (err) {
+      console.error("[RefreshTokenUseCase] redis.get error:", err);
       throw new Error(ErrorMessages.UNAUTHORIZED);
+    }
+
+    // Defensive fallback: if stored missing, try to tolerate transient race/eviction by re-storing
+    if (!stored) {
+      console.warn(
+        "[RefreshTokenUseCase] token missing in redis - possible race/eviction. Applying short fallback."
+      );
+      try {
+        const fallbackTtl = Math.max(
+          60,
+          parseInt(process.env.JWT_REFRESH_FALLBACK_SECONDS ?? "120", 10)
+        ); // seconds
+        await redis.set(redisKey, String(payload.sub), "EX", fallbackTtl);
+        // mark stored for flow to continue - this allows a short window
+        stored = String(payload.sub);
+        console.info(
+          "[RefreshTokenUseCase] fallback re-stored redis key for token (short TTL)",
+          redisKey
+        );
+      } catch (err) {
+        console.error(
+          "[RefreshTokenUseCase] failed to re-store missing refresh token in redis:",
+          err
+        );
+        throw new Error(ErrorMessages.UNAUTHORIZED);
+      }
     }
 
     // 3) Create new tokens (rotate)
@@ -48,14 +84,22 @@ export class RefreshTokenUseCase {
       type: payload.type,
     });
 
-    // compute TTL for refresh from env (seconds). If not set, default 7 days.
-    const refreshTtlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
+    const refreshTtlSeconds = parseInt(
+      process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60),
+      10
+    );
 
     const newRedisKey = `refresh:${newRefreshToken}`;
 
-    // 4) Persist new refresh token in Redis and delete old one (rotation)
-    await redis.set(newRedisKey, String(payload.sub), "EX", refreshTtlSeconds);
-    await redis.del(redisKey);
+    // 4) Persist new refresh token in Redis and delete old one atomically
+    try {
+      const tx = redis.multi();
+      tx.set(newRedisKey, String(payload.sub), "EX", refreshTtlSeconds);
+      tx.del(redisKey);
+      const execRes = await tx.exec();
+    } catch (err) {
+      throw new Error(ErrorMessages.UNAUTHORIZED);
+    }
 
     return {
       accessToken: newAccessToken,

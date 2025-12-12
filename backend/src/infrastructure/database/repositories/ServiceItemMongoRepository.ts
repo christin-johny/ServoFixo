@@ -1,10 +1,16 @@
-import mongoose from 'mongoose';
-import { IServiceItemRepository, ServiceItemQueryParams, PaginatedServiceItems } from '../../../domain/repositories/IServiceItemRepository';
-import { ServiceItem } from '../../../domain/entities/ServiceItem';
-import { ServiceItemModel, IServiceItemDocument } from '../mongoose/models/ServiceItemModel';
+import mongoose from "mongoose";
+import {
+  IServiceItemRepository,
+  ServiceItemQueryParams,
+  PaginatedServiceItems,
+} from "../../../domain/repositories/IServiceItemRepository";
+import { ServiceItem } from "../../../domain/entities/ServiceItem";
+import {
+  ServiceItemModel,
+  IServiceItemDocument,
+} from "../mongoose/models/ServiceItemModel";
 
 export class ServiceItemMongoRepository implements IServiceItemRepository {
-
   async create(serviceItem: ServiceItem): Promise<ServiceItem> {
     const persistenceData = {
       categoryId: new mongoose.Types.ObjectId(serviceItem.getCategoryId()),
@@ -15,12 +21,14 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
       imageUrls: serviceItem.getImageUrls(),
       isActive: serviceItem.getIsActive(),
     };
-    
+
     const doc = await ServiceItemModel.create(persistenceData);
     return this.toEntity(doc);
   }
 
-  async findAll(params: ServiceItemQueryParams): Promise<PaginatedServiceItems> {
+  async findAll(
+    params: ServiceItemQueryParams
+  ): Promise<PaginatedServiceItems> {
     const { page, limit, search, categoryId, isActive } = params;
     const skip = (page - 1) * limit;
 
@@ -36,8 +44,8 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
 
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
       ];
     }
 
@@ -47,35 +55,38 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
         .skip(skip)
         .limit(limit)
         .exec(),
-      ServiceItemModel.countDocuments(query).exec()
+      ServiceItemModel.countDocuments(query).exec(),
     ]);
 
     return {
-      data: docs.map(doc => this.toEntity(doc)),
+      data: docs.map((doc) => this.toEntity(doc)),
       total,
       currentPage: page,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
     };
   }
 
   async findById(id: string): Promise<ServiceItem | null> {
     if (!mongoose.isValidObjectId(id)) return null;
-    const doc = await ServiceItemModel.findOne({ 
-        _id: id, 
-        isDeleted: { $ne: true } 
+    const doc = await ServiceItemModel.findOne({
+      _id: id,
+      isDeleted: { $ne: true },
     }).exec();
-    
+
     return doc ? this.toEntity(doc) : null;
   }
 
-  async findByNameAndCategory(name: string, categoryId: string): Promise<ServiceItem | null> {
-    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const doc = await ServiceItemModel.findOne({ 
+  async findByNameAndCategory(
+    name: string,
+    categoryId: string
+  ): Promise<ServiceItem | null> {
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const doc = await ServiceItemModel.findOne({
       categoryId: new mongoose.Types.ObjectId(categoryId),
-      name: { $regex: new RegExp(`^${escapedName}$`, 'i') },
-      isDeleted: { $ne: true }
+      name: { $regex: new RegExp(`^${escapedName}$`, "i") },
+      isDeleted: { $ne: true },
     }).exec();
-    
+
     return doc ? this.toEntity(doc) : null;
   }
 
@@ -93,30 +104,54 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
       { new: true }
     ).exec();
 
-    if (!doc) throw new Error('Service Item not found for update');
+    if (!doc) throw new Error("Service Item not found for update");
     return this.toEntity(doc);
   }
 
   // ✅ NEW METHOD: Lightweight Status Toggle
   async toggleStatus(id: string, isActive: boolean): Promise<boolean> {
-    const result = await ServiceItemModel.findByIdAndUpdate(id, { isActive }).exec();
+    const result = await ServiceItemModel.findByIdAndUpdate(id, {
+      isActive,
+    }).exec();
     return !!result;
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await ServiceItemModel.findByIdAndUpdate(id, { isDeleted: true }).exec();
+    const result = await ServiceItemModel.findByIdAndUpdate(id, {
+      isDeleted: true,
+    }).exec();
     return !!result;
   }
   async findMostBooked(limit: number): Promise<ServiceItem[]> {
-    const docs = await ServiceItemModel.find({ 
-      isDeleted: { $ne: true }, 
-      isActive: true 
-    })
-    .sort({ bookingCount: -1 }) // Sort Descending (Highest first)
-    .limit(limit)
-    .exec();
+    const docs = await ServiceItemModel.aggregate([
+      {
+        $match: {
+          isDeleted: { $ne: true },
+          isActive: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "servicecategories",
+          localField: "categoryId",
+          foreignField: "_id",
+          as: "category",
+        },
+      },
+      { $unwind: "$category" },
+      {
+        $match: {
+          "category.isDeleted": { $ne: true },
+          "category.isActive": true,
+        },
+      },
 
-    return docs.map(doc => this.toEntity(doc));
+      { $sort: { bookingCount: -1 } },
+
+      { $limit: limit },
+    ]);
+
+    return docs.map((doc) => this.toEntity(doc));
   }
 
   private toEntity(doc: IServiceItemDocument): ServiceItem {

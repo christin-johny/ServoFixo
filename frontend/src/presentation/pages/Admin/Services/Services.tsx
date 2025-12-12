@@ -19,10 +19,10 @@ import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
 
 // Helper to extract the exact message from Backend
 const getErrorMessage = (error: any): string => {
-  if (error.response && error.response.data) {
-    return error.response.data.error || error.response.data.message || "Unknown server error";
-  }
-  return error.message || "Network error";
+    if (error.response && error.response.data) {
+        return error.response.data.error || error.response.data.message || "Unknown server error";
+    }
+    return error.message || "Network error";
 };
 
 const Services: React.FC = () => {
@@ -79,6 +79,11 @@ const Services: React.FC = () => {
             setCategories(result.data);
             setTotal(result.total);
             setTotalPages(result.totalPages);
+
+            // Reset page if current page is now empty
+            if (result.data.length === 0 && page > 1) {
+                setPage(1);
+            }
         } catch (err) {
             console.error(err);
             showError("Failed to load categories");
@@ -99,7 +104,7 @@ const Services: React.FC = () => {
         }
     };
 
-    // --- Handlers ---
+    // --- Handlers (Unchanged) ---
     const handleSaveCategory = async (formData: FormData) => {
         try {
             setIsSubmitting(true);
@@ -121,15 +126,15 @@ const Services: React.FC = () => {
     };
 
     const handleToggleCategoryStatus = async (e: React.MouseEvent, category: ServiceCategory) => {
-        e.stopPropagation(); 
+        e.stopPropagation();
         try {
             const newStatus = !category.isActive;
             await categoryRepo.toggleCategoryStatus(category._id, newStatus);
             showSuccess(`Category ${category.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
             loadCategories();
         } catch (err: any) {
-             console.error(err);
-             showError("Failed to update status. " + getErrorMessage(err));
+            console.error(err);
+            showError("Failed to update status. " + getErrorMessage(err));
         }
     };
 
@@ -159,7 +164,7 @@ const Services: React.FC = () => {
             if (activeCategoryId) loadServicesForCategory(activeCategoryId);
         } catch (err: any) {
             const msg = getErrorMessage(err);
-            showError(msg); 
+            showError(msg);
         } finally {
             setIsSubmitting(false);
         }
@@ -172,7 +177,7 @@ const Services: React.FC = () => {
             showSuccess(`Service ${service.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
             if (expandedId) loadServicesForCategory(expandedId);
         } catch (err: any) {
-             showError("Failed to update status");
+            showError("Failed to update status");
         }
     };
 
@@ -210,9 +215,22 @@ const Services: React.FC = () => {
         }
     };
 
+    // --- Inline Empty State Component ---
+    const EmptyState = (
+        <div className="text-center py-16 border-2 border-dashed border-gray-200 rounded-2xl bg-white/50 mx-1 flex flex-col items-center">
+            <Layers className="text-gray-300 mb-4" size={40} />
+            <h3 className="text-lg font-semibold text-gray-400 mb-1">
+                {debouncedSearch || filterStatus ? "No Categories Match Your Filter" : "No Service Categories Found"}
+            </h3>
+            
+        
+        </div>
+    );
+    // ------------------------------------
+
     return (
         <div className="h-full flex flex-col gap-4 sm:gap-6 overflow-hidden">
-            {/* Header & Filters */}
+            {/* Header & Filters (Unchanged) */}
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end shrink-0 border-b border-gray-200 pb-4 gap-4 sm:gap-0">
                 <div>
                     <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
@@ -225,12 +243,12 @@ const Services: React.FC = () => {
                 </button>
             </div>
 
-{/* Responsive Filter Bar */}
+            {/* Responsive Filter Bar (Unchanged) */}
             <div className="bg-white p-3 sm:p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-3 justify-between items-center shrink-0">
-                
+
                 {/* Search and Select Group */}
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1 max-w-3xl">
-                    
+
                     {/* Search Input */}
                     <div className="relative flex-1">
                         <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -241,26 +259,17 @@ const Services: React.FC = () => {
                         />
                     </div>
 
-                    {/* ✅ STATUS DROPDOWN WITH FILTER ICON */}
+                    {/* STATUS DROPDOWN WITH FILTER ICON */}
                     <div className="relative w-full sm:w-48 shrink-0">
-                        <select 
-                            value={filterStatus} 
-                            onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }} 
-                            className="
-                                w-full h-10 sm:h-11 
-                                pl-4 pr-10 
-                                text-sm font-medium text-gray-700 
-                                bg-white border border-gray-200 rounded-xl 
-                                appearance-none 
-                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 
-                                cursor-pointer transition-all hover:border-gray-300
-                            "
-                        >
+                        <select
+                            value={filterStatus}
+                            onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
+                            className=" w-full h-10 sm:h-11 pl-4 pr-10 text-sm font-medium text-gray-700  bg-white border border-gray-200 rounded-xl  appearance-none  focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer transition-all hover:border-gray-300">
                             <option value="">All Status</option>
                             <option value="true">Active Only</option>
                             <option value="false">Inactive Only</option>
                         </select>
-                        
+
                         {/* Custom Filter Icon */}
                         <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                             <Filter size={16} />
@@ -274,35 +283,41 @@ const Services: React.FC = () => {
                 </span>
             </div>
 
-            {/* Content List */}
+            {/* Content List Area */}
             <div className="flex-1 overflow-y-auto pr-1 -mr-1 pb-4 scrollbar-thin scrollbar-thumb-gray-200">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center h-64 text-gray-400 gap-3"><RefreshCw size={32} className="animate-spin opacity-20" /><p className="text-sm font-medium">Loading...</p></div>
                 ) : (
-                    <div className="grid grid-cols-1 gap-4">
-                        {categories.map((cat) => (
-                            <CategoryCard
-                                key={cat._id}
-                                category={cat}
-                                isExpanded={expandedId === cat._id}
-                                onToggleExpand={() => setExpandedId(expandedId === cat._id ? null : cat._id)}
-                                onEdit={(e) => { e.stopPropagation(); setEditingCategory(cat); setIsCatModalOpen(true); }}
-                                onDelete={(e) => confirmDeleteCategory(e, cat._id)}
-                                onToggleStatus={(e) => handleToggleCategoryStatus(e, cat)} 
-                                onToggleServiceStatus={handleToggleServiceStatus}
-                                services={servicesMap[cat._id] || []}
-                                isLoadingServices={expandedId === cat._id && loadingServices}
-                                onAddService={() => handleAddService(cat._id)}
-                                onEditService={handleEditService}
-                                onDeleteService={confirmDeleteService}
-                            />
-                        ))}
-                    </div>
+                    <>
+                        {categories.length === 0 ? (
+                            EmptyState
+                        ) : (
+                            <div className="grid grid-cols-1 gap-4">
+                                {categories.map((cat) => (
+                                    <CategoryCard
+                                        key={cat._id}
+                                        category={cat}
+                                        isExpanded={expandedId === cat._id}
+                                        onToggleExpand={() => setExpandedId(expandedId === cat._id ? null : cat._id)}
+                                        onEdit={(e) => { e.stopPropagation(); setEditingCategory(cat); setIsCatModalOpen(true); }}
+                                        onDelete={(e) => confirmDeleteCategory(e, cat._id)}
+                                        onToggleStatus={(e) => handleToggleCategoryStatus(e, cat)}
+                                        onToggleServiceStatus={handleToggleServiceStatus}
+                                        services={servicesMap[cat._id] || []}
+                                        isLoadingServices={expandedId === cat._id && loadingServices}
+                                        onAddService={() => handleAddService(cat._id)}
+                                        onEditService={handleEditService}
+                                        onDeleteService={confirmDeleteService}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
+            {totalPages > 1 && categories.length > 0 && ( // Only show if categories exist and pagination is relevant
                 <div className="flex justify-between items-center pt-4 border-t border-gray-200 shrink-0">
                     <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="flex items-center gap-1 px-3 sm:px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-50 transition-colors"><ChevronLeft size={16} /> <span className="hidden sm:inline">Previous</span></button>
                     <span className="text-xs sm:text-sm font-medium text-gray-500">Page {page} of {totalPages}</span>
@@ -310,7 +325,7 @@ const Services: React.FC = () => {
                 </div>
             )}
 
-            {/* Modals */}
+            {/* Modals (Unchanged) */}
             <CategoryModal
                 isOpen={isCatModalOpen} onClose={() => setIsCatModalOpen(false)}
                 onSave={handleSaveCategory} initialData={editingCategory} isLoading={isSubmitting}
