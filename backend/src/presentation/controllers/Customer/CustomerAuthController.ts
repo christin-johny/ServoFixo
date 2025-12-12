@@ -11,7 +11,7 @@ import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
 import { refreshCookieOptions } from '../../../infrastructure/config/Cookie';
 
 import redis from '../../../infrastructure/redis/redisClient';
-import { JwtService } from '../../../infrastructure/security/JwtService';
+
 
 export class CustomerAuthController {
   constructor(
@@ -68,14 +68,7 @@ export class CustomerAuthController {
           
 
       if (result.refreshToken) {
-        try {
-          const jwtService = new JwtService();
-          const payload = await jwtService.verifyRefreshToken(result.refreshToken);
-          const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
-          await redis.set(`refresh:${result.refreshToken}`, String(payload.sub), "EX", ttlSeconds);
-        } catch (err) {
-          console.error("Failed to store refresh token in redis (registerVerifyOtp):", err);
-        }
+
 
         res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
       }
@@ -126,14 +119,7 @@ export class CustomerAuthController {
 
       // If refresh token present, store it in Redis and set cookie
       if (result.refreshToken) {
-        try {
-          const jwtService = new JwtService();
-          const payload = await jwtService.verifyRefreshToken(result.refreshToken);
-          const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
-          await redis.set(`refresh:${result.refreshToken}`, String(payload.sub), "EX", ttlSeconds);
-        } catch (err) {
-          console.error("Failed to store refresh token in redis (login):", err);
-        }
+
 
         // set refresh cookie (httpOnly)
         res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
@@ -253,14 +239,7 @@ export class CustomerAuthController {
 
       // If refresh token present, store and set cookie
       if (result.refreshToken) {
-        try {
-          const jwtService = new JwtService();
-          const payload = await jwtService.verifyRefreshToken(result.refreshToken);
-          const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
-          await redis.set(`refresh:${result.refreshToken}`, String(payload.sub), "EX", ttlSeconds);
-        } catch (err) {
-          console.error("Failed to store refresh token in redis (googleLogin):", err);
-        }
+
 
         res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
       }
@@ -301,14 +280,7 @@ googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
 
     // If refresh token present, store it in Redis and set cookie
     if (result.refreshToken) {
-      try {
-        const jwtService = new JwtService();
-        const payload = await jwtService.verifyRefreshToken(result.refreshToken);
-        const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
-        await redis.set(`refresh:${result.refreshToken}`, String(payload.sub), "EX", ttlSeconds);
-      } catch (err) {
-        console.error("Failed to store refresh token in redis (googleLoginCallback):", err);
-      }
+
 
       // set refresh cookie (uses your refreshCookieOptions imported at top)
       res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);

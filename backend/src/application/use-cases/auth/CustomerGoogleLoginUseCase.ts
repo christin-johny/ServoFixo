@@ -1,5 +1,6 @@
 // backend/src/application/use-cases/auth/CustomerGoogleLoginUseCase.ts
 import { OAuth2Client } from 'google-auth-library';
+import redis from '../../../infrastructure/redis/redisClient';
 import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepository';
 import { JwtService } from '../../../infrastructure/security/JwtService';
 import { Customer } from '../../../domain/entities/Customer';
@@ -135,6 +136,14 @@ export class CustomerGoogleLoginUseCase {
         roles: ['customer'],
         type: 'customer',
       });
+
+      // Persist refresh token to Redis
+      const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
+      try {
+        await redis.set(`refresh:${refreshToken}`, String(customerId), "EX", ttlSeconds);
+      } catch (err) {
+        console.error("Failed to store refresh token in redis (CustomerGoogleLoginUseCase):", err);
+      }
 
       return {
         accessToken,
