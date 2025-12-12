@@ -38,9 +38,8 @@ const CustomerLogin: React.FC = () => {
   // use the hook for fast client-side checks (no visible UI here)
   const { checks } = usePasswordStrength(password);
 
-  // Helper: map the first failed check to the exact Zod message used previously
   const firstPasswordFailureMessage = (): string | undefined => {
-    if (password.length === 0) return undefined; // don't show when empty (until touched)
+    if (password.length === 0) return undefined; 
     if (password.length < 8) return "Password must be at least 8 characters";
     if (password.length > 100) return "Password is too long";
     if (!checks.uppercase) return "Password must contain at least one uppercase letter";
@@ -50,7 +49,6 @@ const CustomerLogin: React.FC = () => {
     return undefined;
   };
 
-  // validate uses Zod as authoritative source. We keep robust handling of ZodError.
   function validate() {
     try {
       loginSchema.parse({ email, password });
@@ -104,7 +102,7 @@ const CustomerLogin: React.FC = () => {
           dispatch(
             setUser({
               id: payload.sub,
-              role: Array.isArray(payload.roles) ? payload.roles[0] : payload.roles,
+              role: payload.type,
               email: payload.email,
             })
           );
@@ -112,7 +110,7 @@ const CustomerLogin: React.FC = () => {
       }
 
       setLoading(false);
-      navigate("/customer");
+      navigate("/");
     } catch (err: unknown) {
       setLoading(false);
       let serverMsg = "Login failed. Try again.";

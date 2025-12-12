@@ -61,7 +61,6 @@ export class VerifyCustomerRegistrationOtpUseCase {
 
     const payload: JwtPayload = {
       sub: savedCustomer.getId(),
-      roles: ['customer'],
       type: 'customer',
     };
    
@@ -72,9 +71,7 @@ export class VerifyCustomerRegistrationOtpUseCase {
     const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
     try {
       await redis.set(`refresh:${refreshToken}`, String(savedCustomer.getId()), "EX", ttlSeconds);
-    } catch (err) {
-      console.error("Failed to store refresh token in redis (VerifyCustomerRegistrationOtpUseCase):", err);
-    }
+    } catch (_) {}
 
     return { accessToken, refreshToken };
   }

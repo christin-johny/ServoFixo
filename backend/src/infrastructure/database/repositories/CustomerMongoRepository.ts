@@ -6,7 +6,7 @@ import { HydratedDocument } from 'mongoose';
 export class CustomerMongoRepository implements ICustomerRepository {
 
   async findById(id: string): Promise<Customer | null> {
-    const doc = await CustomerModel.findById(id).exec();
+    const doc = await CustomerModel.findById(id).select('-password').exec();
     if (!doc) return null;
     return this.toEntity(doc);
   }

@@ -27,10 +27,7 @@ export class RefreshTokenUseCase {
     try {
       payload = await this.jwtService.verifyRefreshToken(refreshToken);
     } catch (err) {
-      // invalid signature or expired
-      console.warn(
-        "[RefreshTokenUseCase] verify failed for token (maybe expired or invalid)"
-      );
+     
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
 
@@ -41,15 +38,13 @@ export class RefreshTokenUseCase {
     try {
       stored = await redis.get(redisKey);
     } catch (err) {
-      console.error("[RefreshTokenUseCase] redis.get error:", err);
+     
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
 
     // Defensive fallback: if stored missing, try to tolerate transient race/eviction by re-storing
     if (!stored) {
-      console.warn(
-        "[RefreshTokenUseCase] token missing in redis - possible race/eviction. Applying short fallback."
-      );
+     
       try {
         const fallbackTtl = Math.max(
           60,
@@ -58,15 +53,9 @@ export class RefreshTokenUseCase {
         await redis.set(redisKey, String(payload.sub), "EX", fallbackTtl);
         // mark stored for flow to continue - this allows a short window
         stored = String(payload.sub);
-        console.info(
-          "[RefreshTokenUseCase] fallback re-stored redis key for token (short TTL)",
-          redisKey
-        );
+        
       } catch (err) {
-        console.error(
-          "[RefreshTokenUseCase] failed to re-store missing refresh token in redis:",
-          err
-        );
+       
         throw new Error(ErrorMessages.UNAUTHORIZED);
       }
     }
@@ -74,13 +63,11 @@ export class RefreshTokenUseCase {
     // 3) Create new tokens (rotate)
     const newAccessToken = await this.jwtService.generateAccessToken({
       sub: payload.sub,
-      roles: payload.roles,
       type: payload.type,
     });
 
     const newRefreshToken = await this.jwtService.generateRefreshToken({
       sub: payload.sub,
-      roles: payload.roles,
       type: payload.type,
     });
 

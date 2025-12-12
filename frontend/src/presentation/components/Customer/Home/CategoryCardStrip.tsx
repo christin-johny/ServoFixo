@@ -15,7 +15,7 @@ interface Props {
 }
 
 const CategoryCardStrip: React.FC<Props> = ({ categories, loading, scrollToSection, images }) => {
-  const displayed = (categories || []).slice(0, 9);
+  const displayed = (categories || []).slice(0, 6);
 
   // default mosaic images (replace paths if you have others)
   const imgs = images && images.length >= 5 ? images : [

@@ -29,7 +29,5 @@ export interface ICustomerRepository {
     limit: number,
     filters: CustomerFilterParams
   ): Promise<PaginatedResult<Customer>>;
-
-  // ✅ FIX: Added missing delete method
   delete(id: string): Promise<boolean>;
 }

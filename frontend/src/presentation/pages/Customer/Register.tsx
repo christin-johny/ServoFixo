@@ -101,19 +101,16 @@ const Register: React.FC = () => {
           return;
         }
       }
+      // try {
+      //   // dynamic access: schema.shape[field].parse
+      //   // @ts-expect-error - runtime dynamic access
+      //   registerSchema.shape[name].parse(value);
+      //   setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+      // } catch (err) {
+      //   const msg = extractZodMessage(err);
+      //   setFieldErrors((prev) => ({ ...prev, [name]: msg ?? "Invalid input" }));
+      // }
 
-      // try single-field Zod parse
-      try {
-        // dynamic access: schema.shape[field].parse
-        // @ts-ignore - runtime dynamic access
-        registerSchema.shape[name].parse(value);
-        setFieldErrors((prev) => ({ ...prev, [name]: "" }));
-      } catch (err) {
-        const msg = extractZodMessage(err);
-        setFieldErrors((prev) => ({ ...prev, [name]: msg ?? "Invalid input" }));
-      }
-
-      // confirmPassword may need re-check after password change
       if (name === "password" && touched.confirmPassword) {
         setFieldErrors((prev) => ({
           ...prev,

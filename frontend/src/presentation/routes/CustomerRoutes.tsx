@@ -3,7 +3,6 @@ import React, { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoaderFallback from "../components/LoaderFallback";
 import AuthGuard from "./AuthGuard";
-import RoleProtectedRoute from "./RoleProtectedRoute";
 import CustomerHome from "../pages/Customer/Home/CustomerHome";
 
 // Lazy imports

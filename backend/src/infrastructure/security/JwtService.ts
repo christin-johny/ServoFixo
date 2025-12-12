@@ -46,9 +46,6 @@ export class JwtService implements IJwtService {
 
       const payload: JwtPayload = {
         sub: String(decoded.sub),
-        roles: Array.isArray(decoded.roles)
-          ? decoded.roles.map((r) => String(r))
-          : [],
         type: decoded.type as JwtPayload['type'],
       };
 
@@ -64,9 +61,6 @@ export class JwtService implements IJwtService {
 
       const payload: JwtPayload = {
         sub: String(decoded.sub),
-        roles: Array.isArray(decoded.roles)
-          ? decoded.roles.map((r) => String(r))
-          : [],
         type: decoded.type as JwtPayload['type'],
       };
 

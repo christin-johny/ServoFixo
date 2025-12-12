@@ -29,7 +29,6 @@ export class CustomerLoginUseCase {
 
     const payload: JwtPayload = {
       sub: customer.getId(),
-      roles: ['customer'],
       type: 'customer',
     };
 
@@ -41,7 +40,7 @@ export class CustomerLoginUseCase {
     try {
       await redis.set(`refresh:${refreshToken}`, String(customer.getId()), "EX", ttlSeconds);
     } catch (err) {
-      console.error("Failed to store refresh token in redis (CustomerLoginUseCase):", err);
+      //console.error("Failed to store refresh token in redis (CustomerLoginUseCase):", err);
     }
 
     return {

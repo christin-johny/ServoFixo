@@ -1,20 +1,29 @@
 import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux'; // 1. Import Redux hooks
 import Navbar from '../../../components/Customer/Layout/Navbar';
 import BottomNav from '../../../components/Customer/Layout/BottomNav';
 import Footer from '../../../components/Customer/Layout/Footer';
 import CategoryRow from '../../../components/Customer/Home/CategoryRow';
 import PopularCarousel from '../../../components/Customer/Home/PopularCarousel';
 import CategoryCardStrip from '../../../components/Customer/Home/CategoryCardStrip';
+import AITroubleshootCard from '../../../components/Customer/Home/AITroubleshootCard';
 import * as homeRepo from '../../../../infrastructure/repositories/customer/homeRepository';
+import * as customerRepo from '../../../../infrastructure/repositories/customer/customerRepository';
+import { type RootState } from '../../../../store/store';
+import { fetchProfileStart, fetchProfileSuccess, fetchProfileFailure } from '../../../../store/customerSlice';
+
 import type { ServiceCategory } from '../../../../domain/types/ServiceCategory';
 import type { ServiceItem } from '../../../../domain/types/ServiceItem';
-import AITroubleshootCard from '../../../components/Customer/Home/AITroubleshootCard';
 
 const CustomerHome: React.FC = () => {
+    const dispatch = useDispatch();
+    const { accessToken, user: authUser } = useSelector((state: RootState) => state.auth);
+    const { profile } = useSelector((state: RootState) => state.customer);
+
     const [categories, setCategories] = useState<ServiceCategory[]>([]);
     const [popularServices, setPopularServices] = useState<ServiceItem[]>([]);
-    const [loading, setLoading] = useState(true);
-    
+    const [pageLoading, setPageLoading] = useState(true);
+
     useEffect(() => {
         const fetchMasterData = async () => {
             try {
@@ -27,13 +36,31 @@ const CustomerHome: React.FC = () => {
             } catch (err) {
                 console.error("Home data failed:", err);
             } finally {
-                setLoading(false);
+                setPageLoading(false);
             }
         };
         fetchMasterData();
     }, []);
 
-    // ✅ CUSTOM ANIMATION HELPER (Bulletproof Smooth Scroll)
+    useEffect(() => {
+
+        const isCustomer = authUser?.role === 'customer';
+
+        if (accessToken && !profile && isCustomer) {
+            const loadProfile = async () => {
+                try {
+                    dispatch(fetchProfileStart());
+                    const data = await customerRepo.getProfile();
+                    dispatch(fetchProfileSuccess(data));
+                } catch (error) {
+                    console.error("Failed to load customer profile", error);
+                    dispatch(fetchProfileFailure("Failed to load"));
+                }
+            };
+            loadProfile();
+        }
+    }, [accessToken, profile, authUser, dispatch]);
+
     const animateScroll = (targetPosition: number, duration: number = 800) => {
         const startPosition = window.pageYOffset;
         const distance = targetPosition - startPosition;
@@ -42,18 +69,11 @@ const CustomerHome: React.FC = () => {
         const animation = (currentTime: number) => {
             if (startTime === null) startTime = currentTime;
             const timeElapsed = currentTime - startTime;
-            
-            // Easing function (Ease In-Out Quad) for smooth acceleration/deceleration
             const run = ease(timeElapsed, startPosition, distance, duration);
-            
             window.scrollTo(0, run);
-
-            if (timeElapsed < duration) {
-                requestAnimationFrame(animation);
-            }
+            if (timeElapsed < duration) requestAnimationFrame(animation);
         };
 
-        // Standard Ease In-Out Quadratic function
         const ease = (t: number, b: number, c: number, d: number) => {
             t /= d / 2;
             if (t < 1) return c / 2 * t * t + b;
@@ -64,30 +84,30 @@ const CustomerHome: React.FC = () => {
         requestAnimationFrame(animation);
     };
 
-    // ✅ UPDATED HANDLER
     const scrollToSection = (id: string) => {
         const element = document.getElementById(id);
         if (element) {
             const elementPosition = element.getBoundingClientRect().top;
             const offsetPosition = elementPosition + window.pageYOffset;
-            const headerOffset = 120; // 120px buffer for navbar
+            const headerOffset = 120;
             const finalPosition = offsetPosition - headerOffset;
-
-            // Trigger custom animation
-            animateScroll(finalPosition, 1000); // 1000ms = 1 second duration
+            animateScroll(finalPosition, 1000);
         }
     };
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
+            {/* Pass user info to Navbar if needed, or let Navbar connect to Redux itself */}
             <Navbar />
 
             <div className="flex-1 pb-24 md:pb-12">
                 <div className="max-w-[1400px] mx-auto p-4 md:p-6 space-y-12">
+
                     
+
                     <CategoryCardStrip
                         categories={categories}
-                        loading={loading}
+                        loading={pageLoading}
                         scrollToSection={scrollToSection}
                     />
 
@@ -106,7 +126,6 @@ const CustomerHome: React.FC = () => {
                         <PopularCarousel services={popularServices} />
                     )}
 
-                    {/* Wrapper ID for "View All" */}
                     <div id="all-categories-list" className="space-y-12">
                         {categories.map((cat) => (
                             <CategoryRow

@@ -254,11 +254,10 @@ const VerifyOtp: React.FC = () => {
             if (payload) {
               dispatch(setUser({
                 id: payload.sub,
-                role: Array.isArray(payload.roles) ? payload.roles[0] : (payload.role ?? "customer"),
+                role: payload.type,
               }));
             }
           }
-          // ✅ Updated Redirect to Root
           navigate("/");
         } else {
           // ✅ Updated Fallback Redirect

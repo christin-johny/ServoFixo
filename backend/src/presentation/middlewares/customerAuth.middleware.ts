@@ -18,7 +18,6 @@ export function makeCustomerAuthMiddleware(jwtService: IJwtService) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const authHeader = req.headers['authorization'];
-
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(StatusCodes.UNAUTHORIZED).json({
           error: ErrorMessages.UNAUTHORIZED,
@@ -26,25 +25,20 @@ export function makeCustomerAuthMiddleware(jwtService: IJwtService) {
       }
 
       const token = authHeader.split(' ')[1];
-
       if (!token) {
         return res.status(StatusCodes.UNAUTHORIZED).json({
           error: ErrorMessages.UNAUTHORIZED,
         });
       }
 
-      // 1️⃣ Verify access token
       const payload = await jwtService.verifyAccessToken(token);
-
-      // 2️⃣ Ensure it's a customer token
       if (payload.type !== 'customer') {
         return res.status(StatusCodes.FORBIDDEN).json({
           error: ErrorMessages.FORBIDDEN,
         });
       }
-
-      // 3️⃣ Attach to request object
-      (req as any).user = payload; // { sub, roles, type }
+      
+      (req as any).userId = payload.sub; 
 
       return next();
     } catch (err) {

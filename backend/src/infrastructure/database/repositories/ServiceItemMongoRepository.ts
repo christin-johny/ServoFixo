@@ -3,6 +3,7 @@ import {
   IServiceItemRepository,
   ServiceItemQueryParams,
   PaginatedServiceItems,
+  ServiceFilters
 } from "../../../domain/repositories/IServiceItemRepository";
 import { ServiceItem } from "../../../domain/entities/ServiceItem";
 import {
@@ -152,6 +153,50 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
     ]);
 
     return docs.map((doc) => this.toEntity(doc));
+  }
+
+  async findWithFilters(filters: ServiceFilters): Promise<ServiceItem[]> {
+    const query: any = {};
+
+    // 1. Filter by Active Status (Always true for customers)
+    if (filters.isActive !== undefined) {
+      query.isActive = filters.isActive;
+    }
+
+    // 2. Filter by Category
+    if (filters.categoryId) {
+      query.categoryId = filters.categoryId;
+    }
+
+    // 3. Search (Name or Description) - Case insensitive
+    if (filters.searchTerm) {
+      query.$or = [
+        { name: { $regex: filters.searchTerm, $options: 'i' } },
+        { description: { $regex: filters.searchTerm, $options: 'i' } }
+      ];
+    }
+
+    // 4. Price Range
+    if (filters.minPrice || filters.maxPrice) {
+      query.price = {};
+      if (filters.minPrice) query.price.$gte = filters.minPrice;
+      if (filters.maxPrice) query.price.$lte = filters.maxPrice;
+    }
+
+    // 5. Build Sort Object
+    let sortOptions: any = {};
+    switch (filters.sortBy) {
+      case 'price_asc': sortOptions = { price: 1 }; break;
+      case 'price_desc': sortOptions = { price: -1 }; break;
+      case 'newest': sortOptions = { createdAt: -1 }; break;
+      default: sortOptions = { createdAt: -1 }; // Default to newest
+    }
+
+    // Execute
+    const docs = await ServiceItemModel.find(query).sort(sortOptions).exec();
+    
+    // Map to Entity
+    return docs.map(doc => this.toEntity(doc));
   }
 
   private toEntity(doc: IServiceItemDocument): ServiceItem {

@@ -7,12 +7,12 @@ import { logout } from "../../../../store/authSlice";
 import { customerLogout } from "../../../../infrastructure/repositories/authRepository";
 
 const useCurrentUser = () => {
-    const { user } = useSelector((state: RootState) => state.auth);
+    const { profile } = useSelector((state: RootState) => state.customer);
     return {
-        name: user?.name || "Guest User",
-        email: user?.email || "Welcome to ServoFixo",
-        address: "Madiwala, Bangalore",
-        avatar: null,
+        name: profile?.name || "Guest User",
+        email: profile?.email || "Welcome to ServoFixo",
+        phone: profile?.phone ||'N/A',
+        avatarUrl: profile?.avatarUrl,
     };
 };
 
@@ -93,9 +93,6 @@ const Navbar: React.FC = () => {
                                             {isLoggedIn ? user.name : "Guest"}
                                         </span>
                                     </div>
-                                    <p className="text-xs text-gray-500 truncate">
-                                        {isLoggedIn ? user.address : "Select Location"}
-                                    </p>
                                 </div>
                             </button>
                         </div>
@@ -202,6 +199,9 @@ const Navbar: React.FC = () => {
                                     <h3 className="font-bold text-lg truncate">{user.name}</h3>
                                     <p className="text-blue-100 text-xs truncate">
                                         {isLoggedIn ? user.email : "Sign in to access more"}
+                                    </p>
+                                    <p className="text-blue-100 text-xs truncate">
+                                        {isLoggedIn ? user.phone : "Sign in to access more"}
                                     </p>
                                 </div>
                             </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Provider, useDispatch } from "react-redux";
 import store from "./store/store";
 import { setAccessToken, setUser, logout } from "./store/authSlice";
@@ -38,7 +38,7 @@ const AppInner: React.FC = () => {
                 dispatch(
                   setUser({
                     id: payload.sub,
-                    role: Array.isArray(payload.roles) ? payload.roles[0] : payload.roles,
+                    role:payload.type ,
                   })
                 );
               }
@@ -47,7 +47,7 @@ const AppInner: React.FC = () => {
             dispatch(logout());
           }
         }
-      } catch (err) {
+      } catch (_) {
         if (!aborted) {
           dispatch(logout());
         }

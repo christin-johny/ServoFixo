@@ -6,7 +6,7 @@ interface User {
   role?: string;
 }
 interface AuthState {
-  accessToken: string | null; // stores AuthResponse.token
+  accessToken: string | null; 
   user: User | null;
 }
 

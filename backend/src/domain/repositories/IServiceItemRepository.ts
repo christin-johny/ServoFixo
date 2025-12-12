@@ -8,6 +8,15 @@ export interface ServiceItemQueryParams {
   isActive?: boolean;
 }
 
+export interface ServiceFilters {
+  searchTerm?: string;
+  categoryId?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  isActive?: boolean;
+  sortBy?: 'price_asc' | 'price_desc' | 'newest' | 'popular';
+}
+
 export interface PaginatedServiceItems {
   data: ServiceItem[];
   total: number;
@@ -27,4 +36,5 @@ export interface IServiceItemRepository {
   delete(id: string): Promise<boolean>;
   toggleStatus(id: string, isActive: boolean): Promise<boolean>;
   findMostBooked(limit: number): Promise<ServiceItem[]>;
+  findWithFilters(filters: ServiceFilters): Promise<ServiceItem[]>;
 }
