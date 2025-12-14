@@ -15,30 +15,39 @@ export interface PaginatedCategories {
   totalPages: number;
 }
 
-export const getCategories = async (params: CategoryQueryParams): Promise<PaginatedCategories> => {
-  const response = await api.get("/api/admin/categories", { params });
+export const getCategories = async (
+  params: CategoryQueryParams
+): Promise<PaginatedCategories> => {
+  const response = await api.get("/admin/categories", { params });
   return response.data;
 };
 
-export const createCategory = async (formData: FormData): Promise<ServiceCategory> => {
-  const response = await api.post("/api/admin/categories", formData, {
+export const createCategory = async (
+  formData: FormData
+): Promise<ServiceCategory> => {
+  const response = await api.post("/admin/categories", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data.category;
 };
 
-export const updateCategory = async (id: string, formData: FormData): Promise<ServiceCategory> => {
-  const response = await api.put(`/api/admin/categories/${id}`, formData, {
+export const updateCategory = async (
+  id: string,
+  formData: FormData
+): Promise<ServiceCategory> => {
+  const response = await api.put(`/admin/categories/${id}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data.category;
 };
 
-// ✅ NEW: Lightweight Toggle Function
-export const toggleCategoryStatus = async (id: string, isActive: boolean): Promise<void> => {
-  await api.patch(`/api/admin/categories/${id}/toggle`, { isActive });
+export const toggleCategoryStatus = async (
+  id: string,
+  isActive: boolean
+): Promise<void> => {
+  await api.patch(`/admin/categories/${id}/toggle`, { isActive });
 };
 
 export const deleteCategory = async (id: string): Promise<void> => {
-  await api.delete(`/api/admin/categories/${id}`);
+  await api.delete(`/admin/categories/${id}`);
 };

@@ -1,15 +1,14 @@
 import React from 'react';
-import { Home, ShoppingBag, User, LogIn } from 'lucide-react'; // Import LogIn icon
+import { Home, ShoppingBag, User, LogIn } from 'lucide-react'; 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import type { RootState } from '../../../../store/store'; // Adjust path to your store
- // Adjust path to your store
+import type { RootState } from '../../../../store/store'; 
+ 
 
 const BottomNav: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // ✅ Check Auth State
+   
   const { accessToken } = useSelector((state: RootState) => state.auth);
   const isLoggedIn = !!accessToken;
 

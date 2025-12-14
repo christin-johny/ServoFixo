@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { X, UploadCloud, Image as ImageIcon, Power, Loader2, Save } from "lucide-react";
 import type { ServiceCategory } from "../../../../domain/types/ServiceCategory";
 
-// ✅ Import the Reusable Schema
 import { categorySchema } from "../../../validation/serviceCatalog";
 
 interface CategoryModalProps {
@@ -20,30 +19,24 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
   initialData,
   isLoading,
 }) => {
-  // Form State
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isActive, setIsActive] = useState(true);
-  
-  // Image State
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  
-  // Error State
+
   const [errors, setErrors] = useState<{ name?: string; description?: string; file?: string }>({});
 
-  // Reset or Load Data when Modal Opens
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
-        // Edit Mode
         setName(initialData.name);
         setDescription(initialData.description);
         setIsActive(initialData.isActive);
-        setPreviewUrl(initialData.iconUrl); // Show existing S3 image
+        setPreviewUrl(initialData.iconUrl);
         setSelectedFile(null);
       } else {
-        // Create Mode (Reset)
         setName("");
         setDescription("");
         setIsActive(true);
@@ -54,11 +47,9 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
     }
   }, [isOpen, initialData]);
 
-  // Handle File Selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Manual File Type/Size Check (React specific)
       if (!file.type.startsWith("image/")) {
         setErrors((prev) => ({ ...prev, file: "Please select a valid image file (JPG, PNG)." }));
         return;
@@ -69,7 +60,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
       }
 
       setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file)); // Create local preview
+      setPreviewUrl(URL.createObjectURL(file));
       setErrors((prev) => ({ ...prev, file: undefined }));
     }
   };
@@ -77,9 +68,8 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
   const handleSubmit = async () => {
     setErrors({});
 
-    // 1. Zod Validation (Using Shared Schema)
     const result = categorySchema.safeParse({ name, description });
-    
+
     if (!result.success) {
       const formattedErrors = result.error.flatten().fieldErrors;
       setErrors({
@@ -88,19 +78,16 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
       });
       return;
     }
-
-    // 2. Custom File Validation (Required only for new categories)
     if (!initialData && !selectedFile) {
       setErrors(prev => ({ ...prev, file: "Please upload a category icon." }));
       return;
     }
 
-    // 3. Prepare FormData
     const formData = new FormData();
     formData.append("name", name);
     formData.append("description", description);
     formData.append("isActive", String(isActive));
-    
+
     if (selectedFile) {
       formData.append("image", selectedFile);
     }
@@ -112,8 +99,8 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 
   return (
     <>
-      {/* Backdrop */}
-      <div 
+ 
+      <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity"
         onClick={onClose}
       />
@@ -121,7 +108,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
       {/* Modal Container */}
       <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-100">
-          
+
           {/* Header */}
           <div className="flex justify-between items-center px-6 py-5 border-b border-gray-100 bg-gray-50/50">
             <div>
@@ -132,8 +119,8 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                 {initialData ? "Update category details and icon" : "Create a new main category for services"}
               </p>
             </div>
-            <button 
-              onClick={onClose} 
+            <button
+              onClick={onClose}
               className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
             >
               <X size={20} />
@@ -142,13 +129,13 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 
           {/* Scrollable Content */}
           <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200">
-            
+
             {/* Image Upload Section */}
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">
                 Category Icon <span className="text-red-500">*</span>
               </label>
-              
+
               <div className="flex items-start gap-4">
                 {/* Preview Box */}
                 <div className={`
@@ -168,16 +155,16 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 
                 {/* Upload Controls */}
                 <div className="flex-1">
-                  <input 
-                    id="modal-file-upload" 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={handleFileChange} 
-                    className="hidden" 
+                  <input
+                    id="modal-file-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
                   />
                   <div className="flex flex-col gap-1">
-                    <label 
-                      htmlFor="modal-file-upload" 
+                    <label
+                      htmlFor="modal-file-upload"
                       className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-all w-max shadow-sm"
                     >
                       <UploadCloud size={16} />
@@ -204,11 +191,10 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. AC Repair"
-                  className={`w-full px-4 h-12 text-sm border rounded-xl focus:ring-2 outline-none transition-all placeholder:text-gray-400 ${
-                    errors.name 
-                      ? "border-red-300 focus:border-red-500 focus:ring-red-500/10" 
+                  className={`w-full px-4 h-12 text-sm border rounded-xl focus:ring-2 outline-none transition-all placeholder:text-gray-400 ${errors.name
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-500/10"
                       : "border-gray-200 focus:border-blue-500 focus:ring-blue-500/10"
-                  }`}
+                    }`}
                 />
                 {errors.name && <p className="text-xs text-red-500 mt-1 font-medium">{errors.name}</p>}
               </div>
@@ -222,11 +208,10 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                   placeholder="Briefly describe the services in this category..."
-                  className={`w-full px-4 py-3 text-sm border rounded-xl focus:ring-2 outline-none transition-all resize-none placeholder:text-gray-400 ${
-                    errors.description 
-                      ? "border-red-300 focus:border-red-500 focus:ring-red-500/10" 
+                  className={`w-full px-4 py-3 text-sm border rounded-xl focus:ring-2 outline-none transition-all resize-none placeholder:text-gray-400 ${errors.description
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-500/10"
                       : "border-gray-200 focus:border-blue-500 focus:ring-blue-500/10"
-                  }`}
+                    }`}
                 />
                 {errors.description && <p className="text-xs text-red-500 mt-1 font-medium">{errors.description}</p>}
               </div>

@@ -1,4 +1,4 @@
-// src/presentation/components/PasswordStrength/usePasswordStrength.ts
+ 
 export type PasswordChecks = {
   length: boolean;
   uppercase: boolean;
@@ -25,8 +25,7 @@ export const usePasswordStrength = (password: string) => {
     number: "Number (0-9)",
     special: "Special character (!@#$%^&*)",
   };
-
-  // list of failed messages (useful to show form errors inline)
+ 
   const failed = (Object.keys(checks) as (keyof PasswordChecks)[])
     .filter((k) => !checks[k])
     .map((k) => messages[k]);

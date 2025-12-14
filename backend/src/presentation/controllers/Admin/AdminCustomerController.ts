@@ -50,7 +50,6 @@ export class AdminCustomerController {
     const customerId = req.params.id;
 
     try {
-      // 1. Input Validation (Body)
       const validationResult = CustomerUpdateSchema.safeParse(req.body);
 
       if (!validationResult.success) {
@@ -63,17 +62,14 @@ export class AdminCustomerController {
 
       const updateDto = validationResult.data;
 
-      // 2. Execute the Update Use Case
       const updatedCustomer = await this.updateCustomerUseCase.execute(
         customerId,
         updateDto
       );
 
-      // 3. Send the updated entity as a clean DTO response
       res.status(StatusCodes.OK).json(mapToResponseDto(updatedCustomer));
     } catch (error) {
       if (error instanceof CustomerUpdateError) {
-        // Handle domain-specific errors (Not Found, Conflict)
         res.status(error.status).json({ message: error.message });
         return;
       }
@@ -87,14 +83,11 @@ export class AdminCustomerController {
     const customerId = req.params.id;
 
     try {
-      // 1. Execute the Use Case
       const customer = await this.getCustomerByIdUseCase.execute(customerId);
 
-      // 2. Send the clean DTO response
       res.status(StatusCodes.OK).json(mapToResponseDto(customer));
     } catch (error) {
       if (error instanceof CustomerUpdateError) {
-        // Handle domain-specific errors (Not Found)
         res.status(error.status).json({ message: error.message });
         return;
       }
@@ -105,7 +98,6 @@ export class AdminCustomerController {
       });
     }
   }
-  // Add deleteCustomer method
   async deleteCustomer(req: Request, res: Response): Promise<void> {
     try {
       await this.deleteCustomerUseCase.execute(req.params.id);

@@ -1,4 +1,3 @@
-// server/controllers/AuthTokenController.ts
 import type { Request, Response } from "express";
 import { refreshCookieOptions } from "../../infrastructure/config/Cookie";
 import { RefreshTokenUseCase } from "../../application/use-cases/auth/RefreshTokenUseCase";
@@ -15,10 +14,8 @@ export class AuthTokenController {
 
       const result = await this.refreshTokenUseCase.execute(refreshToken);
 
-      // Set new refresh cookie (rotation)
       if (result.refreshToken) {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
-        // result.refreshToken was already stored by use-case
       }
 
       return res.status(200).json({
@@ -26,7 +23,9 @@ export class AuthTokenController {
         accessToken: result.accessToken,
       });
     } catch (err: any) {
-      res.clearCookie("refreshToken", { path: refreshCookieOptions.path || "/" });
+      res.clearCookie("refreshToken", {
+        path: refreshCookieOptions.path || "/",
+      });
       return res.status(401).json({ error: "Unauthorized" });
     }
   };

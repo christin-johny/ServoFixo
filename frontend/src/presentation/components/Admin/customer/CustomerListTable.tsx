@@ -25,12 +25,11 @@ const CustomerListTable: React.FC<CustomerListTableProps> = ({
     );
   }
 
-  // --- MOBILE CARD COMPONENT ---
   const MobileCard = ({ customer }: { customer: CustomerDto }) => (
     <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-3 relative overflow-hidden">
       {/* Left Status Strip */}
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${customer.suspended ? 'bg-gray-300' : 'bg-green-500'}`} />
-      
+
       <div className="flex justify-between items-start pl-2">
         <div>
           <h3 className={`font-bold text-gray-900 ${customer.suspended ? 'text-gray-500' : ''}`}>
@@ -45,36 +44,34 @@ const CustomerListTable: React.FC<CustomerListTableProps> = ({
         </div>
 
         {/* Status Badge */}
-        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-          customer.suspended 
-            ? 'bg-gray-100 text-gray-500 border-gray-200' 
+        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${customer.suspended
+            ? 'bg-gray-100 text-gray-500 border-gray-200'
             : 'bg-green-50 text-green-700 border-green-100'
-        }`}>
+          }`}>
           {customer.suspended ? 'SUSPENDED' : 'ACTIVE'}
         </span>
       </div>
 
       {/* Action Buttons (Always Visible on Mobile) */}
       <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-50 pl-2">
-        <button 
+        <button
           onClick={() => onToggleStatus(customer)}
-          className={`p-2 rounded-lg flex items-center gap-2 text-xs font-bold transition-colors ${
-            customer.suspended ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
-          }`}
+          className={`p-2 rounded-lg flex items-center gap-2 text-xs font-bold transition-colors ${customer.suspended ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+            }`}
         >
           {customer.suspended ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
           {customer.suspended ? 'Activate' : 'Suspend'}
         </button>
-        
-        <button 
-          onClick={() => onEdit(customer)} 
+
+        <button
+          onClick={() => onEdit(customer)}
           className="p-2 bg-blue-50 text-blue-600 rounded-lg"
         >
           <Edit size={16} />
         </button>
-        
-        <button 
-          onClick={() => onView(customer)} 
+
+        <button
+          onClick={() => onView(customer)}
           className="p-2 bg-gray-50 text-gray-600 rounded-lg"
         >
           <Eye size={16} />
@@ -85,14 +82,12 @@ const CustomerListTable: React.FC<CustomerListTableProps> = ({
 
   return (
     <>
-      {/* 📱 MOBILE VIEW: Stacked Cards */}
       <div className="block md:hidden">
         {customers.map((customer) => (
           <MobileCard key={customer.id} customer={customer} />
         ))}
       </div>
 
-      {/* 💻 DESKTOP VIEW: Traditional Table */}
       <div className="hidden md:block overflow-hidden bg-white rounded-xl shadow-sm border border-gray-200">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -106,7 +101,7 @@ const CustomerListTable: React.FC<CustomerListTableProps> = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {customers.map((customer) => (
               <tr key={customer.id} className="group hover:bg-gray-50 transition-colors">
-                
+
                 {/* Name */}
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
@@ -128,11 +123,10 @@ const CustomerListTable: React.FC<CustomerListTableProps> = ({
 
                 {/* Status */}
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-bold rounded-full ${
-                    customer.suspended 
-                      ? 'bg-gray-100 text-gray-600' 
+                  <span className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-bold rounded-full ${customer.suspended
+                      ? 'bg-gray-100 text-gray-600'
                       : 'bg-green-100 text-green-700'
-                  }`}>
+                    }`}>
                     {customer.suspended ? 'Suspended' : 'Active'}
                   </span>
                 </td>
@@ -146,12 +140,11 @@ const CustomerListTable: React.FC<CustomerListTableProps> = ({
                     <button onClick={() => onEdit(customer)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                       <Edit className="w-4 h-4" />
                     </button>
-                    <button 
+                    <button
                       onClick={() => onToggleStatus(customer)}
                       title={customer.suspended ? "Activate" : "Suspend"}
-                      className={`p-2 rounded-lg transition-colors ${
-                        customer.suspended ? 'text-green-600 hover:bg-green-50' : 'text-red-500 hover:bg-red-50'
-                      }`}
+                      className={`p-2 rounded-lg transition-colors ${customer.suspended ? 'text-green-600 hover:bg-green-50' : 'text-red-500 hover:bg-red-50'
+                        }`}
                     >
                       {customer.suspended ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
                     </button>

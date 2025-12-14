@@ -1,22 +1,24 @@
-
-import { Email,Phone } from '../../../../shared/types/value-objects/ContactTypes';  
+import {
+  Email,
+  Phone,
+} from "../../../../shared/types/value-objects/ContactTypes";
 
 export class Technician {
-  private readonly id: string; 
+  private readonly id: string;
   private readonly name: string;
   private readonly phone: Phone;
-  private readonly email: Email; 
-  private readonly password: string; 
+  private readonly email: Email;
+  private readonly password: string;
   private readonly avatarUrl: string;
   private readonly bio: string;
   private readonly experienceSummary: string;
-  private readonly categories: string[]; 
+  private readonly categories: string[];
   private readonly subServices: string[];
-  private readonly zones: string[]; 
-  private readonly documents: object[]; 
+  private readonly zones: string[];
+  private readonly documents: object[];
   private readonly pricing: object;
-  private readonly availability: object; 
-  private readonly verificationStatus: string; 
+  private readonly availability: object;
+  private readonly verificationStatus: string;
   private readonly verificationReason?: string;
   private readonly suspended: boolean;
   private readonly suspendReason?: string;
@@ -33,16 +35,16 @@ export class Technician {
     phone: Phone,
     email: Email,
     password: string,
-    avatarUrl: string = '',
-    bio: string = '',
-    experienceSummary: string = '',
+    avatarUrl: string = "",
+    bio: string = "",
+    experienceSummary: string = "",
     categories: string[] = [],
     subServices: string[] = [],
     zones: string[] = [],
     documents: object[] = [],
     pricing: object = {},
     availability: object = {},
-    verificationStatus: string = 'pending',
+    verificationStatus: string = "pending",
     verificationReason?: string,
     suspended: boolean = false,
     suspendReason?: string,
@@ -79,7 +81,10 @@ export class Technician {
     this.updatedAt = updatedAt;
   }
 
-  // Getters 
-  getId(): string { return this.id; }
-  getEmail(): Email { return this.email; }
+  getId(): string {
+    return this.id;
+  }
+  getEmail(): Email {
+    return this.email;
+  }
 }

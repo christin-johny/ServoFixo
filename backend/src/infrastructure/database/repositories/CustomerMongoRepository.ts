@@ -1,16 +1,22 @@
-import { ICustomerRepository, CustomerFilterParams, PaginatedResult } from '../../../domain/repositories/ICustomerRepository';
-import { Customer } from '../../../domain/entities/Customer';
-import { CustomerModel, CustomerDocument } from '../mongoose/models/CustomerModel';
-import { HydratedDocument } from 'mongoose';
+import {
+  ICustomerRepository,
+  CustomerFilterParams,
+  PaginatedResult,
+} from "../../../domain/repositories/ICustomerRepository";
+import { Customer } from "../../../domain/entities/Customer";
+import {
+  CustomerModel,
+  CustomerDocument,
+} from "../mongoose/models/CustomerModel";
+import { HydratedDocument } from "mongoose";
 
 export class CustomerMongoRepository implements ICustomerRepository {
-
   async findById(id: string): Promise<Customer | null> {
-    const doc = await CustomerModel.findById(id).select('-password').exec();
+    const doc = await CustomerModel.findById(id).select("-password").exec();
     if (!doc) return null;
     return this.toEntity(doc);
   }
-  
+
   async findByEmail(email: string): Promise<Customer | null> {
     const normalizedEmail = email.toLowerCase().trim();
     const doc = await CustomerModel.findOne({ email: normalizedEmail }).exec();
@@ -23,7 +29,7 @@ export class CustomerMongoRepository implements ICustomerRepository {
     if (!doc) return null;
     return this.toEntity(doc);
   }
-  
+
   async create(customer: Customer): Promise<Customer> {
     const data = this.toPersistence(customer);
     const doc = await CustomerModel.create(data);
@@ -32,24 +38,20 @@ export class CustomerMongoRepository implements ICustomerRepository {
 
   async update(customer: Customer): Promise<Customer> {
     const data = this.toPersistence(customer);
-    const doc = await CustomerModel.findByIdAndUpdate(
-      customer.getId(),
-      data,
-      { new: true }
-    ).exec();
+    const doc = await CustomerModel.findByIdAndUpdate(customer.getId(), data, {
+      new: true,
+    }).exec();
     if (!doc) return customer;
     return this.toEntity(doc);
   }
 
-  // ✅ UPDATED METHOD: Admin Pagination with Soft Delete Check
   async findAllPaginated(
     page: number,
     limit: number,
     filters: CustomerFilterParams
   ): Promise<PaginatedResult<Customer>> {
     const skip = (page - 1) * limit;
-    
-    // ✅ FIX 1: Filter out deleted customers by default
+
     const query: any = { isDeleted: false };
 
     if (filters.suspended !== undefined) {
@@ -57,7 +59,7 @@ export class CustomerMongoRepository implements ICustomerRepository {
     }
 
     if (filters.search) {
-      const searchRegex = new RegExp(filters.search, 'i');
+      const searchRegex = new RegExp(filters.search, "i");
       query.$or = [
         { name: searchRegex },
         { email: searchRegex },
@@ -69,8 +71,10 @@ export class CustomerMongoRepository implements ICustomerRepository {
       CustomerModel.find(query).skip(skip).limit(limit).exec(),
       CustomerModel.countDocuments(query),
     ]);
-    
-    const customers = docs.map(doc => this.toEntity(doc as HydratedDocument<CustomerDocument>));
+
+    const customers = docs.map((doc) =>
+      this.toEntity(doc as HydratedDocument<CustomerDocument>)
+    );
 
     return {
       data: customers,
@@ -80,19 +84,16 @@ export class CustomerMongoRepository implements ICustomerRepository {
     };
   }
 
- async delete(id: string): Promise<boolean> {
-    // We use findByIdAndUpdate to perform a Soft Delete
+  async delete(id: string): Promise<boolean> {
     const result = await CustomerModel.findByIdAndUpdate(
-      id, 
-      { isDeleted: true }, 
+      id,
+      { isDeleted: true },
       { new: true }
     ).exec();
 
-    // Return true if a document was found and updated, false otherwise
     return !!result;
   }
 
-  // 🔽 Helpers (remain the same)
   private toEntity(doc: CustomerDocument): Customer {
     return new Customer(
       doc._id.toString(),

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, ArrowRight } from 'lucide-react';
-import type { ServiceItem } from '../../../../domain/types/ServiceItem'; // Adjust path if needed
+import type { ServiceItem } from '../../../../domain/types/ServiceItem';  
 
 interface ServiceCardProps {
   service: ServiceItem;

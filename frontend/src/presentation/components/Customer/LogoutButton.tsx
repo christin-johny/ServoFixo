@@ -1,9 +1,9 @@
-// src/presentation/components/LogoutButton.tsx
+
 import React from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { customerLogout } from "../../../infrastructure/repositories/authRepository";
-import { logout } from "../../../store/authSlice"; // see snippet below
+import { logout } from "../../../store/authSlice";
 
 const LogoutButton: React.FC = () => {
   const dispatch = useDispatch();
@@ -11,14 +11,14 @@ const LogoutButton: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await customerLogout(); 
+      await customerLogout();
     } catch (err) {
       console.warn("Logout request failed (still clearing client state):", err);
     } finally {
 
-      dispatch(logout()); 
-      localStorage.removeItem("accessToken"); 
-      sessionStorage.removeItem("otpFlowData"); 
+      dispatch(logout());
+      localStorage.removeItem("accessToken");
+      sessionStorage.removeItem("otpFlowData");
       navigate("/customer/login");
     }
   };

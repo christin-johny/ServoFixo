@@ -4,7 +4,6 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import type { Zone } from "../../../../domain/types/Zone";
 
-// Fix Leaflet icons
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -22,7 +21,6 @@ interface ZoneMapProps {
   isDrawing: boolean;
   initialPoints?: { lat: number; lng: number }[];
   onPolygonComplete: (coords: { lat: number; lng: number }[]) => void;
-  // ✅ NEW: Callback for live updates (dragging)
   onPointsChange?: (coords: { lat: number; lng: number }[]) => void;
 }
 
@@ -39,12 +37,12 @@ const DrawingController: React.FC<{
   return null;
 };
 
-const ZoneMap: React.FC<ZoneMapProps> = ({ 
-  existingZones, 
-  isDrawing, 
-  initialPoints, 
+const ZoneMap: React.FC<ZoneMapProps> = ({
+  existingZones,
+  isDrawing,
+  initialPoints,
   onPolygonComplete,
-  onPointsChange 
+  onPointsChange
 }) => {
   const [drawPoints, setDrawPoints] = useState<{ lat: number; lng: number }[]>([]);
 
@@ -56,9 +54,7 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
     }
   }, [isDrawing, initialPoints]);
 
-  const handleAddPoint = (lat: number, lng: number) => {
-    // Logic to close the loop only if it's a NEW drawing (not editing an existing full shape)
-    // If we are editing, we usually just want to adjust points, but adding points is also allowed.
+  const handleAddPoint = (lat: number, lng: number) => { 
     if (drawPoints.length > 2) {
       const first = drawPoints[0];
       const distance = Math.sqrt(Math.pow(first.lat - lat, 2) + Math.pow(first.lng - lng, 2));
@@ -67,18 +63,17 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
         return;
       }
     }
-    
+
     const newPoints = [...drawPoints, { lat, lng }];
     setDrawPoints(newPoints);
-    if (onPointsChange) onPointsChange(newPoints); // Notify parent
+    if (onPointsChange) onPointsChange(newPoints); 
   };
-
-  // ✅ NEW: Handle Dragging
+ 
   const handleMarkerDrag = (index: number, lat: number, lng: number) => {
     const newPoints = [...drawPoints];
     newPoints[index] = { lat, lng };
     setDrawPoints(newPoints);
-    if (onPointsChange) onPointsChange(newPoints); // Notify parent of move
+    if (onPointsChange) onPointsChange(newPoints);  
   };
 
   return (
@@ -107,26 +102,25 @@ const ZoneMap: React.FC<ZoneMapProps> = ({
       {drawPoints.length > 0 && (
         <>
           {drawPoints.map((p, idx) => (
-            <DraggableMarker 
-              key={`${idx}-${p.lat}-${p.lng}`} 
-              position={p} 
+            <DraggableMarker
+              key={`${idx}-${p.lat}-${p.lng}`}
+              position={p}
               index={idx}
               isDraggable={isDrawing}
               onDrag={handleMarkerDrag}
             />
           ))}
           <Polyline positions={drawPoints.map((p) => [p.lat, p.lng])} color="blue" />
-          <Polygon 
-            positions={drawPoints.map((p) => [p.lat, p.lng])} 
-            pathOptions={{ color: "blue", fillOpacity: 0.1, dashArray: "5, 5" }} 
+          <Polygon
+            positions={drawPoints.map((p) => [p.lat, p.lng])}
+            pathOptions={{ color: "blue", fillOpacity: 0.1, dashArray: "5, 5" }}
           />
         </>
       )}
     </MapContainer>
   );
 };
-
-// ✅ Helper Component for Draggable Marker
+ 
 const DraggableMarker: React.FC<{
   position: { lat: number; lng: number };
   index: number;

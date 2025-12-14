@@ -45,11 +45,9 @@ export class AdminLoginUseCase {
       await redis.set(redisKey, String(admin.getId()), 'EX', refreshTtlSeconds);
      
     } catch (err) {
-      // Do NOT fail login if Redis is down — log and continue.
       console.error(err);
     }
 
-    // 6) Return DTO (controller will set cookie)
     return {
       accessToken,
       refreshToken,

@@ -21,33 +21,28 @@ const zoneNameSchema = z
 const Zones: React.FC = () => {
   const { showSuccess, showError } = useNotification();
 
-  // --- Data State ---
   const [zones, setZones] = useState<Zone[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalZones, setTotalZones] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  // --- Filter & Pagination State ---
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("");
   const debouncedSearch = useDebounce(search, 500);
 
-  // --- UI State ---
   const [isCreating, setIsCreating] = useState(false);
   const [editingZoneId, setEditingZoneId] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // --- Form State ---
   const [zoneName, setZoneName] = useState("");
   const [zoneDesc, setZoneDesc] = useState("");
   const [zoneIsActive, setZoneIsActive] = useState(true);
   const [zonePoints, setZonePoints] = useState<{ lat: number; lng: number }[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ Trigger Fetch on Filters Change
   useEffect(() => {
     loadZones();
   }, [debouncedSearch, filterStatus, page]);
@@ -141,24 +136,22 @@ const Zones: React.FC = () => {
     }
   };
 
-  // ✅ NEW HANDLER: Quick Toggle Status
   const handleToggleStatus = async (zone: Zone) => {
     const newStatus = !zone.isActive;
     const zoneId = zone.id || zone._id;
     if (!zoneId) return;
 
     try {
-      // Use existing updateZone logic but only change isActive
       const payload: UpdateZoneDTO = {
         id: zoneId,
         name: zone.name,
         description: zone.description,
         boundaries: zone.boundaries,
-        isActive: newStatus // Toggle Logic
+        isActive: newStatus
       };
       await zoneRepo.updateZone(payload);
       showSuccess(`Zone ${zone.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
-      await loadZones(); // Refresh list
+      await loadZones();
     } catch (err: any) {
       showError("Failed to update status");
     }
@@ -374,12 +367,12 @@ const Zones: React.FC = () => {
                           <p className="text-sm text-gray-500 truncate mt-0.5">{zone.description || "No description provided"}</p>
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {/* ✅ NEW TOGGLE BUTTON */}
+
                           <button
                             onClick={() => handleToggleStatus(zone)}
                             className={`p-2 rounded-lg transition-colors ${zone.isActive
-                                ? 'text-green-600 hover:bg-green-50'
-                                : 'text-red-500 hover:bg-red-50'
+                              ? 'text-green-600 hover:bg-green-50'
+                              : 'text-red-500 hover:bg-red-50'
                               }`}
                             title={zone.isActive ? "Deactivate" : "Activate"}
                           >

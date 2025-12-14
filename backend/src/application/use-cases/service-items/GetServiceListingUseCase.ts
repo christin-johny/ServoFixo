@@ -6,7 +6,7 @@ export class GetServiceListingUseCase {
   async execute(filters: ServiceFilters) {
 
     const safeFilters = { ...filters, isActive: true };
-    
+
     return await this.serviceItemRepo.findWithFilters(safeFilters);
   }
 }

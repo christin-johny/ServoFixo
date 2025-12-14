@@ -1,18 +1,16 @@
-// src/presentation/routes/TechnicianRoutes.tsx
+
 import React, { Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import LoaderFallback from "../components/LoaderFallback";
 import AuthGuard from "./AuthGuard";
 import RoleProtectedRoute from "./RoleProtectedRoute";
 
-// Placeholder components - implement these when ready
 const TechLogin: React.FC = () => <div className="p-6">Technician Login (implement)</div>;
 const TechDashboard: React.FC = () => <div className="p-6">Technician Dashboard (implement)</div>;
 
 const TechnicianRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
-    <Routes>
-      {/* Public auth route - wrapped with AuthGuard */}
+    <Routes> 
       <Route
         path="login"
         element={

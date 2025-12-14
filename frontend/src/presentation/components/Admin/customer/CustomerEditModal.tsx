@@ -4,8 +4,7 @@ import type { CustomerDto, CustomerUpdatePayload } from '../../../../domain/type
 import { updateCustomer } from '../../../../infrastructure/repositories/admin/customerService';
 import { Loader2, User, X } from 'lucide-react';
 import { CustomerEditSchema, type CustomerEditForm } from '../../../validation/customerSchemas';
-
-// ✅ MATCHING ZONES STYLE: Input
+ 
 interface StyledInputProps extends React.ComponentProps<'input'> {
     label: string;
     error?: string;
@@ -26,8 +25,7 @@ const StyledInput = ({ label, error, className, ...props }: StyledInputProps) =>
         {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
 );
-
-// ✅ MATCHING ZONES STYLE: Primary Button (Save)
+ 
 interface ButtonProps extends React.ComponentProps<'button'> {
     children: React.ReactNode;
 }
@@ -40,8 +38,7 @@ const PrimaryButton = ({ children, className, ...props }: ButtonProps) => (
         {children}
     </button>
 );
-
-// ✅ MATCHING ZONES STYLE: Secondary Button (Cancel)
+ 
 const SecondaryButton = ({ children, className, ...props }: ButtonProps) => (
     <button 
         {...props} 
@@ -76,8 +73,7 @@ const CustomerEditModal: React.FC<CustomerEditModalProps> = ({
     
     const [loading, setLoading] = useState(false);
     const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
-
-    // Reset form when modal opens or customer changes
+  
     useEffect(() => {
         if (isOpen && customerData) {
             setFormData({

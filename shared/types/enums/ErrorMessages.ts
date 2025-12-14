@@ -1,4 +1,3 @@
-// ERROR MESSAGES
 export enum ErrorMessages {
   INVALID_CREDENTIALS = "Invalid email or password",
   ADMIN_NOT_FOUND = "Admin not found",
@@ -20,11 +19,10 @@ export enum ErrorMessages {
   MISSING_REQUIRED_FIELDS = "Missing required fields",
 
   INTERNAL_ERROR = "Internal server error",
-  INVALID_QUERY = 'Invalid Query parameters',
-  INVALID_DATA = 'Invalid request data provided'
+  INVALID_QUERY = "Invalid Query parameters",
+  INVALID_DATA = "Invalid request data provided",
 }
 
-// OPTIONAL: machine-readable error codes
 export enum ErrorCodes {
   INVALID_CREDENTIALS = "ERR_INVALID_CREDENTIALS",
   NOT_FOUND = "ERR_NOT_FOUND",
@@ -33,8 +31,7 @@ export enum ErrorCodes {
   INTERNAL = "ERR_INTERNAL",
   TOKEN_EXPIRED = "ERR_TOKEN_EXPIRED",
 }
-
-// SUCCESS MESSAGES
+ 
 export enum SuccessMessages {
   LOGIN_SUCCESS = "Logged in successfully",
   LOGOUT_SUCCESS = "Logged out successfully",

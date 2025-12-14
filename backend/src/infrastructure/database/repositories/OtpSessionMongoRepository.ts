@@ -1,9 +1,10 @@
-// backend/src/infrastructure/database/repositories/OtpSessionMongoRepository.ts
-
-import { IOtpSessionRepository } from '../../../domain/repositories/IOtpSessionRepository';
-import { OtpSession } from '../../../domain/entities/OtpSession';
-import { OtpSessionModel, OtpSessionDocument } from '../mongoose/models/OtpSessionModel';
-import { OtpContext } from '../../../../../shared/types/enums/OtpContext';
+import { IOtpSessionRepository } from "../../../domain/repositories/IOtpSessionRepository";
+import { OtpSession } from "../../../domain/entities/OtpSession";
+import {
+  OtpSessionModel,
+  OtpSessionDocument,
+} from "../mongoose/models/OtpSessionModel";
+import { OtpContext } from "../../../../../shared/types/enums/OtpContext";
 
 export class OtpSessionMongoRepository implements IOtpSessionRepository {
   async create(session: OtpSession): Promise<OtpSession> {
@@ -39,20 +40,18 @@ export class OtpSessionMongoRepository implements IOtpSessionRepository {
 
     return this.toEntity(doc);
   }
-async countRecentSessions(email: string, minutes: number): Promise<number> {
-  // If your schema uses createdAt timestamps, use that field:
-  const since = new Date(Date.now() - minutes * 60 * 1000);
-  // Adjust the query to match your schema fields; common fields: email, context, createdAt, used
-  try {
-    return await OtpSessionModel.countDocuments({
-      email: email,
-      context: OtpContext.ForgotPassword,
-      createdAt: { $gte: since },
-    }).exec();
-  } catch (err) {
-    throw err;
+  async countRecentSessions(email: string, minutes: number): Promise<number> {
+    const since = new Date(Date.now() - minutes * 60 * 1000);
+    try {
+      return await OtpSessionModel.countDocuments({
+        email: email,
+        context: OtpContext.ForgotPassword,
+        createdAt: { $gte: since },
+      }).exec();
+    } catch (err) {
+      throw err;
+    }
   }
-}
   private toEntity(doc: OtpSessionDocument): OtpSession {
     return new OtpSession(
       doc._id.toString(),
@@ -76,5 +75,4 @@ async countRecentSessions(email: string, minutes: number): Promise<number> {
       used: session.isUsed(),
     };
   }
-
 }

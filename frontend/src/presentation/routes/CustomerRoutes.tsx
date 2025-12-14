@@ -1,12 +1,11 @@
-  // src/presentation/routes/CustomerRoutes.tsx
+ 
   import React, { Suspense, lazy } from "react";
   import { Routes, Route, Navigate,Outlet } from "react-router-dom";
   import LoaderFallback from "../components/LoaderFallback";
   import AuthGuard from "./AuthGuard";
   import CustomerHome from "../pages/Customer/Home/CustomerHome";
   import CustomerDataLoader from "../components/auth/CustomerDataLoader";
-
-  // Lazy imports
+ 
   const CustomerLogin = lazy(() => import("../pages/Customer/CustomerLogin"));
   const CustomerRegister = lazy(() => import("../pages/Customer/Register"));
   const VerifyOtp = lazy(() => import("../pages/Customer/VerifyOtp"));

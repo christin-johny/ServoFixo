@@ -43,22 +43,19 @@ const VerifyOtp: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // --- 1. Clean State Extraction (No Legacy) ---
   const state = location.state as OtpFlowState | null;
   const storageRaw = typeof window !== "undefined" ? sessionStorage.getItem(STORAGE_KEY) : null;
   const storageParsed = storageRaw ? (JSON.parse(storageRaw) as OtpFlowState) : null;
-  
-  // Prioritize: location.state -> sessionStorage -> Default to 'registration'
+
   const context = state?.context ?? storageParsed?.context ?? "registration";
   const email = state?.email ?? storageParsed?.email ?? "";
   const sessionId = state?.sessionId ?? storageParsed?.sessionId ?? "";
-  
+
   const form = state?.form ?? storageParsed?.form ?? {};
   const nameFromState = form.name ?? "";
   const passwordFromState = form.password ?? "";
   const phoneFromState = form.phone ?? "";
 
-  // --- 2. Component State ---
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +65,6 @@ const VerifyOtp: React.FC = () => {
   const [resendTimer, setResendTimer] = useState<number>(RESEND_DELAY_SECONDS);
   const [resending, setResending] = useState(false);
 
-  // Forgot Password Fields
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -78,10 +74,8 @@ const VerifyOtp: React.FC = () => {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
 
-  // Password Strength Hook
   const { checks } = usePasswordStrength(newPassword);
 
-  // --- 3. Effects ---
   useEffect(() => {
     const t = window.setInterval(() => {
       setExpiryTimer((p) => (p > 0 ? p - 1 : 0));
@@ -91,11 +85,9 @@ const VerifyOtp: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Auto-focus first input
     inputsRef.current[0]?.focus();
   }, []);
 
-  // --- 4. Handlers ---
   const handleChange = (i: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
     const next = [...otp];
@@ -174,12 +166,10 @@ const VerifyOtp: React.FC = () => {
     }
   };
 
-  // Helper to extract error message safely
   const extractServerMsg = (err: unknown) => {
     if (err && typeof err === 'object' && 'response' in err) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const resp = (err as any).response?.data;
-        return resp?.message ?? resp?.error ?? (err as any).message ?? "Verification failed";
+      const resp = (err as any).response?.data;
+      return resp?.message ?? resp?.error ?? (err as any).message ?? "Verification failed";
     }
     return (err as Error)?.message ?? "Verification failed";
   };
@@ -238,15 +228,14 @@ const VerifyOtp: React.FC = () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data = resp as any;
         const access = data?.accessToken ?? data?.token;
-        
-        // Cleanup storage on success
+
         try {
           sessionStorage.removeItem(STORAGE_KEY);
-        } catch (_) {}
+        } catch (_) { }
 
         if (access) {
           dispatch(setAccessToken(access));
-          
+
           if (data.user) {
             dispatch(setUser(data.user));
           } else {
@@ -259,12 +248,10 @@ const VerifyOtp: React.FC = () => {
             }
           }
           navigate("/");
-        } else {
-          // ✅ Updated Fallback Redirect
+        } else { 
           window.location.href = "/";
         }
-      } else {
-        // FORGOT PASSWORD FLOW
+      } else { 
         const resp = await authRepo.customerForgotPasswordVerify({
           email,
           otp: code,
@@ -277,9 +264,8 @@ const VerifyOtp: React.FC = () => {
         try {
           sessionStorage.removeItem(STORAGE_KEY);
           sessionStorage.removeItem("forgotResetHandoff");
-        } catch (_) {}
-
-        // Redirect to Login (which is now at /login)
+        } catch (_) { }
+ 
         navigate("/login", {
           state: { successMessage: data?.message ?? "Password reset successful. Please login." },
         });
@@ -358,7 +344,7 @@ const VerifyOtp: React.FC = () => {
                 </button>
               </div>
               {passwordTouched && passwordError && (<p className="mt-1 text-xs text-red-600">{passwordError}</p>)}
-              
+
               <PasswordStrength password={newPassword} />
             </div>
 

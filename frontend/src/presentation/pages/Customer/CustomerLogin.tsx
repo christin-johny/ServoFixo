@@ -1,4 +1,4 @@
-// src/presentation/pages/Customer/CustomerLogin.tsx
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -9,7 +9,6 @@ import { parseJwt } from "../../../utils/jwt";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { usePasswordStrength } from "../../components/PasswordStrength/usePasswordStrength";
 
-// Zod validation schema (unchanged)
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
   password: z
@@ -35,11 +34,10 @@ const CustomerLogin: React.FC = () => {
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
-  // use the hook for fast client-side checks (no visible UI here)
   const { checks } = usePasswordStrength(password);
 
   const firstPasswordFailureMessage = (): string | undefined => {
-    if (password.length === 0) return undefined; 
+    if (password.length === 0) return undefined;
     if (password.length < 8) return "Password must be at least 8 characters";
     if (password.length > 100) return "Password is too long";
     if (!checks.uppercase) return "Password must contain at least one uppercase letter";
@@ -95,8 +93,7 @@ const CustomerLogin: React.FC = () => {
 
       if (token) {
         dispatch(setAccessToken(token));
-        
-        // Decode JWT and set user info
+
         const payload = parseJwt(token);
         if (payload) {
           dispatch(
@@ -144,15 +141,13 @@ const CustomerLogin: React.FC = () => {
     const v = e.target.value;
     setPassword(v);
 
-    if (touched.password) {
-      // fast client-side checks using the hook
+    if (touched.password) { 
       const failMsg = firstPasswordFailureMessage();
       if (failMsg) {
         setFieldErrors((prev) => ({ ...prev, password: failMsg }));
         return;
       }
-
-      // if hook checks pass, still attempt single-field Zod parse (defensive)
+ 
       try {
         loginSchema.shape.password.parse(v);
         setFieldErrors((prev) => ({ ...prev, password: undefined }));
@@ -204,9 +199,8 @@ const CustomerLogin: React.FC = () => {
               </label>
               <div className="relative">
                 <div
-                  className={`flex items-center bg-gray-50 border rounded-lg px-4 py-3 transition-all ${
-                    touched.email && fieldErrors.email ? "border-red-300 bg-red-50" : "border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200"
-                  }`}
+                  className={`flex items-center bg-gray-50 border rounded-lg px-4 py-3 transition-all ${touched.email && fieldErrors.email ? "border-red-300 bg-red-50" : "border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200"
+                    }`}
                 >
                   <Mail className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
                   <input
@@ -240,9 +234,8 @@ const CustomerLogin: React.FC = () => {
               </label>
               <div className="relative">
                 <div
-                  className={`flex items-center bg-gray-50 border rounded-lg px-4 py-3 transition-all ${
-                    touched.password && fieldErrors.password ? "border-red-300 bg-red-50" : "border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200"
-                  }`}
+                  className={`flex items-center bg-gray-50 border rounded-lg px-4 py-3 transition-all ${touched.password && fieldErrors.password ? "border-red-300 bg-red-50" : "border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200"
+                    }`}
                 >
                   <Lock className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
                   <input

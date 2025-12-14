@@ -1,6 +1,6 @@
-import { IServiceItemRepository } from '../../../domain/repositories/IServiceItemRepository';
-import { IImageService } from '../../services/IImageService';
-import { ServiceSpecification } from '../../../domain/entities/ServiceItem';
+import { IServiceItemRepository } from "../../../domain/repositories/IServiceItemRepository";
+import { IImageService } from "../../services/IImageService";
+import { ServiceSpecification } from "../../../domain/entities/ServiceItem";
 
 interface EditServiceRequest {
   id: string;
@@ -10,7 +10,7 @@ interface EditServiceRequest {
   basePrice: number;
   specifications: ServiceSpecification[];
   newImageFiles: { buffer: Buffer; originalName: string; mimeType: string }[];
-  imagesToDelete?: string[]; 
+  imagesToDelete?: string[];
   isActive: boolean;
 }
 
@@ -26,15 +26,19 @@ export class EditServiceItemUseCase {
 
     if (request.imagesToDelete && request.imagesToDelete.length > 0) {
       const deletePromises = request.imagesToDelete.map(async (url) => {
-        await this.imageService.deleteImage(url); // Remove from S3
+        await this.imageService.deleteImage(url);
         service.removeImage(url);
       });
       await Promise.all(deletePromises);
     }
 
     if (request.newImageFiles.length > 0) {
-      const uploadPromises = request.newImageFiles.map(file => 
-        this.imageService.uploadImage(file.buffer, file.originalName, file.mimeType)
+      const uploadPromises = request.newImageFiles.map((file) =>
+        this.imageService.uploadImage(
+          file.buffer,
+          file.originalName,
+          file.mimeType
+        )
       );
       const newUrls = await Promise.all(uploadPromises);
       service.addImages(newUrls);

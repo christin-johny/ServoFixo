@@ -5,7 +5,7 @@ import AdminLogin from "../pages/Admin/AdminLogin";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 import AuthGuard from "./AuthGuard";
 import RoleProtectedRoute from "./RoleProtectedRoute";
-import AdminLayout from "../layouts/AdminLayout"; // <--- Default import
+import AdminLayout from "../layouts/AdminLayout";  
 import Zones from "../pages/Admin/Zones/Zones";
 import Services from "../pages/Admin/Services/Services";
 import Customers from '../pages/Admin/customers/AdminCustomersPage';

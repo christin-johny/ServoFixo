@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  CalendarClock, 
-  History, 
-  Bell, 
-  Users, 
-  CheckCircle, 
-  MapPin, 
+import {
+  LayoutDashboard,
+  CalendarClock,
+  History,
+  Bell,
+  Users,
+  CheckCircle,
+  MapPin,
   CreditCard,
-  FileText, 
-  Settings, 
-  ChevronDown, 
+  FileText,
+  Settings,
+  ChevronDown,
   ChevronRight,
   X,
-  Layers 
+  Layers
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -30,40 +30,44 @@ type MenuSection = { sectionLabel?: string; items: NavItem[]; };
 
 const MENU_CONFIG: MenuSection[] = [
   { items: [{ label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' }] },
-  { 
-    sectionLabel: 'Bookings', 
-    items: [{ label: 'Bookings', icon: CalendarClock, children: [
-      { label: 'Live Feed', path: '/admin/bookings/live', icon: Bell },
-      { label: 'History', path: '/admin/bookings/history', icon: History },
-    ]}] 
+  {
+    sectionLabel: 'Bookings',
+    items: [{
+      label: 'Bookings', icon: CalendarClock, children: [
+        { label: 'Live Feed', path: '/admin/bookings/live', icon: Bell },
+        { label: 'History', path: '/admin/bookings/history', icon: History },
+      ]
+    }]
   },
-  { 
-    sectionLabel: 'People', 
+  {
+    sectionLabel: 'People',
     items: [
-      { label: 'Technicians', icon: Users, children: [
-        { label: 'Verification Queue', path: '/admin/technicians/verification', icon: CheckCircle },
-        { label: 'Technician List', path: '/admin/technicians/list', icon: Users },
-      ]},
+      {
+        label: 'Technicians', icon: Users, children: [
+          { label: 'Verification Queue', path: '/admin/technicians/verification', icon: CheckCircle },
+          { label: 'Technician List', path: '/admin/technicians/list', icon: Users },
+        ]
+      },
       { label: 'Customers', icon: Users, path: '/admin/customers' }
     ]
   },
-  { 
-    sectionLabel: 'Operations', 
+  {
+    sectionLabel: 'Operations',
     items: [
       { label: 'Zones', icon: MapPin, path: '/admin/zones' },
-      { label: 'Services', icon: Layers, path: '/admin/services' } 
-    ] 
+      { label: 'Services', icon: Layers, path: '/admin/services' }
+    ]
   },
-  { 
-    sectionLabel: 'Finance', 
-    items: [{ label: 'Payments', icon: CreditCard, path: '/admin/payments' }] 
+  {
+    sectionLabel: 'Finance',
+    items: [{ label: 'Payments', icon: CreditCard, path: '/admin/payments' }]
   },
-  { 
-    sectionLabel: 'System', 
+  {
+    sectionLabel: 'System',
     items: [
       { label: 'Settings', icon: Settings, path: '/admin/settings' },
       { label: 'Reports', icon: FileText, path: '/admin/reports' }
-    ] 
+    ]
   }
 ];
 
@@ -86,7 +90,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
 
   return (
     <>
-      <div 
+      <div
         className={cn(
           "fixed inset-0 z-40 bg-black/50 transition-opacity lg:hidden",
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -105,7 +109,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="flex h-20 shrink-0 items-center px-6 border-b border-gray-700/50">
           <h1 className="text-2xl font-bold tracking-wide">ServoFixo</h1>
-          <button 
+          <button
             onClick={onClose}
             className="absolute right-4 top-6 text-gray-400 hover:text-white lg:hidden"
           >
@@ -158,7 +162,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
                                 <NavLink
                                   to={child.path}
                                   onClick={() => window.innerWidth < 1024 && onClose()}
-                                  // ✅ FIXED: Explicitly typed 'isActive'
                                   className={({ isActive }: { isActive: boolean }) =>
                                     cn(
                                       "flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all border-l-2 ml-1",
@@ -188,7 +191,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
                       <NavLink
                         to={item.path!}
                         onClick={() => window.innerWidth < 1024 && onClose()}
-                        // ✅ FIXED: Explicitly typed 'isActive'
                         className={({ isActive }: { isActive: boolean }) =>
                           cn(
                             "flex items-center gap-4 rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-200",

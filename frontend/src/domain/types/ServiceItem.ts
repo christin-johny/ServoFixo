@@ -9,8 +9,8 @@ export interface ServiceItem {
   name: string;
   description: string;
   basePrice: number;
-  specifications: ServiceSpecification[]; // Array of details
-  imageUrls: string[]; // Array of S3 links
+  specifications: ServiceSpecification[];  
+  imageUrls: string[];  
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

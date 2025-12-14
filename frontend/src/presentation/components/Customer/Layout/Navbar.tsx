@@ -30,18 +30,15 @@ const Navbar: React.FC = () => {
     const [query, setQuery] = useState("");
     const drawerRef = useRef<HTMLDivElement | null>(null);
 
-    // --- 1. SYNC SEARCH INPUT WITH URL ---
-    // If user navigates to /services?search=ac, fill the input box
     useEffect(() => {
         const urlSearch = searchParams.get('search');
         if (location.pathname === '/services' && urlSearch) {
             setQuery(urlSearch);
         } else if (location.pathname !== '/services') {
-            setQuery(''); // Clear input if we leave the services page
+            setQuery('');
         }
     }, [searchParams, location.pathname]);
 
-    // --- DRAWER OUTSIDE CLICK HANDLER ---
     useEffect(() => {
         function onKey(e: KeyboardEvent) {
             if (e.key === "Escape") setDrawerOpen(false);
@@ -59,15 +56,12 @@ const Navbar: React.FC = () => {
         };
     }, [drawerOpen]);
 
-    // --- 2. UPDATED SEARCH HANDLER ---
     const handleSearch = (e?: React.FormEvent) => {
         e?.preventDefault();
         if (query.trim()) {
-            // Redirect to Listing Page with search param
             navigate(`/services?search=${encodeURIComponent(query)}`);
             setDrawerOpen(false);
         } else {
-            // If empty, go to services without filter
             navigate('/services');
             setDrawerOpen(false);
         }
@@ -267,8 +261,7 @@ const Navbar: React.FC = () => {
         </header>
     );
 };
-
-// Sub-components (Unchanged mostly)
+ 
 const SearchBar = ({ query, setQuery, onSubmit, className = "" }: any) => (
     <form onSubmit={onSubmit} className={`flex items-center gap-3 bg-[#F3F4F6] rounded-full px-4 py-2.5 transition-all focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:bg-white focus-within:shadow-md ${className}`}>
         <Search size={18} className="text-gray-400 flex-shrink-0" />
@@ -297,8 +290,8 @@ const DrawerItem = ({ icon: Icon, label, onClick, active }: any) => (
     <button
         onClick={onClick}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${active
-                ? "bg-blue-50 text-blue-600"
-                : "text-gray-700 hover:bg-gray-100"
+            ? "bg-blue-50 text-blue-600"
+            : "text-gray-700 hover:bg-gray-100"
             }`}
     >
         <Icon size={20} className={active ? "text-blue-600" : "text-gray-500"} />

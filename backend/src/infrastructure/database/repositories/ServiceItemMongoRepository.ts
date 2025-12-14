@@ -67,48 +67,41 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
     };
   }
 
-async findById(id: string): Promise<ServiceItem | null> {
+  async findById(id: string): Promise<ServiceItem | null> {
     if (!mongoose.isValidObjectId(id)) return null;
 
     const docs = await ServiceItemModel.aggregate([
-        // 1. MATCH: Find the service itself
-        {
-            $match: {
-                _id: new mongoose.Types.ObjectId(id),
-                isDeleted: { $ne: true },
-                isActive: { $ne: false }
-            }
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(id),
+          isDeleted: { $ne: true },
+          isActive: { $ne: false },
         },
-        // 2. LOOKUP: Join with the ServiceCategory collection
-        {
-            $lookup: {
-                from: "servicecategories", // Mongoose default collection name for 'ServiceCategory'
-                localField: "categoryId",  // Matches your schema exactly
-                foreignField: "_id",
-                as: "parentCategory"
-            }
+      },
+      {
+        $lookup: {
+          from: "servicecategories",
+          localField: "categoryId",
+          foreignField: "_id",
+          as: "parentCategory",
         },
-        // 3. UNWIND: Flatten the array to access fields easily
-        {
-            $unwind: "$parentCategory"
+      },
+      {
+        $unwind: "$parentCategory",
+      },
+      {
+        $match: {
+          "parentCategory.isActive": { $ne: false },
+          "parentCategory.isDeleted": { $ne: true },
         },
-        // 4. FILTER: Check if the Parent Category is active and not deleted
-        {
-            $match: {
-                "parentCategory.isActive": { $ne: false },
-                "parentCategory.isDeleted": { $ne: true }
-            }
-        }
+      },
     ]).exec();
 
-    // If array is empty, it means Service not found OR Category is blocked
     if (!docs || docs.length === 0) {
-        return null;
+      return null;
     }
-
-    // Return the first result mapped to your entity
     return this.toEntity(docs[0]);
-}
+  }
 
   async findByNameAndCategory(
     name: string,
@@ -142,7 +135,6 @@ async findById(id: string): Promise<ServiceItem | null> {
     return this.toEntity(doc);
   }
 
-  // ✅ NEW METHOD: Lightweight Status Toggle
   async toggleStatus(id: string, isActive: boolean): Promise<boolean> {
     const result = await ServiceItemModel.findByIdAndUpdate(id, {
       isActive,
@@ -209,18 +201,18 @@ async findById(id: string): Promise<ServiceItem | null> {
     }
 
     if (filters.minPrice || filters.maxPrice) {
-      query.price = {};
-      if (filters.minPrice) query.price.$gte = filters.minPrice;
-      if (filters.maxPrice) query.price.$lte = filters.maxPrice;
+      query.basePrice = {};
+      if (filters.minPrice) query.basePrice.$gte = filters.minPrice;
+      if (filters.maxPrice) query.basePrice.$lte = filters.maxPrice;
     }
 
     let sortOptions: any = {};
     switch (filters.sortBy) {
       case "price_asc":
-        sortOptions = { price: 1 };
+        sortOptions = { basePrice: 1 };
         break;
       case "price_desc":
-        sortOptions = { price: -1 };
+        sortOptions = { basePrice: -1 };
         break;
       case "newest":
         sortOptions = { createdAt: -1 };
@@ -234,13 +226,13 @@ async findById(id: string): Promise<ServiceItem | null> {
 
     const docs = await ServiceItemModel.find(query)
       .populate({
-        path: 'categoryId',
+        path: "categoryId",
         match: { isDeleted: false, isActive: true },
-        select: 'name'
+        select: "name",
       })
-      .sort(sortOptions) 
-      .skip(skip)        
-      .limit(limit)      
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limit)
       .exec();
 
     const validDocs = docs.filter((doc) => doc.categoryId !== null);

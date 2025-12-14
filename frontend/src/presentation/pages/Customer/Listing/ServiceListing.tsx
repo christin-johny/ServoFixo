@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Search, Loader2, Filter } from 'lucide-react'; // Removed Star, ArrowRight as they are in Card now
+import { Search, Loader2, Filter } from 'lucide-react';
 
-// Components
 import Navbar from '../../../components/Customer/Layout/Navbar';
 import BottomNav from '../../../components/Customer/Layout/BottomNav';
 import Footer from '../../../components/Customer/Layout/Footer';
 import LoaderFallback from '../../../components/LoaderFallback';
 
-// *** IMPORT THE NEW CARD COMPONENT ***
 import ServiceCard from '../../../components/Customer/Services/ServiceCard';
 
-// Repos
 import * as serviceRepo from '../../../../infrastructure/repositories/customer/serviceRepository';
 import * as homeRepo from '../../../../infrastructure/repositories/customer/homeRepository';
 import type { ServiceItem } from '../../../../domain/types/ServiceItem';
@@ -20,10 +17,8 @@ import type { ServiceCategory } from '../../../../domain/types/ServiceCategory';
 const ITEMS_PER_PAGE = 4;
 
 const ServiceListing: React.FC = () => {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // --- STATE ---
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -31,7 +26,6 @@ const ServiceListing: React.FC = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  // URL Params
   const activeCategoryId = searchParams.get('categoryId') || '';
   const activeSearch = searchParams.get('search') || '';
   const activeSort = searchParams.get('sort') || 'popular';
@@ -40,7 +34,6 @@ const ServiceListing: React.FC = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  // --- 1. FETCH CATEGORIES ---
   useEffect(() => {
     const fetchCats = async () => {
       try {
@@ -53,7 +46,6 @@ const ServiceListing: React.FC = () => {
     fetchCats();
   }, []);
 
-  // --- 2. FETCH SERVICES ---
   useEffect(() => {
     const fetchServices = async () => {
       if (page === 1) setInitialLoading(true);
@@ -84,7 +76,6 @@ const ServiceListing: React.FC = () => {
     fetchServices();
   }, [activeCategoryId, activeSearch, activeSort, page]);
 
-  // --- 3. HANDLERS ---
   const updateFilter = (key: string, value: string) => {
     setPage(1);
     setServices([]);

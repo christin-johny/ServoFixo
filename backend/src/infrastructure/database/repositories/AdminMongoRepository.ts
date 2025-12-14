@@ -1,24 +1,14 @@
-
-import { IAdminRepository } from '../../../domain/repositories/IAdminRepository';
-import { Admin } from '../../../domain/entities/Admin';
-import { AdminModel, AdminDocument } from '../mongoose/models/AdminModel';
-
+import { IAdminRepository } from "../../../domain/repositories/IAdminRepository";
+import { Admin } from "../../../domain/entities/Admin";
+import { AdminModel, AdminDocument } from "../mongoose/models/AdminModel";
 
 export class AdminMongoRepository implements IAdminRepository {
-  /**
-   * Find admin by ID (string).
-   * Returns Admin entity or null if not found.
-   */
   async findById(id: string): Promise<Admin | null> {
     const doc = await AdminModel.findById(id).exec();
     if (!doc) return null;
     return this.toEntity(doc);
   }
 
-  /**
-   * Find admin by email (for login).
-   * Returns Admin entity or null if not found.
-   */
   async findByEmail(email: string): Promise<Admin | null> {
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -40,10 +30,9 @@ export class AdminMongoRepository implements IAdminRepository {
     return this.toEntity(doc);
   }
 
-  // 🔽 Private helper: Mongo Document -> Domain Entity
   private toEntity(doc: AdminDocument): Admin {
     return new Admin(
-      doc._id.toString(), // id: string
+      doc._id.toString(),
       doc.email,
       doc.password,
       doc.roles,
@@ -53,7 +42,6 @@ export class AdminMongoRepository implements IAdminRepository {
     );
   }
 
-  // 🔽 Private helper: Domain Entity -> Plain object for Mongo
   private toPersistence(admin: Admin): {
     email: string;
     password: string;

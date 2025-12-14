@@ -1,10 +1,7 @@
-// backend/src/infrastructure/config/env.ts
-
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
-
 export const env = {
-  jwtSecret: process.env.JWT_SECRET ,
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN ,
+  jwtSecret: process.env.JWT_SECRET,
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN,
 };

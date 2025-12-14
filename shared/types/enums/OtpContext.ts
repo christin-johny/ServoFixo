@@ -1,4 +1,3 @@
-// shared/types/enums/OtpContext.ts
 
 export const OtpContext = {
   Registration : "registration",

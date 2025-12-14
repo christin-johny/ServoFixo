@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import passport from '../../../infrastructure/security/PassportConfig';
-
-// ✅ Import fully assembled controllers from Container
+ 
 import { 
   customerAuthController, 
   authTokenController 
@@ -18,8 +17,7 @@ router.post('/google-login', customerAuthController.googleLogin);
 
 router.post('/refresh', authTokenController.refresh);
 router.post("/logout", customerAuthController.logout);
-
-// --- Google OAuth (Passport) ---
+ 
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 router.get(
   '/google/callback',

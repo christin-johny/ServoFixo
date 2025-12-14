@@ -12,8 +12,7 @@ export interface CreateZoneDTO {
   description: string;
   boundaries: { lat: number; lng: number }[];
 }
-
-// ✅ NEW: Update DTO
+ 
 export interface UpdateZoneDTO {
   id: string;
   name: string;

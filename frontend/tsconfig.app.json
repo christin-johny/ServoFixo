@@ -30,6 +30,6 @@
   },
   "include": [
     "src", 
-    "../backend/src/shared" // 👈 Add the actual path to your shared folder here
+    "../backend/src/shared"  
   ]
 }

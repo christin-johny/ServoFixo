@@ -1,11 +1,14 @@
-// backend/src/presentation/controllers/AdminAuthController.ts
-import redis from '../../../infrastructure/redis/redisClient';
-import { Request, Response } from 'express';
-import { AdminLoginUseCase } from '../../../application/use-cases/auth/AdminLoginUseCase';
-import { ErrorMessages,SuccessMessages,ErrorCodes } from '../../../../../shared/types/enums/ErrorMessages';
+import redis from "../../../infrastructure/redis/redisClient";
+import { Request, Response } from "express";
+import { AdminLoginUseCase } from "../../../application/use-cases/auth/AdminLoginUseCase";
+import {
+  ErrorMessages,
+  SuccessMessages,
+  ErrorCodes,
+} from "../../../../../shared/types/enums/ErrorMessages";
 
-import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
-import { refreshCookieOptions } from '../../../infrastructure/config/Cookie';
+import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
+import { refreshCookieOptions } from "../../../infrastructure/config/Cookie";
 
 export class AdminAuthController {
   constructor(private readonly adminLoginUseCase: AdminLoginUseCase) {}
@@ -23,9 +26,8 @@ export class AdminAuthController {
 
       const result = await this.adminLoginUseCase.execute({ email, password });
 
-      // Set refresh token in httpOnly cookie (do not expose in JSON)
       if (result.refreshToken) {
-        res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
+        res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
 
       return res.status(StatusCodes.OK).json({
@@ -33,14 +35,15 @@ export class AdminAuthController {
         accessToken: result.accessToken,
       });
     } catch (err: any) {
-      // Invalid credentials path (use enum message)
-      if (err instanceof Error && err.message === ErrorMessages.INVALID_CREDENTIALS) {
+      if (
+        err instanceof Error &&
+        err.message === ErrorMessages.INVALID_CREDENTIALS
+      ) {
         return res.status(StatusCodes.UNAUTHORIZED).json({
           message: ErrorMessages.INVALID_CREDENTIALS,
           errorCode: ErrorCodes.INVALID_CREDENTIALS,
         });
       }
-
 
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         message: ErrorMessages.INTERNAL_ERROR,
@@ -60,7 +63,10 @@ export class AdminAuthController {
           const redisKey = `refresh:${refreshToken}`;
           await redis.del(redisKey);
         } catch (redisErr) {
-          console.error('Error deleting refresh token from Redis (admin logout):', redisErr);
+          console.error(
+            "Error deleting refresh token from Redis (admin logout):",
+            redisErr
+          );
         }
       }
 
@@ -68,7 +74,9 @@ export class AdminAuthController {
         message: SuccessMessages.LOGOUT_SUCCESS,
       });
     } catch (err) {
-      res.clearCookie('refreshToken', { path: refreshCookieOptions.path ?? '/' });
+      res.clearCookie("refreshToken", {
+        path: refreshCookieOptions.path ?? "/",
+      });
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         message: ErrorMessages.INTERNAL_ERROR,
         errorCode: ErrorCodes.INTERNAL,

@@ -7,11 +7,10 @@ export class CustomerCategoryController {
 
   getAll = async (req: Request, res: Response): Promise<Response> => {
     try {
-      // Force filter to show only "Active" categories for customers
       const result = await this.getAllCategoriesUseCase.execute({
         isActive: true,
         page: 1,
-        limit: 100 // Fetch all active categories
+        limit: 100
       });
 
       return res.status(StatusCodes.OK).json({ data: result.data });

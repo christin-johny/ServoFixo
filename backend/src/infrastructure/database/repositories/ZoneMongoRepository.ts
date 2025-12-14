@@ -26,8 +26,10 @@ export class ZoneMongoRepository implements IZoneRepository {
   }
 
   async findById(id: string): Promise<Zone | null> {
-    // ✅ FIX: Ensure we don't fetch a soft-deleted zone by ID
-    const doc = await ZoneModel.findOne({ _id: id, isDeleted: { $ne: true } }).exec();
+    const doc = await ZoneModel.findOne({
+      _id: id,
+      isDeleted: { $ne: true },
+    }).exec();
     if (!doc) return null;
     return this.toEntity(doc);
   }
@@ -35,10 +37,9 @@ export class ZoneMongoRepository implements IZoneRepository {
   async findByName(name: string): Promise<Zone | null> {
     const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-    // ✅ FIX: Ensure uniqueness check ignores deleted zones
     const doc = await ZoneModel.findOne({
       name: { $regex: new RegExp(`^${escapedName}$`, "i") },
-      isDeleted: { $ne: true }
+      isDeleted: { $ne: true },
     }).exec();
 
     if (!doc) return null;
@@ -69,14 +70,13 @@ export class ZoneMongoRepository implements IZoneRepository {
     }
   }
 
-  // ✅ UPDATED: Soft Delete Implementation
   async delete(id: string): Promise<boolean> {
-    // Instead of deleting, we set isDeleted to true
-    const result = await ZoneModel.findByIdAndUpdate(id, { isDeleted: true }).exec();
+    const result = await ZoneModel.findByIdAndUpdate(id, {
+      isDeleted: true,
+    }).exec();
     return !!result;
   }
 
-  // 🔄 Mapper: Mongo Doc -> Domain Entity
   private toEntity(doc: IZoneDocument): Zone {
     const points = doc.location.coordinates[0].map((p: number[]) => ({
       lng: p[0],
@@ -106,7 +106,6 @@ export class ZoneMongoRepository implements IZoneRepository {
     });
 
     if (ring.length < 3) {
-      // Handle <3 points case
     } else {
       const first = ring[0];
       let closingIndex = -1;
@@ -140,7 +139,6 @@ export class ZoneMongoRepository implements IZoneRepository {
     const { page, limit, search, isActive } = params;
     const skip = (page - 1) * limit;
 
-    // ✅ FIX: Base query filters out soft-deleted items
     const query: any = { isDeleted: { $ne: true } };
 
     if (isActive !== undefined) {

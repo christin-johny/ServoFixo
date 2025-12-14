@@ -1,4 +1,4 @@
-// src/presentation/components/AdminLogoutButton.tsx
+
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -13,7 +13,6 @@ const AdminLogoutButton: React.FC<{ redirectTo?: string }> = ({ redirectTo = "/a
   const doLogout = async () => {
     setLoading(true);
     try {
-      // best-effort call; even if it fails, clear client state
       await adminLogout();
     } catch (err) {
       console.warn("Logout request failed", err);

@@ -1,4 +1,4 @@
-// src/presentation/pages/Admin/AdminLogin.tsx
+ 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -50,8 +50,7 @@ const AdminLogin: React.FC = () => {
 
     setLoading(true);
     try {
-      const resp = await adminLogin({ email, password });
-      // server sets refresh cookie; access token returned in resp
+      const resp = await adminLogin({ email, password }); 
       const token = (resp as any).accessToken ?? (resp as any).token ?? null;
       const user = (resp as any).user ?? null;
 
@@ -62,8 +61,7 @@ const AdminLogin: React.FC = () => {
         } else {
           const payload = parseJwt(token);
           dispatch(setUser({ id: payload?.sub, role: Array.isArray(payload?.roles) ? payload?.roles[0] : payload?.roles }));
-        }
-        // go to admin index/dashboard
+        } 
         navigate("/admin", { replace: true });
       } else {
         setError("No token received from server");

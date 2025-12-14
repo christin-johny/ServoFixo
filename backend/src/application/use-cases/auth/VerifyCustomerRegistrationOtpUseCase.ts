@@ -67,7 +67,6 @@ export class VerifyCustomerRegistrationOtpUseCase {
     const accessToken = await this.jwtService.generateAccessToken(payload);
     const refreshToken = await this.jwtService.generateRefreshToken(payload);
 
-    // Persist refresh token to Redis
     const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
     try {
       await redis.set(`refresh:${refreshToken}`, String(savedCustomer.getId()), "EX", ttlSeconds);

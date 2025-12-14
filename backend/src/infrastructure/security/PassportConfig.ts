@@ -11,7 +11,6 @@ const googleCallbackUrl =
   process.env.GOOGLE_CALLBACK_URL ??
   `${process.env.BACKEND_ORIGIN ?? ""}/api/customer/auth/google/callback`;
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { Strategy: GoogleStrategy } = require("passport-google-oauth20");
 
 passport.use(
@@ -44,7 +43,7 @@ passport.use(
             await (customerRepository as any).update(customer.getId(), {
               googleId,
             });
-            customer = await customerRepository.findByEmail(email); 
+            customer = await customerRepository.findByEmail(email);
           }
         } else {
           const newCustomer = new Customer(

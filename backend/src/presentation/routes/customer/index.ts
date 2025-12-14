@@ -2,10 +2,9 @@ import { Router } from 'express';
 import { JwtService } from '../../../infrastructure/security/JwtService';
 import { makeCustomerAuthMiddleware } from '../../middlewares/customerAuth.middleware';
 import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
-
-// --- Import Sub-Routers ---
-import authRoutes from './auth.routes';       // ✅ Import Auth
-import serviceRoutes from './service.routes'; // ✅ Import Services
+ 
+import authRoutes from './auth.routes';        
+import serviceRoutes from './service.routes'; 
 import categoryRoutes from './category.routes';
 import customerRoutes from './customer.routes'
 const router = Router();

@@ -1,13 +1,10 @@
-// src/presentation/components/PasswordStrength/PasswordStrength.tsx
+ 
 import React from "react";
 import { usePasswordStrength } from "./usePasswordStrength";
 
 interface Props {
   password: string;
-  /**
-   * When true: render textual failed messages below the checklist.
-   * Default: false (only visual checklist + strength bar).
-   */
+ 
   showFailed?: boolean;
   className?: string;
 }

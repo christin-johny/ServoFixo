@@ -1,4 +1,4 @@
-// src/presentation/pages/Customer/Register.tsx
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ZodError, z } from "zod";
@@ -8,7 +8,6 @@ import { Mail, Lock, User, Phone, Eye, EyeOff } from "lucide-react";
 import { usePasswordStrength } from "../../components/PasswordStrength/usePasswordStrength";
 import PasswordStrength from "../../components/PasswordStrength/PasswordStrength";
 
-// Zod validation schema (authoritative)
 const registerSchema = z
   .object({
     name: z.string().min(1, "Name is required"),
@@ -53,10 +52,8 @@ const Register: React.FC = () => {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // reuse hook for fast password checks and messages
   const { checks } = usePasswordStrength(formData.password);
 
-  // helper - map first failing rule to the same messages used in Zod schema
   const firstPasswordFailureMessage = (): string | undefined => {
     const pwd = formData.password;
     if (!pwd) return undefined;
@@ -71,29 +68,23 @@ const Register: React.FC = () => {
 
   const extractZodMessage = (err: unknown) => {
     if (err instanceof ZodError) {
-      // prefer issues, fallback to older .errors shape defensively
       return err.issues?.[0]?.message ?? (err as any).errors?.[0]?.message ?? null;
     }
     return null;
   };
 
-  // handle general input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((p) => ({ ...p, [name]: value }));
 
-    // real-time validation for touched fields
     if (touched[name]) {
       if (name === "confirmPassword") {
-        // direct compare
         setFieldErrors((prev) => ({
           ...prev,
           confirmPassword: value !== formData.password ? "Passwords do not match" : "",
         }));
         return;
       }
-
-      // fast password checks
       if (name === "password") {
         const fail = firstPasswordFailureMessage();
         if (fail) {
@@ -101,15 +92,7 @@ const Register: React.FC = () => {
           return;
         }
       }
-      // try {
-      //   // dynamic access: schema.shape[field].parse
-      //   // @ts-expect-error - runtime dynamic access
-      //   registerSchema.shape[name].parse(value);
-      //   setFieldErrors((prev) => ({ ...prev, [name]: "" }));
-      // } catch (err) {
-      //   const msg = extractZodMessage(err);
-      //   setFieldErrors((prev) => ({ ...prev, [name]: msg ?? "Invalid input" }));
-      // }
+
 
       if (name === "password" && touched.confirmPassword) {
         setFieldErrors((prev) => ({
@@ -124,7 +107,6 @@ const Register: React.FC = () => {
   const handleBlur = (field: string) => {
     setTouched((p) => ({ ...p, [field]: true }));
 
-    // special-case confirm password
     if (field === "confirmPassword") {
       setFieldErrors((prev) => ({
         ...prev,
@@ -134,7 +116,6 @@ const Register: React.FC = () => {
       return;
     }
 
-    // single-field Zod parse on blur
     try {
       // @ts-ignore
       registerSchema.shape[field].parse(formData[field as keyof typeof formData]);
@@ -168,7 +149,6 @@ const Register: React.FC = () => {
     setError(null);
     setInfo(null);
 
-    // mark all as touched so errors show
     setTouched({
       name: true,
       email: true,
@@ -184,8 +164,7 @@ const Register: React.FC = () => {
       const payload: CustomerRegisterInitDto = { email: formData.email };
       const resp = await customerRegisterInitOtp(payload);
 
-      // ✅ FIXED: Removed 'resp.data as AuthResponse'. 'resp' is already the data.
-      const data = resp as unknown as AuthResponse; // Double cast for safety if types are strict
+      const data = resp as unknown as AuthResponse;
       const sessionId = data?.sessionId ?? null;
 
       setInfo(data?.message ?? "OTP sent. Please check your email.");

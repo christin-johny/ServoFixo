@@ -2,8 +2,7 @@ import React from "react";
 import { Twitter, Facebook, Instagram, Linkedin } from "lucide-react";
 
 const Footer: React.FC = () => {
-  return (
-    // desktop only per original
+  return ( 
     <footer className="hidden md:block bg-[#cfe6f6] border-t border-blue-200 text-gray-900 mt-auto">
       <div className="max-w-[1400px] mx-auto px-6 py-12">
         {/* top columns */}

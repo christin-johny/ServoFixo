@@ -141,11 +141,9 @@ const ServiceItemModal: React.FC<ServiceItemModalProps> = ({
     
     const validSpecs = specs.filter(s => s.title.trim() && s.value.trim());
     formData.append("specifications", JSON.stringify(validSpecs));
-
-    // Append New Files
+ 
     selectedFiles.forEach(file => formData.append("images", file));
-
-    // ✅ Append Deleted Images List
+ 
     if (imagesToDelete.length > 0) {
         formData.append("imagesToDelete", JSON.stringify(imagesToDelete));
     }
@@ -232,7 +230,6 @@ const ServiceItemModal: React.FC<ServiceItemModalProps> = ({
                     <input type="file" multiple accept="image/*" onChange={handleFileSelect} className="hidden" />
                  </label>
 
-                 {/* ✅ Show Existing Images (Editable) */}
                  {existingImages.map((url, idx) => (
                     <div key={`old-${idx}`} className="relative h-20 rounded-xl overflow-hidden border border-gray-200 group">
                         <img src={url} className="w-full h-full object-cover opacity-90" />

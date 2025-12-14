@@ -19,7 +19,6 @@ export class VerifyCustomerForgotPasswordOtpUseCase {
     const { email, otp, sessionId, newPassword } = input;
     const normalizedEmail = email.toLowerCase().trim();
 
-    // 1️⃣ Validate OTP session (ForgotPassword)
     const session = await this.otpSessionRepository.findValidSession(
       normalizedEmail,
       sessionId,
@@ -34,20 +33,16 @@ export class VerifyCustomerForgotPasswordOtpUseCase {
       throw new Error(ErrorMessages.OTP_INVALID);
     }
 
-    // 2️⃣ Mark session as used
     session.markAsUsed();
     await this.otpSessionRepository.save(session);
 
-    // 3️⃣ Find customer
     const customer = await this.customerRepository.findByEmail(normalizedEmail);
     if (!customer) {
       throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
     }
 
-    // 4️⃣ Hash new password
     const hashed = await this.passwordHasher.hash(newPassword);
 
-    // 5️⃣ Create updated customer entity (same data, new password)
     const updated = new Customer(
   customer.getId(),
   customer.getName(),
@@ -60,7 +55,7 @@ export class VerifyCustomerForgotPasswordOtpUseCase {
   false,       
   undefined,   
   {},          
-  undefined, // googleId
+  undefined, 
   customer.getCreatedAt(),
   new Date()
 );

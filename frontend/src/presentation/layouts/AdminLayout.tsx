@@ -1,4 +1,4 @@
-// frontend/src/presentation/layouts/AdminLayout.tsx
+ 
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import AdminSidebar from '../components/Admin/sidebar/AdminSidebar';
@@ -14,8 +14,7 @@ const AdminLayout: React.FC = () => {
         isOpen={isSidebarOpen} 
         onClose={() => setSidebarOpen(false)} 
       />
-
-      {/* Match this margin with sidebar width: 260px */}
+ 
       <div className="flex flex-1 flex-col h-full lg:ml-[260px] transition-all duration-300">
         
         {/* Mobile Header */}

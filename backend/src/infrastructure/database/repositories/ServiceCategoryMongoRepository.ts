@@ -1,9 +1,17 @@
-import { IServiceCategoryRepository, CategoryQueryParams, PaginatedCategories } from '../../../domain/repositories/IServiceCategoryRepository';
-import { ServiceCategory } from '../../../domain/entities/ServiceCategory';
-import { ServiceCategoryModel, IServiceCategoryDocument } from '../mongoose/models/ServiceCategoryModel';
+import {
+  IServiceCategoryRepository,
+  CategoryQueryParams,
+  PaginatedCategories,
+} from "../../../domain/repositories/IServiceCategoryRepository";
+import { ServiceCategory } from "../../../domain/entities/ServiceCategory";
+import {
+  ServiceCategoryModel,
+  IServiceCategoryDocument,
+} from "../mongoose/models/ServiceCategoryModel";
 
-export class ServiceCategoryMongoRepository implements IServiceCategoryRepository {
-
+export class ServiceCategoryMongoRepository
+  implements IServiceCategoryRepository
+{
   async create(category: ServiceCategory): Promise<ServiceCategory> {
     const persistenceData = {
       name: category.getName(),
@@ -11,7 +19,7 @@ export class ServiceCategoryMongoRepository implements IServiceCategoryRepositor
       iconUrl: category.getIconUrl(),
       isActive: category.getIsActive(),
     };
-    
+
     const doc = await ServiceCategoryModel.create(persistenceData);
     return this.toEntity(doc);
   }
@@ -28,8 +36,8 @@ export class ServiceCategoryMongoRepository implements IServiceCategoryRepositor
 
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
       ];
     }
 
@@ -39,30 +47,33 @@ export class ServiceCategoryMongoRepository implements IServiceCategoryRepositor
         .skip(skip)
         .limit(limit)
         .exec(),
-      ServiceCategoryModel.countDocuments(query).exec()
+      ServiceCategoryModel.countDocuments(query).exec(),
     ]);
 
     return {
-      data: docs.map(doc => this.toEntity(doc)),
+      data: docs.map((doc) => this.toEntity(doc)),
       total,
       currentPage: page,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
     };
   }
 
   async findById(id: string): Promise<ServiceCategory | null> {
-    const doc = await ServiceCategoryModel.findOne({ _id: id, isDeleted: { $ne: true } }).exec();
+    const doc = await ServiceCategoryModel.findOne({
+      _id: id,
+      isDeleted: { $ne: true },
+    }).exec();
     if (!doc) return null;
     return this.toEntity(doc);
   }
 
   async findByName(name: string): Promise<ServiceCategory | null> {
-    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const doc = await ServiceCategoryModel.findOne({ 
-      name: { $regex: new RegExp(`^${escapedName}$`, 'i') },
-      isDeleted: { $ne: true }
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const doc = await ServiceCategoryModel.findOne({
+      name: { $regex: new RegExp(`^${escapedName}$`, "i") },
+      isDeleted: { $ne: true },
     }).exec();
-    
+
     if (!doc) return null;
     return this.toEntity(doc);
   }
@@ -79,18 +90,20 @@ export class ServiceCategoryMongoRepository implements IServiceCategoryRepositor
       { new: true }
     ).exec();
 
-    if (!doc) throw new Error('Category not found for update');
+    if (!doc) throw new Error("Category not found for update");
     return this.toEntity(doc);
   }
-
-  // ✅ NEW METHOD: Lightweight Status Toggle
   async toggleStatus(id: string, isActive: boolean): Promise<boolean> {
-    const result = await ServiceCategoryModel.findByIdAndUpdate(id, { isActive }).exec();
+    const result = await ServiceCategoryModel.findByIdAndUpdate(id, {
+      isActive,
+    }).exec();
     return !!result;
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await ServiceCategoryModel.findByIdAndUpdate(id, { isDeleted: true }).exec();
+    const result = await ServiceCategoryModel.findByIdAndUpdate(id, {
+      isDeleted: true,
+    }).exec();
     return !!result;
   }
 

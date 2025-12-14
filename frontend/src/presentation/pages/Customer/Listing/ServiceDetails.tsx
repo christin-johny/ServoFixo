@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams,} from 'react-router-dom';
+import { useParams, } from 'react-router-dom';
 import {
    Star,
    ShieldCheck,
@@ -9,15 +9,13 @@ import {
    MapPin,
 } from 'lucide-react';
 
-// Components
 import Navbar from '../../../components/Customer/Layout/Navbar';
 import Footer from '../../../components/Customer/Layout/Footer';
-import BottomNav from '../../../components/Customer/Layout/BottomNav'; 
+import BottomNav from '../../../components/Customer/Layout/BottomNav';
 import LoaderFallback from '../../../components/LoaderFallback';
 import ServiceCard from '../../../components/Customer/Home/ServiceCard';
 import { useNotification } from "../../../hooks/useNotification";
 
-// Repos & Types
 import * as serviceRepo from '../../../../infrastructure/repositories/customer/serviceRepository';
 import type { ServiceItem } from '../../../../domain/types/ServiceItem';
 
@@ -85,10 +83,10 @@ const ServiceDetails: React.FC = () => {
 
    return (
       <div className="min-h-screen bg-white font-sans text-gray-900">
-         
+
          <div className="sticky top-0 z-50 shadow-sm">
             <Navbar />
-            
+
             {/* MOBILE SHARE BAR (Inside sticky container) */}
             <div className="md:hidden border-t flex justify-end items-center p-3 px-4 ">
                <div className="flex gap-4">
@@ -110,7 +108,7 @@ const ServiceDetails: React.FC = () => {
             {/* IMAGE GALLERY */}
             <div className="relative w-full md:rounded-2xl overflow-hidden mb-8 bg-gray-100">
                <div className="flex md:grid md:grid-cols-4 md:grid-rows-2 gap-0.5 md:gap-2 overflow-x-auto md:overflow-hidden snap-x snap-mandatory scrollbar-hide h-[320px] md:h-[450px]">
-                  
+
                   {/* Main Image */}
                   <div className="min-w-full md:min-w-0 md:col-span-2 md:row-span-2 relative snap-center">
                      <img src={images[0]} alt="Main" className="w-full h-full object-cover" />
@@ -118,27 +116,27 @@ const ServiceDetails: React.FC = () => {
 
                   {/* Other Images */}
                   {[1, 2, 3, 4].map((idx) => (
-                      <div key={idx} className={`${idx > 0 ? 'min-w-full md:min-w-0' : ''} md:block relative overflow-hidden snap-center`}>
-                          {/* Mobile View */}
-                          <div className="md:hidden block w-full h-full">
-                              <img src={images[idx] || images[0]} alt={`Mobile View ${idx}`} className="w-full h-full object-cover" />
-                          </div>
-                          {/* Desktop Grid View */}
-                          <div className="hidden md:block w-full h-full">
-                              {idx === 4 ? (
-                                  <div className="relative w-full h-full">
-                                      <img src={images[idx] || images[0]} alt={`Side ${idx}`} className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
-                                      {images.length > 5 && (
-                                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold text-lg hover:bg-black/50 cursor-pointer">
-                                              +{images.length - 5}
-                                          </div>
-                                      )}
-                                  </div>
-                              ) : (
-                                  <img src={images[idx] || images[0]} alt={`Side ${idx}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
-                              )}
-                          </div>
-                      </div>
+                     <div key={idx} className={`${idx > 0 ? 'min-w-full md:min-w-0' : ''} md:block relative overflow-hidden snap-center`}>
+                        {/* Mobile View */}
+                        <div className="md:hidden block w-full h-full">
+                           <img src={images[idx] || images[0]} alt={`Mobile View ${idx}`} className="w-full h-full object-cover" />
+                        </div>
+                        {/* Desktop Grid View */}
+                        <div className="hidden md:block w-full h-full">
+                           {idx === 4 ? (
+                              <div className="relative w-full h-full">
+                                 <img src={images[idx] || images[0]} alt={`Side ${idx}`} className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
+                                 {images.length > 5 && (
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold text-lg hover:bg-black/50 cursor-pointer">
+                                       +{images.length - 5}
+                                    </div>
+                                 )}
+                              </div>
+                           ) : (
+                              <img src={images[idx] || images[0]} alt={`Side ${idx}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                           )}
+                        </div>
+                     </div>
                   ))}
                </div>
 
@@ -152,31 +150,31 @@ const ServiceDetails: React.FC = () => {
             {/* TEXT CONTENT */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 px-0 md:px-0">
                <div className="md:col-span-2 space-y-8 px-4 md:px-0">
-                  
+
                   {/* Title */}
                   <div className="border-b border-gray-100 pb-6">
                      <div className="flex justify-between items-start">
-                         <div>
-                             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 break-words leading-tight">{service.name}</h1>
-                             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                                <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg">
-                                   <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                   <span className="font-bold text-gray-900">4.8</span>
-                                   <span className="underline ml-1 text-xs">(124 reviews)</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                   <MapPin size={16} /> <span>Bengaluru</span>
-                                </div>
-                             </div>
-                         </div>
-                         <div className="hidden md:flex gap-2 shrink-0">
-                            <button onClick={handleShare} className="p-2.5 hover:bg-gray-100 rounded-full border border-gray-200 text-gray-600 hover:text-blue-600 transition-colors">
-                               <Share2 size={20} />
-                            </button>
-                            <button className="p-2.5 hover:bg-gray-100 rounded-full border border-gray-200 text-gray-600 hover:text-red-500 transition-colors">
-                               <Heart size={20} />
-                            </button>
-                         </div>
+                        <div>
+                           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 break-words leading-tight">{service.name}</h1>
+                           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                              <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg">
+                                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                 <span className="font-bold text-gray-900">4.8</span>
+                                 <span className="underline ml-1 text-xs">(124 reviews)</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                 <MapPin size={16} /> <span>Bengaluru</span>
+                              </div>
+                           </div>
+                        </div>
+                        <div className="hidden md:flex gap-2 shrink-0">
+                           <button onClick={handleShare} className="p-2.5 hover:bg-gray-100 rounded-full border border-gray-200 text-gray-600 hover:text-blue-600 transition-colors">
+                              <Share2 size={20} />
+                           </button>
+                           <button className="p-2.5 hover:bg-gray-100 rounded-full border border-gray-200 text-gray-600 hover:text-red-500 transition-colors">
+                              <Heart size={20} />
+                           </button>
+                        </div>
                      </div>
                   </div>
 
@@ -249,7 +247,6 @@ const ServiceDetails: React.FC = () => {
             )}
          </div>
 
-         {/* ✅ FIXED BOTTOM ELEMENTS (MOBILE ONLY) */}
          <div className="fixed bottom-[60px] left-0 w-full bg-white border-t border-gray-100 p-4 md:hidden z-40 flex items-center justify-between shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
             <div>
                <span className="text-xs text-gray-500 font-medium block">Total Price</span>

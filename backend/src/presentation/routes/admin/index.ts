@@ -2,8 +2,7 @@ import { Router } from "express";
 import { JwtService } from "../../../infrastructure/security/JwtService";
 import { makeAdminAuthMiddleware } from "../../middlewares/adminAuth.middleware";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-
-// Import sub-routers
+ 
 import adminAuthRoutes from "./auth.routes";
 import adminZonesRoutes from "./zones.routes";
 import adminCategoryRoutes from "./categories.routes";

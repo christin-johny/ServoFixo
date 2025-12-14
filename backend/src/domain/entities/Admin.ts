@@ -1,10 +1,10 @@
-import { Email } from '../../../../shared/types/value-objects/ContactTypes';  // Shared Email type
+import { Email } from "../../../../shared/types/value-objects/ContactTypes";
 
 export class Admin {
-  private readonly id: string; 
-  private readonly email: Email; 
+  private readonly id: string;
+  private readonly email: Email;
   private readonly password: string;
-  private readonly roles: string[]; 
+  private readonly roles: string[];
   private readonly additionalInfo: object;
   private readonly createdAt: Date;
   private readonly updatedAt: Date;
@@ -13,7 +13,7 @@ export class Admin {
     id: string,
     email: Email,
     password: string,
-    roles: string[] = ['admin'],
+    roles: string[] = ["admin"],
     additionalInfo: object = {},
     createdAt: Date = new Date(),
     updatedAt: Date = new Date()
@@ -27,8 +27,7 @@ export class Admin {
     this.updatedAt = updatedAt;
   }
 
-  // Getters
-    getId(): string {
+  getId(): string {
     return this.id;
   }
 

@@ -4,7 +4,7 @@ export interface ServiceItemQueryParams {
   page: number;
   limit: number;
   search?: string;
-  categoryId?: string; // Optional: If provided, only fetch items for this category
+  categoryId?: string;
   isActive?: boolean;
 }
 
@@ -14,8 +14,8 @@ export interface ServiceFilters {
   minPrice?: number;
   maxPrice?: number;
   isActive?: boolean;
-  sortBy?: 'price_asc' | 'price_desc' | 'newest' | 'popular';
-  page?: number; 
+  sortBy?: "price_asc" | "price_desc" | "newest" | "popular";
+  page?: number;
   limit?: number;
 }
 

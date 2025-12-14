@@ -1,4 +1,4 @@
-// src/presentation/components/notifications/ToastContainer.tsx
+
 import React from 'react';
 import { useNotification } from '../../hooks/useNotification';
 import Toast from './Toast';
@@ -7,7 +7,7 @@ const ToastContainer: React.FC = () => {
   const { notifications, removeNotification } = useNotification();
 
   return (
-    <div 
+    <div
       className="fixed top-4 right-4 z-[9999] flex flex-col gap-3 pointer-events-none"
       aria-live="polite"
       aria-atomic="false"

@@ -1,6 +1,6 @@
 import { S3ImageService } from "../storage/S3ImageService";
 
-// --- 2. Imports: Zone Module ---
+// --- Zone Module ---
 import { ZoneMongoRepository } from "../database/repositories/ZoneMongoRepository";
 import { CreateZoneUseCase } from "../../application/use-cases/zones/CreateZoneUseCase";
 import { GetAllZonesUseCase } from "../../application/use-cases/zones/GetAllZonesUseCase";
@@ -8,27 +8,25 @@ import { EditZoneUseCase } from "../../application/use-cases/zones/EditZoneUseCa
 import { DeleteZoneUseCase } from "../../application/use-cases/zones/DeleteZoneUseCase";
 import { AdminZoneController } from "../../presentation/controllers/Admin/AdminZoneController";
 
-// --- 3. Imports: Service Category Module ---
+// --- Service Category Module ---
 import { ServiceCategoryMongoRepository } from "../database/repositories/ServiceCategoryMongoRepository";
 import { CreateCategoryUseCase } from "../../application/use-cases/service-categories/CreateCategoryUseCase";
 import { GetAllCategoriesUseCase } from "../../application/use-cases/service-categories/GetAllCategoriesUseCase";
 import { EditCategoryUseCase } from "../../application/use-cases/service-categories/EditCategoryUseCase";
 import { DeleteCategoryUseCase } from "../../application/use-cases/service-categories/DeleteCategoryUseCase";
-// ✅ Import Toggle Use Case
 import { ToggleCategoryStatusUseCase } from "../../application/use-cases/service-categories/ToggleCategoryStatus";
 import { AdminCategoryController } from "../../presentation/controllers/Admin/AdminCategoryController";
 
-// --- 4. Imports: Service Item Module ---
+// --- Service Item Module ---
 import { ServiceItemMongoRepository } from "../database/repositories/ServiceItemMongoRepository";
 import { CreateServiceItemUseCase } from "../../application/use-cases/service-items/CreateServiceItemUseCase";
 import { GetAllServiceItemsUseCase } from "../../application/use-cases/service-items/GetAllServiceItemsUseCase";
 import { DeleteServiceItemUseCase } from "../../application/use-cases/service-items/DeleteServiceItemUseCase";
 import { EditServiceItemUseCase } from "../../application/use-cases/service-items/EditServiceItemUseCase";
-// ✅ Import Toggle Use Case
 import { ToggleServiceItemStatusUseCase } from "../../application/use-cases/service-items/ToggleServiceItemStatus";
 import { AdminServiceItemController } from "../../presentation/controllers/Admin/AdminServiceItemController";
 
-// --- 5. Imports: Customer Module ---
+// --- Customer Module ---
 import { CustomerMongoRepository } from "../database/repositories/CustomerMongoRepository";
 import { GetAllCustomersUseCase } from "../../application/use-cases/customer/GetAllCustomersUseCase";
 import { AdminCustomerController } from "../../presentation/controllers/Admin/AdminCustomerController";
@@ -36,10 +34,9 @@ import { UpdateCustomerUseCase } from "../../application/use-cases/customer/Upda
 import { GetCustomerByIdUseCase } from "../../application/use-cases/customer/GetCustomerByIdUseCase";
 import { DeleteCustomerUseCase } from "../../application/use-cases/customer/DeleteCustomerUseCase";
 
-// --- 6. Imports: Customer Auth & Services ---
+// --- Customer Auth & Services ---
 import { CustomerServiceController } from "../../presentation/controllers/Customer/CustomerServiceController";
 import { GetMostBookedServicesUseCase } from "../../application/use-cases/service-items/GetMostBookedServicesUseCase";
-
 import { CustomerAuthController } from "../../presentation/controllers/Customer/CustomerAuthController";
 import { RequestCustomerRegistrationOtpUseCase } from "../../application/use-cases/auth/RequestCustomerRegistrationOtpUseCase";
 import { VerifyCustomerRegistrationOtpUseCase } from "../../application/use-cases/auth/VerifyCustomerRegistrationOtpUseCase";
@@ -47,23 +44,30 @@ import { CustomerLoginUseCase } from "../../application/use-cases/auth/CustomerL
 import { RequestCustomerForgotPasswordOtpUseCase } from "../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase";
 import { VerifyCustomerForgotPasswordOtpUseCase } from "../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase";
 import { CustomerGoogleLoginUseCase } from "../../application/use-cases/auth/CustomerGoogleLoginUseCase";
-
-// --- 7. Imports: Infrastructure Services ---
-import { OtpSessionMongoRepository } from "../database/repositories/OtpSessionMongoRepository";
-import { NodemailerEmailService } from "../email/NodemailerEmailService"; // Adjust path if needed
-import { BcryptPasswordHasher } from "../security/BcryptPasswordHasher"; // Adjust path if needed
-import { JwtService } from "../security/JwtService";
-import { RefreshTokenUseCase } from "../../application/use-cases/auth/RefreshTokenUseCase";
-import { AuthTokenController } from "../../presentation/controllers/AuthTokenController";
 import { CustomerCategoryController } from "../../presentation/controllers/Customer/CustomerCategoryController";
 import { CustomerProfileController } from "../../presentation/controllers/Customer/CustomerProfileController";
 import { GetServiceListingUseCase } from "../../application/use-cases/service-items/GetServiceListingUseCase";
-import { GetServiceByIdUseCase } from '../../application/use-cases/service-items/GetServiceByIdUseCase';
+import { GetServiceByIdUseCase } from "../../application/use-cases/service-items/GetServiceByIdUseCase";
+
+// --- Infrastructure Services ---
+import { OtpSessionMongoRepository } from "../database/repositories/OtpSessionMongoRepository";
+import { NodemailerEmailService } from "../email/NodemailerEmailService";
+import { BcryptPasswordHasher } from "../security/BcryptPasswordHasher";
+import { JwtService } from "../security/JwtService";
+import { RefreshTokenUseCase } from "../../application/use-cases/auth/RefreshTokenUseCase";
+import { AuthTokenController } from "../../presentation/controllers/AuthTokenController";
+
+// INFRASTRUCTURE SERVICE INSTANTIATION
+
 const imageService = new S3ImageService();
+const otpSessionRepo = new OtpSessionMongoRepository();
+const emailService = new NodemailerEmailService();
+const passwordHasher = new BcryptPasswordHasher();
+const jwtService = new JwtService();
 
-// B. ZONE MODULE WIRING
+// ZONE MODULE WIRING
+
 const zoneRepo = new ZoneMongoRepository();
-
 const createZoneUseCase = new CreateZoneUseCase(zoneRepo);
 const getAllZonesUseCase = new GetAllZonesUseCase(zoneRepo);
 const editZoneUseCase = new EditZoneUseCase(zoneRepo);
@@ -76,9 +80,9 @@ export const adminZoneController = new AdminZoneController(
   editZoneUseCase
 );
 
-// C. CATEGORY MODULE WIRING
-const categoryRepo = new ServiceCategoryMongoRepository();
+// CATEGORY MODULE WIRING
 
+const categoryRepo = new ServiceCategoryMongoRepository();
 const createCategoryUseCase = new CreateCategoryUseCase(
   categoryRepo,
   imageService
@@ -86,10 +90,8 @@ const createCategoryUseCase = new CreateCategoryUseCase(
 const getAllCategoriesUseCase = new GetAllCategoriesUseCase(categoryRepo);
 const editCategoryUseCase = new EditCategoryUseCase(categoryRepo, imageService);
 
-// ✅ FIX: Removed imageService (Soft Delete doesn't delete S3 images)
 const deleteCategoryUseCase = new DeleteCategoryUseCase(categoryRepo);
 
-// ✅ NEW: Instantiate Toggle Use Case
 const toggleCategoryStatusUseCase = new ToggleCategoryStatusUseCase(
   categoryRepo
 );
@@ -102,9 +104,9 @@ export const adminCategoryController = new AdminCategoryController(
   toggleCategoryStatusUseCase
 );
 
-// D. SERVICE ITEM MODULE WIRING
-const serviceItemRepo = new ServiceItemMongoRepository();
+// SERVICE ITEM MODULE WIRING
 
+const serviceItemRepo = new ServiceItemMongoRepository();
 const createServiceItemUseCase = new CreateServiceItemUseCase(
   serviceItemRepo,
   imageService
@@ -113,14 +115,12 @@ const getAllServiceItemsUseCase = new GetAllServiceItemsUseCase(
   serviceItemRepo
 );
 
-// ✅ FIX: Removed imageService (Soft Delete)
 const deleteServiceItemUseCase = new DeleteServiceItemUseCase(serviceItemRepo);
 const editServiceItemUseCase = new EditServiceItemUseCase(
   serviceItemRepo,
   imageService
 );
 
-// ✅ NEW: Instantiate Toggle Use Case
 const toggleServiceItemStatusUseCase = new ToggleServiceItemStatusUseCase(
   serviceItemRepo
 );
@@ -130,39 +130,31 @@ export const adminServiceItemController = new AdminServiceItemController(
   getAllServiceItemsUseCase,
   deleteServiceItemUseCase,
   editServiceItemUseCase,
-  toggleServiceItemStatusUseCase // ✅ Injected
+  toggleServiceItemStatusUseCase
 );
 
-// E. CUSTOMER MODULE WIRING
-const customerRepo = new CustomerMongoRepository();
+// CUSTOMER MODULE WIRING (Admin & Profile)
 
+const customerRepo = new CustomerMongoRepository();
 const getAllCustomersUseCase = new GetAllCustomersUseCase(customerRepo);
 const updateCustomerUseCase = new UpdateCustomerUseCase(customerRepo);
 const getCustomerByIdUseCase = new GetCustomerByIdUseCase(customerRepo);
 const deleteCustomerUseCase = new DeleteCustomerUseCase(customerRepo);
+
 export const customerProfileController = new CustomerProfileController(
   getCustomerByIdUseCase
 );
+
 export const adminCustomerController = new AdminCustomerController(
   customerRepo,
   getAllCustomersUseCase,
   updateCustomerUseCase,
   getCustomerByIdUseCase,
   deleteCustomerUseCase
-  
 );
 
-// =================================================================
-// F. INFRASTRUCTURE SERVICES
-// =================================================================
-const otpSessionRepo = new OtpSessionMongoRepository();
-const emailService = new NodemailerEmailService();
-const passwordHasher = new BcryptPasswordHasher();
-const jwtService = new JwtService();
+// CUSTOMER AUTH MODULE WIRING
 
-// =================================================================
-// G. CUSTOMER AUTH MODULE
-// =================================================================
 const reqRegOtpUseCase = new RequestCustomerRegistrationOtpUseCase(
   customerRepo,
   otpSessionRepo,
@@ -204,24 +196,24 @@ export const customerAuthController = new CustomerAuthController(
   googleLoginUseCase
 );
 
-// =================================================================
-// H. CUSTOMER SERVICE MODULE (Home Page)
-// =================================================================
-const getMostBookedUseCase = new GetMostBookedServicesUseCase(serviceItemRepo);
+// CUSTOMER SERVICE MODULE WIRING (Home/Listing)
 
+const getMostBookedUseCase = new GetMostBookedServicesUseCase(serviceItemRepo);
 const getServiceListingUseCase = new GetServiceListingUseCase(serviceItemRepo);
-export const customerCategoryController = new CustomerCategoryController(
-  getAllCategoriesUseCase // We reuse the Admin Use Case
-);
 const getServiceByIdUseCase = new GetServiceByIdUseCase(serviceItemRepo);
+
+export const customerCategoryController = new CustomerCategoryController(
+  getAllCategoriesUseCase
+);
+
 export const customerServiceController = new CustomerServiceController(
   getMostBookedUseCase,
   getServiceListingUseCase,
   getServiceByIdUseCase
 );
 
-// =================================================================
-// I. TOKEN MANAGEMENT
-// =================================================================
+// TOKEN MANAGEMENT WIRING
+
 const refreshTokenUseCase = new RefreshTokenUseCase(jwtService);
+
 export const authTokenController = new AuthTokenController(refreshTokenUseCase);

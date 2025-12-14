@@ -1,4 +1,4 @@
-// src/presentation/contexts/NotificationContext.tsx
+ 
 import React, { createContext, useCallback, useState } from 'react';
 import type { ReactNode } from 'react';
 
@@ -48,8 +48,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     };
 
     setNotifications((prev) => [...prev, newNotification]);
-
-    // Auto-dismiss after duration
+ 
     if (newNotification.duration && newNotification.duration > 0) {
       setTimeout(() => {
         removeNotification(id);

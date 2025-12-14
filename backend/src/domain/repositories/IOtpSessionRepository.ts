@@ -1,5 +1,3 @@
-// backend/src/domain/repositories/IOtpSessionRepository.ts
-
 import { OtpSession } from "../entities/OtpSession";
 import { OtpContext } from "../../../../shared/types/enums/OtpContext";
 

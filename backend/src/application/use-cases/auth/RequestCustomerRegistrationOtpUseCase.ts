@@ -27,9 +27,8 @@ export class RequestCustomerRegistrationOtpUseCase {
     const otp = this.generateOtp();
     const sessionId = this.generateSessionId();
     const expiresAt = this.calculateExpiry();
-    // 3️⃣ Save OTP session with context: Registration
     const session = new OtpSession(
-      '', // Mongo will assign
+      '',
       normalizedEmail,
       otp,
       OtpContext.Registration,
@@ -39,7 +38,6 @@ export class RequestCustomerRegistrationOtpUseCase {
 
     await this.otpSessionRepository.create(session);
 
-    // 4️⃣ Send OTP
     const subject = 'ServoFixo - Verify your email';
     const text = `Your registration OTP is: ${otp}. It is valid for ${this.otpExpiryMinutes} minutes.`;
 

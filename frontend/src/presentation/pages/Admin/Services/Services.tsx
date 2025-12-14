@@ -3,21 +3,17 @@ import { Plus, Search, Layers, ChevronLeft, ChevronRight, RefreshCw, Filter } fr
 import { useDebounce } from "../../../hooks/useDebounce";
 import { useNotification } from "../../../hooks/useNotification";
 
-// Repositories
 import * as categoryRepo from "../../../../infrastructure/repositories/admin/serviceCategoryRepository";
 import * as serviceRepo from "../../../../infrastructure/repositories/admin/serviceItemRepository";
 
-// Types
 import type { ServiceCategory } from "../../../../domain/types/ServiceCategory";
 import type { ServiceItem } from "../../../../domain/types/ServiceItem";
 
-// Components
 import CategoryCard from "../../../components/Admin/category/CategoryCard";
 import CategoryModal from "../../../components/Admin/category/CategoryModal";
 import ServiceItemModal from "../../../components/Admin/Modals/ServiceItemModal";
 import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
 
-// Helper to extract the exact message from Backend
 const getErrorMessage = (error: any): string => {
     if (error.response && error.response.data) {
         return error.response.data.error || error.response.data.message || "Unknown server error";
@@ -28,7 +24,6 @@ const getErrorMessage = (error: any): string => {
 const Services: React.FC = () => {
     const { showSuccess, showError } = useNotification();
 
-    // --- Category State ---
     const [categories, setCategories] = useState<ServiceCategory[]>([]);
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
@@ -38,12 +33,10 @@ const Services: React.FC = () => {
     const [filterStatus, setFilterStatus] = useState("");
     const debouncedSearch = useDebounce(search, 500);
 
-    // --- Service Item State ---
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [servicesMap, setServicesMap] = useState<{ [key: string]: ServiceItem[] }>({});
     const [loadingServices, setLoadingServices] = useState(false);
 
-    // --- Modal State ---
     const [isCatModalOpen, setIsCatModalOpen] = useState(false);
     const [editingCategory, setEditingCategory] = useState<ServiceCategory | null>(null);
 
@@ -53,17 +46,14 @@ const Services: React.FC = () => {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // --- Delete State ---
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [deleteType, setDeleteType] = useState<"CATEGORY" | "SERVICE" | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // 1. Load Categories
     useEffect(() => {
         loadCategories();
     }, [debouncedSearch, filterStatus, page]);
 
-    // 2. Load Services when Expanded
     useEffect(() => {
         if (expandedId && !servicesMap[expandedId]) {
             loadServicesForCategory(expandedId);
@@ -80,7 +70,6 @@ const Services: React.FC = () => {
             setTotal(result.total);
             setTotalPages(result.totalPages);
 
-            // Reset page if current page is now empty
             if (result.data.length === 0 && page > 1) {
                 setPage(1);
             }
@@ -104,7 +93,6 @@ const Services: React.FC = () => {
         }
     };
 
-    // --- Handlers (Unchanged) ---
     const handleSaveCategory = async (formData: FormData) => {
         try {
             setIsSubmitting(true);
@@ -214,19 +202,17 @@ const Services: React.FC = () => {
             setIsDeleting(false);
         }
     };
-
-    // --- Inline Empty State Component ---
+ 
     const EmptyState = (
         <div className="text-center py-16 border-2 border-dashed border-gray-200 rounded-2xl bg-white/50 mx-1 flex flex-col items-center">
             <Layers className="text-gray-300 mb-4" size={40} />
             <h3 className="text-lg font-semibold text-gray-400 mb-1">
                 {debouncedSearch || filterStatus ? "No Categories Match Your Filter" : "No Service Categories Found"}
             </h3>
-            
-        
+
+
         </div>
-    );
-    // ------------------------------------
+    ); 
 
     return (
         <div className="h-full flex flex-col gap-4 sm:gap-6 overflow-hidden">
@@ -317,7 +303,7 @@ const Services: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && categories.length > 0 && ( // Only show if categories exist and pagination is relevant
+            {totalPages > 1 && categories.length > 0 && (  
                 <div className="flex justify-between items-center pt-4 border-t border-gray-200 shrink-0">
                     <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="flex items-center gap-1 px-3 sm:px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-50 transition-colors"><ChevronLeft size={16} /> <span className="hidden sm:inline">Previous</span></button>
                     <span className="text-xs sm:text-sm font-medium text-gray-500">Page {page} of {totalPages}</span>

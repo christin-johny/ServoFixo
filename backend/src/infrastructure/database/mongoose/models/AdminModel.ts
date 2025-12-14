@@ -1,8 +1,5 @@
-// backend/src/infrastructure/database/mongoose/models/AdminModel.ts
+import mongoose, { Document, Model, Schema } from "mongoose";
 
-import mongoose, { Document, Model, Schema } from 'mongoose';
-
-// 1️⃣ AdminDocument – shape of document in MongoDB (Mongoose level)
 export interface AdminDocument extends Document {
   email: string;
   password: string;
@@ -12,7 +9,6 @@ export interface AdminDocument extends Document {
   updatedAt: Date;
 }
 
-// 2️⃣ Admin Schema – defines how admin is stored in MongoDB
 const AdminSchema: Schema<AdminDocument> = new Schema(
   {
     email: {
@@ -25,11 +21,11 @@ const AdminSchema: Schema<AdminDocument> = new Schema(
     },
     password: {
       type: String,
-      required: true, // hashed password
+      required: true,
     },
     roles: {
       type: [String],
-      default: ['admin'],
+      default: ["admin"],
     },
     additionalInfo: {
       type: Schema.Types.Mixed,
@@ -37,10 +33,9 @@ const AdminSchema: Schema<AdminDocument> = new Schema(
     },
   },
   {
-    timestamps: true, // auto adds createdAt, updatedAt
+    timestamps: true,
   }
 );
 
-// 3️⃣ AdminModel – Mongoose model for the "admins" collection
 export const AdminModel: Model<AdminDocument> =
-  mongoose.models.Admin || mongoose.model<AdminDocument>('Admin', AdminSchema);
+  mongoose.models.Admin || mongoose.model<AdminDocument>("Admin", AdminSchema);

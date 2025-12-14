@@ -1,7 +1,5 @@
-// backend/src/infrastructure/database/mongoose/models/OtpSessionModel.ts
-
-import mongoose, { Document, Model, Schema } from 'mongoose';
-import { OtpContext } from '../../../../../../shared/types/enums/OtpContext';
+import mongoose, { Document, Model, Schema } from "mongoose";
+import { OtpContext } from "../../../../../../shared/types/enums/OtpContext";
 
 export interface OtpSessionDocument extends Document {
   email: string;
@@ -15,7 +13,13 @@ export interface OtpSessionDocument extends Document {
 
 const OtpSessionSchema: Schema<OtpSessionDocument> = new Schema(
   {
-    email: { type: String, required: true, index: true, lowercase: true, trim: true },
+    email: {
+      type: String,
+      required: true,
+      index: true,
+      lowercase: true,
+      trim: true,
+    },
     otp: { type: String, required: true },
     context: {
       type: String,
@@ -35,4 +39,4 @@ OtpSessionSchema.index({ email: 1, sessionId: 1, context: 1 });
 
 export const OtpSessionModel: Model<OtpSessionDocument> =
   mongoose.models.OtpSession ||
-  mongoose.model<OtpSessionDocument>('OtpSession', OtpSessionSchema);
+  mongoose.model<OtpSessionDocument>("OtpSession", OtpSessionSchema);

@@ -32,9 +32,8 @@ app.get("/health", (req, res) => {
 import adminRoutes from "./presentation/routes/admin";
 
 import customerAuthRoutes from "./presentation/routes/customer/auth.routes";
-//import technicianAuthRoutes from "./presentation/routes/technician/auth.routes";
 import customerRoutes from "./presentation/routes/customer/index";
-//
+
 
 app.use("/api/admin", adminRoutes);
 

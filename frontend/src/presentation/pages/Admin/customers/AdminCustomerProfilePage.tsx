@@ -19,8 +19,7 @@ const AdminCustomerProfilePage: React.FC = () => {
     const navigate = useNavigate();
     const { showSuccess, showError } = useNotification();
     const location = useLocation();
-
-    // State
+ 
     const [customer, setCustomer] = useState<CustomerDto | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -132,7 +131,6 @@ const AdminCustomerProfilePage: React.FC = () => {
                 </div>
             </div>
 
-            {/* ✅ FIXED: Use raw CSS classes to hide scrollbars reliably across all browsers */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <div className="max-w-5xl mx-auto space-y-6">
 
@@ -220,8 +218,7 @@ const AdminCustomerProfilePage: React.FC = () => {
 };
 
 export default AdminCustomerProfilePage;
-
-// --- Sub-Components ---
+ 
 
 const ProfileDetails: React.FC<{ customer: CustomerDto }> = ({ customer }) => (
     <div>

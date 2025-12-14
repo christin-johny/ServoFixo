@@ -30,15 +30,12 @@ const CategoryRow: React.FC<CategoryRowProps> = ({ category }) => {
     fetchServices();
     return () => { mounted = false; };
   }, [category._id]);
-
-  // If no services, don't render the section (so users can't scroll to an empty spot)
+ 
   if (!loading && services.length === 0) return null;
 
   return (
-    <section 
-      // ✅ 1. ID: Makes this findable by the browser
-      id={category._id} 
-      // ✅ 2. SCROLL MARGIN: Prevents the title from hiding behind the sticky navbar
+    <section  
+      id={category._id}  
       className="w-full scroll-mt-32"
     >
       <div className="flex justify-between items-end mb-5 px-1">

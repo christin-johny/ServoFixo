@@ -11,14 +11,13 @@ interface Category {
 interface Props {
   categories: Category[];
   loading: boolean;
-  images?: string[]; // optional mosaic images
+  images?: string[];  
 }
 
 const CategoryCardStrip: React.FC<Props> = ({ categories, loading, images }) => {
   const navigate = useNavigate();
   const displayed = (categories || []).slice(0, 6);
-
-  // default mosaic images
+ 
   const imgs = images && images.length >= 3 ? images : [
     "/assets/m1.jpg",
     "/assets/m2.jpeg",

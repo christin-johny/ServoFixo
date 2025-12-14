@@ -1,4 +1,4 @@
-// backend/src/application/use-cases/auth/CustomerGoogleLoginUseCase.ts
+
 import { OAuth2Client } from 'google-auth-library';
 import redis from '../../../infrastructure/redis/redisClient';
 import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepository';
@@ -35,17 +35,11 @@ export class CustomerGoogleLoginUseCase {
     this.googleClient = new OAuth2Client(clientId);
   }
 
-  /**
-   * Accepts either:
-   *  - { token: '<idToken>' }  (frontend flow where you verify idToken)
-   *  - { customer: <Customer | plain object> } (passport flow where req.user already exists)
-   */
   async execute(request: GoogleLoginRequest): Promise<GoogleLoginResponse> {
     try {
       let customer: Customer | any = null;
       let picture: string | undefined;
 
-      // 1) If token is provided -> verify the Google token and find/create customer
       if (request.token) {
         const ticket = await this.googleClient.verifyIdToken({
           idToken: request.token,
@@ -63,13 +57,11 @@ export class CustomerGoogleLoginUseCase {
         customer = await this.customerRepository.findByEmail(email);
 
         if (customer) {
-          // update googleId if missing
           if (typeof customer.getGoogleId === 'function' && !customer.getGoogleId()) {
             if (typeof (this.customerRepository as any).update === 'function') {
               await (this.customerRepository as any).update(customer.getId(), { googleId });
               customer = await this.customerRepository.findByEmail(email);
             } else {
-              // recreate or set googleId locally (best-effort; repository should ideally support update)
               customer = new Customer(
                 customer.getId(),
                 customer.getName(),
@@ -77,7 +69,7 @@ export class CustomerGoogleLoginUseCase {
                 customer.getPassword(),
                 customer.getPhone(),
                 customer.getAvatar?.() ?? undefined,
-                undefined, // defaultZoneId
+                undefined,
                 customer.getAddresses ? customer.getAddresses() : [],
                 customer.isSuspended ? customer.isSuspended() : false,
                 undefined,
@@ -87,12 +79,11 @@ export class CustomerGoogleLoginUseCase {
             }
           }
         } else {
-          // create new customer
           customer = new Customer(
             '',
             name || 'Google User',
             email as unknown as Email,
-            '', // no password for oauth user
+            '', 
             undefined,
             picture,
             undefined,
@@ -105,24 +96,19 @@ export class CustomerGoogleLoginUseCase {
           customer = await this.customerRepository.create(customer);
         }
       } else if (request.customer) {
-        // 2) If the controller (Passport) already provided a customer object, use it
         customer = request.customer;
-        // If the passed customer has no avatar/picture property, try to read it if exists
         picture = (customer && (customer.getAvatar?.() || customer.avatar || customer.picture)) ?? undefined;
       } else {
         throw new Error('Either token or customer must be provided to Google login use-case.');
       }
 
-      // final sanity
       if (!customer || !customer.getId && !customer._id && !customer.id) {
-        // If the repository returned a plain object, normalize id accessors:
         const id = customer.getId ? customer.getId() : customer._id ?? customer.id;
         if (!id) throw new Error('Could not resolve customer id after Google login flow.');
       }
 
       const customerId = customer.getId ? customer.getId() : (customer._id ?? customer.id);
 
-      // 3) Prepare JWT payload and generate tokens
       const jwtPayload: any = {
         sub: customerId,
         type: 'customer',
@@ -134,7 +120,6 @@ export class CustomerGoogleLoginUseCase {
         type: 'customer',
       });
 
-      // Persist refresh token to Redis
       const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
       try {
         await redis.set(`refresh:${refreshToken}`, String(customerId), "EX", ttlSeconds);
@@ -153,7 +138,6 @@ export class CustomerGoogleLoginUseCase {
         },
       };
     } catch (err: any) {
-      // Bubble up with a clear message for debugging
       throw new Error(`CustomerGoogleLoginUseCase error: ${err.message || err}`);
     }
   }

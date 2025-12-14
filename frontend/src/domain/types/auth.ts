@@ -1,4 +1,3 @@
-// DTOs & types used across app
 export interface UserDto {
   id?: string;
   email?: string;

@@ -1,81 +1,65 @@
-// src/infrastructure/api/CustomerService.ts
+import api from "../../api/axiosClient";
 
-// ✅ 1. Use your existing global API client
-import api from "../../api/axiosClient"; 
+import type {
+  CustomerDto,
+  CustomerUpdatePayload,
+} from "../../../domain/types/AdminCustomerDtos";
 
-// Import types from the frontend DTOs
-import type { CustomerDto, CustomerUpdatePayload } from '../../../domain/types/AdminCustomerDtos';
-
-// Define the exact query structure the frontend sends (maps to backend DTO)
 export interface CustomerQueryParams {
-    page: number;
-    limit: number;
-    search?: string;
-    // Note: The 'suspended' value must be 'true', 'false', or undefined (matches backend DTO structure)
-    suspended?: string; 
+  page: number;
+  limit: number;
+  search?: string;
+  suspended?: string;
 }
 
-// Define the exact paginated response structure
 export interface PaginatedCustomersResult {
-    data: CustomerDto[];
-    total: number;
-    page: number;
-    limit: number;
+  data: CustomerDto[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
-/**
- * 1. Fetches a paginated and filtered list of customers for the Admin panel.
- * ✅ Adheres to CategoryService pattern by using { params }.
- */
-export const getCustomers = async (params: CustomerQueryParams): Promise<PaginatedCustomersResult> => {
-    try {
-        // Axios handles query string construction and auth header globally
-        const response = await api.get("/api/admin/customers", { params });
-        
-        // Assuming the backend response structure is { data: [CustomerDto], total: number, page: number, limit: number }
-        return response.data; 
+export const getCustomers = async (
+  params: CustomerQueryParams
+): Promise<PaginatedCustomersResult> => {
+  try {
+    const response = await api.get("/admin/customers", { params });
 
-    } catch (error) {
-        // Use generic error handling consistent with the CategoryService file's environment
-        console.error("CustomerService: Error fetching customer list:", error);
-        throw error;
-    }
+    return response.data;
+  } catch (error) {
+    console.error("CustomerService: Error fetching customer list:", error);
+    throw error;
+  }
 };
 
-/**
- * 2. Updates the customer profile details and status (used by the Edit Modal).
- * ✅ Authentication and headers handled by the global API client.
- */
-export const updateCustomer = async (id: string, payload: CustomerUpdatePayload): Promise<CustomerDto> => {
-    try {
-        // The payload is passed directly as the request body
-        const response = await api.put(`/api/admin/customers/${id}`, payload);
-        
-        // Assuming the backend returns the updated Customer DTO directly
-        return response.data; 
-        
-    } catch (error) {
-        console.error(`CustomerService: Error updating customer ${id}:`, error);
-        throw error;
-    }
+export const updateCustomer = async (
+  id: string,
+  payload: CustomerUpdatePayload
+): Promise<CustomerDto> => {
+  try {
+    const response = await api.put(`/admin/customers/${id}`, payload);
+
+    return response.data;
+  } catch (error) {
+    console.error(`CustomerService: Error updating customer ${id}:`, error);
+    throw error;
+  }
 };
 
 export const getCustomerById = async (id: string): Promise<CustomerDto> => {
-    try {
-        const response = await api.get(`/api/admin/customers/${id}`);
-        // Assuming the backend returns the Customer DTO directly
-        return response.data; 
-        
-    } catch (error) {
-        console.error(`CustomerService: Error fetching customer ${id}:`, error);
-        throw error;
-    }
+  try {
+    const response = await api.get(`/admin/customers/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`CustomerService: Error fetching customer ${id}:`, error);
+    throw error;
+  }
 };
 export const deleteCustomer = async (id: string): Promise<void> => {
-    try {
-        await api.delete(`/api/admin/customers/${id}`);
-    } catch (error) {
-        console.error(`Error deleting customer ${id}:`, error);
-        throw error;
-    }
+  try {
+    await api.delete(`/admin/customers/${id}`);
+  } catch (error) {
+    console.error(`Error deleting customer ${id}:`, error);
+    throw error;
+  }
 };

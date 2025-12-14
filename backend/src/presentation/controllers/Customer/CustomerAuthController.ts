@@ -1,17 +1,15 @@
-// server/controllers/CustomerAuthController.ts
-import type { Request, Response } from 'express';
-import { RequestCustomerRegistrationOtpUseCase } from '../../../application/use-cases/auth/RequestCustomerRegistrationOtpUseCase';
-import { VerifyCustomerRegistrationOtpUseCase } from '../../../application/use-cases/auth/VerifyCustomerRegistrationOtpUseCase';
-import { CustomerLoginUseCase } from '../../../application/use-cases/auth/CustomerLoginUseCase';
-import { RequestCustomerForgotPasswordOtpUseCase } from '../../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase';
-import { VerifyCustomerForgotPasswordOtpUseCase } from '../../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase';
-import { CustomerGoogleLoginUseCase } from '../../../application/use-cases/auth/CustomerGoogleLoginUseCase';
-import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
-import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
-import { refreshCookieOptions } from '../../../infrastructure/config/Cookie';
+import type { Request, Response } from "express";
+import { RequestCustomerRegistrationOtpUseCase } from "../../../application/use-cases/auth/RequestCustomerRegistrationOtpUseCase";
+import { VerifyCustomerRegistrationOtpUseCase } from "../../../application/use-cases/auth/VerifyCustomerRegistrationOtpUseCase";
+import { CustomerLoginUseCase } from "../../../application/use-cases/auth/CustomerLoginUseCase";
+import { RequestCustomerForgotPasswordOtpUseCase } from "../../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase";
+import { VerifyCustomerForgotPasswordOtpUseCase } from "../../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase";
+import { CustomerGoogleLoginUseCase } from "../../../application/use-cases/auth/CustomerGoogleLoginUseCase";
+import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
+import { refreshCookieOptions } from "../../../infrastructure/config/Cookie";
 
-import redis from '../../../infrastructure/redis/redisClient';
-
+import redis from "../../../infrastructure/redis/redisClient";
 
 export class CustomerAuthController {
   constructor(
@@ -35,7 +33,10 @@ export class CustomerAuthController {
       const result = await this.requestRegisterOtpUseCase.execute({ email });
       return res.status(StatusCodes.OK).json(result);
     } catch (err: any) {
-      if (err instanceof Error && err.message === ErrorMessages.EMAIL_ALREADY_EXISTS) {
+      if (
+        err instanceof Error &&
+        err.message === ErrorMessages.EMAIL_ALREADY_EXISTS
+      ) {
         return res.status(StatusCodes.CONFLICT).json({
           error: ErrorMessages.EMAIL_ALREADY_EXISTS,
         });
@@ -47,10 +48,13 @@ export class CustomerAuthController {
     }
   };
 
-  registerVerifyOtp = async (req: Request, res: Response): Promise<Response> => {
+  registerVerifyOtp = async (
+    req: Request,
+    res: Response
+  ): Promise<Response> => {
     try {
       const { email, otp, sessionId, name, password, phone } = req.body;
-      
+
       if (!email || !otp || !sessionId || !name || !password) {
         return res.status(StatusCodes.BAD_REQUEST).json({
           error: ErrorMessages.MISSING_REQUIRED_FIELDS,
@@ -65,16 +69,13 @@ export class CustomerAuthController {
         password,
         phone,
       });
-          
 
       if (result.refreshToken) {
-
-
-        res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
+        res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
 
       return res.status(StatusCodes.OK).json({
-        message: 'Registration successful',
+        message: "Registration successful",
         accessToken: result.accessToken,
       });
     } catch (err: any) {
@@ -103,8 +104,7 @@ export class CustomerAuthController {
       });
     }
   };
- 
-  // 3️⃣ Login (email + password)
+
   login = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { email, password } = req.body;
@@ -115,22 +115,24 @@ export class CustomerAuthController {
         });
       }
 
-      const result = await this.customerLoginUseCase.execute({ email, password });
+      const result = await this.customerLoginUseCase.execute({
+        email,
+        password,
+      });
 
-      // If refresh token present, store it in Redis and set cookie
       if (result.refreshToken) {
-
-
-        // set refresh cookie (httpOnly)
-        res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
+        res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
 
       return res.status(StatusCodes.OK).json({
-        message: 'Login successful',
+        message: "Login successful",
         accessToken: result.accessToken,
       });
     } catch (err: any) {
-      if (err instanceof Error && err.message === ErrorMessages.INVALID_CREDENTIALS) {
+      if (
+        err instanceof Error &&
+        err.message === ErrorMessages.INVALID_CREDENTIALS
+      ) {
         return res.status(StatusCodes.UNAUTHORIZED).json({
           error: ErrorMessages.INVALID_CREDENTIALS,
         });
@@ -142,8 +144,10 @@ export class CustomerAuthController {
     }
   };
 
-  // 4️⃣ Forgot password - init OTP
-  forgotPasswordInitOtp = async (req: Request, res: Response): Promise<Response> => {
+  forgotPasswordInitOtp = async (
+    req: Request,
+    res: Response
+  ): Promise<Response> => {
     try {
       const { email } = req.body;
 
@@ -153,20 +157,24 @@ export class CustomerAuthController {
         });
       }
 
-      const result = await this.requestForgotPasswordOtpUseCase.execute({ email });
+      const result = await this.requestForgotPasswordOtpUseCase.execute({
+        email,
+      });
 
       return res.status(StatusCodes.OK).json(result);
     } catch (err: any) {
-      if (err instanceof Error && err.message === ErrorMessages.CUSTOMER_NOT_FOUND) {
+      if (
+        err instanceof Error &&
+        err.message === ErrorMessages.CUSTOMER_NOT_FOUND
+      ) {
         return res.status(StatusCodes.NOT_FOUND).json({
           message: ErrorMessages.CUSTOMER_NOT_FOUND,
         });
       }
 
-      // rate-limit
-      if (err instanceof Error && err.message === 'TOO_MANY_OTP_REQUESTS') {
+      if (err instanceof Error && err.message === "TOO_MANY_OTP_REQUESTS") {
         return res.status(429).json({
-          message: 'Too many OTP requests. Try again later.',
+          message: "Too many OTP requests. Try again later.",
         });
       }
 
@@ -176,8 +184,10 @@ export class CustomerAuthController {
     }
   };
 
-  // 5️⃣ Forgot password - verify OTP + reset password
- forgotPasswordVerifyOtp = async (req: Request, res: Response): Promise<Response> => {
+  forgotPasswordVerifyOtp = async (
+    req: Request,
+    res: Response
+  ): Promise<Response> => {
     try {
       const { email, otp, sessionId, newPassword } = req.body;
 
@@ -193,7 +203,6 @@ export class CustomerAuthController {
         sessionId,
         newPassword,
       });
-
 
       return res.status(StatusCodes.OK).json(result);
     } catch (err: any) {
@@ -223,9 +232,7 @@ export class CustomerAuthController {
     }
   };
 
-  // 6️⃣ Google Login
   googleLogin = async (req: Request, res: Response): Promise<Response> => {
-    // Deprecated or used for manual token exchange if needed
     try {
       const { token } = req.body;
 
@@ -236,16 +243,13 @@ export class CustomerAuthController {
       }
 
       const result = await this.customerGoogleLoginUseCase.execute({ token });
-
-      // If refresh token present, store and set cookie
+ 
       if (result.refreshToken) {
-
-
-        res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
+        res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
 
       return res.status(StatusCodes.OK).json({
-        message: 'Google login successful',
+        message: "Google login successful",
         accessToken: result.accessToken,
         user: result.user,
       });
@@ -255,73 +259,62 @@ export class CustomerAuthController {
       });
     }
   };
+ 
+  googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const user = req.user as any;
+      if (!user) {
+        res.redirect(
+          `${
+            process.env.FRONTEND_ORIGIN
+          }/login?error=AuthenticationFailed`
+        );
+        return;
+      } 
+      const result = await this.customerGoogleLoginUseCase.execute({
+        customer: user,
+      });
 
-// 7️⃣ Google Login Callback (Passport)
-googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
-  try {
-
-    const user = req.user as any;
-    if (!user) {
-      res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/login?error=AuthenticationFailed`);
-      return;
-    }
-
-
-    // Use the Google-specific use-case (it handles token generation)
-    // The use-case accepts either { token } or { customer } per the updated implementation
-    const result = await this.customerGoogleLoginUseCase.execute({ customer: user });
-
-    if (!result || !result.accessToken || !result.refreshToken) {
-      // fallback: redirect to login with error
-      res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/login?error=AuthenticationFailed`);
-      return;
-    }
-
-
-    // If refresh token present, store it in Redis and set cookie
-    if (result.refreshToken) {
-
-
-      // set refresh cookie (uses your refreshCookieOptions imported at top)
-      res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
-    }
-
-    // Redirect the user to dashboard (frontend will either read accessToken from query OR call /refresh)
-    // We keep the redirect simple so frontend can call /refresh with credentials: 'include' if it prefers cookie-based exchange.
-    // If you want to pass access token in query (less secure), you could include ?accessToken=...
-    res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}`);
-  } catch (err: any) {
-    res.redirect(`${process.env.FRONTEND_ORIGIN || 'http://localhost:5173'}/login?error=InternalError`);
-  }
-};
-
-
-// Replace your current logout implementation with this:
-logout = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const refreshToken = req.cookies?.refreshToken as string | undefined;
-
-    if (refreshToken) {
-      try {
-        // Delete refresh token entry from Redis (if used)
-        await redis.del(`refresh:${refreshToken}`);
-      } catch (err) {
-        console.error("Failed to delete refresh token from redis (logout):", err);
-
+      if (!result || !result.accessToken || !result.refreshToken) { 
+        res.redirect(
+          `${
+            process.env.FRONTEND_ORIGIN
+          }/login?error=AuthenticationFailed`
+        );
+        return;
       }
+ 
+      if (result.refreshToken) { 
+        res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
+      } 
+      res.redirect(`${process.env.FRONTEND_ORIGIN }`);
+    } catch (err: any) {
+      res.redirect(
+        `${
+          process.env.FRONTEND_ORIGIN 
+        }/login?error=InternalError`
+      );
     }
+  }; 
+  logout = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const refreshToken = req.cookies?.refreshToken as string | undefined;
 
-    // Use same options used when setting the cookie.
-    // This must match refreshCookieOptions exactly (path, domain, sameSite, secure).
-    // IMPORTANT: pass the same object reference values or same shape.
-    res.clearCookie("refreshToken", refreshCookieOptions);
-
-    // Return JSON; frontend should clear client-side state and redirect.
-    return res.status(200).json({ message: "Logged out" });
-  } catch (err) {
-    return res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-
+      if (refreshToken) {
+        try { 
+          await redis.del(`refresh:${refreshToken}`);
+        } catch (err) {
+          console.error(
+            "Failed to delete refresh token from redis (logout):",
+            err
+          );
+        }
+      } 
+      res.clearCookie("refreshToken", refreshCookieOptions);
+ 
+      return res.status(200).json({ message: "Logged out" });
+    } catch (err) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
 }

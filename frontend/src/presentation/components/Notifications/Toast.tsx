@@ -1,5 +1,5 @@
-// frontend/src/presentation/components/notifications/Toast.tsx
-import React, {useState } from 'react';
+
+import React, { useState } from 'react';
 import { CheckCircle, XCircle, Info, AlertTriangle, X } from 'lucide-react';
 import type { Notification } from '../../contexts/NotificationContext';
 
@@ -45,15 +45,15 @@ const Toast: React.FC<ToastProps> = ({ notification, onClose }) => {
         min-w-[320px] max-w-md
         relative
         transition-all duration-300 ease-out
-        ${isExiting 
-          ? 'opacity-0 translate-x-full' 
+        ${isExiting
+          ? 'opacity-0 translate-x-full'
           : 'opacity-100 translate-x-0 animate-in slide-in-from-right-4 fade-in'
         }
       `}
     >
       <div className="flex items-start gap-3">
         {getIcon()}
-        
+
         <div className="flex-1 min-w-0">
           {notification.title && (
             <h3 className="font-bold text-base mb-0.5 tracking-wide">

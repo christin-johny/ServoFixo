@@ -1,5 +1,5 @@
-// src/presentation/pages/Customer/ForgotPassword.tsx
-import React, { useState,useEffect } from "react";
+
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { z, ZodError } from "zod";
 import * as authRepo from "../../../infrastructure/repositories/authRepository";
@@ -25,10 +25,8 @@ const ForgotPassword: React.FC = () => {
 
   const extractZodMessage = (err: unknown) => {
     if (err instanceof ZodError) {
-      // prefer issues
       const msg = err.issues?.[0]?.message;
       if (msg) return msg;
-      // fallback to errors if present
       return (err as any).errors?.[0]?.message ?? null;
     } else if (err && typeof err === "object" && "errors" in (err as any) && Array.isArray((err as any).errors)) {
       return (err as any).errors[0]?.message ?? null;
@@ -57,7 +55,6 @@ const ForgotPassword: React.FC = () => {
     setInfo(null);
     setTouched(true);
 
-    // client-side validation (Zod)
     try {
       forgotPasswordSchema.parse({ email });
       setFieldError(null);
@@ -70,8 +67,7 @@ const ForgotPassword: React.FC = () => {
     setLoading(true);
     try {
       const resp = await authRepo.customerForgotPasswordInit({ email });
-      
-      // ✅ FIXED: Removed 'resp.data?.sessionId'. Access directly or cast to any if type is loose.
+
       const sessionId = (resp as any).sessionId ?? null;
 
       const otpFlowData = {
@@ -82,9 +78,8 @@ const ForgotPassword: React.FC = () => {
 
       sessionStorage.setItem("otpFlowData", JSON.stringify(otpFlowData));
 
-      // ✅ FIXED: Removed 'resp.data?.message'. Access 'resp.message' directly.
       setInfo(resp.message ?? "OTP sent. Check your email.");
-      
+
       navigate("/verify-otp", { state: otpFlowData });
     } catch (err: any) {
       const serverMsg = err?.response?.data?.message ?? err?.message ?? "Failed to send OTP. Try again.";
@@ -118,11 +113,10 @@ const ForgotPassword: React.FC = () => {
         <form onSubmit={onSubmit} noValidate className="space-y-4">
           <div>
             <div
-              className={`flex items-center bg-gray-50 border rounded-lg px-4 py-3 transition-all ${
-                touched && fieldError
-                  ? "border-red-300 bg-red-50"
-                  : "border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200"
-              }`}
+              className={`flex items-center bg-gray-50 border rounded-lg px-4 py-3 transition-all ${touched && fieldError
+                ? "border-red-300 bg-red-50"
+                : "border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200"
+                }`}
             >
               <Mail className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
               <input
@@ -130,8 +124,7 @@ const ForgotPassword: React.FC = () => {
                 value={email}
                 onChange={handleEmailChange}
                 onBlur={() => {
-                  setTouched(true);
-                  // run validation on blur as well
+                  setTouched(true); 
                   try {
                     forgotPasswordSchema.shape.email.parse(email);
                     setFieldError(null);
@@ -143,7 +136,7 @@ const ForgotPassword: React.FC = () => {
                 className="bg-transparent outline-none w-full text-gray-900 placeholder-gray-400"
                 aria-label="Email"
                 type="email"
-                
+
               />
             </div>
             {touched && fieldError && (
@@ -154,9 +147,8 @@ const ForgotPassword: React.FC = () => {
           <div>
             <button
               type="submit"
-              className={`w-full rounded-lg py-3 text-white font-semibold transition-all ${
-                loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-sm hover:shadow-md"
-              }`}
+              className={`w-full rounded-lg py-3 text-white font-semibold transition-all ${loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-sm hover:shadow-md"
+                }`}
               disabled={loading}
             >
               {loading ? (

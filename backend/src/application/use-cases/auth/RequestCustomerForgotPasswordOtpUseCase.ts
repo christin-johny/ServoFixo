@@ -1,4 +1,3 @@
-// src/application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase.ts
 import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepository';
 import { IOtpSessionRepository } from '../../../domain/repositories/IOtpSessionRepository';
 import { IEmailService } from '../../services/IEmailService';
@@ -10,7 +9,7 @@ import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 export class RequestCustomerForgotPasswordOtpUseCase {
   private readonly otpExpiryMinutes = 5;
   private readonly rateLimitWindowMinutes = 60;
-  private readonly rateLimitMax = 10; // 10 per hour
+  private readonly rateLimitMax = 10; 
 
   constructor(
     private readonly customerRepository: ICustomerRepository,
@@ -24,13 +23,11 @@ export class RequestCustomerForgotPasswordOtpUseCase {
     const { email } = input;
     const normalizedEmail = email.toLowerCase().trim();
 
-    // 1️⃣ Customer must exist
     const customer = await this.customerRepository.findByEmail(normalizedEmail);
     if (!customer) {
       throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
     }
 
-    // 1.5️⃣ Rate limit check: count OTP sessions in the last window
     try {
       const recentCount = await this.otpSessionRepository.countRecentSessions(
         normalizedEmail,
@@ -40,19 +37,15 @@ export class RequestCustomerForgotPasswordOtpUseCase {
         throw new Error('TOO_MANY_OTP_REQUESTS');
       }
     } catch (err) {
-      // If repository throws, propagate it
       if ((err as Error).message === 'TOO_MANY_OTP_REQUESTS') {
         throw err;
       }
-      // otherwise continue (or rethrow) — we want to be-safe and surface repo errors
     }
 
-    // 2️⃣ Generate OTP + sessionId
     const otp = this.generateOtp();
     const sessionId = this.generateSessionId();
     const expiresAt = this.calculateExpiry();
 
-    // 3️⃣ Save OTP session (ForgotPassword context)
     const session = new OtpSession(
       '',
       normalizedEmail,
@@ -64,7 +57,6 @@ export class RequestCustomerForgotPasswordOtpUseCase {
 
     await this.otpSessionRepository.create(session);
 
-    // 4️⃣ Send OTP email
     const subject = 'ServoFixo - Forgot Password OTP';
     const text = `Your OTP to reset your password is: ${otp}. It is valid for ${this.otpExpiryMinutes} minutes.`;
 

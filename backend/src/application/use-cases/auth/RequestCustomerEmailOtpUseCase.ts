@@ -1,5 +1,3 @@
-// backend/src/application/use-cases/auth/RequestCustomerEmailOtpUseCase.ts
-
 import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepository';
 import { IOtpSessionRepository } from '../../../domain/repositories/IOtpSessionRepository';
 import { IEmailService } from '../../services/IEmailService';
@@ -21,20 +19,17 @@ export class RequestCustomerEmailOtpUseCase {
     const { email } = input;
     const normalizedEmail = email.toLowerCase().trim();
 
-    // 1️⃣ Customer must exist (login flow)
     const customer = await this.customerRepository.findByEmail(normalizedEmail);
     if (!customer) {
       throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
     }
 
-    // 2️⃣ Generate OTP & sessionId
     const otp = this.generateOtp();
     const sessionId = this.generateSessionId();
     const expiresAt = this.calculateExpiry();
 
-    // 3️⃣ Save OTP session
     const session = new OtpSession(
-      '', // id will be assigned by Mongo
+      '', 
       normalizedEmail,
       otp,
       OtpContext.Login,
@@ -44,13 +39,11 @@ export class RequestCustomerEmailOtpUseCase {
 
     await this.otpSessionRepository.create(session);
 
-    // 4️⃣ Send OTP via email
     const subject = 'Your ServoFixo login OTP';
     const text = `Your OTP for login is: ${otp}. It is valid for ${this.otpExpiryMinutes} minutes.`;
 
     await this.emailService.sendTextEmail(normalizedEmail, subject, text);
 
-    // 5️⃣ Return sessionId to client
     return {
       message: 'OTP sent to email',
       sessionId,
@@ -58,7 +51,6 @@ export class RequestCustomerEmailOtpUseCase {
   }
 
   private generateOtp(): string {
-    // 6-digit OTP, e.g. 123456
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 

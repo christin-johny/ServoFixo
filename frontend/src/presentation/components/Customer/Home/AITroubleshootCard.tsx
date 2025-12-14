@@ -1,4 +1,4 @@
-// src/presentation/components/AITroubleshootCard.tsx
+
 import React from "react";
 
 interface Props {

@@ -1,4 +1,3 @@
-
 import { jwtDecode } from "jwt-decode";
 
 export const decodeExp = (token: string | null) => {
@@ -11,8 +10,6 @@ export const decodeExp = (token: string | null) => {
   }
 };
 
-
-// src/utils/jwt.ts
 export const parseJwt = (token: string | null) => {
   if (!token) return null;
   try {

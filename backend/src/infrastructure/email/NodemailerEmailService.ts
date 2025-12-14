@@ -1,7 +1,5 @@
-// backend/src/infrastructure/email/NodemailerEmailService.ts
-
-import nodemailer, { Transporter } from 'nodemailer';
-import { IEmailService } from '../../application/services/IEmailService';
+import nodemailer, { Transporter } from "nodemailer";
+import { IEmailService } from "../../application/services/IEmailService";
 
 export class NodemailerEmailService implements IEmailService {
   private transporter: Transporter;
@@ -15,13 +13,13 @@ export class NodemailerEmailService implements IEmailService {
       !process.env.SMTP_PASS ||
       !process.env.SMTP_FROM
     ) {
-      throw new Error('SMTP configuration missing in environment variables');
+      throw new Error("SMTP configuration missing in environment variables");
     }
 
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
-      secure: Number(process.env.SMTP_PORT) === 465, 
+      secure: Number(process.env.SMTP_PORT) === 465,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -31,7 +29,11 @@ export class NodemailerEmailService implements IEmailService {
     this.from = process.env.SMTP_FROM;
   }
 
-  async sendTextEmail(to: string, subject: string, text: string): Promise<void> {
+  async sendTextEmail(
+    to: string,
+    subject: string,
+    text: string
+  ): Promise<void> {
     await this.transporter.sendMail({
       from: this.from,
       to,
