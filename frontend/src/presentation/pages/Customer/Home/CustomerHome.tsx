@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux'; // 1. Import Redux hooks
 import Navbar from '../../../components/Customer/Layout/Navbar';
 import BottomNav from '../../../components/Customer/Layout/BottomNav';
 import Footer from '../../../components/Customer/Layout/Footer';
@@ -8,17 +7,11 @@ import PopularCarousel from '../../../components/Customer/Home/PopularCarousel';
 import CategoryCardStrip from '../../../components/Customer/Home/CategoryCardStrip';
 import AITroubleshootCard from '../../../components/Customer/Home/AITroubleshootCard';
 import * as homeRepo from '../../../../infrastructure/repositories/customer/homeRepository';
-import * as customerRepo from '../../../../infrastructure/repositories/customer/customerRepository';
-import { type RootState } from '../../../../store/store';
-import { fetchProfileStart, fetchProfileSuccess, fetchProfileFailure } from '../../../../store/customerSlice';
 
 import type { ServiceCategory } from '../../../../domain/types/ServiceCategory';
 import type { ServiceItem } from '../../../../domain/types/ServiceItem';
 
 const CustomerHome: React.FC = () => {
-    const dispatch = useDispatch();
-    const { accessToken, user: authUser } = useSelector((state: RootState) => state.auth);
-    const { profile } = useSelector((state: RootState) => state.customer);
 
     const [categories, setCategories] = useState<ServiceCategory[]>([]);
     const [popularServices, setPopularServices] = useState<ServiceItem[]>([]);
@@ -42,58 +35,7 @@ const CustomerHome: React.FC = () => {
         fetchMasterData();
     }, []);
 
-    useEffect(() => {
 
-        const isCustomer = authUser?.role === 'customer';
-
-        if (accessToken && !profile && isCustomer) {
-            const loadProfile = async () => {
-                try {
-                    dispatch(fetchProfileStart());
-                    const data = await customerRepo.getProfile();
-                    dispatch(fetchProfileSuccess(data));
-                } catch (error) {
-                    console.error("Failed to load customer profile", error);
-                    dispatch(fetchProfileFailure("Failed to load"));
-                }
-            };
-            loadProfile();
-        }
-    }, [accessToken, profile, authUser, dispatch]);
-
-    const animateScroll = (targetPosition: number, duration: number = 800) => {
-        const startPosition = window.pageYOffset;
-        const distance = targetPosition - startPosition;
-        let startTime: number | null = null;
-
-        const animation = (currentTime: number) => {
-            if (startTime === null) startTime = currentTime;
-            const timeElapsed = currentTime - startTime;
-            const run = ease(timeElapsed, startPosition, distance, duration);
-            window.scrollTo(0, run);
-            if (timeElapsed < duration) requestAnimationFrame(animation);
-        };
-
-        const ease = (t: number, b: number, c: number, d: number) => {
-            t /= d / 2;
-            if (t < 1) return c / 2 * t * t + b;
-            t--;
-            return -c / 2 * (t * (t - 2) - 1) + b;
-        };
-
-        requestAnimationFrame(animation);
-    };
-
-    const scrollToSection = (id: string) => {
-        const element = document.getElementById(id);
-        if (element) {
-            const elementPosition = element.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset;
-            const headerOffset = 120;
-            const finalPosition = offsetPosition - headerOffset;
-            animateScroll(finalPosition, 1000);
-        }
-    };
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">

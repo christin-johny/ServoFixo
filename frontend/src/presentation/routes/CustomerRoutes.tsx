@@ -1,30 +1,35 @@
-// src/presentation/routes/CustomerRoutes.tsx
-import React, { Suspense, lazy } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import LoaderFallback from "../components/LoaderFallback";
-import AuthGuard from "./AuthGuard";
-import CustomerHome from "../pages/Customer/Home/CustomerHome";
+  // src/presentation/routes/CustomerRoutes.tsx
+  import React, { Suspense, lazy } from "react";
+  import { Routes, Route, Navigate,Outlet } from "react-router-dom";
+  import LoaderFallback from "../components/LoaderFallback";
+  import AuthGuard from "./AuthGuard";
+  import CustomerHome from "../pages/Customer/Home/CustomerHome";
+  import CustomerDataLoader from "../components/auth/CustomerDataLoader";
 
-// Lazy imports
-const CustomerLogin = lazy(() => import("../pages/Customer/CustomerLogin"));
-const CustomerRegister = lazy(() => import("../pages/Customer/Register"));
-const VerifyOtp = lazy(() => import("../pages/Customer/VerifyOtp"));
-const ForgotPassword = lazy(() => import("../pages/Customer/ForgotPassword"));
-const ServiceListing = lazy(() => import("../pages/Customer/Listing/ServiceListing"));
-// Placeholder for future Profile page
-// const CustomerProfile = lazy(() => import("../pages/Customer/Profile"));
+  // Lazy imports
+  const CustomerLogin = lazy(() => import("../pages/Customer/CustomerLogin"));
+  const CustomerRegister = lazy(() => import("../pages/Customer/Register"));
+  const VerifyOtp = lazy(() => import("../pages/Customer/VerifyOtp"));
+  const ForgotPassword = lazy(() => import("../pages/Customer/ForgotPassword"));
+  const ServiceListing = lazy(() => import("../pages/Customer/Listing/ServiceListing"));
+  const ServiceDetails = lazy(() => import("../pages/Customer/Listing/ServiceDetails"));
 
 const CustomerRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
     <Routes>
-      {/* --- PUBLIC ROUTES --- */}
       
-      <Route index element={<CustomerHome />} />
+      <Route element={
+          <CustomerDataLoader>
+             <Outlet />
+          </CustomerDataLoader>
+      }>
+          <Route index element={<CustomerHome />} />
+          <Route path="home" element={<Navigate to="/" replace />} />
+          <Route path="services" element={<ServiceListing />} />
+          <Route path="services/:id" element={<ServiceDetails />} />
+      </Route>
 
-      <Route path="home" element={<Navigate to="/" replace />} />
-      <Route path="services" element={<ServiceListing />} />
 
-      {/* --- AUTH ROUTES (Guests Only) --- */}
       <Route
         path="login"
         element={
@@ -57,23 +62,6 @@ const CustomerRoutes: React.FC = () => (
           </AuthGuard>
         }
       />
-
-      {/* --- PROTECTED ROUTES (Logged-in Users Only) --- */}
-      {/* Uncomment and add pages here when ready.
-         Note: redirectTo is now "/login" (Root login), not "/customer/login"
-      */}
-      
-      {/* <Route
-        path="profile"
-        element={
-          <RoleProtectedRoute requiredRole="customer" redirectTo="/login">
-            <div className="p-6">
-               <CustomerProfile />
-            </div>
-          </RoleProtectedRoute>
-        }
-      />
-      */}
 
     </Routes>
   </Suspense>

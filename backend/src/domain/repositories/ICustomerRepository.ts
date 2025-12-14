@@ -1,8 +1,8 @@
 import { Customer } from "../entities/Customer";
 
 export interface CustomerFilterParams {
-  search?: string; 
-  suspended?: boolean; 
+  search?: string;
+  suspended?: boolean;
 }
 
 export interface PaginatedResult<T> {
@@ -13,9 +13,8 @@ export interface PaginatedResult<T> {
 }
 
 export interface ICustomerRepository {
-
   findById(id: string): Promise<Customer | null>;
-  
+
   findByEmail(email: string): Promise<Customer | null>;
 
   findByPhone(phone: string): Promise<Customer | null>;
@@ -29,5 +28,6 @@ export interface ICustomerRepository {
     limit: number,
     filters: CustomerFilterParams
   ): Promise<PaginatedResult<Customer>>;
+
   delete(id: string): Promise<boolean>;
 }

@@ -18,11 +18,16 @@ export interface ServiceFilters {
  * Endpoint: GET /api/customer/services?categoryId=...&sort=...
  */
 export const getServices = async (filters: ServiceFilters): Promise<ServiceItem[]> => {
-  // Axios automatically converts this object into query string parameters
-  // e.g. /services?categoryId=123&sort=price_asc
   const response = await api.get("/api/customer/services", {
     params: filters,
   });
-  
+  return response.data.data;
+};
+
+
+
+export const getServiceById = async (id: string): Promise<ServiceItem> => {
+  const response = await api.get(`/api/customer/services/${id}`);
+
   return response.data.data;
 };

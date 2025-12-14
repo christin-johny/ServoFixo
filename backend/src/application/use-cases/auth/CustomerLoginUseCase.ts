@@ -35,12 +35,10 @@ export class CustomerLoginUseCase {
     const accessToken = await this.jwtService.generateAccessToken(payload);
     const refreshToken = await this.jwtService.generateRefreshToken(payload);
 
-    // Persist refresh token to Redis
     const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
     try {
       await redis.set(`refresh:${refreshToken}`, String(customer.getId()), "EX", ttlSeconds);
     } catch (err) {
-      //console.error("Failed to store refresh token in redis (CustomerLoginUseCase):", err);
     }
 
     return {

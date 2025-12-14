@@ -5,7 +5,7 @@ import store from "../../store/store";
 import { setAccessToken, logout } from "../../store/authSlice";
 import { REFRESH_ENDPOINTS } from "../config/authConfig";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_API_BASE ;
 
 // --- 1. Primary Instance (With Interceptors) ---
 const api = axios.create({

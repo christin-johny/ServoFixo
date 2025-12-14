@@ -58,7 +58,7 @@ import { AuthTokenController } from "../../presentation/controllers/AuthTokenCon
 import { CustomerCategoryController } from "../../presentation/controllers/Customer/CustomerCategoryController";
 import { CustomerProfileController } from "../../presentation/controllers/Customer/CustomerProfileController";
 import { GetServiceListingUseCase } from "../../application/use-cases/service-items/GetServiceListingUseCase";
-
+import { GetServiceByIdUseCase } from '../../application/use-cases/service-items/GetServiceByIdUseCase';
 const imageService = new S3ImageService();
 
 // B. ZONE MODULE WIRING
@@ -213,9 +213,11 @@ const getServiceListingUseCase = new GetServiceListingUseCase(serviceItemRepo);
 export const customerCategoryController = new CustomerCategoryController(
   getAllCategoriesUseCase // We reuse the Admin Use Case
 );
+const getServiceByIdUseCase = new GetServiceByIdUseCase(serviceItemRepo);
 export const customerServiceController = new CustomerServiceController(
   getMostBookedUseCase,
-  getServiceListingUseCase
+  getServiceListingUseCase,
+  getServiceByIdUseCase
 );
 
 // =================================================================

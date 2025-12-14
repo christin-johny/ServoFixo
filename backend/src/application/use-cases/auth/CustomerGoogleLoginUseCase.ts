@@ -8,8 +8,7 @@ import { Email } from '../../../../../shared/types/value-objects/ContactTypes';
 
 interface GoogleLoginRequest {
   token?: string;
-  // If you call this use-case from your Passport callback, you can pass the customer object directly:
-  customer?: any;
+  customer?: object;
 }
 
 interface GoogleLoginResponse {
@@ -126,14 +125,12 @@ export class CustomerGoogleLoginUseCase {
       // 3) Prepare JWT payload and generate tokens
       const jwtPayload: any = {
         sub: customerId,
-        roles: ['customer'],
         type: 'customer',
       };
 
       const accessToken = await this.jwtService.generateAccessToken(jwtPayload);
       const refreshToken = await this.jwtService.generateRefreshToken({
         sub: customerId,
-        roles: ['customer'],
         type: 'customer',
       });
 

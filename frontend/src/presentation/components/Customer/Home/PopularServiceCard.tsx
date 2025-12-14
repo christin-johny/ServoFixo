@@ -1,12 +1,15 @@
 import React from 'react';
 import { Star } from 'lucide-react';
 import type { ServiceItem } from '../../../../domain/types/ServiceItem';
+import { useNavigate } from 'react-router-dom';
 
 interface Props { service: ServiceItem }
 
 const PopularServiceCard: React.FC<Props> = ({ service }) => {
+  const navigate = useNavigate()
   return (
     <article
+    onClick={()=>{navigate(`/services/${service._id}`)}}
       className="
         group relative flex flex-col
         w-full h-full

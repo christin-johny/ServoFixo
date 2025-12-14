@@ -1,7 +1,6 @@
 import { IServiceItemRepository } from '../../../domain/repositories/IServiceItemRepository';
 import { IImageService } from '../../services/IImageService';
 import { ServiceSpecification } from '../../../domain/entities/ServiceItem';
-// ... imports
 
 interface EditServiceRequest {
   id: string;

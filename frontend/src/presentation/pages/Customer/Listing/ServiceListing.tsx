@@ -17,7 +17,7 @@ import * as homeRepo from '../../../../infrastructure/repositories/customer/home
 import type { ServiceItem } from '../../../../domain/types/ServiceItem';
 import type { ServiceCategory } from '../../../../domain/types/ServiceCategory';
 
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE = 4;
 
 const ServiceListing: React.FC = () => {
   const navigate = useNavigate();
@@ -189,7 +189,6 @@ const ServiceListing: React.FC = () => {
           <>
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 mb-12">
               {services.map(service => (
-                // Use the new component here
                 <ServiceCard key={service._id} service={service} />
               ))}
             </div>

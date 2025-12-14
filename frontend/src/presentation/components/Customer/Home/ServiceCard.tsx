@@ -1,16 +1,18 @@
 import React from 'react';
 import { Star } from 'lucide-react';
 import type { ServiceItem } from '../../../../domain/types/ServiceItem';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 interface ServiceCardProps {
   service: ServiceItem;
-  onClick?: () => void;
 }
 
-const ServiceCard: React.FC<ServiceCardProps> = ({ service, onClick }) => {
+
+const ServiceCard: React.FC<ServiceCardProps> = ({ service}) => {
+  const navigate = useNavigate()
   return (
     <div 
-      onClick={onClick}
+      onClick={()=>{navigate(`/services/${service._id}`)}}
       //Kept the fixed widths for horizontal scrolling context, improved hover shadow
       className="min-w-[200px] w-[200px] md:min-w-[240px] md:w-[240px] bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden shrink-0 group cursor-pointer hover:shadow-md hover:border-blue-100 transition-all duration-300"
     >

@@ -67,15 +67,48 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
     };
   }
 
-  async findById(id: string): Promise<ServiceItem | null> {
+async findById(id: string): Promise<ServiceItem | null> {
     if (!mongoose.isValidObjectId(id)) return null;
-    const doc = await ServiceItemModel.findOne({
-      _id: id,
-      isDeleted: { $ne: true },
-    }).exec();
 
-    return doc ? this.toEntity(doc) : null;
-  }
+    const docs = await ServiceItemModel.aggregate([
+        // 1. MATCH: Find the service itself
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(id),
+                isDeleted: { $ne: true },
+                isActive: { $ne: false }
+            }
+        },
+        // 2. LOOKUP: Join with the ServiceCategory collection
+        {
+            $lookup: {
+                from: "servicecategories", // Mongoose default collection name for 'ServiceCategory'
+                localField: "categoryId",  // Matches your schema exactly
+                foreignField: "_id",
+                as: "parentCategory"
+            }
+        },
+        // 3. UNWIND: Flatten the array to access fields easily
+        {
+            $unwind: "$parentCategory"
+        },
+        // 4. FILTER: Check if the Parent Category is active and not deleted
+        {
+            $match: {
+                "parentCategory.isActive": { $ne: false },
+                "parentCategory.isDeleted": { $ne: true }
+            }
+        }
+    ]).exec();
+
+    // If array is empty, it means Service not found OR Category is blocked
+    if (!docs || docs.length === 0) {
+        return null;
+    }
+
+    // Return the first result mapped to your entity
+    return this.toEntity(docs[0]);
+}
 
   async findByNameAndCategory(
     name: string,
