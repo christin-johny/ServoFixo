@@ -11,20 +11,17 @@ import CustomerListTable from "../../../components/Admin/customer/CustomerListTa
 const AdminCustomersPage: React.FC = () => {
   const { showSuccess, showError } = useNotification();
   const navigate = useNavigate();
-
-  // --- Data State ---
+ 
   const [customers, setCustomers] = useState<CustomerDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-
-  // --- Filter & Pagination State ---
+ 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>(""); 
   const debouncedSearch = useDebounce(search, 500);
-
-  // --- UI State ---
+ 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [customerToEdit, setCustomerToEdit] = useState<CustomerDto | null>(null);
 

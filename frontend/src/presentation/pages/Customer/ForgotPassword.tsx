@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { z, ZodError } from "zod";
+import { z } from "zod";
 import * as authRepo from "../../../infrastructure/repositories/authRepository";
 import { Mail } from "lucide-react";
+import { extractErrorMessage } from "../../../utils/errorHelper";
 
 const forgotPasswordSchema = z.object({
   email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
@@ -23,17 +24,6 @@ const ForgotPassword: React.FC = () => {
   const [touched, setTouched] = useState(false);
   const [fieldError, setFieldError] = useState<string | null>(null);
 
-  const extractZodMessage = (err: unknown) => {
-    if (err instanceof ZodError) {
-      const msg = err.issues?.[0]?.message;
-      if (msg) return msg;
-      return (err as any).errors?.[0]?.message ?? null;
-    } else if (err && typeof err === "object" && "errors" in (err as any) && Array.isArray((err as any).errors)) {
-      return (err as any).errors[0]?.message ?? null;
-    }
-    return null;
-  };
-
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setEmail(val);
@@ -43,8 +33,8 @@ const ForgotPassword: React.FC = () => {
         forgotPasswordSchema.shape.email.parse(val);
         setFieldError(null);
       } catch (err) {
-        const msg = extractZodMessage(err);
-        setFieldError(msg ?? "Invalid email");
+        const msg = extractErrorMessage(err, "Invalid email");
+        setFieldError(msg);
       }
     }
   };
@@ -59,8 +49,8 @@ const ForgotPassword: React.FC = () => {
       forgotPasswordSchema.parse({ email });
       setFieldError(null);
     } catch (err) {
-      const msg = extractZodMessage(err);
-      setFieldError(msg ?? "Invalid input");
+      const msg = extractErrorMessage(err, "Invalid input");
+      setFieldError(msg);
       return;
     }
 
@@ -81,8 +71,8 @@ const ForgotPassword: React.FC = () => {
       setInfo(resp.message ?? "OTP sent. Check your email.");
 
       navigate("/verify-otp", { state: otpFlowData });
-    } catch (err: any) {
-      const serverMsg = err?.response?.data?.message ?? err?.message ?? "Failed to send OTP. Try again.";
+    } catch (err: unknown) {
+      const serverMsg = extractErrorMessage(err, "Failed to send OTP. Try again.");
       setError(serverMsg);
     } finally {
       setLoading(false);
@@ -129,8 +119,8 @@ const ForgotPassword: React.FC = () => {
                     forgotPasswordSchema.shape.email.parse(email);
                     setFieldError(null);
                   } catch (err) {
-                    const msg = extractZodMessage(err);
-                    setFieldError(msg ?? "Invalid email");
+                    const msg = extractErrorMessage(err, "Invalid email");
+                    setFieldError(msg);
                   }
                 }}
                 className="bg-transparent outline-none w-full text-gray-900 placeholder-gray-400"

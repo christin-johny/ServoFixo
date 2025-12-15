@@ -1,10 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, ArrowRight } from 'lucide-react';
-import type { ServiceItem } from '../../../../domain/types/ServiceItem';  
+import type { ServiceItem } from '../../../../domain/types/ServiceItem';
 
 interface ServiceCardProps {
-  service: ServiceItem;
+  service: ServiceItem & { rating?: number; reviewCount?: number | string };
 }
 
 const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
@@ -12,49 +12,79 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
 
   const displayImage = service.imageUrls?.[0] || 'https://via.placeholder.com/400x300?text=No+Image';
   const displayPrice = service.basePrice;
+  const displayRating = service.rating?.toFixed(1) || '4.8';
+  const displayReviewCount = service.reviewCount ?? '1k';
 
   return (
-    <div
+    <article
       onClick={() => navigate(`/services/${service._id}`)}
-      className="bg-white rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden border border-gray-100 flex flex-col h-full group"
+      className="
+group relative flex flex-col w-full h-full
+ bg-white rounded-xl
+border border-gray-100
+transition-all duration-300
+hover:shadow-xl hover:-translate-y-1 hover:border-transparent
+overflow-hidden
+cursor-pointer
+"
+      role="button"
+      aria-label={service.name}
     >
       {/* Image Area: h-32 on mobile, h-52 on larger screens */}
-      <div className="relative h-32 sm:h-52 bg-gray-100 overflow-hidden">
+      <div className="relative h-32 sm:h-40 bg-gray-100 overflow-hidden">
         <img
           src={displayImage}
           alt={service.name}
           loading="lazy"
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
-        {/* Rating Tag */}
-        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-white/95 backdrop-blur-sm px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold text-gray-800 shadow-sm flex items-center gap-1">
-          <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-          <span>4.8</span>
-        </div>
       </div>
 
-      {/* Content Area: p-3 on mobile, p-5 on larger screens */}
-      <div className="p-3 sm:p-5 flex flex-col flex-1">
-        <h3 className="font-bold text-gray-900 text-sm sm:text-lg leading-tight line-clamp-1 mb-1 group-hover:text-blue-600 transition-colors">
+      {/* Content Area: Uses flex-grow for equal height */}
+      <div className="flex flex-col flex-grow p-3 sm:p-4">
+
+        {/* Title */}
+        <h4 className="text-sm sm:text-base font-bold text-gray-900 line-clamp-2 leading-tight mb-1 group-hover:text-blue-600 transition-colors">
           {service.name}
-        </h3>
-        
-        <p className="text-xs sm:text-sm text-gray-500 line-clamp-2 mb-2 sm:mb-4 flex-1 leading-relaxed">
-          {service.description}
+        </h4>
+
+        {/* Rating Row (from PopularCard) */}
+        <div className="flex items-center gap-1.5 mt-1 mb-2">
+          <div className="flex items-center gap-0.5 bg-green-50 px-1.5 py-0.5 rounded text-green-700">
+            <Star size={10} className="fill-current text-green-700" />
+            <span className="text-[10px] sm:text-xs font-bold">{displayRating}</span>
+          </div>
+          <span className="text-[10px] sm:text-xs text-gray-400">
+            ({displayReviewCount})
+          </span>
+        </div>
+
+        {/* Description (from original ServiceCard) - Removed line-clamp-2 to prevent height variation */}
+        {/* NOTE: If you need to enforce height consistency, remove or reduce the description. */}
+        <p className="text-xs text-gray-500 line-clamp-2 mb-3 leading-relaxed">
+          {service.description || "No description available."}
         </p>
 
-        <div className="flex items-end justify-between mt-auto pt-2 sm:pt-4 border-t border-gray-50">
-          <div>
-            <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-gray-400 font-bold block mb-0.5">Starts at</span>
-            <span className="font-bold text-green-500 text-sm sm:text-xl">₹{displayPrice}</span>
+        {/* Price Section & Button - Pushed to bottom of card (mt-auto) */}
+        <div className="mt-auto pt-2 border-t border-gray-50 flex items-center justify-between">
+          <div className="flex flex-col">
+            <span className="text-[10px] text-gray-400 font-medium">Starts at</span>
+            <span className="text-base font-bold text-gray-900">
+              ₹{displayPrice}
+            </span>
           </div>
-          
-          <button className="bg-blue-50 text-blue-600 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-blue-200">
-            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+
+          {/* Action Button */}
+          <button className="
+bg-blue-50 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center 
+group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 
+shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+">
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 };
 

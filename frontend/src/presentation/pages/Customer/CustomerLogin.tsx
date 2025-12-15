@@ -8,6 +8,7 @@ import { setAccessToken, setUser } from "../../../store/authSlice";
 import { parseJwt } from "../../../utils/jwt";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { usePasswordStrength } from "../../components/PasswordStrength/usePasswordStrength";
+import { extractErrorMessage } from "../../../utils/errorHelper";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
@@ -110,13 +111,7 @@ const CustomerLogin: React.FC = () => {
       navigate("/");
     } catch (err: unknown) {
       setLoading(false);
-      let serverMsg = "Login failed. Try again.";
-      if (err && typeof err === "object" && "response" in err) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        serverMsg = (err as any).response?.data?.message ?? serverMsg;
-      } else if (err instanceof Error) {
-        serverMsg = err.message;
-      }
+      const serverMsg = extractErrorMessage(err, "Login failed. Try again.");
       setError(serverMsg);
     }
   };
@@ -316,7 +311,7 @@ const CustomerLogin: React.FC = () => {
             <div>
               <button
                 type="button"
-                onClick={() => (window.location.href = `${import.meta.env.VITE_API_BASE}/api/customer/auth/google`)}
+                onClick={() => (window.location.href = `${import.meta.env.VITE_API_BASE}/customer/auth/google`)}
                 className="flex items-center justify-center w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all"
               >
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-5 w-5 mr-3" />

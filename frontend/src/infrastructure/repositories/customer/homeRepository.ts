@@ -9,7 +9,7 @@ export const getCategories = async (): Promise<ServiceCategory[]> => {
 };
 
 export const getPopularServices = async (): Promise<ServiceItem[]> => {
-  const response = await api.get("/customer/services/popular?limit=5");
+  const response = await api.get("/customer/services/popular?limit=6");
   return response.data.data;
 };
 

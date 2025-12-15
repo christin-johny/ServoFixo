@@ -69,6 +69,6 @@ export const refresh = async (): Promise<AuthResponse> => {
   throw lastError || new Error("Unable to refresh session");
 };
 export const customerLogout = async (): Promise<{ message?: string }> => {
-  const resp = await api.post("/api/customer/auth/logout");
+  const resp = await api.post("/customer/auth/logout");
   return resp.data;
 };

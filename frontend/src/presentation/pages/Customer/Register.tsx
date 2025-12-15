@@ -7,12 +7,13 @@ import type { CustomerRegisterInitDto, AuthResponse } from "../../../../../share
 import { Mail, Lock, User, Phone, Eye, EyeOff } from "lucide-react";
 import { usePasswordStrength } from "../../components/PasswordStrength/usePasswordStrength";
 import PasswordStrength from "../../components/PasswordStrength/PasswordStrength";
+import { extractErrorMessage } from "../../../utils/errorHelper";
 
 const registerSchema = z
   .object({
     name: z.string().min(1, "Name is required"),
     email: z.string().min(1, "Email is required").email("Please enter a valid email"),
-    phone: z.string().min(10, "Phone number must be at least 10 digits"),
+    phone: z.string().regex(/^\d{10}$/, "Phone must be 10 digits"),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -66,22 +67,19 @@ const Register: React.FC = () => {
     return undefined;
   };
 
-  const extractZodMessage = (err: unknown) => {
-    if (err instanceof ZodError) {
-      return err.issues?.[0]?.message ?? (err as any).errors?.[0]?.message ?? null;
-    }
-    return null;
-  };
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((p) => ({ ...p, [name]: value }));
+
+    const next = { ...formData, [name]: value };
+    setFormData(next);
 
     if (touched[name]) {
       if (name === "confirmPassword") {
         setFieldErrors((prev) => ({
           ...prev,
-          confirmPassword: value !== formData.password ? "Passwords do not match" : "",
+          confirmPassword: value !== next.password ? "Passwords do not match" : "",
         }));
         return;
       }
@@ -107,24 +105,25 @@ const Register: React.FC = () => {
   const handleBlur = (field: string) => {
     setTouched((p) => ({ ...p, [field]: true }));
 
-    if (field === "confirmPassword") {
+    const result = registerSchema.safeParse(formData);
+
+    if (!result.success) {
+      const issue = result.error.issues.find(
+        (i) => i.path[0] === field
+      );
+
       setFieldErrors((prev) => ({
         ...prev,
-        confirmPassword:
-          formData.confirmPassword !== formData.password ? "Passwords do not match" : "",
+        [field]: issue?.message ?? "",
       }));
-      return;
-    }
-
-    try {
-      // @ts-ignore
-      registerSchema.shape[field].parse(formData[field as keyof typeof formData]);
-      setFieldErrors((prev) => ({ ...prev, [field]: "" }));
-    } catch (err) {
-      const msg = extractZodMessage(err);
-      setFieldErrors((prev) => ({ ...prev, [field]: msg ?? "Invalid input" }));
+    } else {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [field]: "",
+      }));
     }
   };
+
 
   const validate = () => {
     try {
@@ -182,8 +181,8 @@ const Register: React.FC = () => {
       sessionStorage.setItem("otpFlowData", JSON.stringify(otpFlowData));
 
       navigate("/verify-otp", { state: otpFlowData });
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? err?.message ?? "Failed to send OTP. Try again.");
+    } catch (err: unknown) {
+      setError(extractErrorMessage(err, "Failed to send OTP. Try again."));
     } finally {
       setLoading(false);
     }
@@ -385,7 +384,7 @@ const Register: React.FC = () => {
             <div className="mt-3 flex items-center justify-center">
               <button
                 type="button"
-                onClick={() => (window.location.href = `${import.meta.env.VITE_API_BASE}/api/customer/auth/google`)}
+                onClick={() => (window.location.href = `${import.meta.env.VITE_API_BASE}/customer/auth/google`)}
                 className="flex items-center justify-center w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all"
               >
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-5 w-5 mr-3" />

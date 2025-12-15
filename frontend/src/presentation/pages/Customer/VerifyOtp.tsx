@@ -1,13 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { ZodError, z } from "zod";
+import { z } from "zod";
 import { setAccessToken, setUser } from "../../../store/authSlice";
 import * as authRepo from "../../../infrastructure/repositories/authRepository";
 import { parseJwt } from "../../../utils/jwt";
 import { Lock, Eye, EyeOff } from "lucide-react";
 import { usePasswordStrength } from "../../components/PasswordStrength/usePasswordStrength";
+
 import PasswordStrength from "../../components/PasswordStrength/PasswordStrength";
+import { extractErrorMessage } from "../../../utils/errorHelper";
 
 const OTP_LENGTH = 6;
 const OTP_EXPIRY_SECONDS = 180;
@@ -140,11 +142,7 @@ const VerifyOtp: React.FC = () => {
           passwordSchema.parse(val);
           setPasswordError(null);
         } catch (err) {
-          if (err instanceof ZodError) {
-            setPasswordError(err.issues?.[0]?.message ?? (err as any).errors?.[0]?.message);
-          } else {
-            setPasswordError("Invalid password");
-          }
+          setPasswordError(extractErrorMessage(err, "Invalid password"));
         }
       }
     }
@@ -166,13 +164,7 @@ const VerifyOtp: React.FC = () => {
     }
   };
 
-  const extractServerMsg = (err: unknown) => {
-    if (err && typeof err === 'object' && 'response' in err) {
-      const resp = (err as any).response?.data;
-      return resp?.message ?? resp?.error ?? (err as any).message ?? "Verification failed";
-    }
-    return (err as Error)?.message ?? "Verification failed";
-  };
+
 
   const verifyOtp = async () => {
     const code = otp.join("");
@@ -192,11 +184,7 @@ const VerifyOtp: React.FC = () => {
         passwordSchema.parse(newPassword);
         setPasswordError(null);
       } catch (err) {
-        if (err instanceof ZodError) {
-          setPasswordError(err.issues?.[0]?.message ?? (err as any).errors?.[0]?.message);
-        } else {
-          setPasswordError("Invalid password");
-        }
+        setPasswordError(extractErrorMessage(err, "Invalid password"));
         return;
       }
 
@@ -271,7 +259,7 @@ const VerifyOtp: React.FC = () => {
         });
       }
     } catch (err: unknown) {
-      setError(extractServerMsg(err));
+      setError(extractErrorMessage(err, "Verification failed"));
     } finally {
       setLoading(false);
     }
@@ -291,7 +279,7 @@ const VerifyOtp: React.FC = () => {
       setExpiryTimer(OTP_EXPIRY_SECONDS);
       setResendTimer(RESEND_DELAY_SECONDS);
     } catch (err: unknown) {
-      setError(extractServerMsg(err));
+      setError(extractErrorMessage(err, "Verification failed"));
     } finally {
       setResending(false);
     }

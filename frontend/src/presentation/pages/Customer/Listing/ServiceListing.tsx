@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams} from 'react-router-dom';
 import { Search, Loader2, Filter } from 'lucide-react';
 
 import Navbar from '../../../components/Customer/Layout/Navbar';
@@ -77,8 +77,10 @@ const ServiceListing: React.FC = () => {
   }, [activeCategoryId, activeSearch, activeSort, page]);
 
   const updateFilter = (key: string, value: string) => {
+      if (searchParams.get(key) === value) return;
     setPage(1);
     setServices([]);
+    setHasMore(true); 
     setSearchParams(prev => {
       if (value) prev.set(key, value);
       else prev.delete(key);

@@ -45,8 +45,8 @@ const ServiceDetails: React.FC = () => {
             if (!id) return;
             const data = await serviceRepo.getServiceById(id);
             setService(data);
-            const allServices = await serviceRepo.getServices({ limit: 4 });
-            setSimilarServices(allServices.filter(s => s._id !== id).slice(0, 4));
+            const services = await serviceRepo.getServices({categoryId: data.categoryId});
+            setSimilarServices(services.filter(s=>s._id !== id));
          } catch (err) {
             console.error("Failed to load service", err);
          } finally {
@@ -65,12 +65,12 @@ const ServiceDetails: React.FC = () => {
       };
 
       if (navigator.share) {
-         try { await navigator.share(shareData); return; } catch (err) { return; }
+         try { await navigator.share(shareData); return; } catch (_) { return; }
       }
       try {
          await navigator.clipboard.writeText(shareUrl);
          showSuccess("Link copied to clipboard!");
-      } catch (err) {
+      } catch (_) {
          prompt("Copy this link:", shareUrl);
       }
    };
@@ -84,7 +84,7 @@ const ServiceDetails: React.FC = () => {
    return (
       <div className="min-h-screen bg-white font-sans text-gray-900">
 
-         <div className="sticky top-0 z-50 shadow-sm">
+         <div className="sticky top-0 z-50 ">
             <Navbar />
 
             {/* MOBILE SHARE BAR (Inside sticky container) */}
@@ -92,7 +92,7 @@ const ServiceDetails: React.FC = () => {
                <div className="flex gap-4">
                   {/* Transparent Share Button */}
                   <button onClick={handleShare} className="active:scale-90 transition-transform p-1">
-                     <Share2 size={24} className="text-gray-700" />
+                     <Share2 size={24} className="text-gray-700 " />
                   </button>
                   {/* Transparent Heart Button */}
                   <button className="active:scale-90 transition-transform p-1">
@@ -103,7 +103,7 @@ const ServiceDetails: React.FC = () => {
          </div>
 
          {/* --- MAIN CONTENT --- */}
-         <div className="max-w-7xl mx-auto px-0 md:px-6 lg:px-8 py-0  pb-48 md:pb-10 md:pt-6" >
+         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-0 pb-48 md:pb-10 md:pt-6" >
 
             {/* IMAGE GALLERY */}
             <div className="relative w-full md:rounded-2xl overflow-hidden mb-8 bg-gray-100">
@@ -142,7 +142,6 @@ const ServiceDetails: React.FC = () => {
 
                {/* Mobile Swipe Hint */}
                <div className="absolute bottom-4 right-4 md:hidden bg-black/60 backdrop-blur px-3 py-1.5 rounded-full text-xs text-white font-medium flex items-center gap-2">
-                  <span>1 / {images.length}</span>
                   <span className="opacity-70 text-[10px] uppercase tracking-wide border-l border-white/30 pl-2">Swipe &rarr;</span>
                </div>
             </div>
@@ -236,15 +235,32 @@ const ServiceDetails: React.FC = () => {
                </div>
             </div>
 
-            {/* Similar Services */}
             {similarServices.length > 0 && (
-               <div className="mt-16 px-4 md:px-0">
-                  <h2 className="text-2xl font-bold mb-6">Similar Services</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                     {similarServices.map(s => <ServiceCard key={s._id} service={s} />)}
-                  </div>
-               </div>
-            )}
+    <section className="mt-16">
+        <h2 className="text-2xl font-bold mb-6 px-4 md:px-0">Similar Services</h2>
+
+        <div 
+            className="flex space-x-1 md:space-x-2 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide"
+            style={{ WebkitOverflowScrolling: 'touch' }} 
+        >
+            {similarServices.map((s, index) => (
+                <div 
+                    key={s._id} 
+                    className={`
+                        snap-center 
+                        flex-shrink-0 
+                        w-[75vw] sm:w-[50vw] md:w-1/4 
+                        ${index === 0 ? 'pl-4' : ''}  
+                        ${index === similarServices.length - 1 ? 'pr-4' : ''} 
+                    `}
+                >
+                    <ServiceCard service={s} />
+                </div>
+            ))}
+        </div>
+
+    </section>
+)}
          </div>
 
          <div className="fixed bottom-[60px] left-0 w-full bg-white border-t border-gray-100 p-4 md:hidden z-40 flex items-center justify-between shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
