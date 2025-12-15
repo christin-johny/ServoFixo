@@ -110,7 +110,6 @@ const CustomerListTable: React.FC<CustomerListTableProps> = ({
                     </div>
                     <div className="ml-3">
                       <div className="text-sm font-bold text-gray-900">{customer.name}</div>
-                      <div className="text-xs text-gray-400">ID: {customer.id.slice(-4)}</div>
                     </div>
                   </div>
                 </td>

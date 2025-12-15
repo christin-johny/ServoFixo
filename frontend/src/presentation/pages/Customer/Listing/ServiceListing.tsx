@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams} from 'react-router-dom';
 import { Search, Loader2, Filter } from 'lucide-react';
-
 import Navbar from '../../../components/Customer/Layout/Navbar';
 import BottomNav from '../../../components/Customer/Layout/BottomNav';
 import Footer from '../../../components/Customer/Layout/Footer';
 import LoaderFallback from '../../../components/LoaderFallback';
-
 import ServiceCard from '../../../components/Customer/Services/ServiceCard';
-
 import * as serviceRepo from '../../../../infrastructure/repositories/customer/serviceRepository';
 import * as homeRepo from '../../../../infrastructure/repositories/customer/homeRepository';
 import type { ServiceItem } from '../../../../domain/types/ServiceItem';

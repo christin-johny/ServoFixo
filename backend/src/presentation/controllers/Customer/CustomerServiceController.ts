@@ -28,7 +28,7 @@ export class CustomerServiceController {
   getAll = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { search, categoryId, minPrice, maxPrice, sortBy } = req.query;
-
+      console.log()
       const filters = {
         searchTerm: search as string,
         categoryId: categoryId as string,

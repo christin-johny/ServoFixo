@@ -236,10 +236,10 @@ const VerifyOtp: React.FC = () => {
             }
           }
           navigate("/");
-        } else { 
+        } else {
           window.location.href = "/";
         }
-      } else { 
+      } else {
         const resp = await authRepo.customerForgotPasswordVerify({
           email,
           otp: code,
@@ -253,7 +253,7 @@ const VerifyOtp: React.FC = () => {
           sessionStorage.removeItem(STORAGE_KEY);
           sessionStorage.removeItem("forgotResetHandoff");
         } catch (_) { }
- 
+
         navigate("/login", {
           state: { successMessage: data?.message ?? "Password reset successful. Please login." },
         });
@@ -298,20 +298,34 @@ const VerifyOtp: React.FC = () => {
 
         <p className="text-sm text-gray-500 mb-6">OTP sent to <strong>{email}</strong></p>
 
-        <div className="flex justify-center gap-3 mb-6">
+        <div className="flex justify-center gap-2 sm:gap-3 mb-6 px-2">
           {Array.from({ length: OTP_LENGTH }).map((_, i) => (
             <input
               key={i}
               ref={(el) => (inputsRef.current[i] = el)}
               maxLength={1}
-              className="w-12 h-12 bg-gray-50 border border-gray-300 text-center text-xl rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              inputMode="numeric"
               value={otp[i]}
               onChange={(e) => handleChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(e, i)}
-              inputMode="numeric"
+              className="
+        w-10 h-10
+        sm:w-12 sm:h-12
+        md:w-14 md:h-14
+        bg-gray-50
+        border border-gray-300
+        text-center
+        text-lg sm:text-xl md:text-2xl
+        rounded-lg
+        focus:ring-2 focus:ring-blue-500
+        focus:border-blue-500
+        outline-none
+        transition-all
+      "
             />
           ))}
         </div>
+
 
         {context === "forgot_password" && (
           <div className="space-y-4 mb-6 text-left">

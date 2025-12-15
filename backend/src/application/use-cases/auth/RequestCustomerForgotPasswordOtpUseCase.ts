@@ -7,7 +7,7 @@ import { CustomerForgotPasswordInitDto } from '../../../../../shared/types/dto/A
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 
 export class RequestCustomerForgotPasswordOtpUseCase {
-  private readonly otpExpiryMinutes = 5;
+  private readonly otpExpiryMinutes = 2;
   private readonly rateLimitWindowMinutes = 60;
   private readonly rateLimitMax = 10; 
 

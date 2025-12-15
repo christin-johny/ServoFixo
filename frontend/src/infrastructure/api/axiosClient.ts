@@ -36,15 +36,31 @@ const processQueue = (error: unknown, token: string | null = null) => {
 };
 
 api.interceptors.request.use(
-  (config) => {
+  (config: { headers: { Authorization: string; }; }) => {
     const token = store.getState().auth.accessToken;
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error: any) => Promise.reject(error)
 );
+
+const AUTH_ENDPOINTS = [
+  '/customer/auth/login',
+  '/customer/auth/register/init-otp',
+  '/customer/auth/register/verify-otp',
+  '/customer/auth/forgot-password/init-otp',
+  '/customer/auth/forgot-password/verify-otp',
+  '/admin/auth/login',
+  '/technician/auth/login',
+  '/technician/auth/register',
+];
+
+const isAuthEndpoint = (url?: string): boolean => {
+  if (!url) return false;
+  return AUTH_ENDPOINTS.some(endpoint => url.includes(endpoint));
+};
 
 api.interceptors.response.use(
   (response: any) => response,
@@ -54,6 +70,10 @@ api.interceptors.response.use(
     };
 
     if (!error.response || !originalConfig) {
+      return Promise.reject(error);
+    }
+
+    if (isAuthEndpoint(originalConfig.url)) {
       return Promise.reject(error);
     }
 
@@ -84,6 +104,7 @@ api.interceptors.response.use(
 
             if (newToken) break;
           } catch (_) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             _;
           }
         }

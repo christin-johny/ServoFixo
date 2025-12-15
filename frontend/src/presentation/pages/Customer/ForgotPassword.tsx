@@ -83,8 +83,19 @@ const ForgotPassword: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg overflow-hidden p-8 text-center border border-gray-200">
         <div className="flex justify-center mb-4">
-          <img src="/assets/logo.png" alt="ServoFixo" className="h-1 object-contain" />
+          <img
+            src="/assets/logo.png"
+            alt="ServoFixo"
+            className="
+      h-8
+      sm:h-12
+      md:h-12
+      lg:h-14
+      object-contain
+    "
+          />
         </div>
+
 
         <h2 className="text-2xl font-semibold mb-4">Request OTP</h2>
         <p className="text-sm text-gray-500 mb-6">Enter your registered email address.</p>
@@ -114,7 +125,7 @@ const ForgotPassword: React.FC = () => {
                 value={email}
                 onChange={handleEmailChange}
                 onBlur={() => {
-                  setTouched(true); 
+                  setTouched(true);
                   try {
                     forgotPasswordSchema.shape.email.parse(email);
                     setFieldError(null);
