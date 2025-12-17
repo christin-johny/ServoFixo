@@ -1,15 +1,8 @@
 import { Router } from "express";
-import { JwtService } from "../../../infrastructure/security/JwtService";
-import { RefreshTokenUseCase } from "../../../application/use-cases/auth/RefreshTokenUseCase";
-import { AuthTokenController } from "../../controllers/AuthTokenController";
+import { authTokenController } from "../../../infrastructure/di/Container";
+import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 
 const router = Router();
-
-const jwtService = new JwtService();
-
-const refreshTokenUseCase = new RefreshTokenUseCase(jwtService);
-
-const authTokenController = new AuthTokenController(refreshTokenUseCase);
 
 router.post("/refresh", authTokenController.refresh);
 
@@ -20,7 +13,7 @@ router.post("/login", (req, res) => {
 });
 
 router.post("/register", (req, res) => {
-  res.status(501).json({
+  res.status(StatusCodes.NOT_IMPLEMENTED).json({
     error: "Technician registration not yet implemented",
   });
 });

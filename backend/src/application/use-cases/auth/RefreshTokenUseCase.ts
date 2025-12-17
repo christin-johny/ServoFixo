@@ -1,11 +1,13 @@
-
 import redis from "../../../infrastructure/redis/redisClient";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import type { IJwtService, JwtPayload } from "../../services/IJwtService";
+import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 
 export class RefreshTokenUseCase {
-  constructor(private readonly jwtService: IJwtService) {}
-
+  constructor(
+    private readonly jwtService: IJwtService,
+    private readonly customerRepository: ICustomerRepository
+  ) {}
 
   async execute(refreshToken: string) {
     if (!refreshToken) {
@@ -16,32 +18,41 @@ export class RefreshTokenUseCase {
     try {
       payload = await this.jwtService.verifyRefreshToken(refreshToken);
     } catch (err) {
-     
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
+        const redisKey = `refresh:${refreshToken}`;
+    if (payload.type === 'customer') {
+  const customer = await this.customerRepository.findById(payload.sub);
+  
+  if (!customer) {
+    await redis.del(redisKey); 
+    throw new Error(ErrorMessages.UNAUTHORIZED); 
+  }
 
-    const redisKey = `refresh:${refreshToken}`;
+  if (customer.isSuspended()) {
+    await redis.del(redisKey); 
+    throw new Error(ErrorMessages.ACCOUNT_BLOCKED); 
+  }
+}
+
+
 
     let stored: string | null = null;
     try {
       stored = await redis.get(redisKey);
     } catch (err) {
-     
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
 
     if (!stored) {
-     
       try {
         const fallbackTtl = Math.max(
           60,
           parseInt(process.env.JWT_REFRESH_FALLBACK_SECONDS ?? "120", 10)
-        ); 
+        );
         await redis.set(redisKey, String(payload.sub), "EX", fallbackTtl);
         stored = String(payload.sub);
-        
       } catch (err) {
-       
         throw new Error(ErrorMessages.UNAUTHORIZED);
       }
     }

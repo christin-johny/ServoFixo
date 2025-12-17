@@ -12,7 +12,6 @@ export class Customer {
   private readonly defaultZoneId?: string; 
   private readonly addresses: object[];
   private readonly suspended: boolean;
-  private readonly suspendReason?: string;
   private readonly additionalInfo: object; 
   private readonly googleId?: string; 
   private readonly createdAt: Date;
@@ -28,7 +27,6 @@ export class Customer {
   defaultZoneId?: string,
   addresses: object[] = [],
   suspended: boolean = false,
-  suspendReason?: string,
   additionalInfo: object = {},
   googleId?: string,
   createdAt?: Date,
@@ -43,7 +41,6 @@ export class Customer {
   this.defaultZoneId = defaultZoneId;
   this.addresses = addresses;
   this.suspended = suspended;
-  this.suspendReason = suspendReason;
   this.additionalInfo = additionalInfo;
   this.googleId = googleId;
   this.createdAt = createdAt ?? new Date();
@@ -60,7 +57,6 @@ export class Customer {
   getCreatedAt(): Date { return this.createdAt; }
   getAdditionalInfo():object{return this.additionalInfo}
   isSuspended(): boolean {return this.suspended}
-  getSuspendReason(): string | undefined {return this.suspendReason}
   getAddresses(): object[] {return this.addresses}
   getAvatarUrl(): string | undefined {return this.avatarUrl}
   getDefaultZoneId():string | undefined {return this.defaultZoneId}

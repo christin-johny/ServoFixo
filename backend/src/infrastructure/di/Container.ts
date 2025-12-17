@@ -49,6 +49,13 @@ import { CustomerProfileController } from "../../presentation/controllers/Custom
 import { GetServiceListingUseCase } from "../../application/use-cases/service-items/GetServiceListingUseCase";
 import { GetServiceByIdUseCase } from "../../application/use-cases/service-items/GetServiceByIdUseCase";
 
+
+
+// --- Customer Auth---
+import { AdminLoginUseCase } from "../../application/use-cases/auth/AdminLoginUseCase";
+import { AdminAuthController } from "../../presentation/controllers/Admin/AdminAuthController";
+import { AdminMongoRepository } from "../database/repositories/AdminMongoRepository"; 
+
 // --- Infrastructure Services ---
 import { OtpSessionMongoRepository } from "../database/repositories/OtpSessionMongoRepository";
 import { NodemailerEmailService } from "../email/NodemailerEmailService";
@@ -211,8 +218,20 @@ export const customerServiceController = new CustomerServiceController(
   getServiceByIdUseCase
 );
 
+// --- ADMIN AUTH MODULE WIRING ---
+const adminRepo = new AdminMongoRepository();
+
+const adminLoginUseCase = new AdminLoginUseCase(
+  adminRepo,
+  passwordHasher, 
+  jwtService     
+);
+
+export const adminAuthController = new AdminAuthController(adminLoginUseCase);
+
+
 // TOKEN MANAGEMENT WIRING
 
-const refreshTokenUseCase = new RefreshTokenUseCase(jwtService);
+const refreshTokenUseCase = new RefreshTokenUseCase(jwtService, customerRepo);
 
 export const authTokenController = new AuthTokenController(refreshTokenUseCase);

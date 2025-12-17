@@ -8,8 +8,7 @@ export interface CustomerDocument extends Document {
   avatarUrl?: string;
   defaultZoneId?: string;
   addresses: any[];
-  suspended: boolean; 
-  suspendReason?: string;
+  suspended: boolean;
   additionalInfo: Record<string, any>;
   googleId?: string;
   createdAt: Date;
@@ -42,7 +41,6 @@ const CustomerSchema: Schema<CustomerDocument> = new Schema(
     defaultZoneId: { type: String },
     addresses: { type: [], default: [] },
     suspended: { type: Boolean, default: false },
-    suspendReason: { type: String },
     additionalInfo: { type: Schema.Types.Mixed, default: {} },
     googleId: { type: String, unique: true, sparse: true },
     isDeleted: { type: Boolean, default: false },

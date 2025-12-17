@@ -15,7 +15,6 @@ router.post('/forgot-password/init-otp', customerAuthController.forgotPasswordIn
 router.post('/forgot-password/verify-otp', customerAuthController.forgotPasswordVerifyOtp);
 router.post('/google-login', customerAuthController.googleLogin);
 
-router.post('/refresh', authTokenController.refresh);
 router.post("/logout", customerAuthController.logout);
  
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));

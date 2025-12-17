@@ -60,7 +60,6 @@ export class UpdateCustomerUseCase {
       existingCustomer.getDefaultZoneId(),
       existingCustomer.getAddresses(),
       updateDto.suspended,
-      existingCustomer.getSuspendReason(),
       existingCustomer.getAdditionalInfo(),
       existingCustomer.getGoogleId(),
       existingCustomer.getCreatedAt(),

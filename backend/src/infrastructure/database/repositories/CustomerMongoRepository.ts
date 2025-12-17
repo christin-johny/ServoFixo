@@ -105,7 +105,6 @@ export class CustomerMongoRepository implements ICustomerRepository {
       doc.defaultZoneId,
       doc.addresses,
       doc.suspended,
-      doc.suspendReason,
       doc.additionalInfo,
       doc.googleId,
       doc.createdAt,

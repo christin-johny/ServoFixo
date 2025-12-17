@@ -68,6 +68,7 @@ export class AdminCustomerController {
 
       res.status(StatusCodes.OK).json(mapToResponseDto(updatedCustomer));
     } catch (error) {
+      console.error(error)
       if (error instanceof CustomerUpdateError) {
         res.status(error.status).json({ message: error.message });
         return;
