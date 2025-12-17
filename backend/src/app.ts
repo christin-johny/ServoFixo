@@ -25,18 +25,13 @@ app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(passport.initialize());
 
-app.get("/health", (req, res) => {
-  res.json({ status: "OK", message: "Server running" });
-});
 
 import adminRoutes from "./presentation/routes/admin";
-
-import customerAuthRoutes from "./presentation/routes/customer/auth.routes";
 import customerRoutes from "./presentation/routes/customer/index";
+import globalAuthRouter from './presentation/routes/GlobalAuthRouter'
 
-
+app.use('/api/auth', globalAuthRouter);
 app.use("/api/admin", adminRoutes);
-
 app.use("/api/customer", customerRoutes);
 
 // app.use("/api/technician/auth", technicianAuthRoutes);

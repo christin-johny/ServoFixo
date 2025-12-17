@@ -16,7 +16,6 @@ import { GetCustomerByIdUseCase } from "../../../application/use-cases/customer/
 import { DeleteCustomerUseCase } from "../../../application/use-cases/customer/DeleteCustomerUseCase";
 export class AdminCustomerController {
   constructor(
-    private readonly customerRepository: ICustomerRepository,
     private readonly getAllCustomersUseCase: GetAllCustomersUseCase,
     private readonly updateCustomerUseCase: UpdateCustomerUseCase,
     private readonly getCustomerByIdUseCase: GetCustomerByIdUseCase,

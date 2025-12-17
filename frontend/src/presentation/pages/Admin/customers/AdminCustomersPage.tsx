@@ -42,7 +42,7 @@ const AdminCustomersPage: React.FC = () => {
       setLoading(true);
       const result = await customerService.getCustomers({
         page,
-        limit: 2,
+        limit: 7,
         search: debouncedSearch,
         suspended: filterStatus === "true" ? "true" : (filterStatus === "false" ? "false" : undefined)
       });
@@ -50,7 +50,7 @@ const AdminCustomersPage: React.FC = () => {
       setCustomers(result.data);
       setTotalCustomers(result.total);
       // @ts-ignore
-      setTotalPages(Math.ceil(result.total / 2)); 
+      setTotalPages(Math.ceil(result.total / 7)); 
       
     } catch (err: any) {
       console.error(err);

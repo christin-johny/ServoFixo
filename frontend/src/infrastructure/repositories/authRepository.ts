@@ -1,6 +1,5 @@
 import api from "../api/axiosClient";
 import { refreshApi } from "../api/axiosClient";
-import { REFRESH_ENDPOINTS } from "../config/authConfig";
 import type {
   CustomerLoginRequestDto,
   AuthResponse,
@@ -51,23 +50,18 @@ export const customerForgotPasswordVerify = async (
   return resp.data;
 };
 
+
 export const refresh = async (): Promise<AuthResponse> => {
-  let lastError: unknown = null;
-
-  for (const endpoint of REFRESH_ENDPOINTS) {
-    try {
-      const resp = await refreshApi.post(endpoint);
-
-      if (resp.data) {
-        return resp.data;
-      }
-    } catch (err) {
-      lastError = err;
-    }
+  const resp = await refreshApi.post('/auth/refresh'); 
+    
+  if (resp.data) {
+    return resp.data;
   }
-
-  throw lastError || new Error("Unable to refresh session");
+    
+  throw new Error("Empty response from server");
 };
+
+
 export const customerLogout = async (): Promise<{ message?: string }> => {
   const resp = await api.post("/customer/auth/logout");
   return resp.data;

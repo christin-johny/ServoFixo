@@ -49,7 +49,6 @@ const VerifyOtp: React.FC = () => {
 
   const context = state?.context ?? storageParsed?.context ?? "registration";
   const email = state?.email ?? storageParsed?.email ?? "";
-  //const sessionId = state?.sessionId ?? storageParsed?.sessionId ?? "";
   const [sessionId,setSessionId] = useState(state?.sessionId ?? storageParsed?.sessionId?? "")
 
   const form = state?.form ?? storageParsed?.form ?? {};

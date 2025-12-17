@@ -146,7 +146,6 @@ export const customerProfileController = new CustomerProfileController(
 );
 
 export const adminCustomerController = new AdminCustomerController(
-  customerRepo,
   getAllCustomersUseCase,
   updateCustomerUseCase,
   getCustomerByIdUseCase,

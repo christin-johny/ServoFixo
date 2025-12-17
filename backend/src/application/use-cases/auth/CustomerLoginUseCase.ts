@@ -23,6 +23,10 @@ export class CustomerLoginUseCase {
 
     const customer = await this.customerRepository.findByEmail(normalizedEmail);
     if (!customer) throw new Error(ErrorMessages.INVALID_CREDENTIALS);
+    
+    if (customer.isSuspended()) {
+       throw new Error(ErrorMessages.ACCOUNT_BLOCKED);
+    }
 
     const ok = await this.passwordHasher.compare(password, customer.getPassword());
     if (!ok) throw new Error(ErrorMessages.INVALID_CREDENTIALS);

@@ -1,29 +1,31 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoaderFallback from "../components/LoaderFallback";
 import AdminLogin from "../pages/Admin/AdminLogin";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
-import AuthGuard from "./AuthGuard";
+import GuestOnlyGuard from "./GuestOnlyGuard";
 import RoleProtectedRoute from "./RoleProtectedRoute";
-import AdminLayout from "../layouts/AdminLayout";  
+import AdminLayout from "../layouts/AdminLayout";
 import Zones from "../pages/Admin/Zones/Zones";
 import Services from "../pages/Admin/Services/Services";
-import Customers from '../pages/Admin/customers/AdminCustomersPage';
+import Customers from "../pages/Admin/customers/AdminCustomersPage";
 import AdminCustomerProfilePage from "../pages/Admin/customers/AdminCustomerProfilePage";
 
-
 const AdminRoutes: React.FC = () => (
-  <React.Suspense fallback={<LoaderFallback />}>
+  <Suspense fallback={<LoaderFallback />}>
     <Routes>
+
+      {/* Login */}
       <Route
         path="login"
         element={
-          <AuthGuard>
+          <GuestOnlyGuard>
             <AdminLogin />
-          </AuthGuard>
+          </GuestOnlyGuard>
         }
       />
 
+      {/* Protected Admin Area */}
       <Route
         element={
           <RoleProtectedRoute requiredRole="admin" redirectTo="/admin/login">
@@ -33,25 +35,18 @@ const AdminRoutes: React.FC = () => (
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="zones" element={<Zones />} />
+        <Route path="services" element={<Services />} />
 
-        {/* Placeholder Routes */}
-        <Route path="bookings/*" element={<div>Bookings Module</div>} />
-        <Route path="technicians/*" element={<div>Technicians Module</div>} />
-        <Route path="customers/*">
+        <Route path="customers">
           <Route index element={<Customers />} />
           <Route path=":customerId" element={<AdminCustomerProfilePage />} />
         </Route>
-        <Route path="zones" element={<Zones />} />
-        <Route path="payments" element={<div>Payments Module</div>} />
-        <Route path="services" element={<Services />} />
-        <Route path="disputes" element={<div>Disputes Module</div>} />
-        <Route path="reports" element={<div>Reports Module</div>} />
-        <Route path="settings" element={<div>Settings Module</div>} />
 
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Route>
     </Routes>
-  </React.Suspense>
+  </Suspense>
 );
 
 export default AdminRoutes;

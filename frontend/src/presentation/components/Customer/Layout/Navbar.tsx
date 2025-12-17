@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../../../../store/store";
 import { logout } from "../../../../store/authSlice";
 import { customerLogout } from "../../../../infrastructure/repositories/authRepository";
+import ConfirmModal from "../../Admin/Modals/ConfirmModal";
 
 const useCurrentUser = () => {
     const { profile } = useSelector((state: RootState) => state.customer);
@@ -28,6 +29,10 @@ const Navbar: React.FC = () => {
 
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [query, setQuery] = useState("");
+
+    const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
     const drawerRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
@@ -67,7 +72,13 @@ const Navbar: React.FC = () => {
         }
     };
 
-    const handleLogout = async () => {
+    const handleLogoutClick = () => {
+        setLogoutModalOpen(true);
+        setDrawerOpen(false); 
+    };
+
+    const confirmLogout = async () => {
+        setIsLoggingOut(true);
         try {
             await customerLogout();
         } catch (err) {
@@ -76,7 +87,9 @@ const Navbar: React.FC = () => {
             dispatch(logout());
             localStorage.removeItem("accessToken");
             sessionStorage.removeItem("otpFlowData");
-            setDrawerOpen(false);
+
+            setLogoutModalOpen(false);
+            setIsLoggingOut(false);
             navigate("/login");
         }
     };
@@ -154,7 +167,7 @@ const Navbar: React.FC = () => {
                                     <IconButton icon={Bell} onClick={() => { }} badge />
                                     <ProfileAvatar onClick={() => navigate("/profile")} />
                                     <button
-                                        onClick={handleLogout}
+                                        onClick={handleLogoutClick}
                                         className="p-2 rounded-full hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
                                         title="Logout"
                                     >
@@ -236,7 +249,7 @@ const Navbar: React.FC = () => {
                         <div className="p-4 bg-gray-50 border-t border-gray-100 shrink-0">
                             {isLoggedIn ? (
                                 <button
-                                    onClick={handleLogout}
+                                    onClick={handleLogoutClick}
                                     className="w-full flex items-center justify-center gap-2 bg-white border border-red-200 text-red-600 py-3 rounded-xl font-semibold hover:bg-red-50 transition-all shadow-sm mb-11"
                                 >
                                     <LogOut size={18} /> Logout
@@ -258,10 +271,20 @@ const Navbar: React.FC = () => {
                     </aside>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={logoutModalOpen}
+                onClose={() => setLogoutModalOpen(false)}
+                onConfirm={confirmLogout}
+                title="Confirm Logout"
+                message="Are you sure you want to log out of your account?"
+                confirmText="Yes, Logout"
+                isLoading={isLoggingOut}
+            />
         </header>
     );
 };
- 
+
 const SearchBar = ({ query, setQuery, onSubmit, className = "" }: any) => (
     <form onSubmit={onSubmit} className={`flex items-center gap-3 bg-[#F3F4F6] rounded-full px-4 py-2.5 transition-all focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:bg-white focus-within:shadow-md ${className}`}>
         <Search size={18} className="text-gray-400 flex-shrink-0" />

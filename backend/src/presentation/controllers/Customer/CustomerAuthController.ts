@@ -144,6 +144,12 @@ export class CustomerAuthController {
           error: ErrorMessages.INVALID_CREDENTIALS,
         });
       }
+      if(err instanceof Error &&
+        err.message === ErrorMessages.ACCOUNT_BLOCKED){
+         return res.status(StatusCodes.UNAUTHORIZED).json({
+          error: ErrorMessages.ACCOUNT_BLOCKED,
+        }); 
+        }
 
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,

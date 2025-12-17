@@ -65,7 +65,7 @@ const Services: React.FC = () => {
         try {
             setLoading(true);
             const result = await categoryRepo.getCategories({
-                page, limit: 2, search: debouncedSearch, isActive: filterStatus
+                page, limit: 5, search: debouncedSearch, isActive: filterStatus
             });
             setCategories(result.data);
             setTotal(result.total);
@@ -93,7 +93,7 @@ const Services: React.FC = () => {
             setLoadingServices(true);
             const result = await serviceRepo.getServices({ categoryId: catId, page: 1, limit: 100 });
             setServicesMap(prev => ({ ...prev, [catId]: result.data }));
-        } catch (err) {
+        } catch  {
             showError("Failed to load services");
         } finally {
             setLoadingServices(false);

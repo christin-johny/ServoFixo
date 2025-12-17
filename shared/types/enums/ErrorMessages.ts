@@ -21,6 +21,7 @@ export enum ErrorMessages {
   INTERNAL_ERROR = "Internal server error",
   INVALID_QUERY = "Invalid Query parameters",
   INVALID_DATA = "Invalid request data provided",
+  ACCOUNT_BLOCKED = "Your account has been suspended. Please contact support."
 }
 
 export enum ErrorCodes {
