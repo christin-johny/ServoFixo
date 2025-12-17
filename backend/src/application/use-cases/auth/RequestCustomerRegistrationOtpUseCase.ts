@@ -7,7 +7,7 @@ import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { OtpSession } from "../../../domain/entities/OtpSession";
 
 export class RequestCustomerRegistrationOtpUseCase {
-  private readonly otpExpiryMinutes = 5;
+  private readonly otpExpiryMinutes = 2;
 
   constructor(
     private readonly customerRepository: ICustomerRepository,

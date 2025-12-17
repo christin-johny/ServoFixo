@@ -29,8 +29,8 @@ export class CustomerAuthController {
           error: ErrorMessages.MISSING_REQUIRED_FIELDS,
         });
       }
-
       const result = await this.requestRegisterOtpUseCase.execute({ email,phone });
+      console.log('from response',result)
       return res.status(StatusCodes.OK).json(result);
     } catch (err: any) {
       if (
@@ -57,13 +57,12 @@ export class CustomerAuthController {
   ): Promise<Response> => {
     try {
       const { email, otp, sessionId, name, password, phone } = req.body;
-
+      console.log('FROM REQUEST',sessionId)
       if (!email || !otp || !sessionId || !name || !password) {
         return res.status(StatusCodes.BAD_REQUEST).json({
           error: ErrorMessages.MISSING_REQUIRED_FIELDS,
         });
       }
-
       const result = await this.verifyRegisterOtpUseCase.execute({
         email,
         otp,
@@ -76,13 +75,12 @@ export class CustomerAuthController {
       if (result.refreshToken) {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
-
       return res.status(StatusCodes.OK).json({
         message: "Registration successful",
         accessToken: result.accessToken,
       });
     } catch (err: any) {
-      console.error("🛑 REGISTRATION FAILED:", err);
+      // console.error("🛑 REGISTRATION FAILED:", err);
       if (err instanceof Error) {
         if (err.message === ErrorMessages.OTP_INVALID) {
           return res.status(StatusCodes.UNAUTHORIZED).json({
@@ -169,6 +167,7 @@ export class CustomerAuthController {
       const result = await this.requestForgotPasswordOtpUseCase.execute({
         email,
       });
+      console.log('response',result);
 
       return res.status(StatusCodes.OK).json(result);
     } catch (err: any) {
@@ -205,6 +204,7 @@ export class CustomerAuthController {
           message: ErrorMessages.MISSING_REQUIRED_FIELDS,
         });
       }
+      console.log('from request',req.body)
 
       const result = await this.verifyForgotPasswordOtpUseCase.execute({
         email,

@@ -16,7 +16,7 @@ export class CreateCategoryUseCase {
   ) {}
 
   async execute(request: CreateCategoryRequest): Promise<ServiceCategory> {
-    console.log(request.name)
+
     const existing = await this.categoryRepo.findByName(request.name);
     if (existing) {
       throw new Error("Category with this name already exists");

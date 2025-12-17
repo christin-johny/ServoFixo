@@ -33,21 +33,17 @@ export class VerifyCustomerRegistrationOtpUseCase {
         throw new Error(ErrorMessages.PHONE_ALREADY_EXISTS);
       }
     }
-
     const session = await this.otpSessionRepository.findValidSession(
       normalizedEmail,
       sessionId,
       OtpContext.Registration
     );
-
     if (!session) {
       throw new Error(ErrorMessages.OTP_SESSION_INVALID);
     }
-
     if (session.getOtp() !== otp) {
       throw new Error(ErrorMessages.OTP_INVALID);
     }
-
     session.markAsUsed();
     await this.otpSessionRepository.save(session);
 

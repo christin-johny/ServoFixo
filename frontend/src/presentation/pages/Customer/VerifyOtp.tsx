@@ -12,12 +12,11 @@ import PasswordStrength from "../../components/PasswordStrength/PasswordStrength
 import { extractErrorMessage } from "../../../utils/errorHelper";
 
 const OTP_LENGTH = 6;
-const OTP_EXPIRY_SECONDS = 180;
+const OTP_EXPIRY_SECONDS = 120;
 const RESEND_DELAY_SECONDS = 60;
 
 const STORAGE_KEY = "otpFlowData";
 
-/** Type Definition for State passing */
 interface OtpFlowState {
   email: string;
   sessionId: string;
@@ -30,7 +29,6 @@ interface OtpFlowState {
   successMessage?: string;
 }
 
-/** Password validation schema (authoritative) */
 const passwordSchema = z
   .string()
   .min(8, "Password must be at least 8 characters")
@@ -51,7 +49,8 @@ const VerifyOtp: React.FC = () => {
 
   const context = state?.context ?? storageParsed?.context ?? "registration";
   const email = state?.email ?? storageParsed?.email ?? "";
-  const sessionId = state?.sessionId ?? storageParsed?.sessionId ?? "";
+  //const sessionId = state?.sessionId ?? storageParsed?.sessionId ?? "";
+  const [sessionId,setSessionId] = useState(state?.sessionId ?? storageParsed?.sessionId?? "")
 
   const form = state?.form ?? storageParsed?.form ?? {};
   const nameFromState = form.name ?? "";
@@ -272,9 +271,12 @@ const VerifyOtp: React.FC = () => {
 
     try {
       if (context === "registration") {
-        await authRepo.customerRegisterInitOtp({ email });
+        const phone = phoneFromState
+        const response = await authRepo.customerRegisterInitOtp({ email,phone });
+        setSessionId(response?.sessionId ?? '')
       } else {
-        await authRepo.customerForgotPasswordInit({ email });
+        const response = await authRepo.customerForgotPasswordInit({ email });
+        setSessionId(response?.sessionId ?? '')
       }
       setExpiryTimer(OTP_EXPIRY_SECONDS);
       setResendTimer(RESEND_DELAY_SECONDS);
