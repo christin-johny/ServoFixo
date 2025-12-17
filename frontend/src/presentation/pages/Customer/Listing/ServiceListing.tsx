@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams} from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Loader2, Filter } from 'lucide-react';
 import Navbar from '../../../components/Customer/Layout/Navbar';
 import BottomNav from '../../../components/Customer/Layout/BottomNav';
@@ -11,7 +11,7 @@ import * as homeRepo from '../../../../infrastructure/repositories/customer/home
 import type { ServiceItem } from '../../../../domain/types/ServiceItem';
 import type { ServiceCategory } from '../../../../domain/types/ServiceCategory';
 
-const ITEMS_PER_PAGE = 4;
+const ITEMS_PER_PAGE = 8;
 
 const ServiceListing: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -26,6 +26,8 @@ const ServiceListing: React.FC = () => {
   const activeCategoryId = searchParams.get('categoryId') || '';
   const activeSearch = searchParams.get('search') || '';
   const activeSort = searchParams.get('sort') || 'popular';
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -74,16 +76,21 @@ const ServiceListing: React.FC = () => {
   }, [activeCategoryId, activeSearch, activeSort, page]);
 
   const updateFilter = (key: string, value: string) => {
-      if (searchParams.get(key) === value) return;
+    const current = searchParams.get(key) || '';
+
+    if (current === value && value !== '') return;
+
     setPage(1);
     setServices([]);
-    setHasMore(true); 
+    setHasMore(true);
+
     setSearchParams(prev => {
       if (value) prev.set(key, value);
       else prev.delete(key);
       return prev;
     });
   };
+
 
   const clearAllFilters = () => {
     setPage(1);
@@ -143,7 +150,7 @@ const ServiceListing: React.FC = () => {
           <div className="w-full overflow-hidden border-b border-gray-100 pb-1">
             <div className="flex gap-2 overflow-x-auto pb-3 pt-1 scrollbar-hide snap-x scroll-pl-1">
               <button
-                onClick={() => updateFilter('categoryId', '')}
+                onClick={() => navigate('/services')}
                 className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 snap-start select-none border ${!activeCategoryId ? 'bg-blue-500 text-white ' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
               >
                 All Services

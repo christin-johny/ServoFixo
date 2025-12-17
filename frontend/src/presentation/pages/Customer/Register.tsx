@@ -160,7 +160,7 @@ const Register: React.FC = () => {
 
     setLoading(true);
     try {
-      const payload: CustomerRegisterInitDto = { email: formData.email };
+      const payload: CustomerRegisterInitDto = { email: formData.email,phone:formData.phone };
       const resp = await customerRegisterInitOtp(payload);
 
       const data = resp as unknown as AuthResponse;

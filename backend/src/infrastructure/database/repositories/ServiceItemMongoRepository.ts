@@ -182,7 +182,6 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
 
   async findWithFilters(filters: ServiceFilters): Promise<ServiceItem[]> {
     const query: any = {};
-
     query.isDeleted = false;
 
     if (filters.isActive !== undefined) {

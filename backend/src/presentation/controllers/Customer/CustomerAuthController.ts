@@ -23,14 +23,14 @@ export class CustomerAuthController {
 
   registerInitOtp = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { email } = req.body;
+      const { email,phone } = req.body;
       if (!email) {
         return res.status(StatusCodes.BAD_REQUEST).json({
           error: ErrorMessages.MISSING_REQUIRED_FIELDS,
         });
       }
 
-      const result = await this.requestRegisterOtpUseCase.execute({ email });
+      const result = await this.requestRegisterOtpUseCase.execute({ email,phone });
       return res.status(StatusCodes.OK).json(result);
     } catch (err: any) {
       if (
@@ -41,6 +41,9 @@ export class CustomerAuthController {
           error: ErrorMessages.EMAIL_ALREADY_EXISTS,
         });
       }
+      if (err.message === ErrorMessages.PHONE_ALREADY_EXISTS) {
+             return res.status(StatusCodes.CONFLICT).json({ error: ErrorMessages.PHONE_ALREADY_EXISTS });
+        }
 
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
@@ -79,6 +82,7 @@ export class CustomerAuthController {
         accessToken: result.accessToken,
       });
     } catch (err: any) {
+      console.error("🛑 REGISTRATION FAILED:", err);
       if (err instanceof Error) {
         if (err.message === ErrorMessages.OTP_INVALID) {
           return res.status(StatusCodes.UNAUTHORIZED).json({
@@ -95,6 +99,11 @@ export class CustomerAuthController {
         if (err.message === ErrorMessages.EMAIL_ALREADY_EXISTS) {
           return res.status(StatusCodes.CONFLICT).json({
             error: ErrorMessages.EMAIL_ALREADY_EXISTS,
+          });
+        }
+        if (err.message === ErrorMessages.PHONE_ALREADY_EXISTS) {
+          return res.status(StatusCodes.CONFLICT).json({
+            error: ErrorMessages.PHONE_ALREADY_EXISTS,
           });
         }
       }
@@ -243,7 +252,7 @@ export class CustomerAuthController {
       }
 
       const result = await this.customerGoogleLoginUseCase.execute({ token });
- 
+
       if (result.refreshToken) {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
@@ -259,49 +268,41 @@ export class CustomerAuthController {
       });
     }
   };
- 
+
   googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
     try {
       const user = req.user as any;
       if (!user) {
         res.redirect(
-          `${
-            process.env.FRONTEND_ORIGIN
-          }/login?error=AuthenticationFailed`
+          `${process.env.FRONTEND_ORIGIN}/login?error=AuthenticationFailed`
         );
         return;
-      } 
+      }
       const result = await this.customerGoogleLoginUseCase.execute({
         customer: user,
       });
 
-      if (!result || !result.accessToken || !result.refreshToken) { 
+      if (!result || !result.accessToken || !result.refreshToken) {
         res.redirect(
-          `${
-            process.env.FRONTEND_ORIGIN
-          }/login?error=AuthenticationFailed`
+          `${process.env.FRONTEND_ORIGIN}/login?error=AuthenticationFailed`
         );
         return;
       }
- 
-      if (result.refreshToken) { 
+
+      if (result.refreshToken) {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
-      } 
-      res.redirect(`${process.env.FRONTEND_ORIGIN }`);
+      }
+      res.redirect(`${process.env.FRONTEND_ORIGIN}`);
     } catch (err: any) {
-      res.redirect(
-        `${
-          process.env.FRONTEND_ORIGIN 
-        }/login?error=InternalError`
-      );
+      res.redirect(`${process.env.FRONTEND_ORIGIN}/login?error=InternalError`);
     }
-  }; 
+  };
   logout = async (req: Request, res: Response): Promise<Response> => {
     try {
       const refreshToken = req.cookies?.refreshToken as string | undefined;
 
       if (refreshToken) {
-        try { 
+        try {
           await redis.del(`refresh:${refreshToken}`);
         } catch (err) {
           console.error(
@@ -309,9 +310,9 @@ export class CustomerAuthController {
             err
           );
         }
-      } 
+      }
       res.clearCookie("refreshToken", refreshCookieOptions);
- 
+
       return res.status(200).json({ message: "Logged out" });
     } catch (err) {
       return res.status(500).json({ message: "Internal server error" });

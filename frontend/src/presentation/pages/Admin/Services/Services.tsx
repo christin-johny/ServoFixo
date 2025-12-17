@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Search, Layers, ChevronLeft, ChevronRight, RefreshCw, Filter } from "lucide-react";
+import { Plus, Layers, RefreshCw } from "lucide-react";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { useNotification } from "../../../hooks/useNotification";
 
@@ -13,6 +13,7 @@ import CategoryCard from "../../../components/Admin/category/CategoryCard";
 import CategoryModal from "../../../components/Admin/category/CategoryModal";
 import ServiceItemModal from "../../../components/Admin/Modals/ServiceItemModal";
 import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
+import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
 
 const getErrorMessage = (error: any): string => {
     if (error.response && error.response.data) {
@@ -64,7 +65,7 @@ const Services: React.FC = () => {
         try {
             setLoading(true);
             const result = await categoryRepo.getCategories({
-                page, limit: 4, search: debouncedSearch, isActive: filterStatus
+                page, limit: 2, search: debouncedSearch, isActive: filterStatus
             });
             setCategories(result.data);
             setTotal(result.total);
@@ -79,6 +80,12 @@ const Services: React.FC = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleClearFilters = () => {
+        setSearch("");
+        setFilterStatus("");
+        setPage(1);
     };
 
     const loadServicesForCategory = async (catId: string) => {
@@ -202,7 +209,7 @@ const Services: React.FC = () => {
             setIsDeleting(false);
         }
     };
- 
+
     const EmptyState = (
         <div className="text-center py-16 border-2 border-dashed border-gray-200 rounded-2xl bg-white/50 mx-1 flex flex-col items-center">
             <Layers className="text-gray-300 mb-4" size={40} />
@@ -212,7 +219,7 @@ const Services: React.FC = () => {
 
 
         </div>
-    ); 
+    );
 
     return (
         <div className="h-full flex flex-col gap-4 sm:gap-6 overflow-hidden">
@@ -230,44 +237,21 @@ const Services: React.FC = () => {
             </div>
 
             {/* Responsive Filter Bar (Unchanged) */}
-            <div className="bg-white p-3 sm:p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-3 justify-between items-center shrink-0">
-
-                {/* Search and Select Group */}
-                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1 max-w-3xl">
-
-                    {/* Search Input */}
-                    <div className="relative flex-1">
-                        <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input
-                            value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                            placeholder="Search categories..."
-                            className="w-full pl-10 pr-4 h-10 sm:h-11 text-sm font-medium text-gray-700 placeholder:text-gray-400 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-gray-50/30 focus:bg-white transition-all"
-                        />
-                    </div>
-
-                    {/* STATUS DROPDOWN WITH FILTER ICON */}
-                    <div className="relative w-full sm:w-48 shrink-0">
-                        <select
-                            value={filterStatus}
-                            onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
-                            className=" w-full h-10 sm:h-11 pl-4 pr-10 text-sm font-medium text-gray-700  bg-white border border-gray-200 rounded-xl  appearance-none  focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer transition-all hover:border-gray-300">
-                            <option value="">All Status</option>
-                            <option value="true">Active Only</option>
-                            <option value="false">Inactive Only</option>
-                        </select>
-
-                        {/* Custom Filter Icon */}
-                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                            <Filter size={16} />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Total Count (Hidden on mobile to save space) */}
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden md:block">
-                    {total === 0 ? "No Categories" : `Showing ${categories.length} of ${total}`}
-                </span>
-            </div>
+            <SearchFilterBar
+                search={search}
+                onSearchChange={(val) => { setSearch(val); setPage(1); }}
+                searchPlaceholder="Search Categories..."
+                filterStatus={filterStatus}
+                onFilterChange={(val) => { setFilterStatus(val); setPage(1); }}
+                onClear={handleClearFilters}
+                filterOptions={[
+                    { label: "Active", value: "true" },
+                    { label: "Inactive", value: "false" }
+                ]}
+                totalItems={total}
+                currentCount={categories.length}
+                itemName="Categories"
+            />
 
             {/* Content List Area */}
             <div className="flex-1 overflow-y-auto pr-1 -mr-1 pb-4 scrollbar-thin scrollbar-thumb-gray-200">
@@ -303,13 +287,13 @@ const Services: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && categories.length > 0 && (  
-                <div className="flex justify-between items-center pt-4 border-t border-gray-200 shrink-0">
-                    <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="flex items-center gap-1 px-3 sm:px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-50 transition-colors"><ChevronLeft size={16} /> <span className="hidden sm:inline">Previous</span></button>
-                    <span className="text-xs sm:text-sm font-medium text-gray-500">Page {page} of {totalPages}</span>
-                    <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="flex items-center gap-1 px-3 sm:px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg disabled:opacity-50 transition-colors"><span className="hidden sm:inline">Next</span> <ChevronRight size={16} /></button>
-                </div>
-            )}
+            <div className="bg-white z-10 relative">
+                <PaginationBar
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                />
+            </div>
 
             {/* Modals (Unchanged) */}
             <CategoryModal

@@ -69,7 +69,6 @@ const AppInner: React.FC = () => {
     <BrowserRouter>
       <Routes>
         
-        {/* 1. Admin Routes (Keep Isolated) */}
         <Route
           path="/admin/*"
           element={
@@ -79,11 +78,8 @@ const AppInner: React.FC = () => {
           }
         />
 
-        {/* 2. Technician Routes (Keep Isolated) */}
         <Route path="/technician/*" element={<TechnicianRoutes />} />
 
-        {/* 3. Customer Routes (Now at Root) */}
-        {/* This MUST be last because "/*" catches everything else */}
         <Route path="/*" element={<CustomerRoutes />} />
 
       </Routes>

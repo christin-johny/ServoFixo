@@ -43,6 +43,7 @@ export interface CustomerLoginRequestDto {
 
 export interface CustomerRegisterInitDto {
   email: string;
+  phone:string
 }
 
 export interface CustomerRegisterVerifyDto {

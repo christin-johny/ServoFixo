@@ -4,6 +4,7 @@ import { GetServiceListingUseCase } from "../../../application/use-cases/service
 import { GetServiceByIdUseCase } from "../../../application/use-cases/service-items/GetServiceByIdUseCase";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { number } from "zod";
 
 export class CustomerServiceController {
   constructor(
@@ -27,14 +28,16 @@ export class CustomerServiceController {
 
   getAll = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { search, categoryId, minPrice, maxPrice, sortBy } = req.query;
-      console.log()
+      const { search, categoryId, minPrice, maxPrice, sortBy,page,limit } = req.query;
+      
       const filters = {
         searchTerm: search as string,
         categoryId: categoryId as string,
         minPrice: minPrice ? Number(minPrice) : undefined,
         maxPrice: maxPrice ? Number(maxPrice) : undefined,
         sortBy: sortBy as any,
+        page:Number(page),
+        limit:Number(limit),
         isActive: true,
       };
       const services = await this.getServiceListingUseCase.execute(filters);
