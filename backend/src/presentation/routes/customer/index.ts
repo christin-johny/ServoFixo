@@ -8,6 +8,7 @@ import serviceRoutes from './service.routes';
 import categoryRoutes from './category.routes';
 import customerRoutes from './customer.routes';
 import addressRoutes from'./adress.routes';
+import zoneRoutes from'./zone.routes'
 const router = Router();
 
 const jwtService = new JwtService();
@@ -20,8 +21,12 @@ router.use('/services', serviceRoutes);
 
 router.use('/categories', categoryRoutes);
 
+router.use("/zones",zoneRoutes);
+
 router.use('/profile',customerAuth,customerRoutes)
 
 router.use("/addresses",customerAuth,addressRoutes);
+
+
 
 export default router;

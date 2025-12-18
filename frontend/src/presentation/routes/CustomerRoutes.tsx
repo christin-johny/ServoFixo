@@ -4,6 +4,7 @@ import LoaderFallback from "../components/LoaderFallback";
 import GuestOnlyGuard from "./GuestOnlyGuard";
 import CustomerHome from "../pages/Customer/Home/CustomerHome";
 import CustomerDataLoader from "../components/auth/CustomerDataLoader";
+import RoleProtectedRoute from "./RoleProtectedRoute";
 
 const CustomerLogin = lazy(() => import("../pages/Customer/CustomerLogin"));
 const CustomerRegister = lazy(() => import("../pages/Customer/Register"));
@@ -11,7 +12,7 @@ const VerifyOtp = lazy(() => import("../pages/Customer/VerifyOtp"));
 const ForgotPassword = lazy(() => import("../pages/Customer/ForgotPassword"));
 const ServiceListing = lazy(() => import("../pages/Customer/Listing/ServiceListing"));
 const ServiceDetails = lazy(() => import("../pages/Customer/Listing/ServiceDetails"));
-
+const ProfilePage = lazy(() => import("../pages/Customer/Profile/ProfilePage")); 
 const CustomerRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
     <Routes>
@@ -20,6 +21,14 @@ const CustomerRoutes: React.FC = () => (
         <Route index element={<CustomerHome />} />
         <Route path="services" element={<ServiceListing />} />
         <Route path="services/:id" element={<ServiceDetails />} />
+        <Route 
+          path="profile" 
+          element={
+            <RoleProtectedRoute requiredRole="customer" redirectTo="/login">
+              <ProfilePage />
+            </RoleProtectedRoute>
+          } 
+        />
       </Route>
 
       <Route path="login" element={<GuestOnlyGuard><CustomerLogin /></GuestOnlyGuard>} />

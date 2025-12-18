@@ -1,27 +1,43 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export interface CustomerProfile {
-  _id: string;
+  id: string; 
   name: string;
   email: string;
   phone?: string;
   avatarUrl?: string;
   defaultZoneId?: string;
-  addresses: [];
   suspended: boolean;
   googleId?: string;
   createdAt?: string;
 }
 
+export interface Address {
+  id: string;
+  tag: string;
+  street: string;
+  city: string;
+  state: string;
+  pincode: string;
+  isDefault: boolean;
+  isServiceable: boolean;
+}
+
 interface CustomerState {
   profile: CustomerProfile | null;
+  addresses: Address[];
+  currentLocationName: string;
   loading: boolean;
+  addressLoading: boolean; 
   error: string | null;
 }
 
 const initialState: CustomerState = {
   profile: null,
+  addresses: [],
+  currentLocationName: "Detecting Location...",
   loading: false,
+  addressLoading: false,
   error: null,
 };
 
@@ -41,10 +57,20 @@ const customerSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
-    clearCustomerData(state) {
-      state.profile = null;
-      state.loading = false;
-      state.error = null;
+    // 🟢 Triggers the skeleton loading state on the Profile Page
+    fetchAddressesStart(state) {
+      state.addressLoading = true;
+    },
+    // 🟢 Updates the address book in state
+    setAddresses(state, action: PayloadAction<Address[]>) {
+      state.addressLoading = false;
+      state.addresses = action.payload;
+    },
+    setCurrentLocation(state, action: PayloadAction<string>) {
+      state.currentLocationName = action.payload;
+    },
+    clearCustomerData() {
+      return initialState;
     },
     updateAvatar(state, action: PayloadAction<string>) {
       if (state.profile) {
@@ -54,10 +80,14 @@ const customerSlice = createSlice({
   },
 });
 
+// 🟢 Ensure all new actions are exported here
 export const {
   fetchProfileStart,
   fetchProfileSuccess,
   fetchProfileFailure,
+  fetchAddressesStart,
+  setAddresses,
+  setCurrentLocation,
   clearCustomerData,
   updateAvatar,
 } = customerSlice.actions;

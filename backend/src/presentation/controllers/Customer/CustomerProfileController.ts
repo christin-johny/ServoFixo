@@ -15,7 +15,7 @@ export class CustomerProfileController {
   // 🔵 GET /profile (Existing)
   getProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const userId = (req as any).user?.id;
+      const userId = (req as any)?.userId;
       if (!userId) return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, message: ErrorMessages.UNAUTHORIZED });
 
       const profileData = await this.getCustomerProfileUseCase.execute(userId);

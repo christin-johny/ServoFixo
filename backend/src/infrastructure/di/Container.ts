@@ -68,7 +68,9 @@ import { AuthTokenController } from "../../presentation/controllers/AuthTokenCon
 
 import { ZoneService } from "../../domain/services/ZoneService";
 import { AddressMongoRepository } from "../database/repositories/AddressMongoRepository";
-
+// --- Customer Zone Module Imports ---
+import { FindZoneByLocationUseCase } from "../../application/use-cases/zones/FindZoneByLocationUseCase";
+import { CustomerZoneController } from "../../presentation/controllers/Customer/CustomerZoneController";
 //Address
 
 import { CustomerAddressController } from "../../presentation/controllers/Customer/CustomerAddressController";
@@ -95,7 +97,8 @@ const editZoneUseCase = new EditZoneUseCase(zoneRepo);
 const deleteZoneUseCase = new DeleteZoneUseCase(zoneRepo);
 
 export const zoneService = new ZoneService(zoneRepo);
-
+const findZoneByLocationUseCase = new FindZoneByLocationUseCase(zoneService);
+export const CustomerzoneController = new CustomerZoneController(findZoneByLocationUseCase);
 export const adminZoneController = new AdminZoneController(
   createZoneUseCase,
   getAllZonesUseCase,

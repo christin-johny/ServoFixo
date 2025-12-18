@@ -24,10 +24,7 @@ export class GetCustomerProfileUseCase {
         email: customer.getEmail(),
         phone: customer.getPhone(),
         avatar: customer.getAvatarUrl(),
-        // Add other non-sensitive customer fields here
-      },
-      addresses: addresses || [], // Safe fallback if null
-      // Future: bookings: [] 
+      }
     };
   }
 }
