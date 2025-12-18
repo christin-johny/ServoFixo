@@ -1,4 +1,4 @@
-import mongoose, { Document, Model, Schema } from 'mongoose';
+ import mongoose, { Document, Model, Schema } from 'mongoose';
 
 export interface CustomerDocument extends Document {
   name: string;
@@ -39,7 +39,6 @@ const CustomerSchema: Schema<CustomerDocument> = new Schema(
     },
     avatarUrl: { type: String },
     defaultZoneId: { type: String },
-    addresses: { type: [], default: [] },
     suspended: { type: Boolean, default: false },
     additionalInfo: { type: Schema.Types.Mixed, default: {} },
     googleId: { type: String, unique: true, sparse: true },

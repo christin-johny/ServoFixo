@@ -5,7 +5,7 @@ import { CustomerLoginUseCase } from "../../../application/use-cases/auth/Custom
 import { RequestCustomerForgotPasswordOtpUseCase } from "../../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase";
 import { VerifyCustomerForgotPasswordOtpUseCase } from "../../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase";
 import { CustomerGoogleLoginUseCase } from "../../../application/use-cases/auth/CustomerGoogleLoginUseCase";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorCodes, ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { refreshCookieOptions } from "../../../infrastructure/config/Cookie";
 
@@ -76,7 +76,7 @@ export class CustomerAuthController {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
       return res.status(StatusCodes.OK).json({
-        message: "Registration successful",
+        message: SuccessMessages.REGISTRATION_SUCCESS,
         accessToken: result.accessToken,
       });
     } catch (err: any) {
@@ -131,7 +131,7 @@ export class CustomerAuthController {
       }
 
       return res.status(StatusCodes.OK).json({
-        message: "Login successful",
+        message: SuccessMessages.LOGIN_SUCCESS,
         accessToken: result.accessToken,
       });
     } catch (err: any) {
@@ -261,7 +261,7 @@ export class CustomerAuthController {
       }
 
       return res.status(StatusCodes.OK).json({
-        message: "Google login successful",
+        message: SuccessMessages.GOOGLE_LOGIN_SUCCESS,
         accessToken: result.accessToken,
         user: result.user,
       });
@@ -316,9 +316,9 @@ export class CustomerAuthController {
       }
       res.clearCookie("refreshToken", refreshCookieOptions);
 
-      return res.status(200).json({ message: "Logged out" });
+      return res.status(StatusCodes.OK).json({ message: SuccessMessages.LOGOUT_SUCCESS });
     } catch (err) {
-      return res.status(500).json({ message: "Internal server error" });
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: ErrorMessages.INTERNAL_ERROR });
     }
   };
 }

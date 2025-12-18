@@ -24,7 +24,11 @@ export class CreateZoneUseCase {
       name,
       description || "",
       boundaries,
-      isActive !== undefined ? isActive : true
+      isActive !== undefined ? isActive : true,
+      {}, // additionalInfo
+      new Date(),
+      new Date(),
+      false // 🟢 isDeleted
     );
 
     return this.zoneRepository.create(newZone);

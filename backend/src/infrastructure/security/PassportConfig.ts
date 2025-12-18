@@ -39,11 +39,25 @@ passport.use(
         let customer = await customerRepository.findByEmail(email);
 
         if (customer) {
-          if (!customer.getGoogleId && !customer.getGoogleId?.()) {
-            await (customerRepository as any).update(customer.getId(), {
+          if (!customer.getGoogleId()) {
+            const updatedCustomer = new Customer(
+              customer.getId(),
+              customer.getName(),
+              customer.getEmail(),
+              customer.getPassword(),
+              customer.getPhone(),
+              customer.getAvatarUrl(),
+              customer.getDefaultZoneId(),
+              customer.isSuspended(),
+              customer.getAdditionalInfo(),
               googleId,
-            });
-            customer = await customerRepository.findByEmail(email);
+              customer.getCreatedAt(),
+              new Date(),
+              customer.getIsDeleted()
+            );
+
+            await customerRepository.update(updatedCustomer);
+            customer = updatedCustomer;
           }
         } else {
           const newCustomer = new Customer(
@@ -54,12 +68,14 @@ passport.use(
             undefined,
             picture,
             undefined,
-            [],
             false,
-            undefined,
             {},
-            googleId
+            googleId,
+            new Date(),
+            new Date(),
+            false
           );
+
           customer = await customerRepository.create(newCustomer);
         }
 
@@ -72,15 +88,14 @@ passport.use(
 );
 
 passport.serializeUser((user: any, done) => {
-  done(null, (user && user._id) || user);
+  const id = user.getId ? user.getId() : user._id || user.id;
+  done(null, id);
 });
 
 passport.deserializeUser(async (id: any, done) => {
   try {
     if (!id) return done(null, null);
-    const user = (await customerRepository.findById)
-      ? await (customerRepository as any).findById(id)
-      : null;
+    const user = await customerRepository.findById(id);
     done(null, user);
   } catch (err) {
     done(err);

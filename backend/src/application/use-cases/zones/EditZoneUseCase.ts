@@ -35,7 +35,8 @@ export class EditZoneUseCase {
       isActive !== undefined ? isActive : existingZone.getIsActive(),
       existingZone.getAdditionalInfo(),
       existingZone.getCreatedAt(),
-      new Date()
+      new Date(),
+      existingZone.getIsDeleted() // 🟢 Pass existing status
     );
 
     return this.zoneRepository.update(updatedZone);

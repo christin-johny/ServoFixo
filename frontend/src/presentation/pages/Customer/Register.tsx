@@ -8,6 +8,9 @@ import { Mail, Lock, User, Phone, Eye, EyeOff } from "lucide-react";
 import { usePasswordStrength } from "../../components/PasswordStrength/usePasswordStrength";
 import PasswordStrength from "../../components/PasswordStrength/PasswordStrength";
 import { extractErrorMessage } from "../../../utils/errorHelper";
+import Navbar from "../../components/Customer/Layout/Navbar";
+import Footer from "../../components/Customer/Layout/Footer";
+import BottomNav from "../../components/Customer/Layout/BottomNav";
 
 const registerSchema = z
   .object({
@@ -189,6 +192,8 @@ const Register: React.FC = () => {
   };
 
   return (
+    <>
+    <Navbar/>
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-5xl bg-white rounded-lg shadow-lg overflow-hidden flex flex-col md:flex-row">
         {/* LEFT: form */}
@@ -398,6 +403,9 @@ const Register: React.FC = () => {
         <div className="hidden md:block md:w-1/2 bg-[url('/assets/loginpic.png')] bg-cover bg-center" role="img" aria-label="illustration" />
       </div>
     </div>
+    <Footer/>
+    <BottomNav/>
+    </>
   );
 };
 

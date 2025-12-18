@@ -57,13 +57,12 @@ export class VerifyCustomerRegistrationOtpUseCase {
       phone,
       undefined,
       undefined,
-      [],
       false,
-      undefined,
       {},
       undefined,
       new Date(),
-      new Date()
+      new Date(),
+      false
     );
     const savedCustomer = await this.customerRepository.create(customer);
 

@@ -12,20 +12,33 @@ import { HydratedDocument } from "mongoose";
 
 export class CustomerMongoRepository implements ICustomerRepository {
   async findById(id: string): Promise<Customer | null> {
-    const doc = await CustomerModel.findById(id).select("-password").exec();
+    const doc = await CustomerModel.findOne({
+      _id: id,
+      isDeleted: { $ne: true }, // Ignore deleted users
+    })
+      .select("-password")
+      .exec();
+
     if (!doc) return null;
     return this.toEntity(doc);
   }
 
   async findByEmail(email: string): Promise<Customer | null> {
     const normalizedEmail = email.toLowerCase().trim();
-    const doc = await CustomerModel.findOne({ email: normalizedEmail }).exec();
+    const doc = await CustomerModel.findOne({
+      email: normalizedEmail,
+      isDeleted: { $ne: true },
+    }).exec();
     if (!doc) return null;
     return this.toEntity(doc);
   }
 
   async findByPhone(phone: string): Promise<Customer | null> {
-    const doc = await CustomerModel.findOne({ phone: phone }).exec();
+    const doc = await CustomerModel.findOne({ 
+        phone: phone,
+        isDeleted: { $ne: true } 
+    }).exec();
+    
     if (!doc) return null;
     return this.toEntity(doc);
   }
@@ -103,12 +116,12 @@ export class CustomerMongoRepository implements ICustomerRepository {
       doc.phone,
       doc.avatarUrl,
       doc.defaultZoneId,
-      doc.addresses,
       doc.suspended,
       doc.additionalInfo,
       doc.googleId,
       doc.createdAt,
-      doc.updatedAt
+      doc.updatedAt,
+      doc.isDeleted 
     );
   }
 
@@ -120,6 +133,7 @@ export class CustomerMongoRepository implements ICustomerRepository {
       phone: customer.getPhone(),
       googleId: customer.getGoogleId(),
       suspended: customer.isSuspended(),
+      isDeleted: customer.getIsDeleted(),
     };
   }
 }

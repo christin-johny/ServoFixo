@@ -21,4 +21,5 @@ export interface IZoneRepository {
   findByName(name: string): Promise<Zone | null>;
   update(zone: Zone): Promise<Zone>;
   delete(id: string): Promise<boolean>;
+  findZoneByCoordinates(lat: number, lng: number): Promise<Zone | null>;
 }

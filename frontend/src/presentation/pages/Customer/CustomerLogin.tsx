@@ -9,6 +9,9 @@ import { parseJwt } from "../../../utils/jwt";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { usePasswordStrength } from "../../components/PasswordStrength/usePasswordStrength";
 import { extractErrorMessage } from "../../../utils/errorHelper";
+import Navbar from "../../components/Customer/Layout/Navbar";
+import Footer from "../../components/Customer/Layout/Footer";
+import BottomNav from "../../components/Customer/Layout/BottomNav";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
@@ -157,7 +160,10 @@ const CustomerLogin: React.FC = () => {
   };
 
   return (
+    <>
+      <Navbar/>
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+
       <div className="w-full max-w-5xl bg-white rounded-lg shadow-lg overflow-hidden flex flex-col md:flex-row">
         {/* LEFT: form */}
         <div className="w-full md:w-1/2 p-8">
@@ -325,6 +331,9 @@ const CustomerLogin: React.FC = () => {
         <div className="hidden md:block md:w-1/2 bg-[url('/assets/loginpic.png')] bg-cover bg-center" role="img" aria-label="illustration" />
       </div>
     </div>
+    <Footer/>
+    <BottomNav/>
+    </>
   );
 };
 

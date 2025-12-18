@@ -10,12 +10,12 @@ export class Customer {
   private readonly password: string; 
   private readonly avatarUrl?: string;
   private readonly defaultZoneId?: string; 
-  private readonly addresses: object[];
   private readonly suspended: boolean;
   private readonly additionalInfo: object; 
   private readonly googleId?: string; 
   private readonly createdAt: Date;
   private readonly updatedAt: Date;
+  private isDeleted: boolean;
 
  constructor(
   id: string,
@@ -25,12 +25,13 @@ export class Customer {
   phone?: Phone,
   avatarUrl?: string,
   defaultZoneId?: string,
-  addresses: object[] = [],
   suspended: boolean = false,
   additionalInfo: object = {},
   googleId?: string,
   createdAt?: Date,
-  updatedAt?: Date
+  updatedAt?: Date,
+  isDeleted: boolean = false
+
 ) {
   this.id = id;
   this.name = name;
@@ -39,12 +40,12 @@ export class Customer {
   this.password = password;
   this.avatarUrl = avatarUrl;
   this.defaultZoneId = defaultZoneId;
-  this.addresses = addresses;
   this.suspended = suspended;
   this.additionalInfo = additionalInfo;
   this.googleId = googleId;
   this.createdAt = createdAt ?? new Date();
   this.updatedAt = updatedAt ?? new Date();
+  this.isDeleted = isDeleted;
 }
 
 
@@ -57,7 +58,7 @@ export class Customer {
   getCreatedAt(): Date { return this.createdAt; }
   getAdditionalInfo():object{return this.additionalInfo}
   isSuspended(): boolean {return this.suspended}
-  getAddresses(): object[] {return this.addresses}
   getAvatarUrl(): string | undefined {return this.avatarUrl}
   getDefaultZoneId():string | undefined {return this.defaultZoneId}
+  getIsDeleted(): boolean {return this.isDeleted;}
 } 

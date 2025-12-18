@@ -21,7 +21,14 @@ export enum ErrorMessages {
   INTERNAL_ERROR = "Internal server error",
   INVALID_QUERY = "Invalid Query parameters",
   INVALID_DATA = "Invalid request data provided",
-  ACCOUNT_BLOCKED = "Your account has been suspended. Please contact support."
+  ACCOUNT_BLOCKED = "Your account has been suspended. Please contact support.",
+  ADDRESS_NOT_FOUND ="Address not found",
+  CATEGORY_NOT_FOUND = 'Category not found',
+  SERVICE_NOT_FOUND = 'Service not found',
+  ZONE_NOT_FOUND = 'Zone not found',
+  INVALID_ZONE =  "Invalid Zone Shape: The boundaries cannot cross each other. Please draw a simple loop.",
+  
+
 }
 
 export enum ErrorCodes {
@@ -35,8 +42,15 @@ export enum ErrorCodes {
  
 export enum SuccessMessages {
   LOGIN_SUCCESS = "Logged in successfully",
+  GOOGLE_LOGIN_SUCCESS = "Google login successful",
   LOGOUT_SUCCESS = "Logged out successfully",
   OTP_SENT = "OTP sent successfully",
   PASSWORD_RESET_SUCCESS = "Password reset successfully",
   REGISTRATION_SUCCESS = "Registration completed successfully",
+  ADDRESS_ADDED ="Address updated successfully" ,
+  ADDRESS_DELETED = "Address deleted successfully",
+  ADDRESS_UPDATED ="Address updated successfully",
+  DEFAULT_ADDRESS_UPDATED="Default address updated",
+  
+
 }

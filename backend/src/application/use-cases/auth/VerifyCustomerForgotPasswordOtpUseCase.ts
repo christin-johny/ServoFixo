@@ -50,14 +50,13 @@ export class VerifyCustomerForgotPasswordOtpUseCase {
   hashed,
   customer.getPhone(),
   undefined,   
-  undefined,   
-  [],          
-  false,       
-  undefined,   
+  undefined,          
+  false,  
   {},          
   undefined, 
   customer.getCreatedAt(),
-  new Date()
+  new Date(),
+  customer.getIsDeleted()
 );
 
 

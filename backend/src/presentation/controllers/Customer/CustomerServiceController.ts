@@ -64,7 +64,7 @@ export class CustomerServiceController {
       if (!service) {
         return res
           .status(StatusCodes.NOT_FOUND)
-          .json({ success: false, message: "Service not found" });
+          .json({ success: false, message: ErrorMessages.SERVICE_NOT_FOUND });
       }
 
       return res.status(StatusCodes.OK).json({ success: true, data: service });

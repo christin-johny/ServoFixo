@@ -58,12 +58,12 @@ export class UpdateCustomerUseCase {
       updateDto.phone,
       existingCustomer.getAvatarUrl(),
       existingCustomer.getDefaultZoneId(),
-      existingCustomer.getAddresses(),
       updateDto.suspended,
       existingCustomer.getAdditionalInfo(),
       existingCustomer.getGoogleId(),
       existingCustomer.getCreatedAt(),
-      new Date()
+      new Date(),
+      existingCustomer.getIsDeleted()
     );
 
     const savedCustomer = await this.customerRepository.update(updatedCustomer);

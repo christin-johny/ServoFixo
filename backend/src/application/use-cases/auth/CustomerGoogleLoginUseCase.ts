@@ -1,10 +1,9 @@
-
-import { OAuth2Client } from 'google-auth-library';
-import redis from '../../../infrastructure/redis/redisClient';
-import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepository';
-import { JwtService } from '../../../infrastructure/security/JwtService';
-import { Customer } from '../../../domain/entities/Customer';
-import { Email } from '../../../../../shared/types/value-objects/ContactTypes';
+import { OAuth2Client } from "google-auth-library";
+import redis from "../../../infrastructure/redis/redisClient";
+import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
+import { JwtService } from "../../../infrastructure/security/JwtService";
+import { Customer } from "../../../domain/entities/Customer";
+import { Email } from "../../../../../shared/types/value-objects/ContactTypes";
 
 interface GoogleLoginRequest {
   token?: string;
@@ -37,7 +36,7 @@ export class CustomerGoogleLoginUseCase {
 
   async execute(request: GoogleLoginRequest): Promise<GoogleLoginResponse> {
     try {
-      let customer: Customer | any = null;
+      let customer: Customer | null = null;
       let picture: string | undefined;
 
       if (request.token) {
@@ -48,7 +47,7 @@ export class CustomerGoogleLoginUseCase {
         const payload = ticket.getPayload();
 
         if (!payload || !payload.email) {
-          throw new Error('Invalid Google Token');
+          throw new Error("Invalid Google Token");
         }
 
         const { email, name, sub: googleId, picture: pic } = payload;
@@ -57,74 +56,80 @@ export class CustomerGoogleLoginUseCase {
         customer = await this.customerRepository.findByEmail(email);
 
         if (customer) {
-          if (typeof customer.getGoogleId === 'function' && !customer.getGoogleId()) {
-            if (typeof (this.customerRepository as any).update === 'function') {
-              await (this.customerRepository as any).update(customer.getId(), { googleId });
-              customer = await this.customerRepository.findByEmail(email);
-            } else {
-              customer = new Customer(
-                customer.getId(),
-                customer.getName(),
-                customer.getEmail(),
-                customer.getPassword(),
-                customer.getPhone(),
-                customer.getAvatar?.() ?? undefined,
-                undefined,
-                customer.getAddresses ? customer.getAddresses() : [],
-                customer.isSuspended ? customer.isSuspended() : false,
-                undefined,
-                customer.getAdditionalInfo ? customer.getAdditionalInfo() : {},
-                googleId
-              );
-            }
+          if (!customer.getGoogleId()) {
+            customer = new Customer(
+              customer.getId(),
+              customer.getName(),
+              customer.getEmail(),
+              customer.getPassword(),
+              customer.getPhone(),
+              customer.getAvatarUrl(),
+              customer.getDefaultZoneId(),
+              customer.isSuspended(),
+              customer.getAdditionalInfo(),
+              googleId,
+              customer.getCreatedAt(),
+              new Date(),
+              customer.getIsDeleted()
+            );
+            await this.customerRepository.update(customer);
           }
         } else {
           customer = new Customer(
-            '',
-            name || 'Google User',
+            "",
+            name || "Google User",
             email as unknown as Email,
-            '', 
+            "",
             undefined,
             picture,
             undefined,
-            [],
             false,
-            undefined,
             {},
-            googleId
+            googleId,
+            new Date(),
+            new Date(),
+            false
           );
+
           customer = await this.customerRepository.create(customer);
         }
       } else if (request.customer) {
-        customer = request.customer;
-        picture = (customer && (customer.getAvatar?.() || customer.avatar || customer.picture)) ?? undefined;
+        const rawCust = request.customer as any;
+        customer = rawCust;
+        picture = rawCust.avatarUrl || rawCust.picture;
       } else {
-        throw new Error('Either token or customer must be provided to Google login use-case.');
+        throw new Error(
+          "Either token or customer must be provided to Google login use-case."
+        );
       }
 
-      if (!customer || !customer.getId && !customer._id && !customer.id) {
-        const id = customer.getId ? customer.getId() : customer._id ?? customer.id;
-        if (!id) throw new Error('Could not resolve customer id after Google login flow.');
-      }
+      if (!customer) throw new Error("Customer resolution failed.");
 
-      const customerId = customer.getId ? customer.getId() : (customer._id ?? customer.id);
-
+      const customerId = customer.getId();
       const jwtPayload: any = {
         sub: customerId,
-        type: 'customer',
+        type: "customer",
       };
 
       const accessToken = await this.jwtService.generateAccessToken(jwtPayload);
       const refreshToken = await this.jwtService.generateRefreshToken({
         sub: customerId,
-        type: 'customer',
+        type: "customer",
       });
+      const ttlSeconds = parseInt(
+        process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60),
+        10
+      );
 
-      const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
       try {
-        await redis.set(`refresh:${refreshToken}`, String(customerId), "EX", ttlSeconds);
+        await redis.set(
+          `refresh:${refreshToken}`,
+          String(customerId),
+          "EX",
+          ttlSeconds
+        );
       } catch (err) {
-        console.error("Failed to store refresh token in redis (CustomerGoogleLoginUseCase):", err);
+        console.error("Failed to store refresh token in redis:", err);
       }
 
       return {
@@ -132,13 +137,15 @@ export class CustomerGoogleLoginUseCase {
         refreshToken,
         user: {
           id: customerId,
-          name: customer.getName ? customer.getName() : (customer.name ?? ''),
-          email: customer.getEmail ? customer.getEmail() : (customer.email ?? ''),
+          name: customer.getName(),
+          email: typeof customer.getEmail === 'function' ? (customer.getEmail() as any) : customer.getEmail(),
           avatarUrl: picture,
         },
       };
     } catch (err: any) {
-      throw new Error(`CustomerGoogleLoginUseCase error: ${err.message || err}`);
+      throw new Error(
+        `CustomerGoogleLoginUseCase error: ${err.message || err}`
+      );
     }
   }
 }

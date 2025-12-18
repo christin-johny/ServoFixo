@@ -10,6 +10,8 @@ import { usePasswordStrength } from "../../components/PasswordStrength/usePasswo
 
 import PasswordStrength from "../../components/PasswordStrength/PasswordStrength";
 import { extractErrorMessage } from "../../../utils/errorHelper";
+import { useNotification } from "../../../presentation/hooks/useNotification";
+
 
 const OTP_LENGTH = 6;
 const OTP_EXPIRY_SECONDS = 120;
@@ -42,6 +44,7 @@ const VerifyOtp: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { showSuccess } = useNotification()
 
   const state = location.state as OtpFlowState | null;
   const storageRaw = typeof window !== "undefined" ? sessionStorage.getItem(STORAGE_KEY) : null;
@@ -49,7 +52,7 @@ const VerifyOtp: React.FC = () => {
 
   const context = state?.context ?? storageParsed?.context ?? "registration";
   const email = state?.email ?? storageParsed?.email ?? "";
-  const [sessionId,setSessionId] = useState(state?.sessionId ?? storageParsed?.sessionId?? "")
+  const [sessionId, setSessionId] = useState(state?.sessionId ?? storageParsed?.sessionId ?? "")
 
   const form = state?.form ?? storageParsed?.form ?? {};
   const nameFromState = form.name ?? "";
@@ -233,28 +236,25 @@ const VerifyOtp: React.FC = () => {
               }));
             }
           }
+          showSuccess("Registration successful!")
           navigate("/");
         } else {
           window.location.href = "/";
         }
       } else {
-        const resp = await authRepo.customerForgotPasswordVerify({
+        await authRepo.customerForgotPasswordVerify({
           email,
           otp: code,
           sessionId,
           newPassword,
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const data = resp as any;
         try {
           sessionStorage.removeItem(STORAGE_KEY);
           sessionStorage.removeItem("forgotResetHandoff");
-        } catch (_) { }
-
-        navigate("/login", {
-          state: { successMessage: data?.message ?? "Password reset successful. Please login." },
-        });
+        } catch  {}
+        showSuccess("Password reset successful. Please login.")
+        navigate("/login");
       }
     } catch (err: unknown) {
       setError(extractErrorMessage(err, "Verification failed"));
@@ -269,14 +269,29 @@ const VerifyOtp: React.FC = () => {
     setError(null);
 
     try {
+      let newSessionId = ""; // Helper var to capture the ID
+
       if (context === "registration") {
         const phone = phoneFromState
-        const response = await authRepo.customerRegisterInitOtp({ email,phone });
-        setSessionId(response?.sessionId ?? '')
+        const response = await authRepo.customerRegisterInitOtp({ email, phone });
+        newSessionId = response?.sessionId ?? '';
       } else {
         const response = await authRepo.customerForgotPasswordInit({ email });
-        setSessionId(response?.sessionId ?? '')
+        newSessionId = response?.sessionId ?? '';
       }
+
+      // 1. Update React State (This is what you already had ✅)
+      setSessionId(newSessionId);
+
+      // 2. Update Session Storage (The missing piece for refreshes 🛡️)
+      if (newSessionId) {
+        const currentData = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}');
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+          ...currentData,
+          sessionId: newSessionId
+        }));
+      }
+
       setExpiryTimer(OTP_EXPIRY_SECONDS);
       setResendTimer(RESEND_DELAY_SECONDS);
     } catch (err: unknown) {

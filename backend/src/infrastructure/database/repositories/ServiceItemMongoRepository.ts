@@ -10,6 +10,7 @@ import {
   ServiceItemModel,
   IServiceItemDocument,
 } from "../mongoose/models/ServiceItemModel";
+import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
 export class ServiceItemMongoRepository implements IServiceItemRepository {
   async create(serviceItem: ServiceItem): Promise<ServiceItem> {
@@ -131,7 +132,7 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
       { new: true }
     ).exec();
 
-    if (!doc) throw new Error("Service Item not found for update");
+    if (!doc) throw new Error(ErrorMessages.SERVICE_NOT_FOUND);
     return this.toEntity(doc);
   }
 

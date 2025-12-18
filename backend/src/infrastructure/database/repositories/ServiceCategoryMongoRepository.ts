@@ -8,6 +8,7 @@ import {
   ServiceCategoryModel,
   IServiceCategoryDocument,
 } from "../mongoose/models/ServiceCategoryModel";
+import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
 export class ServiceCategoryMongoRepository
   implements IServiceCategoryRepository
@@ -90,7 +91,7 @@ export class ServiceCategoryMongoRepository
       { new: true }
     ).exec();
 
-    if (!doc) throw new Error("Category not found for update");
+    if (!doc) throw new Error(ErrorMessages.CATEGORY_NOT_FOUND);
     return this.toEntity(doc);
   }
   async toggleStatus(id: string, isActive: boolean): Promise<boolean> {
