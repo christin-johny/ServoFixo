@@ -14,7 +14,7 @@ export class CustomerMongoRepository implements ICustomerRepository {
   async findById(id: string): Promise<Customer | null> {
     const doc = await CustomerModel.findOne({
       _id: id,
-      isDeleted: { $ne: true }, // Ignore deleted users
+      isDeleted: { $ne: true }, 
     })
       .select("-password")
       .exec();
@@ -24,6 +24,7 @@ export class CustomerMongoRepository implements ICustomerRepository {
   }
 
   async findByEmail(email: string): Promise<Customer | null> {
+    if (!email) return null;
     const normalizedEmail = email.toLowerCase().trim();
     const doc = await CustomerModel.findOne({
       email: normalizedEmail,
@@ -129,6 +130,7 @@ export class CustomerMongoRepository implements ICustomerRepository {
     return {
       name: customer.getName(),
       email: customer.getEmail(),
+      avatarUrl: customer.getAvatarUrl(),
       password: customer.getPassword(),
       phone: customer.getPhone(),
       googleId: customer.getGoogleId(),

@@ -13,6 +13,7 @@ export interface CustomerProfile {
 }
 
 export interface Address {
+  name: string;
   id: string;
   tag: string;
   street: string;
@@ -57,11 +58,9 @@ const customerSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
-    // 🟢 Triggers the skeleton loading state on the Profile Page
     fetchAddressesStart(state) {
       state.addressLoading = true;
     },
-    // 🟢 Updates the address book in state
     setAddresses(state, action: PayloadAction<Address[]>) {
       state.addressLoading = false;
       state.addresses = action.payload;
@@ -72,15 +71,19 @@ const customerSlice = createSlice({
     clearCustomerData() {
       return initialState;
     },
-    updateAvatar(state, action: PayloadAction<string>) {
-      if (state.profile) {
-        state.profile.avatarUrl = action.payload;
-      }
-    },
+    updateProfileSuccess(state, action: PayloadAction<Partial<CustomerProfile>>) {
+    if (state.profile) {
+      state.profile = { ...state.profile, ...action.payload };
+    }
+  },
+  updateAvatar(state, action: PayloadAction<string>) {
+    if (state.profile) {
+      state.profile.avatarUrl = action.payload;
+    }
+  },
   },
 });
 
-// 🟢 Ensure all new actions are exported here
 export const {
   fetchProfileStart,
   fetchProfileSuccess,
@@ -89,6 +92,7 @@ export const {
   setAddresses,
   setCurrentLocation,
   clearCustomerData,
+  updateProfileSuccess,
   updateAvatar,
 } = customerSlice.actions;
 

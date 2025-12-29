@@ -4,12 +4,12 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../../../../store/store";
 import { logout } from "../../../../store/authSlice";
-import { 
-    fetchProfileStart, 
-    fetchProfileSuccess, 
-    fetchProfileFailure, 
-    setCurrentLocation, 
-    clearCustomerData 
+import {
+    fetchProfileStart,
+    fetchProfileSuccess,
+    fetchProfileFailure,
+    setCurrentLocation,
+    clearCustomerData
 } from "../../../../store/customerSlice";
 import { getProfile, getZoneByLocation } from "../../../../infrastructure/repositories/customer/customerRepository";
 import { customerLogout } from "../../../../infrastructure/repositories/authRepository";
@@ -41,6 +41,8 @@ const Navbar: React.FC = () => {
     const [query, setQuery] = useState("");
     const [logoutModalOpen, setLogoutModalOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+    const profileMenuRef = useRef<HTMLDivElement | null>(null);
     const drawerRef = useRef<HTMLDivElement | null>(null);
 
     // --- 1. GPS LOCATION DETECTION ---
@@ -103,6 +105,21 @@ const Navbar: React.FC = () => {
             window.removeEventListener("mousedown", onClickOutside);
         };
     }, [drawerOpen]);
+    useEffect(() => {
+  function handleClickOutside(e: MouseEvent) {
+    if (
+      profileMenuOpen &&
+      profileMenuRef.current &&
+      !profileMenuRef.current.contains(e.target as Node)
+    ) {
+      setProfileMenuOpen(false);
+    }
+  }
+
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, [profileMenuOpen]);
+
 
     const handleSearch = (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -188,15 +205,58 @@ const Navbar: React.FC = () => {
                         <div className="flex items-center gap-3 pl-2 border-l border-gray-200">
                             {isLoggedIn ? (
                                 <>
-                                    <IconButton icon={Bell} onClick={() => { }} badge />
-                                    <ProfileAvatar onClick={() => navigate("/profile")} />
-                                    <button
-                                        onClick={() => setLogoutModalOpen(true)}
-                                        className="p-2 rounded-full hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
-                                        title="Logout"
-                                    >
-                                        <LogOut size={20} />
-                                    </button>
+                                    <div className="flex items-center gap-3 pl-2 border-l border-gray-200 relative">
+                                        <IconButton icon={Bell} onClick={() => { }} badge />
+
+                                        {/* PROFILE DROPDOWN */}
+                                        <div ref={profileMenuRef} className="relative">
+                                            <button
+                                                onClick={() => setProfileMenuOpen(prev => !prev)}
+                                                className="p-1 rounded-full border border-transparent hover:border-gray-200 transition-all"
+                                            >
+                                                <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                                                    <User size={18} />
+                                                </div>
+                                            </button>
+
+                                            {profileMenuOpen && (
+                                                <div className="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
+
+                                                    {/* USER INFO */}
+                                                    <div className="px-4 py-3 border-b border-gray-100">
+                                                        <p className="font-bold text-sm text-gray-900 truncate">
+                                                            {user.name}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 truncate">
+                                                            {user.email}
+                                                        </p>
+                                                    </div>
+
+                                                    {/* ACTIONS */}
+                                                    <button
+                                                        onClick={() => {
+                                                            navigate("/profile");
+                                                            setProfileMenuOpen(false);
+                                                        }}
+                                                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                                    >
+                                                        <User size={16} /> My Profile
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => {
+                                                            setLogoutModalOpen(true);
+                                                            setProfileMenuOpen(false);
+                                                        }}
+                                                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50"
+                                                    >
+                                                        <LogOut size={16} /> Logout
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
                                 </>
                             ) : (
                                 <button onClick={() => navigate("/login")} className="flex items-center gap-2 bg-blue-600 hover:bg-black text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all">
@@ -241,11 +301,11 @@ const Navbar: React.FC = () => {
 
                         <div className="p-4 bg-gray-50 border-t border-gray-100 shrink-0">
                             {isLoggedIn ? (
-                                <button onClick={() => setLogoutModalOpen(true)} className="w-full flex items-center justify-center gap-2 bg-white border border-red-200 text-red-600 py-3 rounded-xl font-semibold mb-11 shadow-sm hover:bg-red-50">
+                                <button onClick={() => setLogoutModalOpen(true)} className="w-full flex items-center justify-center gap-2 bg-white border border-red-200 text-red-600 py-3 rounded-xl font-semibold mb-12 shadow-sm hover:bg-red-50">
                                     <LogOut size={18} /> Logout
                                 </button>
                             ) : (
-                                <button onClick={() => { navigate("/login"); setDrawerOpen(false); }} className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-xl font-bold mb-11 shadow-md hover:bg-blue-700">
+                                <button onClick={() => { navigate("/login"); setDrawerOpen(false); }} className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-xl font-bold mb-12 shadow-md hover:bg-blue-700">
                                     <LogIn size={18} /> Login / Register
                                 </button>
                             )}

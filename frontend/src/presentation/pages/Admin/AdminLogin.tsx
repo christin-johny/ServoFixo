@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-// 1. Remove useNavigate since we are using window.location for the fix
 import { useDispatch } from "react-redux";
 import { z } from "zod";
 import { adminLogin } from "../../../infrastructure/repositories/admin/adminAuthRepository";
@@ -13,7 +12,6 @@ const loginSchema = z.object({
 });
 
 const AdminLogin: React.FC = () => {
-  // const navigate = useNavigate(); // <-- Removed for the fix
   const dispatch = useDispatch();
 
   const [email, setEmail] = useState("");
@@ -50,15 +48,12 @@ const AdminLogin: React.FC = () => {
     setLoading(true);
     try {
       const resp = await adminLogin({ email, password }); 
-      const token = (resp as any).accessToken ?? (resp as any).token ?? null;
-      const user = (resp as any).user ?? null;
+      const token = (resp as  unknown).accessToken ?? (resp as  unknown).token ?? null;
+      const user = (resp as  unknown).user ?? null;
 
       if (token) {
-        // 🟢 FIX STEP 1: Manually save to storage to ensure it persists 
-        // across the "reload" we are about to trigger.
         localStorage.setItem("accessToken", token);
 
-        // Update Redux (Standard practice)
         dispatch(setAccessToken(token));
         
         if (user) {
@@ -71,16 +66,13 @@ const AdminLogin: React.FC = () => {
           }
         } 
         
-        // 🟢 FIX STEP 2: Force a Hard Browser Redirect
-        // This simulates the "Refresh" that fixes your issue.
-        // It bypasses the React Router race condition entirely.
         window.location.href = "/admin/dashboard";
 
       } else {
         setError("No token received from server");
       }
 
-    } catch (err: any) {
+    } catch (err:  unknown) {
       setError(err?.message ?? "Login failed");
 
     } finally {

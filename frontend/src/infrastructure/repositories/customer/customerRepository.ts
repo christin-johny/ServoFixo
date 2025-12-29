@@ -16,7 +16,7 @@ export const uploadAvatar = async (file: File): Promise<{ avatarUrl: string }> =
   const formData = new FormData();
   formData.append("avatar", file);
 
-  const response = await api.post("/customer/avatar", formData, {
+  const response = await api.post("/customer/profile/avatar", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -39,16 +39,19 @@ export const getMyAddresses = async (): Promise<Address[]> => {
 };
 
 
-export const addAddress = async (addressData: Omit<Address, 'id'> & { lat: number, lng: number }): Promise<Address> => {
+export const addAddress = async (addressData:unknown): Promise<Address> => {
   const response = await api.post("/customer/addresses", addressData);
   return response.data.data;
 };
 
+export const updateAddress = async (id: string, addressData: unknown): Promise<Address> => {
+  const response = await api.put(`/customer/addresses/${id}`, addressData);
+  return response.data.data;
+};
 
 export const deleteAddress = async (id: string): Promise<void> => {
   await api.delete(`/customer/addresses/${id}`);
 };
-
 
 export const setDefaultAddress = async (id: string): Promise<void> => {
   await api.patch(`/customer/addresses/${id}/default`);

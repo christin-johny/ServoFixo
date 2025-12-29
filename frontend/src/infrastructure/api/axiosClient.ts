@@ -35,7 +35,6 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
-// Request Interceptor (Unchanged - works perfectly)
 api.interceptors.request.use(
   (config: any) => {
     const token = store.getState().auth.accessToken;
@@ -44,10 +43,9 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error: any) => Promise.reject(error)
+  (error: unknown) => Promise.reject(error)
 );
 
-// List of endpoints that should NEVER trigger a refresh loop
 const AUTH_ENDPOINTS = [
   '/customer/auth/login',
   '/customer/auth/register/init-otp',
@@ -57,7 +55,7 @@ const AUTH_ENDPOINTS = [
   '/admin/auth/login',
   '/technician/auth/login',
   '/technician/auth/register',
-  '/auth/refresh' // 🟢 Added this so we don't refresh the refresh!
+  '/auth/refresh' 
 ];
 
 const isAuthEndpoint = (url?: string): boolean => {
@@ -76,12 +74,10 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 1. Don't retry if it's a login or auth call failing
     if (isAuthEndpoint(originalConfig.url)) {
       return Promise.reject(error);
     }
 
-    // 2. Handle 401 Unauthorized
     if (error.response.status === 401 && !originalConfig._retry) {
       if (isRefreshing) {
         return new Promise<string | null>((resolve, reject) => {
@@ -100,7 +96,6 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // 🟢 REFACTORED: Single Centralized Refresh Call
         const resp = await refreshApi.post('/auth/refresh');
         const newToken = resp.data?.accessToken || resp.data?.token || null;
 
@@ -108,7 +103,6 @@ api.interceptors.response.use(
           throw new Error("Refresh failed: No token returned");
         }
 
-        // Success! Update everything.
         store.dispatch(setAccessToken(newToken));
         processQueue(null, newToken);
 
@@ -118,7 +112,6 @@ api.interceptors.response.use(
         return api(originalConfig);
 
       } catch (refreshError) {
-        // If refresh fails, log them out completely
         processQueue(refreshError, null);
         store.dispatch(logout());
         return Promise.reject(refreshError);

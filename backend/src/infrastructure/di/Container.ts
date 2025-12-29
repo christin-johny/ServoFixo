@@ -79,6 +79,7 @@ import { UpdateAddressUseCase } from "../../application/use-cases/address/Update
 import { GetMyAddressesUseCase } from "../../application/use-cases/address/GetMyAddressesUseCase";
 import { DeleteAddressUseCase } from "../../application/use-cases/address/DeleteAddressUseCase";
 import { GetCustomerProfileUseCase } from "../../application/use-cases/customer/GetCustomerProfileUseCase";
+import { UploadAvatarUseCase } from "../../application/use-cases/customer/UploadAvatarUseCase";
 
 
 // INFRASTRUCTURE SERVICE INSTANTIATION
@@ -167,10 +168,12 @@ const updateCustomerUseCase = new UpdateCustomerUseCase(customerRepo);
 const getCustomerByIdUseCase = new GetCustomerByIdUseCase(customerRepo);
 const deleteCustomerUseCase = new DeleteCustomerUseCase(customerRepo);
 const getCustomerProfileUseCase = new GetCustomerProfileUseCase(customerRepo, addressRepo);
+const uploadAvatarUseCase = new UploadAvatarUseCase(customerRepo, imageService)
 export const customerProfileController = new CustomerProfileController(
   getCustomerProfileUseCase,
   updateCustomerUseCase,
-  deleteCustomerUseCase
+  deleteCustomerUseCase,
+  uploadAvatarUseCase
 );
 
 

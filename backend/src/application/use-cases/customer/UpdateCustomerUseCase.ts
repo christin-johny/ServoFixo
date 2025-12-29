@@ -1,73 +1,42 @@
+import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { Customer } from "../../../domain/entities/Customer";
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { CustomerUpdateDto } from "../../dto/Customer/AdminCustomerDtos";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 
-export class CustomerUpdateError extends Error {
-  public status: StatusCodes;
-  constructor(message: string, status: StatusCodes = StatusCodes.BAD_REQUEST) {
-    super(message);
-    this.name = "CustomerUpdateError";
-    this.status = status;
-  }
-}
 
 export class UpdateCustomerUseCase {
   constructor(private readonly customerRepository: ICustomerRepository) {}
 
-  async execute(
-    customerId: string,
-    updateDto: CustomerUpdateDto
-  ): Promise<Customer> {
-    const existingCustomer = await this.customerRepository.findById(customerId);
-    if (!existingCustomer) {
-      throw new CustomerUpdateError(
-        "Customer not found.",
-        StatusCodes.NOT_FOUND
-      );
-    }
+  async execute(customerId: string, updateDto: any): Promise<Customer> {
+    const existing = await this.customerRepository.findById(customerId);
+    if (!existing) throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
 
-    if (updateDto.email !== existingCustomer.getEmail()) {
-      const customerByEmail = await this.customerRepository.findByEmail(
-        updateDto.email
-      );
-      if (customerByEmail && customerByEmail.getId() !== customerId) {
-        throw new CustomerUpdateError(
-          "Email is already registered by another user.",
-          StatusCodes.CONFLICT
-        );
-      }
-    }
-    if (updateDto.phone && updateDto.phone !== existingCustomer.getPhone()) {
-      const customerByPhone = await this.customerRepository.findByPhone(
-        updateDto.phone
-      );
+    const nameToUpdate = updateDto.name ?? existing.getName();
+    const phoneToUpdate = updateDto.phone ?? existing.getPhone();
+    const emailToUpdate = existing.getEmail();
+
+    if (updateDto.phone && updateDto.phone !== existing.getPhone()) {
+      const customerByPhone = await this.customerRepository.findByPhone(updateDto.phone);
       if (customerByPhone && customerByPhone.getId() !== customerId) {
-        throw new CustomerUpdateError(
-          "Phone number is already registered by another user.",
-          StatusCodes.CONFLICT
-        );
+        throw new Error(ErrorMessages.PHONE_ALREADY_EXISTS);
       }
     }
 
     const updatedCustomer = new Customer(
-      existingCustomer.getId(),
-      updateDto.name,
-      updateDto.email,
-      existingCustomer.getPassword(),
-      updateDto.phone,
-      existingCustomer.getAvatarUrl(),
-      existingCustomer.getDefaultZoneId(),
-      updateDto.suspended,
-      existingCustomer.getAdditionalInfo(),
-      existingCustomer.getGoogleId(),
-      existingCustomer.getCreatedAt(),
+      existing.getId(),
+      nameToUpdate,
+      emailToUpdate,
+      existing.getPassword(),
+      phoneToUpdate,
+      existing.getAvatarUrl(),
+      existing.getDefaultZoneId(),
+      existing.isSuspended(),
+      existing.getAdditionalInfo(),
+      existing.getGoogleId(),
+      existing.getCreatedAt(),
       new Date(),
-      existingCustomer.getIsDeleted()
+      existing.getIsDeleted()
     );
 
-    const savedCustomer = await this.customerRepository.update(updatedCustomer);
-
-    return savedCustomer;
+    return await this.customerRepository.update(updatedCustomer);
   }
 }

@@ -36,7 +36,7 @@ export class EditZoneUseCase {
       existingZone.getAdditionalInfo(),
       existingZone.getCreatedAt(),
       new Date(),
-      existingZone.getIsDeleted() // 🟢 Pass existing status
+      existingZone.getIsDeleted() 
     );
 
     return this.zoneRepository.update(updatedZone);

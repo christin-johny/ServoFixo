@@ -13,9 +13,9 @@ export class CustomerAddressController {
     private deleteAddressUseCase: DeleteAddressUseCase
   ) {}
 
-  async addAddress(req: Request, res: Response): Promise<Response> {
+  addAddress=async (req: Request, res: Response): Promise<Response> =>{
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).userId;
       const address = await this.addAddressUseCase.execute({
         ...req.body,
         userId,
@@ -31,9 +31,9 @@ export class CustomerAddressController {
     }
   }
 
-  async getMyAddresses(req: Request, res: Response): Promise<Response> {
+  getMyAddresses=async (req: Request, res: Response): Promise<Response> =>{
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).userId;
       const addresses = await this.getMyAddressesUseCase.execute(userId);
 
       return res.status(200).json({ success: true, data: addresses });
@@ -42,10 +42,10 @@ export class CustomerAddressController {
     }
   }
 
-  async deleteAddress(req: Request, res: Response): Promise<Response> {
+  deleteAddress=async (req: Request, res: Response): Promise<Response> =>{
     try {
       const { id } = req.params;
-      const userId = (req as any).user.id;
+      const userId = (req as any).userId;
 
       await this.deleteAddressUseCase.execute(id, userId);
 
@@ -55,10 +55,10 @@ export class CustomerAddressController {
     }
   }
 
-  async updateAddress(req: Request, res: Response): Promise<Response> {
+  updateAddress =async (req: Request, res: Response): Promise<Response> =>{
     try {
       const { id } = req.params;
-      const userId = (req as any).user.id;
+      const userId = (req as any).userId;
 
       const address = await this.updateAddressUseCase.execute(id, userId, req.body);
 
@@ -72,10 +72,10 @@ export class CustomerAddressController {
     }
   }
 
-  async setDefaultAddress(req: Request, res: Response): Promise<Response> {
+ setDefaultAddress= async (req: Request, res: Response): Promise<Response>=> {
     try {
       const { id } = req.params;
-      const userId = (req as any).user.id;
+      const userId = (req as any).userId;
 
       await this.updateAddressUseCase.execute(id, userId, { isDefault: true });
 

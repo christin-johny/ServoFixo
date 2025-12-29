@@ -7,7 +7,7 @@ export class Zone {
   private readonly additionalInfo: object;
   private readonly createdAt: Date;
   private readonly updatedAt: Date;
-  private isDeleted: boolean; // 🟢 Added
+  private isDeleted: boolean; 
 
   constructor(
     id: string,
@@ -18,7 +18,7 @@ export class Zone {
     additionalInfo: object = {},
     createdAt: Date = new Date(),
     updatedAt: Date = new Date(),
-    isDeleted: boolean = false // 🟢 Added
+    isDeleted: boolean = false 
   ) {
     this.id = id;
     this.name = name;

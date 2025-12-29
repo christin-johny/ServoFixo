@@ -25,10 +25,10 @@ export class CreateZoneUseCase {
       description || "",
       boundaries,
       isActive !== undefined ? isActive : true,
-      {}, // additionalInfo
+      {}, 
       new Date(),
       new Date(),
-      false // 🟢 isDeleted
+      false
     );
 
     return this.zoneRepository.create(newZone);

@@ -110,7 +110,7 @@ export class ZoneMongoRepository implements IZoneRepository {
       doc.additionalInfo,
       doc.createdAt,
       doc.updatedAt,
-      doc.isDeleted // 🟢 Mapped
+      doc.isDeleted
     );
   }
 
@@ -118,23 +118,19 @@ export class ZoneMongoRepository implements IZoneRepository {
     const points = zone.getBoundaries();
     let ring = points.map((p) => [p.lng, p.lat]);
 
-    // Simple deduplication of adjacent points
     ring = ring.filter((point, index) => {
       if (index === 0) return true;
       const prev = ring[index - 1];
       return point[0] !== prev[0] || point[1] !== prev[1];
     });
 
-    // 🟢 FIX: Handle invalid polygons explicitly
     if (ring.length < 3) {
-      throw new Error(ErrorMessages.INVALID_ZONE); // Throwing error instead of doing nothing
+      throw new Error(ErrorMessages.INVALID_ZONE);
     } 
     
-    // Auto-close the loop if needed
     const first = ring[0];
     let closingIndex = -1;
     
-    // Check if the first point appears again later
     for (let i = 2; i < ring.length; i++) {
       if (ring[i][0] === first[0] && ring[i][1] === first[1]) {
         closingIndex = i;
@@ -145,7 +141,6 @@ export class ZoneMongoRepository implements IZoneRepository {
     if (closingIndex !== -1) {
       ring = ring.slice(0, closingIndex + 1);
     } else {
-      // If last point != first point, push first point to close it
       const last = ring[ring.length - 1];
       if (last[0] !== first[0] || last[1] !== first[1]) {
         ring.push(first);
@@ -161,7 +156,7 @@ export class ZoneMongoRepository implements IZoneRepository {
         type: "Polygon",
         coordinates: [ring],
       },
-      isDeleted: zone.getIsDeleted(), // 🟢 Mapped
+      isDeleted: zone.getIsDeleted(), 
     };
   }
 
