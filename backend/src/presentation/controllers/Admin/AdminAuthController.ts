@@ -4,7 +4,6 @@ import { AdminLoginUseCase } from "../../../application/use-cases/auth/AdminLogi
 import {
   ErrorMessages,
   SuccessMessages,
-  ErrorCodes,
 } from "../../../../../shared/types/enums/ErrorMessages";
 
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
@@ -20,7 +19,6 @@ export class AdminAuthController {
       if (!email || !password) {
         return res.status(StatusCodes.BAD_REQUEST).json({
           message: ErrorMessages.MISSING_REQUIRED_FIELDS,
-          errorCode: ErrorCodes.VALIDATION,
         });
       }
 
@@ -41,13 +39,11 @@ export class AdminAuthController {
       ) {
         return res.status(StatusCodes.UNAUTHORIZED).json({
           message: ErrorMessages.INVALID_CREDENTIALS,
-          errorCode: ErrorCodes.INVALID_CREDENTIALS,
         });
       }
 
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         message: ErrorMessages.INTERNAL_ERROR,
-        errorCode: ErrorCodes.INTERNAL,
       });
     }
   };
@@ -79,7 +75,6 @@ export class AdminAuthController {
       });
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         message: ErrorMessages.INTERNAL_ERROR,
-        errorCode: ErrorCodes.INTERNAL,
       });
     }
   };

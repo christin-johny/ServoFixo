@@ -16,7 +16,6 @@ export class CustomerMongoRepository implements ICustomerRepository {
       _id: id,
       isDeleted: { $ne: true }, 
     })
-      .select("-password")
       .exec();
 
     if (!doc) return null;
@@ -29,7 +28,8 @@ export class CustomerMongoRepository implements ICustomerRepository {
     const doc = await CustomerModel.findOne({
       email: normalizedEmail,
       isDeleted: { $ne: true },
-    }).exec();
+    })
+    .exec();
     if (!doc) return null;
     return this.toEntity(doc);
   }
@@ -38,7 +38,9 @@ export class CustomerMongoRepository implements ICustomerRepository {
     const doc = await CustomerModel.findOne({ 
         phone: phone,
         isDeleted: { $ne: true } 
-    }).exec();
+    })
+    .select("-password")
+    .exec();
     
     if (!doc) return null;
     return this.toEntity(doc);
@@ -82,7 +84,7 @@ export class CustomerMongoRepository implements ICustomerRepository {
     }
 
     const [docs, total] = await Promise.all([
-      CustomerModel.find(query).skip(skip).limit(limit).exec(),
+      CustomerModel.find(query).skip(skip).limit(limit).select("-password").exec(),
       CustomerModel.countDocuments(query),
     ]);
 

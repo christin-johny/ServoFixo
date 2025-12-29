@@ -3,9 +3,8 @@ import { CreateServiceItemUseCase } from "../../../application/use-cases/service
 import { GetAllServiceItemsUseCase } from "../../../application/use-cases/service-items/GetAllServiceItemsUseCase";
 import { DeleteServiceItemUseCase } from "../../../application/use-cases/service-items/DeleteServiceItemUseCase";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import {ErrorMessages,SuccessMessages,} from "../../../../../shared/types/enums/ErrorMessages";
 import { EditServiceItemUseCase } from "../../../application/use-cases/service-items/EditServiceItemUseCase";
-
 import { ToggleServiceItemStatusUseCase } from "../../../application/use-cases/service-items/ToggleServiceItemStatus";
 
 export class AdminServiceItemController {
@@ -32,7 +31,7 @@ export class AdminServiceItemController {
       if (!files || files.length === 0) {
         return res
           .status(StatusCodes.BAD_REQUEST)
-          .json({ error: "At least one image is required." });
+          .json({ error: ErrorMessages.INVALID_IMAGES });
       }
 
       let parsedSpecs = [];
@@ -41,7 +40,7 @@ export class AdminServiceItemController {
       } catch (e) {
         return res
           .status(StatusCodes.BAD_REQUEST)
-          .json({ error: "Invalid format for specifications." });
+          .json({ error: ErrorMessages.INVALID_SPECIFICATIONS });
       }
 
       const serviceItem = await this.createUseCase.execute({
@@ -59,14 +58,14 @@ export class AdminServiceItemController {
       });
 
       return res.status(StatusCodes.CREATED).json({
-        message: "Service Item created successfully",
+        message: SuccessMessages.SERVICE_CREATED,
         serviceItem,
       });
     } catch (err: any) {
       if (err.code === 11000) {
         return res
           .status(StatusCodes.CONFLICT)
-          .json({ error: "A service with this name already exists." });
+          .json({ error: ErrorMessages.SERVICE_ALREADY_EXISTS });
       }
       return res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
@@ -107,9 +106,9 @@ export class AdminServiceItemController {
       await this.deleteUseCase.execute(id);
       return res
         .status(StatusCodes.OK)
-        .json({ message: "Service Item deleted successfully" });
+        .json({ message: SuccessMessages.SERVICE_DELETED });
     } catch (err: any) {
-      if (err.message === "Service Item not found") {
+      if (err.message === ErrorMessages.SERVICE_NOT_FOUND) {
         return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
       }
       return res
@@ -138,7 +137,7 @@ export class AdminServiceItemController {
       } catch (e) {
         return res
           .status(StatusCodes.BAD_REQUEST)
-          .json({ error: "Invalid specs" });
+          .json({ error: ErrorMessages.INVALID_SPECIFICATIONS });
       }
 
       let parsedDeleteList: string[] = [];
@@ -168,17 +167,20 @@ export class AdminServiceItemController {
 
       return res
         .status(StatusCodes.OK)
-        .json({ message: "Service updated", serviceItem: updatedService });
+        .json({
+          message: SuccessMessages.SERVICE_UPDATED,
+          serviceItem: updatedService,
+        });
     } catch (err: any) {
-      if (err.message.includes("already exists")) {
+      if (err.message === ErrorMessages.SERVICE_ALREADY_EXISTS) {
         return res.status(StatusCodes.CONFLICT).json({ error: err.message });
       }
       if (err.code === 11000) {
         return res
           .status(StatusCodes.CONFLICT)
-          .json({ error: "A service with this name already exists." });
+          .json({ error: ErrorMessages.SERVICE_ALREADY_EXISTS });
       }
-      if (err.message === "Service Item not found") {
+      if (err.message === ErrorMessages.SERVICE_NOT_FOUND) {
         return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
       }
       return res
@@ -195,13 +197,13 @@ export class AdminServiceItemController {
       if (typeof isActive !== "boolean") {
         return res
           .status(StatusCodes.BAD_REQUEST)
-          .json({ error: "isActive must be a boolean" });
+          .json({ error: ErrorMessages.INVALID_IS_ACTIVE });
       }
 
       await this.toggleStatusUseCase.execute(id, isActive);
       return res
         .status(StatusCodes.OK)
-        .json({ message: `Service status updated to ${isActive}` });
+        .json({ message: SuccessMessages.SERVICE_STATUS_UPDATED, isActive });
     } catch (err: any) {
       if (err.message.includes("not found"))
         return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });

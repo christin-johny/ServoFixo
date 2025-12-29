@@ -11,7 +11,6 @@ export class ChangePasswordUseCase {
 
   async execute(userId: string, data: any): Promise<void> {
     const { currentPassword, newPassword } = data;
-
     const customer = await this.customerRepository.findById(userId);
     if (!customer) {
       throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
@@ -19,9 +18,7 @@ export class ChangePasswordUseCase {
 
     const storedPassword = customer.getPassword();
     if (!storedPassword) {
-      throw new Error(
-        "No local password set. Please use the Reset Password flow."
-      );
+      throw new Error(ErrorMessages.GOOGLE_REGISTERED);
     }
 
     const isMatch = await this.passwordHasher.compare(
@@ -29,7 +26,7 @@ export class ChangePasswordUseCase {
       storedPassword
     );
     if (!isMatch) {
-      throw new Error("Current password is incorrect.");
+      throw new Error(ErrorMessages.INVALID_PASSWORD);
     }
 
     const newHashedPassword = await this.passwordHasher.hash(newPassword);

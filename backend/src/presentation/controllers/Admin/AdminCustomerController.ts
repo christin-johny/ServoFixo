@@ -4,11 +4,7 @@ import {
   CustomerUpdateSchema,
 } from "../../../application/dto/Customer/AdminCustomerDtos";
 import { GetAllCustomersUseCase } from "../../../application/use-cases/customer/GetAllCustomersUseCase";
-import {
-  UpdateCustomerUseCase,
-  CustomerUpdateError,
-} from "../../../application/use-cases/customer/UpdateCustomerUseCase";
-import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
+import {UpdateCustomerUseCase} from "../../../application/use-cases/customer/UpdateCustomerUseCase";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { mapToResponseDto } from "../../../application/use-cases/customer/GetAllCustomersUseCase";
@@ -68,9 +64,8 @@ export class AdminCustomerController {
 
       res.status(StatusCodes.OK).json(mapToResponseDto(updatedCustomer));
     } catch (error) {
-      console.error(error)
-      if (error instanceof CustomerUpdateError) {
-        res.status(error.status).json({ message: error.message });
+      if (error instanceof Error) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: error.message });
         return;
       }
 
@@ -87,12 +82,11 @@ export class AdminCustomerController {
 
       res.status(StatusCodes.OK).json(mapToResponseDto(customer));
     } catch (error) {
-      if (error instanceof CustomerUpdateError) {
-        res.status(error.status).json({ message: error.message });
+      if (error instanceof Error) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: error.message });
         return;
       }
 
-      console.error("Error fetching customer by ID:", error);
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         message: ErrorMessages.INTERNAL_ERROR,
       });
@@ -103,8 +97,7 @@ export class AdminCustomerController {
       await this.deleteCustomerUseCase.execute(req.params.id);
       res.status(204).send();
     } catch (error) {
-      console.error("Error deleting customer:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: ErrorMessages.INTERNAL_ERROR});
     }
   }
 }

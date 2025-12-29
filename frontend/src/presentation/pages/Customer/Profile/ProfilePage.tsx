@@ -18,7 +18,8 @@ import {
   addAddress,
   updateAddress,
   updateProfile,
-  uploadAvatar
+  uploadAvatar,
+  changePassword
 } from "../../../../infrastructure/repositories/customer/customerRepository";
 import { logout } from "../../../../store/authSlice";
 import { useNotification } from "../../../hooks/useNotification";
@@ -29,6 +30,7 @@ import BottomNav from "../../../../presentation/components/Customer/Layout/Botto
 import Footer from "../../../../presentation/components/Customer/Layout/Footer";
 import AddressModal from '../../../../presentation/components/Customer/Profile/AddressModal';
 import UpdateDetailsModal from '../../../../presentation/components/Customer/Profile/UpdateDetailsModal';
+import ChangePasswordModal from "../../../../presentation/components/Customer/Profile/ChangePasswordModal";
 
 const Pill = ({ text, icon: Icon, }: { text?: string; icon?: LucideIcon; }) => (
   <div className="bg-gray-100 rounded-md px-4 py-2 text-sm text-gray-900 flex items-center gap-2">
@@ -57,6 +59,7 @@ const ProfilePage: React.FC = () => {
 
   const [isSaving, setIsSaving] = useState(false);
   const [editingAddress, setEditingAddress] = useState<unknown>(null);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   useEffect(() => {
     const loadAddresses = async () => {
@@ -72,18 +75,18 @@ const ProfilePage: React.FC = () => {
   }, [dispatch]);
 
 
-const handleUpdateProfile = async (formData: { name: string; phone: string }) => {
-  try {
-    const updatedData = await updateProfile(formData);
-    dispatch(updateProfileSuccess(updatedData));
-    showSuccess("Profile updated successfully!");
-    setIsEditProfileOpen(false); 
-  } catch (err: any) {
-    const errorMessage = err.response?.data?.message || "Failed to update profile";
-    showError(errorMessage);
-    throw err; 
-  }
-};
+  const handleUpdateProfile = async (formData: { name: string; phone: string }) => {
+    try {
+      const updatedData = await updateProfile(formData);
+      dispatch(updateProfileSuccess(updatedData));
+      showSuccess("Profile updated successfully!");
+      setIsEditProfileOpen(false);
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || "Failed to update profile";
+      showError(errorMessage);
+      throw err;
+    }
+  };
 
   const handleAvatarClick = () => fileInputRef.current?.click();
 
@@ -95,9 +98,32 @@ const handleUpdateProfile = async (formData: { name: string; phone: string }) =>
       const { avatarUrl } = await uploadAvatar(file);
       dispatch(updateAvatar(avatarUrl));
       showSuccess("Profile picture updated!");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        showError(err.message);
+        return;
+      }
+
       showError("Failed to upload image");
     }
+
+  };
+
+  const handleChangePassword = async (data: any) => {
+    try {
+      await changePassword(data);
+      showSuccess("Password updated successfully!");
+      setIsChangePasswordOpen(false);
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to change password";
+
+      showError(errorMessage);
+      throw err;
+    }
+
   };
 
   const handleAddAddress = async (formData: any) => {
@@ -115,9 +141,12 @@ const handleUpdateProfile = async (formData: { name: string; phone: string }) =>
       dispatch(setAddresses(updated));
       setIsAddressModalOpen(false);
       setEditingAddress(null);
-    } catch (err: any) {
-      showError(err.response?.data?.message || "Failed to save address.");
-    } finally {
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Failed to save address.";
+      showError(message);
+    }finally {
       setIsSaving(false);
     }
   };
@@ -159,7 +188,6 @@ const handleUpdateProfile = async (formData: { name: string; phone: string }) =>
   };
 
   const handleDeleteAccount = () => {
-    alert("Delete account API not wired yet");
   };
 
   return (
@@ -214,7 +242,9 @@ const handleUpdateProfile = async (formData: { name: string; phone: string }) =>
                 >
                   Update details
                 </button>
-                <button className="text-blue-600 text-sm font-semibold hover:underline">Change Password</button>
+                <button onClick={() => setIsChangePasswordOpen(true)} className="text-blue-600 text-sm font-semibold hover:underline">
+                  Change Password
+                </button>
               </div>
             </div>
           </div>
@@ -331,6 +361,12 @@ const handleUpdateProfile = async (formData: { name: string; phone: string }) =>
             onUpdate={handleUpdateProfile}
           />
         )}
+
+        <ChangePasswordModal
+          isOpen={isChangePasswordOpen}
+          onClose={() => setIsChangePasswordOpen(false)}
+          onConfirm={handleChangePassword}
+        />
 
         <AddressModal
           isOpen={isAddressModalOpen}

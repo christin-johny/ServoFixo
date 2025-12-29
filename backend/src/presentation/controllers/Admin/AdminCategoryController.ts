@@ -6,7 +6,7 @@ import { DeleteCategoryUseCase } from "../../../application/use-cases/service-ca
 
 import { ToggleCategoryStatusUseCase } from "../../../application/use-cases/service-categories/ToggleCategoryStatus";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
 export class AdminCategoryController {
   constructor(
@@ -25,7 +25,7 @@ export class AdminCategoryController {
 
       if (!name || !description || !file) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-          error: "Name, description, and image are required.",
+          error: ErrorMessages.MISSING_REQUIRED_FIELDS,
         });
       }
 
@@ -41,11 +41,11 @@ export class AdminCategoryController {
       });
 
       return res.status(StatusCodes.CREATED).json({
-        message: "Category created successfully",
+        message: SuccessMessages.CATEGORY_CREATED,
         category,
       });
     } catch (err: any) {
-      if (err.message === "Category with this name already exists") {
+      if (err.message === ErrorMessages.CATEGORY_ALREADY_EXISTS) {
         return res.status(StatusCodes.CONFLICT).json({ error: err.message });
       }
       return res
@@ -99,13 +99,13 @@ export class AdminCategoryController {
       });
 
       return res.status(StatusCodes.OK).json({
-        message: "Category updated successfully",
+        message: SuccessMessages.CATEGORY_UPDATED,
         category,
       });
     } catch (err: any) {
-      if (err.message === "Category not found")
+      if (err.message === ErrorMessages.CATEGORY_NOT_FOUND)
         return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
-      if (err.message.includes("already exists"))
+      if (err.message.includes(ErrorMessages.CATEGORY_ALREADY_EXISTS))
         return res.status(StatusCodes.CONFLICT).json({ error: err.message });
       return res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
@@ -121,7 +121,7 @@ export class AdminCategoryController {
       if (typeof isActive !== "boolean") {
         return res
           .status(StatusCodes.BAD_REQUEST)
-          .json({ error: "isActive must be a boolean" });
+          .json({ error: ErrorMessages.INVALID_IS_ACTIVE });
       }
 
       await this.toggleStatusUseCase.execute(id, isActive);
@@ -129,7 +129,7 @@ export class AdminCategoryController {
         .status(StatusCodes.OK)
         .json({ message: `Category status updated to ${isActive}` });
     } catch (err: any) {
-      if (err.message.includes("not found"))
+      if (err.message.includes(ErrorMessages.CATEGORY_NOT_FOUND))
         return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
       return res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
@@ -143,9 +143,9 @@ export class AdminCategoryController {
       await this.deleteUseCase.execute(id);
       return res
         .status(StatusCodes.OK)
-        .json({ message: "Category deleted successfully" });
+        .json({ message: SuccessMessages.CATEGORY_DELETED });
     } catch (err: any) {
-      if (err.message === "Category not found")
+      if (err.message === ErrorMessages.CATEGORY_NOT_FOUND)
         return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
       return res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)

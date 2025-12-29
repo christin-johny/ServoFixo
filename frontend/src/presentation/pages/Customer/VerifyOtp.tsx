@@ -279,11 +279,7 @@ const VerifyOtp: React.FC = () => {
         const response = await authRepo.customerForgotPasswordInit({ email });
         newSessionId = response?.sessionId ?? '';
       }
-
-      // 1. Update React State (This is what you already had ✅)
       setSessionId(newSessionId);
-
-      // 2. Update Session Storage (The missing piece for refreshes 🛡️)
       if (newSessionId) {
         const currentData = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}');
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify({

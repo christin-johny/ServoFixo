@@ -5,7 +5,11 @@ import { DeleteCustomerUseCase } from "../../../application/use-cases/customer/D
 import { UploadAvatarUseCase } from "../../../application/use-cases/customer/UploadAvatarUseCase";
 import { ChangePasswordUseCase } from "../../../application/use-cases/customer/ChangePasswordUseCase";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import {
+  ErrorMessages,
+  SuccessMessages,
+} from "../../../../../shared/types/enums/ErrorMessages";
+
 
 export class CustomerProfileController {
   constructor(
@@ -31,7 +35,17 @@ export class CustomerProfileController {
         data: profileData,
       });
     } catch (error) {
-      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: error.message });
+      if (error instanceof Error) {
+        return res.status(StatusCodes.NOT_FOUND).json({
+          success: false,
+          message: error.message,
+        });
+      }
+
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "Something went wrong",
+      });
     }
   };
 
@@ -50,7 +64,7 @@ export class CustomerProfileController {
 
       return res.status(StatusCodes.OK).json({
         success: true,
-        message: "Profile updated successfully",
+        message: SuccessMessages.PROFILE_UPDATED,
         data: {
           id: updatedCustomer.getId(),
           name: updatedCustomer.getName(),
@@ -58,17 +72,29 @@ export class CustomerProfileController {
           phone: updatedCustomer.getPhone(),
         },
       });
-    } catch (error) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: error.message });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          message: error.message,
+        });
+      }
+
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: ErrorMessages.SOMETHING_WRONG,
+      });
     }
   };
+
   changePassword = async (req: Request, res: Response) => {
     try {
       const userId = (req as any)?.userId;
+
       if (!userId) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({ 
-          success: false, 
-          message: ErrorMessages.UNAUTHORIZED 
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+          success: false,
+          message: ErrorMessages.UNAUTHORIZED,
         });
       }
 
@@ -76,12 +102,12 @@ export class CustomerProfileController {
 
       return res.status(StatusCodes.OK).json({
         success: true,
-        message: "Password changed successfully."
+        message: SuccessMessages.CHANGE_PASSWORD_SUCCESS,
       });
     } catch (error: any) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ 
-        success: false, 
-        message: error.message 
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: error.message,
       });
     }
   };
@@ -100,47 +126,46 @@ export class CustomerProfileController {
 
       return res.status(StatusCodes.OK).json({
         success: true,
-        message: "Account deleted successfully. We are sorry to see you go.",
+        message: SuccessMessages.ACCOUNT_DELETED,
       });
     } catch (error) {
       next(error);
     }
   };
 
-uploadAvatar = async (req: Request, res: Response) => {
+  uploadAvatar = async (req: Request, res: Response) => {
     try {
       const userId = (req as any)?.userId;
       if (!userId) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({ 
-          success: false, 
-          message: ErrorMessages.UNAUTHORIZED 
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+          success: false,
+          message: ErrorMessages.UNAUTHORIZED,
         });
       }
 
       if (!req.file) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ 
-          success: false, 
-          message: "No file uploaded" 
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          message: ErrorMessages.NO_FILE,
         });
       }
 
       const avatarUrl = await this.uploadAvatarUseCase.execute(userId, {
         buffer: req.file.buffer,
         originalName: req.file.originalname,
-        mimeType: req.file.mimetype
+        mimeType: req.file.mimetype,
       });
 
       return res.status(StatusCodes.OK).json({
         success: true,
-        message: "Avatar uploaded successfully",
-        data: { avatarUrl }
+        message: SuccessMessages.PROFILE_UPDATED,
+        data: { avatarUrl },
       });
     } catch (error: any) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ 
-        success: false, 
-        message: error.message 
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: error.message,
       });
     }
   };
 }
-

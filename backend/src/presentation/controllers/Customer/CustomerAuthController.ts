@@ -5,7 +5,7 @@ import { CustomerLoginUseCase } from "../../../application/use-cases/auth/Custom
 import { RequestCustomerForgotPasswordOtpUseCase } from "../../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase";
 import { VerifyCustomerForgotPasswordOtpUseCase } from "../../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase";
 import { CustomerGoogleLoginUseCase } from "../../../application/use-cases/auth/CustomerGoogleLoginUseCase";
-import { ErrorCodes, ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { refreshCookieOptions } from "../../../infrastructure/config/Cookie";
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, Filter, ChevronLeft, ChevronRight,X } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, X } from "lucide-react";
 
 interface FilterOption {
   label: string;
@@ -7,27 +7,20 @@ interface FilterOption {
 }
 
 interface DataTableControlsProps {
-  // Search Props
   search: string;
   onSearchChange: (val: string) => void;
   searchPlaceholder?: string;
-
-  // Filter Props
   filterStatus?: string;
   onFilterChange?: (val: string) => void;
-  filterOptions?: FilterOption[]; // e.g. [{label: "Active", value: "true"}]
-
+  filterOptions?: FilterOption[];
   onClear?: () => void;
-
-  // Pagination Props
   page: number;
   totalPages: number;
   onPageChange: (newPage: number) => void;
-  
-  // Info Props
+
   totalItems: number;
   currentCount: number;
-  itemName?: string; // e.g., "Customers", "Zones"
+  itemName?: string; 
 }
 
 export const SearchFilterBar: React.FC<Omit<DataTableControlsProps, 'page' | 'totalPages' | 'onPageChange'>> = ({
@@ -40,13 +33,11 @@ export const SearchFilterBar: React.FC<Omit<DataTableControlsProps, 'page' | 'to
     { label: "Active Only", value: "true" },
     { label: "Inactive Only", value: "false" }
   ],
-  // Destructure onClear
   onClear,
   totalItems,
   currentCount,
   itemName = "items"
 }) => {
-  // 3. Logic: Is there an active filter?
   const hasActiveFilter = search.length > 0 || (filterStatus && filterStatus !== "");
 
   return (
@@ -84,14 +75,14 @@ export const SearchFilterBar: React.FC<Omit<DataTableControlsProps, 'page' | 'to
 
         {/* 4. THE CLEAR BUTTON (Only shows if filters are active AND onClear is provided) */}
         {hasActiveFilter && onClear && (
-           <button 
-             onClick={onClear}
-             className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100 shrink-0"
-             title="Clear all filters"
-           >
-             <X size={16} />
-             <span >Clear</span>
-           </button>
+          <button
+            onClick={onClear}
+            className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100 shrink-0"
+            title="Clear all filters"
+          >
+            <X size={16} />
+            <span >Clear</span>
+          </button>
         )}
       </div>
 
@@ -110,39 +101,34 @@ export const PaginationBar: React.FC<Pick<DataTableControlsProps, 'page' | 'tota
   if (totalPages <= 1) return null;
 
   return (
-    // 1. Reduced padding on mobile (p-2) to save space
     <div className="p-2 sm:p-4 border-t border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0 rounded-b-xl">
-      
+
       {/* 2. Reduced gap on mobile (gap-2) */}
       <div className="flex w-full sm:w-auto justify-between gap-2">
-          <button
-            disabled={page === 1}
-            onClick={() => onPageChange(page - 1)}
-            // 3. Compact button styles for mobile:
-            //    - text-xs (smaller font)
-            //    - px-3 (less internal padding)
-            //    - h-9 (fixed height for consistency)
-            className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 h-9 px-3 sm:px-4 text-xs sm:text-sm font-bold text-gray-600 bg-white border border-gray-200 sm:border-transparent sm:bg-transparent hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            <ChevronLeft size={14} className="sm:w-4 sm:h-4" /> 
-            <span>Previous</span>
-          </button>
+        <button
+          disabled={page === 1}
+          onClick={() => onPageChange(page - 1)}
+          className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 h-9 px-3 sm:px-4 text-xs sm:text-sm font-bold text-gray-600 bg-white border border-gray-200 sm:border-transparent sm:bg-transparent hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          <ChevronLeft size={14} className="sm:w-4 sm:h-4" />
+          <span>Previous</span>
+        </button>
 
-          {/* Mobile Page Indicator: Compact text */}
-          <span className="sm:hidden flex items-center justify-center text-xs font-bold text-gray-500 bg-white px-2 border border-gray-200 rounded-lg h-9 min-w-[60px]">
-             {page} / {totalPages}
-          </span>
+        {/* Mobile Page Indicator: Compact text */}
+        <span className="sm:hidden flex items-center justify-center text-xs font-bold text-gray-500 bg-white px-2 border border-gray-200 rounded-lg h-9 min-w-[60px]">
+          {page} / {totalPages}
+        </span>
 
-          <button
-            disabled={page === totalPages}
-            onClick={() => onPageChange(page + 1)}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 h-9 px-3 sm:px-4 text-xs sm:text-sm font-bold text-gray-600 bg-white border border-gray-200 sm:border-transparent sm:bg-transparent hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            <span>Next</span>
-            <ChevronRight size={14} className="sm:w-4 sm:h-4" />
-          </button>
+        <button
+          disabled={page === totalPages}
+          onClick={() => onPageChange(page + 1)}
+          className="flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 h-9 px-3 sm:px-4 text-xs sm:text-sm font-bold text-gray-600 bg-white border border-gray-200 sm:border-transparent sm:bg-transparent hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          <span>Next</span>
+          <ChevronRight size={14} className="sm:w-4 sm:h-4" />
+        </button>
       </div>
-      
+
       {/* Desktop Page Indicator (Unchanged) */}
       <span className="hidden sm:inline text-xs sm:text-sm font-medium text-gray-500">
         Page <span className="font-bold text-gray-800">{page}</span> of {totalPages}

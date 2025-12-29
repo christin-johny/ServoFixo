@@ -22,8 +22,8 @@ export class CustomerAddressController {
       });
 
       const message = address.getIsServiceable()
-        ? "Address added successfully!"
-        : "Address saved, but it is currently outside our service area.";
+        ? SuccessMessages.ADDRESS_ADDED
+        : SuccessMessages.ADDRESS_OUTSIDE_ZONE;
 
       return res.status(201).json({ success: true, message, data: address });
     } catch (error: any) {

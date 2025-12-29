@@ -4,7 +4,7 @@ import { GetAllZonesUseCase } from "../../../application/use-cases/zones/GetAllZ
 import { DeleteZoneUseCase } from "../../../application/use-cases/zones/DeleteZoneUseCase";
 import { EditZoneUseCase } from "../../../application/use-cases/zones/EditZoneUseCase";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages,SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
 export class AdminZoneController {
   constructor(
@@ -39,15 +39,15 @@ export class AdminZoneController {
       });
 
       return res.status(StatusCodes.CREATED).json({
-        message: "Zone created successfully",
+        message: SuccessMessages.ZONE_CREATED,
         zone,
       });
     } catch (err: any) {
-      if (err.message === "Zone with this name already exists") {
+      if (err.message === ErrorMessages.ZONE_ALREADY_EXISTS) {
         return res.status(StatusCodes.CONFLICT).json({ error: err.message });
       }
 
-      if (err.message && err.message.includes("Invalid Zone Shape")) {
+      if (err.message && err.message.includes(ErrorMessages.INVALID_ZONE)) {
         return res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
       }
 
@@ -88,12 +88,12 @@ export class AdminZoneController {
       await this.deleteZoneUseCase.execute(id);
       return res
         .status(StatusCodes.OK)
-        .json({ message: "Zone deleted successfully" });
+        .json({ message: SuccessMessages.ZONE_DELETED });
     } catch (err: any) {
-      if (err.message === "Zone not found or could not be deleted") {
+      if (err.message === ErrorMessages.ZONE_DELETE_FAILED) {
         return res
           .status(StatusCodes.NOT_FOUND)
-          .json({ error: "Zone not found" });
+          .json({ error: ErrorMessages.ZONE_NOT_FOUND });
       }
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
@@ -108,8 +108,7 @@ export class AdminZoneController {
 
       if (boundaries && (!Array.isArray(boundaries) || boundaries.length < 3)) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-          error:
-            "Valid boundaries (at least 3 points) are required if updating location",
+          error:ErrorMessages.INVALID_BOUNDARIES
         });
       }
 
@@ -122,19 +121,19 @@ export class AdminZoneController {
       });
 
       return res.status(StatusCodes.OK).json({
-        message: "Zone updated successfully",
+        message: SuccessMessages.ZONE_UPDATED,
         zone: updatedZone,
       });
     } catch (err: any) {
-      if (err.message === "Zone not found") {
+      if (err.message === ErrorMessages.ZONE_NOT_FOUND) {
         return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
       }
 
-      if (err.message === "Zone with this name already exists") {
+      if (err.message === ErrorMessages.ZONE_ALREADY_EXISTS) {
         return res.status(StatusCodes.CONFLICT).json({ error: err.message });
       }
 
-      if (err.message && err.message.includes("Invalid Zone Shape")) {
+      if (err.message && err.message.includes(ErrorMessages.INVALID_ZONE)) {
         return res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
       }
 

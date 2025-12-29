@@ -1,7 +1,6 @@
 import { IAddressRepository } from "../../../domain/repositories/IAddressRepository";
 import { ZoneService } from "../../../domain/services/ZoneService";
 import { Address } from "../../../domain/entities/Address";
-import { Phone } from "../../../../../shared/types/value-objects/ContactTypes";
 
 export interface AddAddressDTO {
   userId: string;

@@ -45,7 +45,7 @@ const Navbar: React.FC = () => {
     const profileMenuRef = useRef<HTMLDivElement | null>(null);
     const drawerRef = useRef<HTMLDivElement | null>(null);
 
-    // --- 1. GPS LOCATION DETECTION ---
+    //GPS LOCATION DETECTION
     useEffect(() => {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
@@ -65,7 +65,7 @@ const Navbar: React.FC = () => {
         }
     }, [dispatch]);
 
-    // --- 2. INITIAL PROFILE FETCH ---
+    //INITIAL PROFILE FETC
     useEffect(() => {
         if (isLoggedIn && !profile) {
             const loadProfile = async () => {
@@ -81,7 +81,7 @@ const Navbar: React.FC = () => {
         }
     }, [isLoggedIn, profile, dispatch]);
 
-    // --- 3. EVENT LISTENERS & SEARCH ---
+    // EVENT LISTENERS & SEARCH 
     useEffect(() => {
         const urlSearch = searchParams.get('search');
         if (location.pathname === '/services' && urlSearch) {
@@ -136,7 +136,7 @@ const Navbar: React.FC = () => {
             console.warn("Logout failed:", err);
         } finally {
             dispatch(logout());
-            dispatch(clearCustomerData()); // Clear profile and address state
+            dispatch(clearCustomerData()); 
             localStorage.removeItem("accessToken");
             sessionStorage.removeItem("otpFlowData");
             setLogoutModalOpen(false);
@@ -327,7 +327,6 @@ const Navbar: React.FC = () => {
     );
 };
 
-// --- SUB-COMPONENTS ---
 
 const SearchBar = ({ query, setQuery, onSubmit, className = "" }: any) => (
     <form onSubmit={onSubmit} className={`flex items-center gap-3 bg-[#F3F4F6] rounded-full px-4 py-2.5 transition-all focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:bg-white focus-within:shadow-md ${className}`}>

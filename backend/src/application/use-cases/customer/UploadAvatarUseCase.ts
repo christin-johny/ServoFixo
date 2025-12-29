@@ -21,7 +21,6 @@ export class UploadAvatarUseCase {
       file.originalName,
       file.mimeType
     );
-    console.log(avatarUrl);
 
     const updatedCustomer = new Customer(
       customer.getId(),
