@@ -63,3 +63,14 @@ export const deleteCustomer = async (id: string): Promise<void> => {
     throw error;
   }
 };
+
+
+export const getCustomerAddresses = async (id: string): Promise<unknown[]> => {
+  try {
+    const response = await api.get(`/admin/customers/${id}/addresses`);
+    return response.data.data; 
+  } catch (error) {
+    console.error(`Error fetching addresses for customer ${id}:`, error);
+    throw error;
+  }
+};

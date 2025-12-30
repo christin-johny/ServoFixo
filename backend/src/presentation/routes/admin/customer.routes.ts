@@ -18,5 +18,8 @@ router.put("/:id", (req, res) =>
 router.delete("/:id", (req, res) =>
   adminCustomerController.deleteCustomer(req, res)
 );
+router.get("/:id/addresses", (req, res) =>
+  adminCustomerController.getCustomerAddresses(req, res) 
+);
 
 export default router;

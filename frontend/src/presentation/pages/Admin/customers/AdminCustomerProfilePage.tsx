@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { User, ShoppingBag, MapPin, Loader2, ChevronLeft, Edit2, Trash2, XCircle, Mail, Phone, Calendar, Shield, Clock } from 'lucide-react';
+import { User, ShoppingBag, MapPin, Loader2, ChevronLeft, Edit2, Trash2, XCircle, Mail, Phone, Calendar, Shield, Clock, CheckCircle } from 'lucide-react';
 
 import { useNotification } from '../../../hooks/useNotification';
 import type { CustomerDto } from '../../../../domain/types/AdminCustomerDtos';
@@ -19,7 +19,7 @@ const AdminCustomerProfilePage: React.FC = () => {
     const navigate = useNavigate();
     const { showSuccess, showError } = useNotification();
     const location = useLocation();
- 
+
     const [customer, setCustomer] = useState<CustomerDto | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -61,6 +61,7 @@ const AdminCustomerProfilePage: React.FC = () => {
         fetchCustomer();
     }
 
+
     const handleConfirmDelete = async () => {
         if (!customer) return;
         setIsDeleting(true);
@@ -69,9 +70,11 @@ const AdminCustomerProfilePage: React.FC = () => {
             showSuccess(`Customer ${customer.name} has been deleted.`);
             setIsDeleteModalOpen(false);
             navigate('/admin/customers');
-        } catch (error: any) {
-            showError("Failed to delete customer. Please try again.");
-        } finally {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to save address.";
+            showError(message);
+        }
+        finally {
             setIsDeleting(false);
         }
     };
@@ -187,7 +190,7 @@ const AdminCustomerProfilePage: React.FC = () => {
                         {/* Tab Panels */}
                         <div className="p-6">
                             {activeTab === 'profile' && <ProfileDetails customer={customer} />}
-                            
+
                             {activeTab === 'orders' && <OrdersList customerId={customerId || ""} />}
                             {activeTab === 'addresses' && <AddressesList customerId={customerId || ""} />}
                         </div>
@@ -218,7 +221,7 @@ const AdminCustomerProfilePage: React.FC = () => {
 };
 
 export default AdminCustomerProfilePage;
- 
+
 
 const ProfileDetails: React.FC<{ customer: CustomerDto }> = ({ customer }) => (
     <div>
@@ -270,12 +273,70 @@ const OrdersList: React.FC<{ customerId: string }> = () => (
     </div>
 );
 
-const AddressesList: React.FC<{ customerId: string }> = () => (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="bg-gray-50 p-4 rounded-full mb-4">
-            <MapPin size={32} className="text-gray-300" />
+const AddressesList: React.FC<{ customerId: string }> = ({ customerId }) => {
+    const [addresses, setAddresses] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetch = async () => {
+            setLoading(true);
+            try {
+                const data = await customerService.getCustomerAddresses(customerId);
+                setAddresses(data || []);
+            } catch (err) {
+                setAddresses([]);
+                console.error("No addresses found or fetch failed", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetch();
+    }, [customerId]);
+
+    if (loading) {
+        return (
+            <div className="flex justify-center py-10">
+                <Loader2 className="animate-spin text-blue-600" size={32} />
+            </div>
+        );
+    }
+
+    if (addresses.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="bg-gray-50 p-4 rounded-full mb-4">
+                    <MapPin size={32} className="text-gray-300" />
+                </div>
+                <h4 className="text-gray-900 font-semibold">No Addresses Saved</h4>
+                <p className="text-sm text-gray-500 max-w-xs mt-1">
+                    There are no saved addresses associated with this account.
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="grid grid-cols-1 gap-4">
+            {addresses.map((addr) => (
+                <div key={addr.id} className="p-4 rounded-xl border border-gray-100 bg-gray-50 flex flex-col gap-1">
+                    <div className="flex justify-between">
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-black uppercase rounded">
+                            {addr.tag}
+                        </span>
+                        {addr.isDefault && (
+                            <span className="text-[10px] text-green-600 font-bold flex items-center gap-1">
+                                <CheckCircle size={12} /> Primary
+                            </span>
+                        )}
+                    </div>
+                    <p className="text-sm font-bold text-gray-900 mt-1">
+                        {addr.houseNumber}, {addr.street}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                        {addr.city}, {addr.state} - {addr.pincode}
+                    </p>
+                </div>
+            ))}
         </div>
-        <h4 className="text-gray-900 font-semibold">No Addresses Saved</h4>
-        <p className="text-sm text-gray-500 max-w-xs mt-1">There are no saved addresses associated with this account.</p>
-    </div>
-);
+    );
+};

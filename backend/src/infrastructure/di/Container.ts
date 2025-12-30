@@ -49,12 +49,10 @@ import { CustomerProfileController } from "../../presentation/controllers/Custom
 import { GetServiceListingUseCase } from "../../application/use-cases/service-items/GetServiceListingUseCase";
 import { GetServiceByIdUseCase } from "../../application/use-cases/service-items/GetServiceByIdUseCase";
 
-
-
 // --- Customer Auth---
 import { AdminLoginUseCase } from "../../application/use-cases/auth/AdminLoginUseCase";
 import { AdminAuthController } from "../../presentation/controllers/Admin/AdminAuthController";
-import { AdminMongoRepository } from "../database/repositories/AdminMongoRepository"; 
+import { AdminMongoRepository } from "../database/repositories/AdminMongoRepository";
 
 // --- Infrastructure Services ---
 import { OtpSessionMongoRepository } from "../database/repositories/OtpSessionMongoRepository";
@@ -63,8 +61,6 @@ import { BcryptPasswordHasher } from "../security/BcryptPasswordHasher";
 import { JwtService } from "../security/JwtService";
 import { RefreshTokenUseCase } from "../../application/use-cases/auth/RefreshTokenUseCase";
 import { AuthTokenController } from "../../presentation/controllers/AuthTokenController";
-
-
 
 import { ZoneService } from "../../domain/services/ZoneService";
 import { AddressMongoRepository } from "../database/repositories/AddressMongoRepository";
@@ -76,7 +72,7 @@ import { CustomerZoneController } from "../../presentation/controllers/Customer/
 import { CustomerAddressController } from "../../presentation/controllers/Customer/CustomerAddressController";
 import { AddAddressUseCase } from "../../application/use-cases/address/AddAddressUseCase";
 import { UpdateAddressUseCase } from "../../application/use-cases/address/UpdateAddressUseCase";
-import { GetMyAddressesUseCase } from "../../application/use-cases/address/GetMyAddressesUseCase";
+import { GetAddressesUseCase } from "../../application/use-cases/address/GetAddressesUseCase";
 import { DeleteAddressUseCase } from "../../application/use-cases/address/DeleteAddressUseCase";
 import { GetCustomerProfileUseCase } from "../../application/use-cases/customer/GetCustomerProfileUseCase";
 import { UploadAvatarUseCase } from "../../application/use-cases/customer/UploadAvatarUseCase";
@@ -99,7 +95,9 @@ const deleteZoneUseCase = new DeleteZoneUseCase(zoneRepo);
 
 export const zoneService = new ZoneService(zoneRepo);
 const findZoneByLocationUseCase = new FindZoneByLocationUseCase(zoneService);
-export const CustomerzoneController = new CustomerZoneController(findZoneByLocationUseCase);
+export const CustomerzoneController = new CustomerZoneController(
+  findZoneByLocationUseCase
+);
 export const adminZoneController = new AdminZoneController(
   createZoneUseCase,
   getAllZonesUseCase,
@@ -167,9 +165,15 @@ const getAllCustomersUseCase = new GetAllCustomersUseCase(customerRepo);
 const updateCustomerUseCase = new UpdateCustomerUseCase(customerRepo);
 const getCustomerByIdUseCase = new GetCustomerByIdUseCase(customerRepo);
 const deleteCustomerUseCase = new DeleteCustomerUseCase(customerRepo);
-const getCustomerProfileUseCase = new GetCustomerProfileUseCase(customerRepo, addressRepo);
-const uploadAvatarUseCase = new UploadAvatarUseCase(customerRepo, imageService)
-const changePasswordUseCase = new ChangePasswordUseCase(customerRepo,passwordHasher)
+const getCustomerProfileUseCase = new GetCustomerProfileUseCase(
+  customerRepo,
+  addressRepo
+);
+const uploadAvatarUseCase = new UploadAvatarUseCase(customerRepo, imageService);
+const changePasswordUseCase = new ChangePasswordUseCase(
+  customerRepo,
+  passwordHasher
+);
 export const customerProfileController = new CustomerProfileController(
   getCustomerProfileUseCase,
   updateCustomerUseCase,
@@ -178,12 +182,14 @@ export const customerProfileController = new CustomerProfileController(
   changePasswordUseCase
 );
 
+const getAddressesUseCase = new GetAddressesUseCase(addressRepo);
 
 export const adminCustomerController = new AdminCustomerController(
   getAllCustomersUseCase,
   updateCustomerUseCase,
   getCustomerByIdUseCase,
-  deleteCustomerUseCase
+  deleteCustomerUseCase,
+  getAddressesUseCase
 );
 
 // CUSTOMER AUTH MODULE WIRING
@@ -245,20 +251,13 @@ export const customerServiceController = new CustomerServiceController(
   getServiceByIdUseCase
 );
 
-
-
-
-
-
 const addAddressUseCase = new AddAddressUseCase(addressRepo, zoneService);
 const updateAddressUseCase = new UpdateAddressUseCase(addressRepo, zoneService);
-const getMyAddressesUseCase = new GetMyAddressesUseCase(addressRepo);
 const deleteAddressUseCase = new DeleteAddressUseCase(addressRepo);
-
 export const customerAddressController = new CustomerAddressController(
   addAddressUseCase,
   updateAddressUseCase,
-  getMyAddressesUseCase,
+  getAddressesUseCase,
   deleteAddressUseCase
 );
 // --- ADMIN AUTH MODULE WIRING ---
@@ -266,16 +265,14 @@ const adminRepo = new AdminMongoRepository();
 
 const adminLoginUseCase = new AdminLoginUseCase(
   adminRepo,
-  passwordHasher, 
-  jwtService     
+  passwordHasher,
+  jwtService
 );
 
 export const adminAuthController = new AdminAuthController(adminLoginUseCase);
 
-
 // TOKEN MANAGEMENT WIRING
 
 const refreshTokenUseCase = new RefreshTokenUseCase(jwtService, customerRepo);
-
 
 export const authTokenController = new AuthTokenController(refreshTokenUseCase);

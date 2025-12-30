@@ -318,10 +318,10 @@ const ProfilePage: React.FC = () => {
               <span className="font-semibold text-gray-700">Logout</span>
               <ChevronRight size={18} />
             </button>
-            <button onClick={() => setShowDeleteAccountModal(true)} className="w-full bg-red-50 p-4 rounded-xl flex justify-between items-center hover:bg-red-100 transition-colors">
+            {/* <button onClick={() => setShowDeleteAccountModal(true)} className="w-full bg-red-50 p-4 rounded-xl flex justify-between items-center hover:bg-red-100 transition-colors">
               <span className="font-semibold text-red-600">Delete My Account</span>
               <ChevronRight size={18} />
-            </button>
+            </button> */}
           </section>
         </div>
 

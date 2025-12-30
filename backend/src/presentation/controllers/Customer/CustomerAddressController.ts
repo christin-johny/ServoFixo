@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { AddAddressUseCase } from "../../../application/use-cases/address/AddAddressUseCase";
 import { UpdateAddressUseCase } from "../../../application/use-cases/address/UpdateAddressUseCase";
-import { GetMyAddressesUseCase } from "../../../application/use-cases/address/GetMyAddressesUseCase";
+import { GetAddressesUseCase } from "../../../application/use-cases/address/GetAddressesUseCase";
 import { DeleteAddressUseCase } from "../../../application/use-cases/address/DeleteAddressUseCase";
 import { SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
@@ -9,7 +9,7 @@ export class CustomerAddressController {
   constructor(
     private addAddressUseCase: AddAddressUseCase,
     private updateAddressUseCase: UpdateAddressUseCase,
-    private getMyAddressesUseCase: GetMyAddressesUseCase,
+    private getAddressesUseCase: GetAddressesUseCase,
     private deleteAddressUseCase: DeleteAddressUseCase
   ) {}
 
@@ -34,7 +34,7 @@ export class CustomerAddressController {
   getMyAddresses=async (req: Request, res: Response): Promise<Response> =>{
     try {
       const userId = (req as any).userId;
-      const addresses = await this.getMyAddressesUseCase.execute(userId);
+      const addresses = await this.getAddressesUseCase.execute(userId);
 
       return res.status(200).json({ success: true, data: addresses });
     } catch (error: any) {

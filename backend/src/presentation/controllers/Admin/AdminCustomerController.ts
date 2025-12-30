@@ -10,12 +10,14 @@ import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { mapToResponseDto } from "../../../application/use-cases/customer/GetAllCustomersUseCase";
 import { GetCustomerByIdUseCase } from "../../../application/use-cases/customer/GetCustomerByIdUseCase";
 import { DeleteCustomerUseCase } from "../../../application/use-cases/customer/DeleteCustomerUseCase";
+import { GetAddressesUseCase } from "../../../application/use-cases/address/GetAddressesUseCase";
 export class AdminCustomerController {
   constructor(
     private readonly getAllCustomersUseCase: GetAllCustomersUseCase,
     private readonly updateCustomerUseCase: UpdateCustomerUseCase,
     private readonly getCustomerByIdUseCase: GetCustomerByIdUseCase,
-    private readonly deleteCustomerUseCase: DeleteCustomerUseCase
+    private readonly deleteCustomerUseCase: DeleteCustomerUseCase,
+    private readonly getAddressesByUserIdUseCase: GetAddressesUseCase
   ) {}
 
   async getAllCustomers(req: Request, res: Response): Promise<void> {
@@ -98,6 +100,17 @@ export class AdminCustomerController {
       res.status(204).send();
     } catch (error) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: ErrorMessages.INTERNAL_ERROR});
+    }
+  }
+  async getCustomerAddresses(req: Request, res: Response): Promise<void> {
+    const customerId = req.params.id; 
+    try {
+      const addresses = await this.getAddressesByUserIdUseCase.execute(customerId);
+      res.status(StatusCodes.OK).json({ success: true, data: addresses });
+    } catch (error: any) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
+        message: error.message || ErrorMessages.INTERNAL_ERROR 
+      });
     }
   }
 }

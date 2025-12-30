@@ -1,7 +1,7 @@
 import { IAddressRepository } from "../../../domain/repositories/IAddressRepository";
 import { Address } from "../../../domain/entities/Address";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
-export class GetMyAddressesUseCase {
+export class GetAddressesUseCase {
   constructor(private addressRepository: IAddressRepository) {}
 
   async execute(userId: string): Promise<Address[]> {
