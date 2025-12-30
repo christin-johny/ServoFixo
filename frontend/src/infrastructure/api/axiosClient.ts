@@ -1,8 +1,7 @@
 import axios from "axios";
-import type { AxiosRequestConfig, AxiosError } from "axios";
+import type { AxiosError, InternalAxiosRequestConfig } from "axios";
 import store from "../../store/store";
 import { setAccessToken, logout } from "../../store/authSlice";
-
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 
@@ -21,7 +20,7 @@ export const refreshApi = axios.create({
 interface FailedRequest {
   resolve: (value: string | PromiseLike<string | null> | null) => void;
   reject: (error?: unknown) => void;
-  config: AxiosRequestConfig;
+  config: InternalAxiosRequestConfig;
 }
 
 let isRefreshing = false;
@@ -66,7 +65,7 @@ const isAuthEndpoint = (url?: string): boolean => {
 api.interceptors.response.use(
   (response: any) => response,
   async (error: AxiosError) => {
-    const originalConfig = error.config as AxiosRequestConfig & {
+    const originalConfig = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
 

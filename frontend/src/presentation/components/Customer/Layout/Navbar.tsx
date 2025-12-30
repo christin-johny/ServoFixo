@@ -54,7 +54,7 @@ const Navbar: React.FC = () => {
                     try {
                         const zoneName = await getZoneByLocation(latitude, longitude);
                         dispatch(setCurrentLocation(zoneName));
-                    } catch (err) {
+                    } catch (err:unknown) {
                         dispatch(setCurrentLocation("Location Error"));
                     }
                 },
@@ -74,8 +74,10 @@ const Navbar: React.FC = () => {
                     const data = await getProfile();
                     dispatch(fetchProfileSuccess(data));
                 } catch (err: unknown) {
-                    dispatch(fetchProfileFailure(err.message || "Failed to load profile"));
+                    const message =err instanceof Error ? err.message : "Failed to load profile";
+                    dispatch(fetchProfileFailure(message));
                 }
+
             };
             loadProfile();
         }
@@ -106,19 +108,19 @@ const Navbar: React.FC = () => {
         };
     }, [drawerOpen]);
     useEffect(() => {
-  function handleClickOutside(e: MouseEvent) {
-    if (
-      profileMenuOpen &&
-      profileMenuRef.current &&
-      !profileMenuRef.current.contains(e.target as Node)
-    ) {
-      setProfileMenuOpen(false);
-    }
-  }
+        function handleClickOutside(e: MouseEvent) {
+            if (
+                profileMenuOpen &&
+                profileMenuRef.current &&
+                !profileMenuRef.current.contains(e.target as Node)
+            ) {
+                setProfileMenuOpen(false);
+            }
+        }
 
-  document.addEventListener("mousedown", handleClickOutside);
-  return () => document.removeEventListener("mousedown", handleClickOutside);
-}, [profileMenuOpen]);
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [profileMenuOpen]);
 
 
     const handleSearch = (e?: React.FormEvent) => {
@@ -136,7 +138,7 @@ const Navbar: React.FC = () => {
             console.warn("Logout failed:", err);
         } finally {
             dispatch(logout());
-            dispatch(clearCustomerData()); 
+            dispatch(clearCustomerData());
             localStorage.removeItem("accessToken");
             sessionStorage.removeItem("otpFlowData");
             setLogoutModalOpen(false);
@@ -346,11 +348,11 @@ const IconButton = ({ icon: Icon, onClick, badge }: any) => (
     </button>
 );
 
-const ProfileAvatar = ({ onClick }: any) => (
-    <button onClick={onClick} className="p-1 rounded-full border border-transparent hover:border-gray-200 transition-all">
-        <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"><User size={18} /></div>
-    </button>
-);
+// const ProfileAvatar = ({ onClick }: any) => (
+//     <button onClick={onClick} className="p-1 rounded-full border border-transparent hover:border-gray-200 transition-all">
+//         <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"><User size={18} /></div>
+//     </button>
+// );
 
 const DrawerItem = ({ icon: Icon, label, onClick, active }: any) => (
     <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${active ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-100"}`}>

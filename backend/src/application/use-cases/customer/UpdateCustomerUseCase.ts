@@ -12,6 +12,11 @@ export class UpdateCustomerUseCase {
 
     const nameToUpdate = updateDto.name ?? existing.getName();
     const phoneToUpdate = updateDto.phone ?? existing.getPhone();
+    
+    const suspendedToUpdate = updateDto.suspended !== undefined 
+      ? updateDto.suspended 
+      : existing.isSuspended();
+
     const emailToUpdate = existing.getEmail();
 
     if (updateDto.phone && updateDto.phone !== existing.getPhone()) {
@@ -29,7 +34,7 @@ export class UpdateCustomerUseCase {
       phoneToUpdate,
       existing.getAvatarUrl(),
       existing.getDefaultZoneId(),
-      existing.isSuspended(),
+      suspendedToUpdate, 
       existing.getAdditionalInfo(),
       existing.getGoogleId(),
       existing.getCreatedAt(),

@@ -14,4 +14,6 @@ export interface ServiceItem {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  rating?: number;
+reviewCount?: number;
 }

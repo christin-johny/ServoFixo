@@ -39,6 +39,24 @@ const Pill = ({ text, icon: Icon, }: { text?: string; icon?: LucideIcon; }) => (
   </div>
 );
 
+interface AddressData {
+  id?: string;
+  name: string;
+  phone: string;
+  tag: string;
+  houseNumber: string;
+  street: string;
+  landmark?: string;
+  city: string;
+  pincode: string;
+  state: string;
+  location?: {
+    type: string;
+    coordinates: [number, number]; 
+  };
+  isDefault: boolean;
+}
+
 const ProfilePage: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -58,7 +76,7 @@ const ProfilePage: React.FC = () => {
   const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
 
   const [isSaving, setIsSaving] = useState(false);
-  const [editingAddress, setEditingAddress] = useState<unknown>(null);
+  const [editingAddress, setEditingAddress] = useState<AddressData | null>(null);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   useEffect(() => {
@@ -81,9 +99,15 @@ const ProfilePage: React.FC = () => {
       dispatch(updateProfileSuccess(updatedData));
       showSuccess("Profile updated successfully!");
       setIsEditProfileOpen(false);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || "Failed to update profile";
-      showError(errorMessage);
+    } catch (err: unknown) {
+      let message = "Failed to update profile";
+      if (err && typeof err === "object" && "response" in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        if (axiosErr.response?.data?.message) {
+          message = axiosErr.response.data.message;
+        }
+      }
+      showError(message);
       throw err;
     }
   };
@@ -103,10 +127,8 @@ const ProfilePage: React.FC = () => {
         showError(err.message);
         return;
       }
-
       showError("Failed to upload image");
     }
-
   };
 
   const handleChangePassword = async (data: any) => {
@@ -115,26 +137,21 @@ const ProfilePage: React.FC = () => {
       showSuccess("Password updated successfully!");
       setIsChangePasswordOpen(false);
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Failed to change password";
-
+      const errorMessage = err instanceof Error ? err.message : "Failed to change password";
       showError(errorMessage);
       throw err;
     }
-
   };
 
-  const handleAddAddress = async (formData: any) => {
+  const handleAddAddress = async (formData: unknown) => {
     setIsSaving(true);
     try {
-      if (editingAddress) {
+      if (editingAddress && editingAddress.id) {
         await updateAddress(editingAddress.id, formData);
-        showSuccess('Address updated successfully!');
+        showSuccess("Address updated successfully!");
       } else {
         await addAddress(formData);
-        showSuccess('Address added successfully!');
+        showSuccess("Address added successfully!");
       }
 
       const updated = await getMyAddresses();
@@ -142,11 +159,15 @@ const ProfilePage: React.FC = () => {
       setIsAddressModalOpen(false);
       setEditingAddress(null);
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Failed to save address.";
+      let message = "Failed to save address.";
+      if (err && typeof err === "object" && "response" in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        if (axiosErr.response?.data?.message) {
+          message = axiosErr.response.data.message;
+        }
+      }
       showError(message);
-    }finally {
+    } finally {
       setIsSaving(false);
     }
   };
@@ -211,7 +232,7 @@ const ProfilePage: React.FC = () => {
                 <div className="relative">
                   <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border-4 border-black overflow-hidden shadow-inner">
                     {profile?.avatarUrl ? (
-                      <img src={profile.avatarUrl} className="w-full h-full object-cover" />
+                      <img src={profile.avatarUrl} className="w-full h-full object-cover" alt="Profile" />
                     ) : (
                       <User size={56} className="text-gray-400" />
                     )}
@@ -289,7 +310,7 @@ const ProfilePage: React.FC = () => {
                     </div>
                     <div className="flex justify-end gap-2 mt-5">
                       <button
-                        onClick={() => { setEditingAddress(addr); setIsAddressModalOpen(true); }}
+                        onClick={() => { setEditingAddress(addr as any); setIsAddressModalOpen(true); }}
                         className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                       >
                         <Pencil size={18} />
@@ -312,16 +333,11 @@ const ProfilePage: React.FC = () => {
             )}
           </section>
 
-          {/* ACCOUNT ACTIONS */}
           <section className="space-y-3">
             <button onClick={() => setShowLogoutModal(true)} className="w-full bg-white p-4 rounded-xl flex justify-between items-center shadow-sm border hover:bg-gray-50 transition-colors">
               <span className="font-semibold text-gray-700">Logout</span>
               <ChevronRight size={18} />
             </button>
-            {/* <button onClick={() => setShowDeleteAccountModal(true)} className="w-full bg-red-50 p-4 rounded-xl flex justify-between items-center hover:bg-red-100 transition-colors">
-              <span className="font-semibold text-red-600">Delete My Account</span>
-              <ChevronRight size={18} />
-            </button> */}
           </section>
         </div>
 

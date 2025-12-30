@@ -26,13 +26,17 @@ const AdminLogin: React.FC = () => {
       loginSchema.parse({ email, password });
       setFieldErrors({});
       return true;
-    } catch (err) {
+    } catch (err: unknown) {
       if (err instanceof z.ZodError) {
-        const errs: any = {};
+        const errs: Record<string, string> = {};
+
         err.errors.forEach((e) => {
-          const f = e.path[0] as string;
-          if (!errs[f]) errs[f] = e.message;
+          const field = e.path[0];
+          if (typeof field === "string" && !errs[field]) {
+            errs[field] = e.message;
+          }
         });
+
         setFieldErrors(errs);
       }
       return false;
@@ -47,35 +51,48 @@ const AdminLogin: React.FC = () => {
 
     setLoading(true);
     try {
-      const resp = await adminLogin({ email, password }); 
-      const token = (resp as  unknown).accessToken ?? (resp as  unknown).token ?? null;
-      const user = (resp as  unknown).user ?? null;
+      const resp: unknown = await adminLogin({ email, password });
 
+      const token =
+        typeof resp === "object" &&
+          resp !== null &&
+          ("accessToken" in resp || "token" in resp)
+          ? (resp as { accessToken?: string; token?: string }).accessToken ??
+          (resp as { token?: string }).token ??
+          null
+          : null;
+
+      const user =
+        typeof resp === "object" &&
+          resp !== null &&
+          "user" in resp
+          ? (resp as { user: unknown }).user
+          : null;
       if (token) {
         localStorage.setItem("accessToken", token);
 
         dispatch(setAccessToken(token));
-        
+
         if (user) {
           dispatch(setUser(user));
         } else {
           const payload = parseJwt(token);
           if (payload) {
-             const role = Array.isArray(payload?.roles) ? payload?.roles[0] : payload?.roles;
-             dispatch(setUser({ id: payload?.sub, role }));
+            const role = Array.isArray(payload?.roles) ? payload?.roles[0] : payload?.roles;
+            dispatch(setUser({ id: payload?.sub, role }));
           }
-        } 
-        
+        }
+
         window.location.href = "/admin/dashboard";
 
       } else {
         setError("No token received from server");
       }
 
-    } catch (err:  unknown) {
-      setError(err?.message ?? "Login failed");
-
-    } finally {
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Login failed");
+    }
+    finally {
       setLoading(false);
     }
   };
@@ -118,11 +135,10 @@ const AdminLogin: React.FC = () => {
                 Admin Email
               </label>
               <div
-                className={`flex items-center bg-[#F4F5F9] border rounded-xl px-4 py-3 text-sm ${
-                  fieldErrors.email
-                    ? "border-red-300 bg-red-50"
-                    : "border-transparent focus-within:border-[#1E88E5]"
-                }`}
+                className={`flex items-center bg-[#F4F5F9] border rounded-xl px-4 py-3 text-sm ${fieldErrors.email
+                  ? "border-red-300 bg-red-50"
+                  : "border-transparent focus-within:border-[#1E88E5]"
+                  }`}
               >
                 <Mail className="w-4 h-4 text-gray-400 mr-3" />
                 <input
@@ -144,11 +160,10 @@ const AdminLogin: React.FC = () => {
                 Admin Password
               </label>
               <div
-                className={`flex items-center bg-[#F4F5F9] border rounded-xl px-4 py-3 text-sm ${
-                  fieldErrors.password
-                    ? "border-red-300 bg-red-50"
-                    : "border-transparent focus-within:border-[#1E88E5]"
-                }`}
+                className={`flex items-center bg-[#F4F5F9] border rounded-xl px-4 py-3 text-sm ${fieldErrors.password
+                  ? "border-red-300 bg-red-50"
+                  : "border-transparent focus-within:border-[#1E88E5]"
+                  }`}
               >
                 <Lock className="w-4 h-4 text-gray-400 mr-3" />
                 <input
@@ -174,11 +189,10 @@ const AdminLogin: React.FC = () => {
             {/* Login Button */}
             <button
               type="submit"
-              className={`w-full rounded-xl py-3 text-white font-semibold text-sm ${
-                loading
-                  ? "bg-blue-400"
-                  : "bg-[#1E88E5] hover:bg-[#166fbd]"
-              }`}
+              className={`w-full rounded-xl py-3 text-white font-semibold text-sm ${loading
+                ? "bg-blue-400"
+                : "bg-[#1E88E5] hover:bg-[#166fbd]"
+                }`}
               disabled={loading}
             >
               {loading ? "Logging in..." : "Login"}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { X, MapPin, Save, Search, Loader2, AlertCircle, Crosshair, User, Smartphone, CheckCircle } from 'lucide-react';
+import { X, MapPin, Save, Search, Loader2, AlertCircle, Crosshair, User, Smartphone, CheckCircle, type LucideIcon } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
-import L from 'leaflet';
+import L, { type LeafletEvent } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { getZoneByLocation } from '../../../../infrastructure/repositories/customer/customerRepository';
 
@@ -20,17 +20,41 @@ interface NominatimResult {
   lon: string;
   display_name: string;
   address?: {
-    road?: string; suburb?: string; city?: string; 
+    road?: string; suburb?: string; city?: string;
     town?: string; village?: string; state?: string; postcode?: string;
   };
+}
+
+interface AddressData {
+  id?: string;
+  name: string;
+  phone: string;
+  tag: string;
+  houseNumber: string;
+  street: string;
+  landmark?: string;
+  city: string;
+  pincode: string;
+  state: string;
+  location?: {
+    type: string;
+    coordinates: [number, number];
+  };
+  isDefault: boolean;
 }
 
 interface AddressModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => Promise<void>;
-  initialData?: any;
+  onSubmit: (data: unknown) => Promise<void>;
+  initialData?: AddressData | null;
   isLoading?: boolean;
+}
+
+interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  icon?: LucideIcon;
+  error?: string;
 }
 
 const RecenterMap = ({ position }: { position: L.LatLng }) => {
@@ -46,12 +70,18 @@ const LocationMarker = ({ position, setPosition, onDragEnd }: { position: L.LatL
       position={position}
       icon={DefaultIcon}
       draggable={true}
-      eventHandlers={{ dragend: (e) => { setPosition(e.target.getLatLng()); onDragEnd(); } }}
+      eventHandlers={{
+        dragend: (e: LeafletEvent) => {
+          const marker = e.target as L.Marker;
+          setPosition(marker.getLatLng());
+          onDragEnd();
+        }
+      }}
     />
   );
 };
 
-const InputField = ({ label, icon: Icon, error, ...props }: any) => (
+const InputField = ({ label, icon: Icon, error, ...props }: InputFieldProps) => (
   <div className="space-y-1 flex-1">
     {label && <label className="text-xs font-bold text-gray-500 uppercase ml-1">{label}</label>}
     <div className="relative">
@@ -85,14 +115,14 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) newErrors.name = "Name is required";
     else if (!/^[a-zA-Z\s]+$/.test(formData.name)) newErrors.name = "Only letters allowed";
-    
+
     if (!formData.phone) newErrors.phone = "Required";
     else if (!/^\d{10}$/.test(formData.phone)) newErrors.phone = "Enter 10 digits";
 
     if (!formData.houseNumber) newErrors.houseNumber = "Required";
     if (!formData.street) newErrors.street = "Street required";
     if (!formData.city) newErrors.city = "Required";
-    
+
     if (!formData.pincode) newErrors.pincode = "Required";
     else if (!/^\d{6}$/.test(formData.pincode)) newErrors.pincode = "Invalid pincode";
 
@@ -140,7 +170,20 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
         const [lng, lat] = initialData.location.coordinates;
         isLocked.current = true;
         setMapPosition(new L.LatLng(lat, lng));
-        setFormData({ ...initialData, lat, lng, tag: initialData.tag || 'Home' });
+        setFormData({
+          name: initialData.name || '',
+          phone: initialData.phone || '',
+          tag: initialData.tag || 'Home',
+          houseNumber: initialData.houseNumber || '',
+          street: initialData.street || '',
+          landmark: initialData.landmark || '',
+          city: initialData.city || '',
+          pincode: initialData.pincode || '',
+          state: initialData.state || '',
+          lat: lat,
+          lng: lng,
+          isDefault: initialData.isDefault || false
+        });
       } else {
         isLocked.current = false;
         setFormData(prev => ({ ...prev, name: '', phone: '', houseNumber: '', street: '', landmark: '', city: '', pincode: '', state: '', isDefault: false }));
@@ -165,7 +208,7 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden animate-in fade-in zoom-in">
-        
+
         <div className="p-5 border-b flex justify-between items-center bg-white shrink-0">
           <h3 className="text-lg font-black flex items-center gap-2">
             <MapPin className="text-blue-600" size={20} />
@@ -231,22 +274,22 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <InputField icon={User} placeholder="Receiver's Name" value={formData.name} error={errors.name} onChange={(e: any) => setFormData({ ...formData, name: e.target.value })} />
-            <InputField icon={Smartphone} placeholder="Contact No" value={formData.phone} error={errors.phone} onChange={(e: any) => setFormData({ ...formData, phone: e.target.value })} />
+            <InputField icon={User} placeholder="Receiver's Name" value={formData.name} error={errors.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+            <InputField icon={Smartphone} placeholder="Contact No" value={formData.phone} error={errors.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
           </div>
 
           <div className="space-y-3">
             <div className="flex gap-2">
               {['Home', 'Work', 'Other'].map(t => (
-                <button key={t} onClick={() => setFormData({ ...formData, tag: t })} className={`flex-1 py-2.5 rounded-xl text-xs font-black border transition-all ${formData.tag === t ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-400 border-gray-100'}`}>{t}</button>
+                <button key={t} type="button" onClick={() => setFormData({ ...formData, tag: t })} className={`flex-1 py-2.5 rounded-xl text-xs font-black border transition-all ${formData.tag === t ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-400 border-gray-100'}`}>{t}</button>
               ))}
             </div>
-            <InputField placeholder="House / Flat No / Floor" value={formData.houseNumber} error={errors.houseNumber} onChange={(e: any) => setFormData({ ...formData, houseNumber: e.target.value })} />
-            <InputField placeholder="Street Name" value={formData.street} error={errors.street} onChange={(e: any) => setFormData({ ...formData, street: e.target.value })} />
+            <InputField placeholder="House / Flat No / Floor" value={formData.houseNumber} error={errors.houseNumber} onChange={(e) => setFormData({ ...formData, houseNumber: e.target.value })} />
+            <InputField placeholder="Street Name" value={formData.street} error={errors.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} />
             <div className="grid grid-cols-3 gap-3">
-              <InputField placeholder="City" value={formData.city} error={errors.city} onChange={(e: any) => setFormData({ ...formData, city: e.target.value })} />
-              <InputField placeholder="State" value={formData.state} onChange={(e: any) => setFormData({ ...formData, state: e.target.value })} />
-              <InputField placeholder="Pincode" value={formData.pincode} error={errors.pincode} onChange={(e: any) => setFormData({ ...formData, pincode: e.target.value })} />
+              <InputField placeholder="City" value={formData.city} error={errors.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
+              <InputField placeholder="State" value={formData.state} onChange={(e) => setFormData({ ...formData, state: e.target.value })} />
+              <InputField placeholder="Pincode" value={formData.pincode} error={errors.pincode} onChange={(e) => setFormData({ ...formData, pincode: e.target.value })} />
             </div>
           </div>
 
@@ -259,6 +302,7 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
           </label>
 
           <button
+            type="button"
             disabled={isLoading || isOutside || isFetchingDetails}
             onClick={() => {
               if (validate()) {
