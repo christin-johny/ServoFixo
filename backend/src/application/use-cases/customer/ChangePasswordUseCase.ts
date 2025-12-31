@@ -5,13 +5,13 @@ import { Customer } from "../../../domain/entities/Customer";
 
 export class ChangePasswordUseCase {
   constructor(
-    private readonly customerRepository: ICustomerRepository,
-    private readonly passwordHasher: IPasswordHasher
+    private readonly _customerRepository: ICustomerRepository,
+    private readonly _passwordHasher: IPasswordHasher
   ) {}
 
   async execute(userId: string, data: any): Promise<void> {
     const { currentPassword, newPassword } = data;
-    const customer = await this.customerRepository.findById(userId);
+    const customer = await this._customerRepository.findById(userId);
     if (!customer) {
       throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
     }
@@ -21,7 +21,7 @@ export class ChangePasswordUseCase {
       throw new Error(ErrorMessages.GOOGLE_REGISTERED);
     }
 
-    const isMatch = await this.passwordHasher.compare(
+    const isMatch = await this._passwordHasher.compare(
       currentPassword,
       storedPassword
     );
@@ -29,7 +29,7 @@ export class ChangePasswordUseCase {
       throw new Error(ErrorMessages.INVALID_PASSWORD);
     }
 
-    const newHashedPassword = await this.passwordHasher.hash(newPassword);
+    const newHashedPassword = await this._passwordHasher.hash(newPassword);
 
     const updatedCustomer = new Customer(
       customer.getId(),
@@ -47,6 +47,6 @@ export class ChangePasswordUseCase {
       customer.getIsDeleted()
     );
 
-    await this.customerRepository.update(updatedCustomer);
+    await this._customerRepository.update(updatedCustomer);
   }
 }

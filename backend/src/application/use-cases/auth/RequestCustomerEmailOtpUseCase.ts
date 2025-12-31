@@ -10,16 +10,16 @@ export class RequestCustomerEmailOtpUseCase {
   private readonly otpExpiryMinutes = 5;
 
   constructor(
-    private readonly customerRepository: ICustomerRepository,
-    private readonly otpSessionRepository: IOtpSessionRepository,
-    private readonly emailService: IEmailService
+    private readonly _customerRepository: ICustomerRepository,
+    private readonly _otpSessionRepository: IOtpSessionRepository,
+    private readonly _emailService: IEmailService
   ) {}
 
   async execute(input: OtpLoginInitDto): Promise<AuthResponse> {
     const { email } = input;
     const normalizedEmail = email.toLowerCase().trim();
 
-    const customer = await this.customerRepository.findByEmail(normalizedEmail);
+    const customer = await this._customerRepository.findByEmail(normalizedEmail);
     if (!customer) {
       throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
     }
@@ -37,12 +37,12 @@ export class RequestCustomerEmailOtpUseCase {
       expiresAt
     );
 
-    await this.otpSessionRepository.create(session);
+    await this._otpSessionRepository.create(session);
 
     const subject = 'Your ServoFixo login OTP';
     const text = `Your OTP for login is: ${otp}. It is valid for ${this.otpExpiryMinutes} minutes.`;
 
-    await this.emailService.sendTextEmail(normalizedEmail, subject, text);
+    await this._emailService.sendTextEmail(normalizedEmail, subject, text);
 
     return {
       message: 'OTP sent to email',

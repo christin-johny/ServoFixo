@@ -16,17 +16,17 @@ interface EditServiceRequest {
 
 export class EditServiceItemUseCase {
   constructor(
-    private readonly serviceRepo: IServiceItemRepository,
-    private readonly imageService: IImageService
+    private readonly _serviceRepo: IServiceItemRepository,
+    private readonly _imageService: IImageService
   ) {}
 
   async execute(request: EditServiceRequest): Promise<any> {
-    const service = await this.serviceRepo.findById(request.id);
+    const service = await this._serviceRepo.findById(request.id);
     if (!service) throw new Error("Service Item not found");
 
     if (request.imagesToDelete && request.imagesToDelete.length > 0) {
       const deletePromises = request.imagesToDelete.map(async (url) => {
-        await this.imageService.deleteImage(url);
+        await this._imageService.deleteImage(url);
         service.removeImage(url);
       });
       await Promise.all(deletePromises);
@@ -34,7 +34,7 @@ export class EditServiceItemUseCase {
 
     if (request.newImageFiles.length > 0) {
       const uploadPromises = request.newImageFiles.map((file) =>
-        this.imageService.uploadImage(
+        this._imageService.uploadImage(
           file.buffer,
           file.originalName,
           file.mimeType
@@ -52,6 +52,6 @@ export class EditServiceItemUseCase {
       request.isActive
     );
 
-    return this.serviceRepo.update(service);
+    return this._serviceRepo.update(service);
   }
 }

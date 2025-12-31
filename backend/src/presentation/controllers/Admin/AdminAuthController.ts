@@ -10,7 +10,7 @@ import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { refreshCookieOptions } from "../../../infrastructure/config/Cookie";
 
 export class AdminAuthController {
-  constructor(private readonly adminLoginUseCase: AdminLoginUseCase) {}
+  constructor(private readonly _adminLoginUseCase: AdminLoginUseCase) {}
 
   login = async (req: Request, res: Response): Promise<Response> => {
     try {
@@ -22,7 +22,7 @@ export class AdminAuthController {
         });
       }
 
-      const result = await this.adminLoginUseCase.execute({ email, password });
+      const result = await this._adminLoginUseCase.execute({ email, password });
 
       if (result.refreshToken) {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);

@@ -2,14 +2,14 @@ import { IServiceCategoryRepository } from '../../../domain/repositories/IServic
 
 export class DeleteCategoryUseCase {
   constructor(
-    private readonly categoryRepo: IServiceCategoryRepository,
+    private readonly _categoryRepo: IServiceCategoryRepository,
 
   ) {}
 
   async execute(id: string): Promise<void> {
-    const category = await this.categoryRepo.findById(id);
+    const category = await this._categoryRepo.findById(id);
     if (!category) throw new Error('Category not found');
 
-    await this.categoryRepo.delete(id);
+    await this._categoryRepo.delete(id);
   }
 }

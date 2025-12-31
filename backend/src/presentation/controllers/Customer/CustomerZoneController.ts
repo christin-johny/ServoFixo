@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { FindZoneByLocationUseCase } from "../../../application/use-cases/zones/FindZoneByLocationUseCase";
 
 export class CustomerZoneController {
-  constructor(private findZoneByLocationUseCase: FindZoneByLocationUseCase) {}
+  constructor(private _findZoneByLocationUseCase: FindZoneByLocationUseCase) {}
 
   findByLocation = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -14,7 +14,7 @@ export class CustomerZoneController {
         return;
       }
 
-      const result = await this.findZoneByLocationUseCase.execute(lat, lng);
+      const result = await this._findZoneByLocationUseCase.execute(lat, lng);
       
       res.status(200).json({
         success: true,

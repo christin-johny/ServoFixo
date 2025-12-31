@@ -5,12 +5,12 @@ import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
 export class UpdateAddressUseCase {
   constructor(
-    private addressRepository: IAddressRepository,
-    private zoneService: ZoneService
+    private _addressRepository: IAddressRepository,
+    private _zoneService: ZoneService
   ) {}
 
   async execute(id: string, userId: string, input: any): Promise<Address> {
-    const existing = await this.addressRepository.findById(id);
+    const existing = await this._addressRepository.findById(id);
     if (!existing) throw new Error(ErrorMessages.ADDRESS_NOT_FOUND);
     if (existing.getUserId() !== userId)
       throw new Error(ErrorMessages.UNAUTHORIZED);
@@ -22,17 +22,17 @@ export class UpdateAddressUseCase {
     let isServiceable = existing.getIsServiceable();
 
     if (lat && lng) {
-    const result = await this.zoneService.checkServiceability(lat, lng);
+    const result = await this._zoneService.checkServiceability(lat, lng);
     zoneId = result.zoneId || undefined;
     isServiceable = result.isServiceable;
   }
 
     if (input.isDefault && !existing.getIsDefault()) {
-      const oldDefault = await this.addressRepository.findDefaultByUserId(
+      const oldDefault = await this._addressRepository.findDefaultByUserId(
         userId
       );
       if (oldDefault && oldDefault.getId() !== id) {
-        await this.addressRepository.update(
+        await this._addressRepository.update(
           this.createNonDefaultCopy(oldDefault)
         );
       }
@@ -56,7 +56,7 @@ export class UpdateAddressUseCase {
       isServiceable
     );
 
-    return await this.addressRepository.update(updated);
+    return await this._addressRepository.update(updated);
   }
 
   private createNonDefaultCopy(addr: Address): Address {

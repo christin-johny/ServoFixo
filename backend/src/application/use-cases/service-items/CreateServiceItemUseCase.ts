@@ -14,18 +14,18 @@ interface CreateServiceRequest {
 
 export class CreateServiceItemUseCase {
   constructor(
-    private readonly serviceRepo: IServiceItemRepository,
-    private readonly imageService: IImageService
+    private readonly _serviceRepo: IServiceItemRepository,
+    private readonly _imageService: IImageService
   ) {}
 
   async execute(request: CreateServiceRequest): Promise<ServiceItem> {
-    const existing = await this.serviceRepo.findByNameAndCategory(request.name, request.categoryId);
+    const existing = await this._serviceRepo.findByNameAndCategory(request.name, request.categoryId);
     if (existing) {
       throw new Error(`Service '${request.name}' already exists in this category.`);
     }
 
     const uploadPromises = request.imageFiles.map(file => 
-      this.imageService.uploadImage(file.buffer, file.originalName, file.mimeType)
+      this._imageService.uploadImage(file.buffer, file.originalName, file.mimeType)
     );
     
     const imageUrls = await Promise.all(uploadPromises);
@@ -43,6 +43,6 @@ export class CreateServiceItemUseCase {
       new Date()
     );
 
-    return this.serviceRepo.create(newService);
+    return this._serviceRepo.create(newService);
   }
 }

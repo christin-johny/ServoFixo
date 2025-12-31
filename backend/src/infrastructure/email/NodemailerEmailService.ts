@@ -2,8 +2,8 @@ import nodemailer, { Transporter } from "nodemailer";
 import { IEmailService } from "../../application/services/IEmailService";
 
 export class NodemailerEmailService implements IEmailService {
-  private transporter: Transporter;
-  private from: string;
+  private _transporter: Transporter;
+  private _from: string;
 
   constructor() {
     if (
@@ -16,7 +16,7 @@ export class NodemailerEmailService implements IEmailService {
       throw new Error("SMTP configuration missing in environment variables");
     }
 
-    this.transporter = nodemailer.createTransport({
+    this._transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
       secure: Number(process.env.SMTP_PORT) === 465,
@@ -26,7 +26,7 @@ export class NodemailerEmailService implements IEmailService {
       },
     });
 
-    this.from = process.env.SMTP_FROM;
+    this._from = process.env.SMTP_FROM;
   }
 
   async sendTextEmail(
@@ -34,8 +34,8 @@ export class NodemailerEmailService implements IEmailService {
     subject: string,
     text: string
   ): Promise<void> {
-    await this.transporter.sendMail({
-      from: this.from,
+    await this._transporter.sendMail({
+      from: this._from,
       to,
       subject,
       text,

@@ -3,11 +3,11 @@ import { GetAllCategoriesUseCase } from '../../../application/use-cases/service-
 import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
 
 export class CustomerCategoryController {
-  constructor(private readonly getAllCategoriesUseCase: GetAllCategoriesUseCase) {}
+  constructor(private readonly _getAllCategoriesUseCase: GetAllCategoriesUseCase) {}
 
   getAll = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const result = await this.getAllCategoriesUseCase.execute({
+      const result = await this._getAllCategoriesUseCase.execute({
         isActive: true,
         page: 1,
         limit: 100

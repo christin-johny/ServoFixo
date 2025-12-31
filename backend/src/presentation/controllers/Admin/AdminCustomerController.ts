@@ -13,11 +13,11 @@ import { DeleteCustomerUseCase } from "../../../application/use-cases/customer/D
 import { GetAddressesUseCase } from "../../../application/use-cases/address/GetAddressesUseCase";
 export class AdminCustomerController {
   constructor(
-    private readonly getAllCustomersUseCase: GetAllCustomersUseCase,
-    private readonly updateCustomerUseCase: UpdateCustomerUseCase,
-    private readonly getCustomerByIdUseCase: GetCustomerByIdUseCase,
-    private readonly deleteCustomerUseCase: DeleteCustomerUseCase,
-    private readonly getAddressesByUserIdUseCase: GetAddressesUseCase
+    private readonly _getAllCustomersUseCase: GetAllCustomersUseCase,
+    private readonly _updateCustomerUseCase: UpdateCustomerUseCase,
+    private readonly _getCustomerByIdUseCase: GetCustomerByIdUseCase,
+    private readonly _deleteCustomerUseCase: DeleteCustomerUseCase,
+    private readonly _getAddressesByUserIdUseCase: GetAddressesUseCase
   ) {}
 
   async getAllCustomers(req: Request, res: Response): Promise<void> {
@@ -33,7 +33,7 @@ export class AdminCustomerController {
       }
 
       const filterDto = validationResult.data;
-      const result = await this.getAllCustomersUseCase.execute(filterDto);
+      const result = await this._getAllCustomersUseCase.execute(filterDto);
 
       res.status(StatusCodes.OK).json(result);
     } catch (error) {
@@ -59,7 +59,7 @@ export class AdminCustomerController {
 
       const updateDto = validationResult.data;
 
-      const updatedCustomer = await this.updateCustomerUseCase.execute(
+      const updatedCustomer = await this._updateCustomerUseCase.execute(
         customerId,
         updateDto
       );
@@ -80,7 +80,7 @@ export class AdminCustomerController {
     const customerId = req.params.id;
 
     try {
-      const customer = await this.getCustomerByIdUseCase.execute(customerId);
+      const customer = await this._getCustomerByIdUseCase.execute(customerId);
 
       res.status(StatusCodes.OK).json(mapToResponseDto(customer));
     } catch (error) {
@@ -96,7 +96,7 @@ export class AdminCustomerController {
   }
   async deleteCustomer(req: Request, res: Response): Promise<void> {
     try {
-      await this.deleteCustomerUseCase.execute(req.params.id);
+      await this._deleteCustomerUseCase.execute(req.params.id);
       res.status(204).send();
     } catch (error) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: ErrorMessages.INTERNAL_ERROR});
@@ -105,7 +105,7 @@ export class AdminCustomerController {
   async getCustomerAddresses(req: Request, res: Response): Promise<void> {
     const customerId = req.params.id; 
     try {
-      const addresses = await this.getAddressesByUserIdUseCase.execute(customerId);
+      const addresses = await this._getAddressesByUserIdUseCase.execute(customerId);
       res.status(StatusCodes.OK).json({ success: true, data: addresses });
     } catch (error: any) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 

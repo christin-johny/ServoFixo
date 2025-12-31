@@ -13,11 +13,11 @@ import {
 
 export class CustomerProfileController {
   constructor(
-    private readonly getCustomerProfileUseCase: GetCustomerProfileUseCase,
-    private readonly updateCustomerUseCase: UpdateCustomerUseCase,
-    private readonly deleteCustomerUseCase: DeleteCustomerUseCase,
-    private readonly uploadAvatarUseCase: UploadAvatarUseCase,
-    private readonly changePasswordUseCase: ChangePasswordUseCase
+    private readonly _getCustomerProfileUseCase: GetCustomerProfileUseCase,
+    private readonly _updateCustomerUseCase: UpdateCustomerUseCase,
+    private readonly _deleteCustomerUseCase: DeleteCustomerUseCase,
+    private readonly _uploadAvatarUseCase: UploadAvatarUseCase,
+    private readonly _changePasswordUseCase: ChangePasswordUseCase
   ) {}
 
   getProfile = async (req: Request, res: Response, next: NextFunction) => {
@@ -28,7 +28,7 @@ export class CustomerProfileController {
           .status(StatusCodes.UNAUTHORIZED)
           .json({ success: false, message: ErrorMessages.UNAUTHORIZED });
 
-      const profileData = await this.getCustomerProfileUseCase.execute(userId);
+      const profileData = await this._getCustomerProfileUseCase.execute(userId);
 
       return res.status(StatusCodes.OK).json({
         success: true,
@@ -57,7 +57,7 @@ export class CustomerProfileController {
           .status(StatusCodes.UNAUTHORIZED)
           .json({ success: false, message: ErrorMessages.UNAUTHORIZED });
 
-      const updatedCustomer = await this.updateCustomerUseCase.execute(
+      const updatedCustomer = await this._updateCustomerUseCase.execute(
         userId,
         req.body
       );
@@ -98,7 +98,7 @@ export class CustomerProfileController {
         });
       }
 
-      await this.changePasswordUseCase.execute(userId, req.body);
+      await this._changePasswordUseCase.execute(userId, req.body);
 
       return res.status(StatusCodes.OK).json({
         success: true,
@@ -122,7 +122,7 @@ export class CustomerProfileController {
         });
       }
 
-      await this.deleteCustomerUseCase.execute(userId);
+      await this._deleteCustomerUseCase.execute(userId);
 
       return res.status(StatusCodes.OK).json({
         success: true,
@@ -150,7 +150,7 @@ export class CustomerProfileController {
         });
       }
 
-      const avatarUrl = await this.uploadAvatarUseCase.execute(userId, {
+      const avatarUrl = await this._uploadAvatarUseCase.execute(userId, {
         buffer: req.file.buffer,
         originalName: req.file.originalname,
         mimeType: req.file.mimetype,

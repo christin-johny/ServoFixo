@@ -11,13 +11,13 @@ interface CreateCategoryRequest {
 
 export class CreateCategoryUseCase {
   constructor(
-    private readonly categoryRepo: IServiceCategoryRepository,
-    private readonly imageService: IImageService
+    private readonly _categoryRepo: IServiceCategoryRepository,
+    private readonly _imageService: IImageService
   ) {}
 
   async execute(request: CreateCategoryRequest): Promise<ServiceCategory> {
 
-    const existing = await this.categoryRepo.findByName(request.name);
+    const existing = await this._categoryRepo.findByName(request.name);
     if (existing) {
       throw new Error("Category with this name already exists");
     }
@@ -26,7 +26,7 @@ export class CreateCategoryUseCase {
       throw new Error("Category icon/image is required");
     }
 
-    const iconUrl = await this.imageService.uploadImage(
+    const iconUrl = await this._imageService.uploadImage(
       request.imageFile.buffer,
       request.imageFile.originalName,
       request.imageFile.mimeType
@@ -42,6 +42,6 @@ export class CreateCategoryUseCase {
       new Date()
     );
 
-    return this.categoryRepo.create(newCategory);
+    return this._categoryRepo.create(newCategory);
   }
 }

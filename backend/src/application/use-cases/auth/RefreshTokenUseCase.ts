@@ -5,8 +5,8 @@ import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepos
 
 export class RefreshTokenUseCase {
   constructor(
-    private readonly jwtService: IJwtService,
-    private readonly customerRepository: ICustomerRepository
+    private readonly _jwtService: IJwtService,
+    private readonly _customerRepository: ICustomerRepository
   ) {}
 
   async execute(refreshToken: string) {
@@ -16,26 +16,24 @@ export class RefreshTokenUseCase {
 
     let payload: JwtPayload;
     try {
-      payload = await this.jwtService.verifyRefreshToken(refreshToken);
+      payload = await this._jwtService.verifyRefreshToken(refreshToken);
     } catch (err) {
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
-        const redisKey = `refresh:${refreshToken}`;
-    if (payload.type === 'customer') {
-  const customer = await this.customerRepository.findById(payload.sub);
-  
-  if (!customer) {
-    await redis.del(redisKey); 
-    throw new Error(ErrorMessages.UNAUTHORIZED); 
-  }
+    const redisKey = `refresh:${refreshToken}`;
+    if (payload.type === "customer") {
+      const customer = await this._customerRepository.findById(payload.sub);
 
-  if (customer.isSuspended()) {
-    await redis.del(redisKey); 
-    throw new Error(ErrorMessages.ACCOUNT_BLOCKED); 
-  }
-}
+      if (!customer) {
+        await redis.del(redisKey);
+        throw new Error(ErrorMessages.UNAUTHORIZED);
+      }
 
-
+      if (customer.isSuspended()) {
+        await redis.del(redisKey);
+        throw new Error(ErrorMessages.ACCOUNT_BLOCKED);
+      }
+    }
 
     let stored: string | null = null;
     try {
@@ -57,12 +55,12 @@ export class RefreshTokenUseCase {
       }
     }
 
-    const newAccessToken = await this.jwtService.generateAccessToken({
+    const newAccessToken = await this._jwtService.generateAccessToken({
       sub: payload.sub,
       type: payload.type,
     });
 
-    const newRefreshToken = await this.jwtService.generateRefreshToken({
+    const newRefreshToken = await this._jwtService.generateRefreshToken({
       sub: payload.sub,
       type: payload.type,
     });

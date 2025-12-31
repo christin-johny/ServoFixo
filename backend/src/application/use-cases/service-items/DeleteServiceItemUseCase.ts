@@ -3,13 +3,13 @@ import { IServiceItemRepository } from '../../../domain/repositories/IServiceIte
 
 export class DeleteServiceItemUseCase {
   constructor(
-    private readonly serviceRepo: IServiceItemRepository,
+    private readonly _serviceRepo: IServiceItemRepository,
   ) {}
 
   async execute(id: string): Promise<void> {
-    const service = await this.serviceRepo.findById(id);
+    const service = await this._serviceRepo.findById(id);
     if (!service) throw new Error('Service Item not found');
 
-    await this.serviceRepo.delete(id);
+    await this._serviceRepo.delete(id);
   }
 }

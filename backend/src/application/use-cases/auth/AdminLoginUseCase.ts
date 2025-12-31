@@ -8,20 +8,20 @@ import redis from '../../../infrastructure/redis/redisClient';
 
 export class AdminLoginUseCase {
   constructor(
-    private readonly adminRepository: IAdminRepository,
-    private readonly passwordHasher: IPasswordHasher,
-    private readonly jwtService: IJwtService
+    private readonly _adminRepository: IAdminRepository,
+    private readonly _passwordHasher: IPasswordHasher,
+    private readonly _jwtService: IJwtService
   ) {}
 
   async execute(input: AdminLoginDto): Promise<AuthResultDto> {
     const { email, password } = input;
-    const admin = await this.adminRepository.findByEmail(email);
+    const admin = await this._adminRepository.findByEmail(email);
 
     if (!admin) {
       throw new Error(ErrorMessages.INVALID_CREDENTIALS);
     }
 
-    const passwordMatches = await this.passwordHasher.compare(
+    const passwordMatches = await this._passwordHasher.compare(
       password,
       admin.getPassword()
     );
@@ -35,8 +35,8 @@ export class AdminLoginUseCase {
       type: 'admin',
     };
 
-    const accessToken = await this.jwtService.generateAccessToken(payload);
-    const refreshToken = await this.jwtService.generateRefreshToken(payload);
+    const accessToken = await this._jwtService.generateAccessToken(payload);
+    const refreshToken = await this._jwtService.generateRefreshToken(payload);
 
     const refreshTtlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
 

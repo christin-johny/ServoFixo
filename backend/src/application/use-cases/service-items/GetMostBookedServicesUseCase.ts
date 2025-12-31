@@ -2,9 +2,9 @@ import { IServiceItemRepository } from "../../../domain/repositories/IServiceIte
 import { ServiceItem } from "../../../domain/entities/ServiceItem";
 
 export class GetMostBookedServicesUseCase {
-  constructor(private readonly serviceItemRepo: IServiceItemRepository) {}
+  constructor(private readonly _serviceItemRepo: IServiceItemRepository) {}
 
   async execute(limit: number = 5): Promise<ServiceItem[]> {
-    return await this.serviceItemRepo.findMostBooked(limit);
+    return await this._serviceItemRepo.findMostBooked(limit);
   }
 }

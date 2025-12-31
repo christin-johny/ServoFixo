@@ -6,7 +6,7 @@ import { ErrorMessages } from "../../../../shared/types/enums/ErrorMessages";
 import { StatusCodes } from "../../../../shared/types/enums/StatusCodes";
 
 export class AuthTokenController {
-  constructor(private readonly refreshTokenUseCase: RefreshTokenUseCase) {}
+  constructor(private readonly _refreshTokenUseCase: RefreshTokenUseCase) {}
 
   refresh = async (req: Request, res: Response): Promise<Response> => {
     try {
@@ -18,7 +18,7 @@ export class AuthTokenController {
           .json({ error: ErrorMessages.UNAUTHORIZED });
       }
 
-      const result = await this.refreshTokenUseCase.execute(refreshToken);
+      const result = await this._refreshTokenUseCase.execute(refreshToken);
 
       if (result.refreshToken) {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);

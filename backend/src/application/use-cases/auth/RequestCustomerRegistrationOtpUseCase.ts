@@ -10,9 +10,9 @@ export class RequestCustomerRegistrationOtpUseCase {
   private readonly otpExpiryMinutes = 2;
 
   constructor(
-    private readonly customerRepository: ICustomerRepository,
-    private readonly otpSessionRepository: IOtpSessionRepository,
-    private readonly emailService: IEmailService
+    private readonly _customerRepository: ICustomerRepository,
+    private readonly _otpSessionRepository: IOtpSessionRepository,
+    private readonly _emailService: IEmailService
   ) {}
 
   async execute(
@@ -21,11 +21,11 @@ export class RequestCustomerRegistrationOtpUseCase {
     const { email,phone } = input;
     const normalizedEmail = email.toLowerCase().trim();
 
-    const existing = await this.customerRepository.findByEmail(normalizedEmail);
+    const existing = await this._customerRepository.findByEmail(normalizedEmail);
     if (existing) {
       throw new Error(ErrorMessages.EMAIL_ALREADY_EXISTS);
     }
-    const existingPhone = await this.customerRepository.findByPhone(phone);
+    const existingPhone = await this._customerRepository.findByPhone(phone);
     if (existingPhone ) {
       throw new Error(ErrorMessages.PHONE_ALREADY_EXISTS );
     }
@@ -42,12 +42,12 @@ export class RequestCustomerRegistrationOtpUseCase {
       expiresAt
     );
 
-    await this.otpSessionRepository.create(session);
+    await this._otpSessionRepository.create(session);
 
     const subject = "ServoFixo - Verify your email";
     const text = `Your registration OTP is: ${otp}. It is valid for ${this.otpExpiryMinutes} minutes.`;
 
-    await this.emailService.sendTextEmail(normalizedEmail, subject, text);
+    await this._emailService.sendTextEmail(normalizedEmail, subject, text);
 
     return {
       message: "OTP sent to email for registration",

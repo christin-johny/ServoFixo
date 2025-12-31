@@ -4,16 +4,16 @@ import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
 export class GetCustomerProfileUseCase {
   constructor(
-    private readonly customerRepository: ICustomerRepository,
-    private readonly addressRepository: IAddressRepository
+    private readonly _customerRepository: ICustomerRepository,
+    private readonly _addressRepository: IAddressRepository
   ) {}
 
   async execute(userId: string) {
 
-    const customer = await this.customerRepository.findById(userId);
+    const customer = await this._customerRepository.findById(userId);
     if (!customer) throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
 
-    const addresses = await this.addressRepository.findAllByUserId(userId);
+    const addresses = await this._addressRepository.findAllByUserId(userId);
 
     return {
       user: {

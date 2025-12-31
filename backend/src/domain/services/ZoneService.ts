@@ -7,11 +7,11 @@ export interface ServiceabilityResult {
 }
 
 export class ZoneService {
-  constructor(private zoneRepository: IZoneRepository) {}
+  constructor(private _zoneRepository: IZoneRepository) {}
 
   async checkServiceability(lat: number, lng: number): Promise<ServiceabilityResult> {
     
-    const zone = await this.zoneRepository.findZoneByCoordinates(lat, lng);
+    const zone = await this._zoneRepository.findZoneByCoordinates(lat, lng);
 
     if (zone) {
       return { 

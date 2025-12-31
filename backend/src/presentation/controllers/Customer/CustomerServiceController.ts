@@ -8,15 +8,15 @@ import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
 export class CustomerServiceController {
   constructor(
-    private readonly getMostBookedUseCase: GetMostBookedServicesUseCase,
-    private readonly getServiceListingUseCase: GetServiceListingUseCase,
-    private readonly getServiceByIdUseCase: GetServiceByIdUseCase
+    private readonly _getMostBookedUseCase: GetMostBookedServicesUseCase,
+    private readonly _getServiceListingUseCase: GetServiceListingUseCase,
+    private readonly _getServiceByIdUseCase: GetServiceByIdUseCase
   ) {}
 
   getMostBooked = async (req: Request, res: Response): Promise<Response> => {
     try {
       const limit = parseInt(req.query.limit as string) || 5;
-      const services = await this.getMostBookedUseCase.execute(limit);
+      const services = await this._getMostBookedUseCase.execute(limit);
       return res.status(StatusCodes.OK).json({ data: services });
     } catch (error) {
       console.error("Error fetching popular services:", error);
@@ -40,7 +40,7 @@ export class CustomerServiceController {
         limit:Number(limit),
         isActive: true,
       };
-      const services = await this.getServiceListingUseCase.execute(filters);
+      const services = await this._getServiceListingUseCase.execute(filters);
 
       return res.status(StatusCodes.OK).json({
         success: true,
@@ -59,7 +59,7 @@ export class CustomerServiceController {
     try {
       const { id } = req.params;
 
-      const service = await this.getServiceByIdUseCase.execute(id);
+      const service = await this._getServiceByIdUseCase.execute(id);
 
       if (!service) {
         return res

@@ -8,9 +8,9 @@ import { Customer } from '../../../domain/entities/Customer';
 
 export class VerifyCustomerForgotPasswordOtpUseCase {
   constructor(
-    private readonly customerRepository: ICustomerRepository,
-    private readonly otpSessionRepository: IOtpSessionRepository,
-    private readonly passwordHasher: IPasswordHasher
+    private readonly _customerRepository: ICustomerRepository,
+    private readonly _otpSessionRepository: IOtpSessionRepository,
+    private readonly _passwordHasher: IPasswordHasher
   ) {}
 
   async execute(
@@ -19,7 +19,7 @@ export class VerifyCustomerForgotPasswordOtpUseCase {
     const { email, otp, sessionId, newPassword } = input;
     const normalizedEmail = email.toLowerCase().trim();
 
-    const session = await this.otpSessionRepository.findValidSession(
+    const session = await this._otpSessionRepository.findValidSession(
       normalizedEmail,
       sessionId,
       OtpContext.ForgotPassword
@@ -34,14 +34,14 @@ export class VerifyCustomerForgotPasswordOtpUseCase {
     }
 
     session.markAsUsed();
-    await this.otpSessionRepository.save(session);
+    await this._otpSessionRepository.save(session);
 
-    const customer = await this.customerRepository.findByEmail(normalizedEmail);
+    const customer = await this._customerRepository.findByEmail(normalizedEmail);
     if (!customer) {
       throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
     }
 
-    const hashed = await this.passwordHasher.hash(newPassword);
+    const hashed = await this._passwordHasher.hash(newPassword);
 
     const updated = new Customer(
   customer.getId(),
@@ -60,7 +60,7 @@ export class VerifyCustomerForgotPasswordOtpUseCase {
 );
 
 
-    await this.customerRepository.update(updated);
+    await this._customerRepository.update(updated);
 
     return {
       message: 'Password reset successful. You can now log in with your new password.',

@@ -13,12 +13,12 @@ import redis from "../../../infrastructure/redis/redisClient";
 
 export class CustomerAuthController {
   constructor(
-    private readonly requestRegisterOtpUseCase: RequestCustomerRegistrationOtpUseCase,
-    private readonly verifyRegisterOtpUseCase: VerifyCustomerRegistrationOtpUseCase,
-    private readonly customerLoginUseCase: CustomerLoginUseCase,
-    private readonly requestForgotPasswordOtpUseCase: RequestCustomerForgotPasswordOtpUseCase,
-    private readonly verifyForgotPasswordOtpUseCase: VerifyCustomerForgotPasswordOtpUseCase,
-    private readonly customerGoogleLoginUseCase: CustomerGoogleLoginUseCase
+    private readonly _requestRegisterOtpUseCase: RequestCustomerRegistrationOtpUseCase,
+    private readonly _verifyRegisterOtpUseCase: VerifyCustomerRegistrationOtpUseCase,
+    private readonly _customerLoginUseCase: CustomerLoginUseCase,
+    private readonly _requestForgotPasswordOtpUseCase: RequestCustomerForgotPasswordOtpUseCase,
+    private readonly _verifyForgotPasswordOtpUseCase: VerifyCustomerForgotPasswordOtpUseCase,
+    private readonly _customerGoogleLoginUseCase: CustomerGoogleLoginUseCase
   ) {}
 
   registerInitOtp = async (req: Request, res: Response): Promise<Response> => {
@@ -29,7 +29,7 @@ export class CustomerAuthController {
           error: ErrorMessages.MISSING_REQUIRED_FIELDS,
         });
       }
-      const result = await this.requestRegisterOtpUseCase.execute({ email,phone });
+      const result = await this._requestRegisterOtpUseCase.execute({ email,phone });
 
       return res.status(StatusCodes.OK).json(result);
     } catch (err: any) {
@@ -63,7 +63,7 @@ export class CustomerAuthController {
           error: ErrorMessages.MISSING_REQUIRED_FIELDS,
         });
       }
-      const result = await this.verifyRegisterOtpUseCase.execute({
+      const result = await this._verifyRegisterOtpUseCase.execute({
         email,
         otp,
         sessionId,
@@ -121,7 +121,7 @@ export class CustomerAuthController {
         });
       }
 
-      const result = await this.customerLoginUseCase.execute({
+      const result = await this._customerLoginUseCase.execute({
         email,
         password,
       });
@@ -169,7 +169,7 @@ export class CustomerAuthController {
         });
       }
 
-      const result = await this.requestForgotPasswordOtpUseCase.execute({
+      const result = await this._requestForgotPasswordOtpUseCase.execute({
         email,
       });
 
@@ -209,7 +209,7 @@ export class CustomerAuthController {
         });
       }
 
-      const result = await this.verifyForgotPasswordOtpUseCase.execute({
+      const result = await this._verifyForgotPasswordOtpUseCase.execute({
         email,
         otp,
         sessionId,
@@ -254,7 +254,7 @@ export class CustomerAuthController {
         });
       }
 
-      const result = await this.customerGoogleLoginUseCase.execute({ token });
+      const result = await this._customerGoogleLoginUseCase.execute({ token });
 
       if (result.refreshToken) {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
@@ -281,7 +281,7 @@ export class CustomerAuthController {
         );
         return;
       }
-      const result = await this.customerGoogleLoginUseCase.execute({
+      const result = await this._customerGoogleLoginUseCase.execute({
         customer: user,
       });
 

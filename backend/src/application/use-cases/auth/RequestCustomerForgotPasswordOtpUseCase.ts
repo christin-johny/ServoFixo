@@ -12,9 +12,9 @@ export class RequestCustomerForgotPasswordOtpUseCase {
   private readonly rateLimitMax = 10; 
 
   constructor(
-    private readonly customerRepository: ICustomerRepository,
-    private readonly otpSessionRepository: IOtpSessionRepository,
-    private readonly emailService: IEmailService
+    private readonly _customerRepository: ICustomerRepository,
+    private readonly _otpSessionRepository: IOtpSessionRepository,
+    private readonly _emailService: IEmailService
   ) {}
 
   async execute(
@@ -23,13 +23,13 @@ export class RequestCustomerForgotPasswordOtpUseCase {
     const { email } = input;
     const normalizedEmail = email.toLowerCase().trim();
 
-    const customer = await this.customerRepository.findByEmail(normalizedEmail);
+    const customer = await this._customerRepository.findByEmail(normalizedEmail);
     if (!customer) {
       throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
     }
 
     try {
-      const recentCount = await this.otpSessionRepository.countRecentSessions(
+      const recentCount = await this._otpSessionRepository.countRecentSessions(
         normalizedEmail,
         this.rateLimitWindowMinutes
       );
@@ -55,12 +55,12 @@ export class RequestCustomerForgotPasswordOtpUseCase {
       expiresAt
     );
 
-    await this.otpSessionRepository.create(session);
+    await this._otpSessionRepository.create(session);
 
     const subject = 'ServoFixo - Forgot Password OTP';
     const text = `Your OTP to reset your password is: ${otp}. It is valid for ${this.otpExpiryMinutes} minutes.`;
 
-    await this.emailService.sendTextEmail(normalizedEmail, subject, text);
+    await this._emailService.sendTextEmail(normalizedEmail, subject, text);
 
     return {
       message: 'OTP sent to email for password reset',

@@ -5,18 +5,18 @@ import { Customer } from "../../../domain/entities/Customer";
 
 export class UploadAvatarUseCase {
   constructor(
-    private readonly customerRepository: ICustomerRepository,
-    private readonly imageService: IImageService
+    private readonly _customerRepository: ICustomerRepository,
+    private readonly _imageService: IImageService
   ) {}
 
   async execute(
     userId: string,
     file: { buffer: Buffer; originalName: string; mimeType: string }
   ): Promise<string> {
-    const customer = await this.customerRepository.findById(userId);
+    const customer = await this._customerRepository.findById(userId);
     if (!customer) throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
 
-    const avatarUrl = await this.imageService.uploadImage(
+    const avatarUrl = await this._imageService.uploadImage(
       file.buffer,
       file.originalName,
       file.mimeType
@@ -38,7 +38,7 @@ export class UploadAvatarUseCase {
       customer.getIsDeleted()
     );
 
-    await this.customerRepository.update(updatedCustomer);
+    await this._customerRepository.update(updatedCustomer);
     return avatarUrl;
   }
 }

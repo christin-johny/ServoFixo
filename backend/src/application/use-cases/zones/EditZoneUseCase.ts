@@ -10,18 +10,18 @@ export interface EditZoneDto {
 }
 
 export class EditZoneUseCase {
-  constructor(private readonly zoneRepository: IZoneRepository) {}
+  constructor(private readonly _zoneRepository: IZoneRepository) {}
 
   async execute(input: EditZoneDto): Promise<Zone> {
     const { id, name, description, boundaries, isActive } = input;
 
-    const existingZone = await this.zoneRepository.findById(id);
+    const existingZone = await this._zoneRepository.findById(id);
     if (!existingZone) {
       throw new Error("Zone not found");
     }
 
     if (name && name !== existingZone.getName()) {
-      const duplicate = await this.zoneRepository.findByName(name);
+      const duplicate = await this._zoneRepository.findByName(name);
       if (duplicate) {
         throw new Error("Zone with this name already exists");
       }
@@ -39,6 +39,6 @@ export class EditZoneUseCase {
       existingZone.getIsDeleted() 
     );
 
-    return this.zoneRepository.update(updatedZone);
+    return this._zoneRepository.update(updatedZone);
   }
 }

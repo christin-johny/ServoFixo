@@ -8,10 +8,10 @@ import { ErrorMessages,SuccessMessages } from "../../../../../shared/types/enums
 
 export class AdminZoneController {
   constructor(
-    private readonly createZoneUseCase: CreateZoneUseCase,
-    private readonly getAllZonesUseCase: GetAllZonesUseCase,
-    private readonly deleteZoneUseCase: DeleteZoneUseCase,
-    private readonly editZoneUseCase: EditZoneUseCase
+    private readonly _createZoneUseCase: CreateZoneUseCase,
+    private readonly _getAllZonesUseCase: GetAllZonesUseCase,
+    private readonly _deleteZoneUseCase: DeleteZoneUseCase,
+    private readonly _editZoneUseCase: EditZoneUseCase
   ) {}
 
   create = async (req: Request, res: Response): Promise<Response> => {
@@ -31,7 +31,7 @@ export class AdminZoneController {
         });
       }
 
-      const zone = await this.createZoneUseCase.execute({
+      const zone = await this._createZoneUseCase.execute({
         name,
         description,
         boundaries,
@@ -67,7 +67,7 @@ export class AdminZoneController {
       if (req.query.isActive === "true") isActive = true;
       if (req.query.isActive === "false") isActive = false;
 
-      const result = await this.getAllZonesUseCase.execute({
+      const result = await this._getAllZonesUseCase.execute({
         page,
         limit,
         search,
@@ -85,7 +85,7 @@ export class AdminZoneController {
   delete = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      await this.deleteZoneUseCase.execute(id);
+      await this._deleteZoneUseCase.execute(id);
       return res
         .status(StatusCodes.OK)
         .json({ message: SuccessMessages.ZONE_DELETED });
@@ -112,7 +112,7 @@ export class AdminZoneController {
         });
       }
 
-      const updatedZone = await this.editZoneUseCase.execute({
+      const updatedZone = await this._editZoneUseCase.execute({
         id,
         name,
         description,

@@ -12,28 +12,28 @@ interface EditCategoryRequest {
 
 export class EditCategoryUseCase {
   constructor(
-    private readonly categoryRepo: IServiceCategoryRepository,
-    private readonly imageService: IImageService
+    private readonly _categoryRepo: IServiceCategoryRepository,
+    private readonly _imageService: IImageService
   ) {}
 
   async execute(request: EditCategoryRequest): Promise<ServiceCategory> {
-    const category = await this.categoryRepo.findById(request.id);
+    const category = await this._categoryRepo.findById(request.id);
     if (!category) throw new Error('Category not found');
 
     if (request.name && request.name !== category.getName()) {
-      const existing = await this.categoryRepo.findByName(request.name);
+      const existing = await this._categoryRepo.findByName(request.name);
       if (existing) throw new Error('Category with this name already exists');
     }
 
     if (request.imageFile) {
-      const newUrl = await this.imageService.uploadImage(
+      const newUrl = await this._imageService.uploadImage(
         request.imageFile.buffer,
         request.imageFile.originalName,
         request.imageFile.mimeType
       );
 
       if (category.getIconUrl()) {
-        await this.imageService.deleteImage(category.getIconUrl());
+        await this._imageService.deleteImage(category.getIconUrl());
       }
 
       category.updateIcon(newUrl);
@@ -45,6 +45,6 @@ export class EditCategoryUseCase {
       request.isActive !== undefined ? request.isActive : category.getIsActive()
     );
 
-    return this.categoryRepo.update(category);
+    return this._categoryRepo.update(category);
   }
 }

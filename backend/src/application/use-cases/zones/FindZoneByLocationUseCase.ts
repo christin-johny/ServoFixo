@@ -1,9 +1,9 @@
 import { ZoneService, ServiceabilityResult } from "../../../domain/services/ZoneService";
 
 export class FindZoneByLocationUseCase {
-  constructor(private readonly zoneService: ZoneService) {}
+  constructor(private readonly _zoneService: ZoneService) {}
 
   async execute(lat: number, lng: number): Promise<ServiceabilityResult> {
-    return await this.zoneService.checkServiceability(lat, lng);
+    return await this._zoneService.checkServiceability(lat, lng);
   }
 }

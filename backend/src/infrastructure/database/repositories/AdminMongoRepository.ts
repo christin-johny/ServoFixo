@@ -18,10 +18,6 @@ export class AdminMongoRepository implements IAdminRepository {
     return this.toEntity(doc);
   }
 
-  /**
-   * Create a new admin from an Admin entity.
-   * Returns a fresh Admin entity built from the saved document.
-   */
   async create(admin: Admin): Promise<Admin> {
     const data = this.toPersistence(admin);
 

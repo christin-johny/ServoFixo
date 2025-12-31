@@ -4,10 +4,10 @@ import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepos
 
 
 export class UpdateCustomerUseCase {
-  constructor(private readonly customerRepository: ICustomerRepository) {}
+  constructor(private readonly _customerRepository: ICustomerRepository) {}
 
   async execute(customerId: string, updateDto: any): Promise<Customer> {
-    const existing = await this.customerRepository.findById(customerId);
+    const existing = await this._customerRepository.findById(customerId);
     if (!existing) throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
 
     const nameToUpdate = updateDto.name ?? existing.getName();
@@ -20,7 +20,7 @@ export class UpdateCustomerUseCase {
     const emailToUpdate = existing.getEmail();
 
     if (updateDto.phone && updateDto.phone !== existing.getPhone()) {
-      const customerByPhone = await this.customerRepository.findByPhone(updateDto.phone);
+      const customerByPhone = await this._customerRepository.findByPhone(updateDto.phone);
       if (customerByPhone && customerByPhone.getId() !== customerId) {
         throw new Error(ErrorMessages.PHONE_ALREADY_EXISTS);
       }
@@ -42,6 +42,6 @@ export class UpdateCustomerUseCase {
       existing.getIsDeleted()
     );
 
-    return await this.customerRepository.update(updatedCustomer);
+    return await this._customerRepository.update(updatedCustomer);
   }
 }

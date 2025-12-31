@@ -16,7 +16,7 @@ export const mapToResponseDto = (customer: Customer): CustomerResponseDto => {
 
 
 export class GetAllCustomersUseCase {
-  constructor(private readonly customerRepository: ICustomerRepository) {}
+  constructor(private readonly _customerRepository: ICustomerRepository) {}
 
   async execute(filterDto: CustomerFilterDto): Promise<PaginatedResult<CustomerResponseDto>> {
 
@@ -28,7 +28,7 @@ export class GetAllCustomersUseCase {
       suspended: filterDto.suspended, 
     };
 
-    const paginatedResult: PaginatedResult<Customer> = await this.customerRepository.findAllPaginated(
+    const paginatedResult: PaginatedResult<Customer> = await this._customerRepository.findAllPaginated(
       page,
       limit,
       filters

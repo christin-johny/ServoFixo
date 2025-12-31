@@ -9,12 +9,12 @@ export interface CreateZoneDto {
 }
 
 export class CreateZoneUseCase {
-  constructor(private readonly zoneRepository: IZoneRepository) {}
+  constructor(private readonly _zoneRepository: IZoneRepository) {}
 
   async execute(input: CreateZoneDto): Promise<Zone> {
     const { name, description, boundaries, isActive } = input;
 
-    const existing = await this.zoneRepository.findByName(name);
+    const existing = await this._zoneRepository.findByName(name);
     if (existing) {
       throw new Error("Zone with this name already exists");
     }
@@ -31,6 +31,6 @@ export class CreateZoneUseCase {
       false
     );
 
-    return this.zoneRepository.create(newZone);
+    return this._zoneRepository.create(newZone);
   }
 }

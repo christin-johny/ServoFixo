@@ -1,9 +1,9 @@
 import { IServiceCategoryRepository, CategoryQueryParams, PaginatedCategories } from '../../../domain/repositories/IServiceCategoryRepository';
 
 export class GetAllCategoriesUseCase {
-  constructor(private readonly categoryRepo: IServiceCategoryRepository) {}
+  constructor(private readonly _categoryRepo: IServiceCategoryRepository) {}
 
   async execute(params: CategoryQueryParams): Promise<PaginatedCategories> {
-    return this.categoryRepo.findAll(params);
+    return this._categoryRepo.findAll(params);
   }
 }

@@ -10,10 +10,10 @@ import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enum
 
 export class AdminCategoryController {
   constructor(
-    private readonly createUseCase: CreateCategoryUseCase,
-    private readonly getAllUseCase: GetAllCategoriesUseCase,
-    private readonly editUseCase: EditCategoryUseCase,
-    private readonly deleteUseCase: DeleteCategoryUseCase,
+    private readonly _createUseCase: CreateCategoryUseCase,
+    private readonly _getAllUseCase: GetAllCategoriesUseCase,
+    private readonly _editUseCase: EditCategoryUseCase,
+    private readonly _deleteUseCase: DeleteCategoryUseCase,
 
     private readonly toggleStatusUseCase: ToggleCategoryStatusUseCase
   ) {}
@@ -29,7 +29,7 @@ export class AdminCategoryController {
         });
       }
 
-      const category = await this.createUseCase.execute({
+      const category = await this._createUseCase.execute({
         name,
         description,
         isActive: isActive === "true",
@@ -64,7 +64,7 @@ export class AdminCategoryController {
       if (req.query.isActive === "true") isActive = true;
       if (req.query.isActive === "false") isActive = false;
 
-      const result = await this.getAllUseCase.execute({
+      const result = await this._getAllUseCase.execute({
         page,
         limit,
         search,
@@ -84,7 +84,7 @@ export class AdminCategoryController {
       const { name, description, isActive } = req.body;
       const file = req.file;
 
-      const category = await this.editUseCase.execute({
+      const category = await this._editUseCase.execute({
         id,
         name,
         description,
@@ -140,7 +140,7 @@ export class AdminCategoryController {
   delete = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      await this.deleteUseCase.execute(id);
+      await this._deleteUseCase.execute(id);
       return res
         .status(StatusCodes.OK)
         .json({ message: SuccessMessages.CATEGORY_DELETED });

@@ -20,16 +20,16 @@ export interface AddAddressDTO {
 
 export class AddAddressUseCase {
   constructor(
-    private addressRepository: IAddressRepository,
-    private zoneService: ZoneService
+    private _addressRepository: IAddressRepository,
+    private _zoneService: ZoneService
   ) {}
 
   async execute(input: AddAddressDTO): Promise<Address> {
     
-    const zoneResult = await this.zoneService.checkServiceability(input.lat, input.lng);
+    const zoneResult = await this._zoneService.checkServiceability(input.lat, input.lng);
 
     if (input.isDefault) {
-      const oldDefault = await this.addressRepository.findDefaultByUserId(input.userId);
+      const oldDefault = await this._addressRepository.findDefaultByUserId(input.userId);
 
       if (oldDefault) {
         const updatedOldAddress = new Address(
@@ -49,7 +49,7 @@ export class AddAddressUseCase {
             oldDefault.getZoneId(),
             oldDefault.getIsServiceable()
         );
-        await this.addressRepository.update(updatedOldAddress);
+        await this._addressRepository.update(updatedOldAddress);
       }
     }
 
@@ -74,6 +74,6 @@ export class AddAddressUseCase {
       zoneResult.isServiceable 
     );
 
-    return await this.addressRepository.create(newAddress);
+    return await this._addressRepository.create(newAddress);
   }
 }

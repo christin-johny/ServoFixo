@@ -26,8 +26,8 @@ export class CustomerGoogleLoginUseCase {
   private clientId: string;
 
   constructor(
-    private customerRepository: ICustomerRepository,
-    private jwtService: JwtService,
+    private _customerRepository: ICustomerRepository,
+    private _jwtService: JwtService,
     clientId: string
   ) {
     this.clientId = clientId;
@@ -53,7 +53,7 @@ export class CustomerGoogleLoginUseCase {
         const { email, name, sub: googleId, picture: pic } = payload;
         picture = pic;
 
-        customer = await this.customerRepository.findByEmail(email);
+        customer = await this._customerRepository.findByEmail(email);
 
         if (customer) {
           if (!customer.getGoogleId()) {
@@ -72,7 +72,7 @@ export class CustomerGoogleLoginUseCase {
               new Date(),
               customer.getIsDeleted()
             );
-            await this.customerRepository.update(customer);
+            await this._customerRepository.update(customer);
           }
         } else {
           customer = new Customer(
@@ -91,7 +91,7 @@ export class CustomerGoogleLoginUseCase {
             false
           );
 
-          customer = await this.customerRepository.create(customer);
+          customer = await this._customerRepository.create(customer);
         }
       } else if (request.customer) {
         const rawCust = request.customer as any;
@@ -111,8 +111,8 @@ export class CustomerGoogleLoginUseCase {
         type: "customer",
       };
 
-      const accessToken = await this.jwtService.generateAccessToken(jwtPayload);
-      const refreshToken = await this.jwtService.generateRefreshToken({
+      const accessToken = await this._jwtService.generateAccessToken(jwtPayload);
+      const refreshToken = await this._jwtService.generateRefreshToken({
         sub: customerId,
         type: "customer",
       });

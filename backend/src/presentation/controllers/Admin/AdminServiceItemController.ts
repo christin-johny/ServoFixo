@@ -9,11 +9,11 @@ import { ToggleServiceItemStatusUseCase } from "../../../application/use-cases/s
 
 export class AdminServiceItemController {
   constructor(
-    private readonly createUseCase: CreateServiceItemUseCase,
-    private readonly getAllUseCase: GetAllServiceItemsUseCase,
-    private readonly deleteUseCase: DeleteServiceItemUseCase,
-    private readonly editUseCase: EditServiceItemUseCase,
-    private readonly toggleStatusUseCase: ToggleServiceItemStatusUseCase
+    private readonly _createUseCase: CreateServiceItemUseCase,
+    private readonly _getAllUseCase: GetAllServiceItemsUseCase,
+    private readonly _deleteUseCase: DeleteServiceItemUseCase,
+    private readonly _editUseCase: EditServiceItemUseCase,
+    private readonly _toggleStatusUseCase: ToggleServiceItemStatusUseCase
   ) {}
 
   create = async (req: Request, res: Response): Promise<Response> => {
@@ -43,7 +43,7 @@ export class AdminServiceItemController {
           .json({ error: ErrorMessages.INVALID_SPECIFICATIONS });
       }
 
-      const serviceItem = await this.createUseCase.execute({
+      const serviceItem = await this._createUseCase.execute({
         categoryId,
         name,
         description,
@@ -84,7 +84,7 @@ export class AdminServiceItemController {
       if (req.query.isActive === "true") isActive = true;
       if (req.query.isActive === "false") isActive = false;
 
-      const result = await this.getAllUseCase.execute({
+      const result = await this._getAllUseCase.execute({
         page,
         limit,
         search,
@@ -103,7 +103,7 @@ export class AdminServiceItemController {
   delete = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      await this.deleteUseCase.execute(id);
+      await this._deleteUseCase.execute(id);
       return res
         .status(StatusCodes.OK)
         .json({ message: SuccessMessages.SERVICE_DELETED });
@@ -147,7 +147,7 @@ export class AdminServiceItemController {
         parsedDeleteList = [];
       }
 
-      const updatedService = await this.editUseCase.execute({
+      const updatedService = await this._editUseCase.execute({
         id,
         categoryId,
         name,
@@ -200,7 +200,7 @@ export class AdminServiceItemController {
           .json({ error: ErrorMessages.INVALID_IS_ACTIVE });
       }
 
-      await this.toggleStatusUseCase.execute(id, isActive);
+      await this._toggleStatusUseCase.execute(id, isActive);
       return res
         .status(StatusCodes.OK)
         .json({ message: SuccessMessages.SERVICE_STATUS_UPDATED, isActive });
