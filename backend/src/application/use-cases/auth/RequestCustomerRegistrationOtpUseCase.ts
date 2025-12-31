@@ -1,13 +1,13 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { IOtpSessionRepository } from "../../../domain/repositories/IOtpSessionRepository";
-import { IEmailService } from "../../services/IEmailService";
+import { IEmailService } from "../../interfaces/IEmailService";
 import { CustomerRegisterInitDto } from "../../../../../shared/types/dto/AuthDtos";
 import { OtpContext } from "../../../../../shared/types/enums/OtpContext";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { OtpSession } from "../../../domain/entities/OtpSession";
 
 export class RequestCustomerRegistrationOtpUseCase {
-  private readonly otpExpiryMinutes = 2;
+  private readonly _otpExpiryMinutes = 2;
 
   constructor(
     private readonly _customerRepository: ICustomerRepository,
@@ -45,7 +45,7 @@ export class RequestCustomerRegistrationOtpUseCase {
     await this._otpSessionRepository.create(session);
 
     const subject = "ServoFixo - Verify your email";
-    const text = `Your registration OTP is: ${otp}. It is valid for ${this.otpExpiryMinutes} minutes.`;
+    const text = `Your registration OTP is: ${otp}. It is valid for ${this._otpExpiryMinutes} minutes.`;
 
     await this._emailService.sendTextEmail(normalizedEmail, subject, text);
 
@@ -65,7 +65,7 @@ export class RequestCustomerRegistrationOtpUseCase {
 
   private calculateExpiry(): Date {
     const expires = new Date();
-    expires.setMinutes(expires.getMinutes() + this.otpExpiryMinutes);
+    expires.setMinutes(expires.getMinutes() + this._otpExpiryMinutes);
     return expires;
   }
 }

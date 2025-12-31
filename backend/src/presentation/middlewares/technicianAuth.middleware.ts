@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { IJwtService } from "../../application/services/IJwtService";
+import { IJwtService } from "../../application/interfaces/IJwtService";
 import { ErrorMessages } from "../../../../shared/types/enums/ErrorMessages";
 import { StatusCodes } from "../../../../shared/types/enums/StatusCodes";
 

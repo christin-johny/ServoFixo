@@ -1,4 +1,4 @@
-import { IZoneRepository } from "../repositories/IZoneRepository";
+import { IZoneRepository } from "../../domain/repositories/IZoneRepository";
 
 export interface ServiceabilityResult {
   isServiceable: boolean;

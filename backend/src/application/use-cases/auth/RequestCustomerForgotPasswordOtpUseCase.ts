@@ -1,15 +1,15 @@
 import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepository';
 import { IOtpSessionRepository } from '../../../domain/repositories/IOtpSessionRepository';
-import { IEmailService } from '../../services/IEmailService';
+import { IEmailService } from '../../interfaces/IEmailService';
 import { OtpSession } from '../../../domain/entities/OtpSession';
 import { OtpContext } from '../../../../../shared/types/enums/OtpContext';
 import { CustomerForgotPasswordInitDto } from '../../../../../shared/types/dto/AuthDtos';
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 
 export class RequestCustomerForgotPasswordOtpUseCase {
-  private readonly otpExpiryMinutes = 2;
-  private readonly rateLimitWindowMinutes = 60;
-  private readonly rateLimitMax = 10; 
+  private readonly _otpExpiryMinutes = 2;
+  private readonly _rateLimitWindowMinutes = 60;
+  private readonly _rateLimitMax = 10; 
 
   constructor(
     private readonly _customerRepository: ICustomerRepository,
@@ -31,9 +31,9 @@ export class RequestCustomerForgotPasswordOtpUseCase {
     try {
       const recentCount = await this._otpSessionRepository.countRecentSessions(
         normalizedEmail,
-        this.rateLimitWindowMinutes
+        this._rateLimitWindowMinutes
       );
-      if (recentCount >= this.rateLimitMax) {
+      if (recentCount >= this._rateLimitMax) {
         throw new Error('TOO_MANY_OTP_REQUESTS');
       }
     } catch (err) {
@@ -58,7 +58,7 @@ export class RequestCustomerForgotPasswordOtpUseCase {
     await this._otpSessionRepository.create(session);
 
     const subject = 'ServoFixo - Forgot Password OTP';
-    const text = `Your OTP to reset your password is: ${otp}. It is valid for ${this.otpExpiryMinutes} minutes.`;
+    const text = `Your OTP to reset your password is: ${otp}. It is valid for ${this._otpExpiryMinutes} minutes.`;
 
     await this._emailService.sendTextEmail(normalizedEmail, subject, text);
 
@@ -78,7 +78,7 @@ export class RequestCustomerForgotPasswordOtpUseCase {
 
   private calculateExpiry(): Date {
     const expires = new Date();
-    expires.setMinutes(expires.getMinutes() + this.otpExpiryMinutes);
+    expires.setMinutes(expires.getMinutes() + this._otpExpiryMinutes);
     return expires;
   }
 }

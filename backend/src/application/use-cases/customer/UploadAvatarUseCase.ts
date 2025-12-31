@@ -1,5 +1,5 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { IImageService } from "../../services/IImageService";
+import { IImageService } from "../../interfaces/IImageService";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { Customer } from "../../../domain/entities/Customer";
 

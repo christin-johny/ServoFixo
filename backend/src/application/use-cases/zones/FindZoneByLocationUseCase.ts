@@ -1,4 +1,4 @@
-import { ZoneService, ServiceabilityResult } from "../../../domain/services/ZoneService";
+import { ZoneService, ServiceabilityResult } from "../../services/ZoneService";
 
 export class FindZoneByLocationUseCase {
   constructor(private readonly _zoneService: ZoneService) {}

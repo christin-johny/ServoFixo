@@ -22,16 +22,16 @@ interface GoogleLoginResponse {
 }
 
 export class CustomerGoogleLoginUseCase {
-  private googleClient: OAuth2Client;
-  private clientId: string;
+  private _googleClient: OAuth2Client;
+  private _clientId: string;
 
   constructor(
     private _customerRepository: ICustomerRepository,
     private _jwtService: JwtService,
     clientId: string
   ) {
-    this.clientId = clientId;
-    this.googleClient = new OAuth2Client(clientId);
+    this._clientId = clientId;
+    this._googleClient = new OAuth2Client(clientId);
   }
 
   async execute(request: GoogleLoginRequest): Promise<GoogleLoginResponse> {
@@ -40,9 +40,9 @@ export class CustomerGoogleLoginUseCase {
       let picture: string | undefined;
 
       if (request.token) {
-        const ticket = await this.googleClient.verifyIdToken({
+        const ticket = await this._googleClient.verifyIdToken({
           idToken: request.token,
-          audience: this.clientId,
+          audience: this._clientId,
         });
         const payload = ticket.getPayload();
 

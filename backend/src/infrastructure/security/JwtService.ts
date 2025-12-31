@@ -1,5 +1,5 @@
 import jwt, { Secret, SignOptions } from 'jsonwebtoken';
-import { IJwtService, JwtPayload } from '../../application/services/IJwtService';
+import { IJwtService, JwtPayload } from '../../application/interfaces/IJwtService';
 import { ErrorMessages } from '../../../../shared/types/enums/ErrorMessages';
 
 export class JwtService implements IJwtService {

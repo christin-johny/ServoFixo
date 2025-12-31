@@ -1,8 +1,8 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import redis from "../../../infrastructure/redis/redisClient";
 import { IOtpSessionRepository } from "../../../domain/repositories/IOtpSessionRepository";
-import { IPasswordHasher } from "../../services/IPasswordHasher";
-import { IJwtService, JwtPayload } from "../../services/IJwtService";
+import { IPasswordHasher } from "../../interfaces/IPasswordHasher";
+import { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
 import { CustomerRegisterVerifyDto } from "../../../../../shared/types/dto/AuthDtos";
 import { AuthResultDto } from "../../dto/auth/AuthResultDto";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";

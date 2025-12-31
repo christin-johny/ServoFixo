@@ -62,7 +62,7 @@ import { JwtService } from "../security/JwtService";
 import { RefreshTokenUseCase } from "../../application/use-cases/auth/RefreshTokenUseCase";
 import { AuthTokenController } from "../../presentation/controllers/AuthTokenController";
 
-import { ZoneService } from "../../domain/services/ZoneService";
+import { ZoneService } from "../../application/services/ZoneService";
 import { AddressMongoRepository } from "../database/repositories/AddressMongoRepository";
 // --- Customer Zone Module Imports ---
 import { FindZoneByLocationUseCase } from "../../application/use-cases/zones/FindZoneByLocationUseCase";

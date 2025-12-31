@@ -1,5 +1,5 @@
 import { IAddressRepository } from "../../../domain/repositories/IAddressRepository";
-import { ZoneService } from "../../../domain/services/ZoneService";
+import { ZoneService } from "../../services/ZoneService";
 import { Address } from "../../../domain/entities/Address";
 
 export interface AddAddressDTO {

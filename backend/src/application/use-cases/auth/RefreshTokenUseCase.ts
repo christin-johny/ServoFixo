@@ -1,6 +1,6 @@
 import redis from "../../../infrastructure/redis/redisClient";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import type { IJwtService, JwtPayload } from "../../services/IJwtService";
+import type { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 
 export class RefreshTokenUseCase {

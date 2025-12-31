@@ -1,5 +1,5 @@
 import { IServiceItemRepository } from '../../../domain/repositories/IServiceItemRepository';
-import { IImageService } from '../../services/IImageService';
+import { IImageService } from '../../interfaces/IImageService';
 import { ServiceItem, ServiceSpecification } from '../../../domain/entities/ServiceItem';
 
 interface CreateServiceRequest {

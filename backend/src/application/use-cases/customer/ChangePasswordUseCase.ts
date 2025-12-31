@@ -1,5 +1,5 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { IPasswordHasher } from "../../services/IPasswordHasher";
+import { IPasswordHasher } from "../../interfaces/IPasswordHasher";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { Customer } from "../../../domain/entities/Customer";
 

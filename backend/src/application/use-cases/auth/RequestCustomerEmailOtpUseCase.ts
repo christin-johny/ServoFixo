@@ -1,6 +1,6 @@
 import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepository';
 import { IOtpSessionRepository } from '../../../domain/repositories/IOtpSessionRepository';
-import { IEmailService } from '../../services/IEmailService';
+import { IEmailService } from '../../interfaces/IEmailService';
 import { OtpContext } from '../../../../../shared/types/enums/OtpContext';
 import { OtpLoginInitDto, AuthResponse } from '../../../../../shared/types/dto/AuthDtos';
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';

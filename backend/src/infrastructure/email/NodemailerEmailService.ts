@@ -1,5 +1,5 @@
 import nodemailer, { Transporter } from "nodemailer";
-import { IEmailService } from "../../application/services/IEmailService";
+import { IEmailService } from "../../application/interfaces/IEmailService";
 
 export class NodemailerEmailService implements IEmailService {
   private _transporter: Transporter;

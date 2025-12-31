@@ -1,5 +1,5 @@
 import { IServiceCategoryRepository } from "../../../domain/repositories/IServiceCategoryRepository";
-import { IImageService } from "../../services/IImageService";
+import { IImageService } from "../../interfaces/IImageService";
 import { ServiceCategory } from "../../../domain/entities/ServiceCategory";
 
 interface CreateCategoryRequest {
