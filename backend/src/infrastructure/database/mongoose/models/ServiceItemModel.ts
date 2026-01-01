@@ -10,6 +10,8 @@ export interface IServiceItemDocument extends Document {
   isActive: boolean;
   isDeleted: boolean;
   bookingCount: number;
+  rating: number;       
+  reviewCount: number;  
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,6 +42,8 @@ const ServiceItemSchema: Schema = new Schema(
     isDeleted: { type: Boolean, default: false },
 
     bookingCount: { type: Number, default: 0, index: -1 },
+    rating: { type: Number, default: 0, index: -1 },      
+    reviewCount: { type: Number, default: 0 },            
   },
   { timestamps: true }
 );

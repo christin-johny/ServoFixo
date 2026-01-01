@@ -79,7 +79,7 @@ import { UploadAvatarUseCase } from "../../application/use-cases/customer/Upload
 import { ChangePasswordUseCase } from "../../application/use-cases/customer/ChangePasswordUseCase";
 
 //logger
-import { WinstonLogger } from '../logging/WinstonLogger';
+import { WinstonLogger } from "../logging/WinstonLogger";
 
 // INFRASTRUCTURE SERVICE INSTANTIATION
 
@@ -92,13 +92,16 @@ const logger = new WinstonLogger();
 
 // ZONE MODULE WIRING
 const zoneRepo = new ZoneMongoRepository();
-const createZoneUseCase = new CreateZoneUseCase(zoneRepo);
-const getAllZonesUseCase = new GetAllZonesUseCase(zoneRepo);
-const editZoneUseCase = new EditZoneUseCase(zoneRepo);
-const deleteZoneUseCase = new DeleteZoneUseCase(zoneRepo);
+const createZoneUseCase = new CreateZoneUseCase(zoneRepo, logger);
+const getAllZonesUseCase = new GetAllZonesUseCase(zoneRepo, logger);
+const editZoneUseCase = new EditZoneUseCase(zoneRepo, logger);
+const deleteZoneUseCase = new DeleteZoneUseCase(zoneRepo, logger);
 
 export const zoneService = new ZoneService(zoneRepo);
-const findZoneByLocationUseCase = new FindZoneByLocationUseCase(zoneService);
+const findZoneByLocationUseCase = new FindZoneByLocationUseCase(
+  zoneService,
+  logger
+);
 export const customerZoneController = new CustomerZoneController(
   findZoneByLocationUseCase
 );
@@ -106,7 +109,8 @@ export const adminZoneController = new AdminZoneController(
   createZoneUseCase,
   getAllZonesUseCase,
   deleteZoneUseCase,
-  editZoneUseCase
+  editZoneUseCase,
+  logger
 );
 
 // CATEGORY MODULE WIRING
@@ -114,15 +118,24 @@ export const adminZoneController = new AdminZoneController(
 const categoryRepo = new ServiceCategoryMongoRepository();
 const createCategoryUseCase = new CreateCategoryUseCase(
   categoryRepo,
-  imageService
+  imageService,
+  logger
 );
-const getAllCategoriesUseCase = new GetAllCategoriesUseCase(categoryRepo);
-const editCategoryUseCase = new EditCategoryUseCase(categoryRepo, imageService);
+const getAllCategoriesUseCase = new GetAllCategoriesUseCase(
+  categoryRepo,
+  logger
+);
+const editCategoryUseCase = new EditCategoryUseCase(
+  categoryRepo,
+  imageService,
+  logger
+);
 
-const deleteCategoryUseCase = new DeleteCategoryUseCase(categoryRepo);
+const deleteCategoryUseCase = new DeleteCategoryUseCase(categoryRepo, logger);
 
 const toggleCategoryStatusUseCase = new ToggleCategoryStatusUseCase(
-  categoryRepo
+  categoryRepo,
+  logger
 );
 
 export const adminCategoryController = new AdminCategoryController(
@@ -130,7 +143,8 @@ export const adminCategoryController = new AdminCategoryController(
   getAllCategoriesUseCase,
   editCategoryUseCase,
   deleteCategoryUseCase,
-  toggleCategoryStatusUseCase
+  toggleCategoryStatusUseCase,
+  logger
 );
 
 // SERVICE ITEM MODULE WIRING
@@ -138,20 +152,27 @@ export const adminCategoryController = new AdminCategoryController(
 const serviceItemRepo = new ServiceItemMongoRepository();
 const createServiceItemUseCase = new CreateServiceItemUseCase(
   serviceItemRepo,
-  imageService
+  imageService,
+  logger
 );
 const getAllServiceItemsUseCase = new GetAllServiceItemsUseCase(
-  serviceItemRepo
+  serviceItemRepo,
+  logger
 );
 
-const deleteServiceItemUseCase = new DeleteServiceItemUseCase(serviceItemRepo);
+const deleteServiceItemUseCase = new DeleteServiceItemUseCase(
+  serviceItemRepo,
+  logger
+);
 const editServiceItemUseCase = new EditServiceItemUseCase(
   serviceItemRepo,
-  imageService
+  imageService,
+  logger
 );
 
 const toggleServiceItemStatusUseCase = new ToggleServiceItemStatusUseCase(
-  serviceItemRepo
+  serviceItemRepo,
+  logger
 );
 
 export const adminServiceItemController = new AdminServiceItemController(
@@ -159,7 +180,8 @@ export const adminServiceItemController = new AdminServiceItemController(
   getAllServiceItemsUseCase,
   deleteServiceItemUseCase,
   editServiceItemUseCase,
-  toggleServiceItemStatusUseCase
+  toggleServiceItemStatusUseCase,
+  logger
 );
 
 // CUSTOMER MODULE WIRING (Admin & Profile)
@@ -186,7 +208,7 @@ export const customerProfileController = new CustomerProfileController(
   changePasswordUseCase
 );
 
-const getAddressesUseCase = new GetAddressesUseCase(addressRepo);
+const getAddressesUseCase = new GetAddressesUseCase(addressRepo, logger);
 
 export const adminCustomerController = new AdminCustomerController(
   getAllCustomersUseCase,
@@ -241,12 +263,22 @@ export const customerAuthController = new CustomerAuthController(
 
 // CUSTOMER SERVICE MODULE WIRING (Home/Listing)
 
-const getMostBookedUseCase = new GetMostBookedServicesUseCase(serviceItemRepo);
-const getServiceListingUseCase = new GetServiceListingUseCase(serviceItemRepo);
-const getServiceByIdUseCase = new GetServiceByIdUseCase(serviceItemRepo);
+const getMostBookedUseCase = new GetMostBookedServicesUseCase(
+  serviceItemRepo,
+  logger
+);
+const getServiceListingUseCase = new GetServiceListingUseCase(
+  serviceItemRepo,
+  logger
+);
+const getServiceByIdUseCase = new GetServiceByIdUseCase(
+  serviceItemRepo,
+  logger
+);
 
 export const customerCategoryController = new CustomerCategoryController(
-  getAllCategoriesUseCase
+  getAllCategoriesUseCase,
+  logger
 );
 
 export const customerServiceController = new CustomerServiceController(
@@ -255,15 +287,25 @@ export const customerServiceController = new CustomerServiceController(
   getServiceByIdUseCase
 );
 
-const addAddressUseCase = new AddAddressUseCase(addressRepo, zoneService);
-const updateAddressUseCase = new UpdateAddressUseCase(addressRepo, zoneService);
-const deleteAddressUseCase = new DeleteAddressUseCase(addressRepo);
+const addAddressUseCase = new AddAddressUseCase(
+  addressRepo,
+  zoneService,
+  logger
+);
+const updateAddressUseCase = new UpdateAddressUseCase(
+  addressRepo,
+  zoneService,
+  logger
+);
+const deleteAddressUseCase = new DeleteAddressUseCase(addressRepo, logger);
 export const customerAddressController = new CustomerAddressController(
   addAddressUseCase,
   updateAddressUseCase,
   getAddressesUseCase,
-  deleteAddressUseCase
+  deleteAddressUseCase,
+  logger
 );
+
 // --- ADMIN AUTH MODULE WIRING ---
 const adminRepo = new AdminMongoRepository();
 

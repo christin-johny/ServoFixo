@@ -1,28 +1,35 @@
-import { IZoneRepository, ZoneQueryParams } from '../../../domain/repositories/IZoneRepository';
-import { ZoneResponseDto } from '../../dto/zone/ZoneResponseDto';
-import { ZoneMapper } from '../../mappers/ZoneMapper';
+import {
+  IZoneRepository,
+  ZoneQueryParams,
+} from "../../../domain/repositories/IZoneRepository";
+import { ZoneResponseDto } from "../../dto/zone/ZoneResponseDto";
+import { ZoneMapper } from "../../mappers/ZoneMapper";
+import { ILogger } from "../../interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export interface PaginatedZonesResponse {
   zones: ZoneResponseDto[];
   total: number;
-  // ADDED: Pagination metadata
   currentPage: number;
   totalPages: number;
 }
 
 export class GetAllZonesUseCase {
-  constructor(private readonly _zoneRepository: IZoneRepository) {}
+  constructor(
+    private readonly _zoneRepository: IZoneRepository,
+    private readonly _logger: ILogger
+  ) {}
 
   async execute(params: ZoneQueryParams): Promise<PaginatedZonesResponse> {
+    this._logger.debug(LogEvents.ZONE_GET_ALL_INIT, { params });
+
     const result = await this._zoneRepository.findAll(params);
-    
+
     return {
-      // Map Entities to DTOs
-      zones: result.zones.map(z => ZoneMapper.toResponse(z)),
+      zones: result.zones.map((z) => ZoneMapper.toResponse(z)),
       total: result.total,
-      // Pass through metadata
       currentPage: result.currentPage,
-      totalPages: result.totalPages
+      totalPages: result.totalPages,
     };
   }
 }

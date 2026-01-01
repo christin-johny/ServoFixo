@@ -3,28 +3,27 @@ import { ZoneService } from "../../services/ZoneService";
 import { CreateAddressDto } from "../../dto/address/CreateAddressDto";
 import { AddressResponseDto } from "../../dto/address/AddressResponseDto";
 import { AddressMapper } from "../../mappers/AddressMapper";
+import { ILogger } from "../../interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class AddAddressUseCase {
   constructor(
     private _addressRepository: IAddressRepository,
-    private _zoneService: ZoneService
+    private _zoneService: ZoneService,
+    private _logger: ILogger 
   ) {}
 
   async execute(input: CreateAddressDto, userId: string): Promise<AddressResponseDto> {
     
-    // 1. Check Serviceability (External Logic)
     const zoneResult = await this._zoneService.checkServiceability(input.lat, input.lng);
 
-    // 2. Handle "Default Address" Logic
     if (input.isDefault) {
       const oldDefault = await this._addressRepository.findDefaultByUserId(userId);
       if (oldDefault) {
-        // Mark old address as non-default using Domain Method
         await this._addressRepository.update(oldDefault.markAsNonDefault());
       }
     }
 
-    // 3. Create New Entity using Mapper
     const newAddress = AddressMapper.toDomain(
       input,
       userId,
@@ -33,10 +32,14 @@ export class AddAddressUseCase {
       zoneResult.isServiceable
     );
 
-    // 4. Save to Repository
     const savedAddress = await this._addressRepository.create(newAddress);
 
-    // 5. Return Safe DTO
+    this._logger.info(LogEvents.ADDRESS_ADDED, { 
+      addressId: savedAddress.getId(), 
+      userId, 
+      isServiceable: zoneResult.isServiceable 
+    });
+
     return AddressMapper.toResponse(savedAddress);
   }
 }

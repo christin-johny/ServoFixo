@@ -2,14 +2,20 @@ import { IAddressRepository } from "../../../domain/repositories/IAddressReposit
 import { AddressResponseDto } from "../../dto/address/AddressResponseDto";
 import { AddressMapper } from "../../mappers/AddressMapper";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ILogger } from "../../interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class GetAddressesUseCase {
-  constructor(private _addressRepository: IAddressRepository) {}
+  constructor(
+    private _addressRepository: IAddressRepository,
+    private _logger: ILogger 
+  ) {}
 
   async execute(userId: string): Promise<AddressResponseDto[]> {
     const addresses = await this._addressRepository.findAllByUserId(userId);
     
     if (!addresses || addresses.length === 0) {
+        this._logger.warn(LogEvents.ADDRESS_NOT_FOUND, { userId, reason: "User has no addresses" });
         throw new Error(ErrorMessages.ADDRESS_NOT_FOUND); 
     }
 

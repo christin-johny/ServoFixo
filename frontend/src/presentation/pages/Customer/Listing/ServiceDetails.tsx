@@ -46,7 +46,7 @@ const ServiceDetails: React.FC = () => {
             const data = await serviceRepo.getServiceById(id);
             setService(data);
             const services = await serviceRepo.getServices({categoryId: data.categoryId});
-            setSimilarServices(services.filter(s=>s._id !== id));
+            setSimilarServices(services.filter(s=>s.id !== id));
          } catch (err) {
             console.error("Failed to load service", err);
          } finally {
@@ -245,7 +245,7 @@ const ServiceDetails: React.FC = () => {
         >
             {similarServices.map((s, index) => (
                 <div 
-                    key={s._id} 
+                    key={s.id} 
                     className={`
                         snap-center 
                         flex-shrink-0 

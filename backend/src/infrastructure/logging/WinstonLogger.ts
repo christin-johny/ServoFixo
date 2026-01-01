@@ -3,20 +3,20 @@ import DailyRotateFile from 'winston-daily-rotate-file';
 import { ILogger } from '../../application/interfaces/ILogger';
 
 export class WinstonLogger implements ILogger {
-  private logger: winston.Logger;
+private logger: winston.Logger;
 
   constructor() {
     const logFormat = winston.format.combine(
       winston.format.timestamp(),
-      winston.format.json() 
+      winston.format.json()
     );
 
     const errorTransport = new DailyRotateFile({
       filename: 'logs/error-%DATE%.log',
       datePattern: 'YYYY-MM-DD',
-      zippedArchive: true,
-      maxSize: '20m',     
-      maxFiles: '14d',     
+      zippedArchive: true, 
+      maxSize: '5m',     
+      maxFiles: '3d',     
       level: 'error',
     });
 
@@ -24,8 +24,8 @@ export class WinstonLogger implements ILogger {
       filename: 'logs/combined-%DATE%.log',
       datePattern: 'YYYY-MM-DD',
       zippedArchive: true,
-      maxSize: '20m',
-      maxFiles: '14d',     
+      maxSize: '5m',       
+      maxFiles: '3d',     
     });
 
     this.logger = winston.createLogger({

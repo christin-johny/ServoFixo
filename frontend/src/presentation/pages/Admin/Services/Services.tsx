@@ -114,7 +114,6 @@ const Services: React.FC = () => {
         try {
             setIsSubmitting(true);
             if (editingCategory) {
-                // FIX: Use .id instead of ._id
                 await categoryRepo.updateCategory(editingCategory.id, formData);
                 showSuccess("Category updated");
             } else {
@@ -135,7 +134,6 @@ const Services: React.FC = () => {
         e.stopPropagation();
         try {
             const newStatus = !category.isActive;
-            // FIX: Use .id instead of ._id
             await categoryRepo.toggleCategoryStatus(category.id, newStatus);
             showSuccess(`Category ${category.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
             loadCategories();
@@ -161,7 +159,7 @@ const Services: React.FC = () => {
         try {
             setIsSubmitting(true);
             if (editingService) {
-                await serviceRepo.updateService(editingService._id, formData);
+                await serviceRepo.updateService(editingService.id, formData);
                 showSuccess("Service updated successfully");
             } else {
                 await serviceRepo.createService(formData);
@@ -180,7 +178,7 @@ const Services: React.FC = () => {
     const handleToggleServiceStatus = async (service: ServiceItem) => {
         try {
             const newStatus = !service.isActive;
-            await serviceRepo.toggleServiceStatus(service._id, newStatus);
+            await serviceRepo.toggleServiceStatus(service.id, newStatus);
             showSuccess(`Service ${service.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
             if (expandedId) loadServicesForCategory(expandedId);
         } catch (err: unknown) {

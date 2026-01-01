@@ -59,7 +59,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({ category }) => {
               <div key={i} className="min-w-[200px] w-[200px] md:min-w-[240px] md:w-[240px] h-64 bg-gray-100 rounded-xl animate-pulse shrink-0 snap-start"/>
             ))
           : services.map(s => (
-              <div key={s._id} className="snap-start shrink-0">
+              <div key={s.id} className="snap-start shrink-0">
                  <ServiceCard service={s} />
               </div>
             ))

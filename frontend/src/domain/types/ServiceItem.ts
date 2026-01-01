@@ -4,7 +4,7 @@ export interface ServiceSpecification {
 }
 
 export interface ServiceItem {
-  _id: string;
+  id: string;
   categoryId: string;
   name: string;
   description: string;

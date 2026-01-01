@@ -4,6 +4,8 @@ import { CreateCategoryDto } from "../../dto/category/CreateCategoryDto";
 import { CategoryResponseDto } from "../../dto/category/CategoryResponseDto";
 import { CategoryMapper } from "../../mappers/CategoryMapper";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ILogger } from "../../interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export interface IFile {
   buffer: Buffer;
@@ -14,16 +16,21 @@ export interface IFile {
 export class CreateCategoryUseCase {
   constructor(
     private readonly _categoryRepo: IServiceCategoryRepository,
-    private readonly _imageService: IImageService
+    private readonly _imageService: IImageService,
+    private readonly _logger: ILogger
   ) {}
 
   async execute(dto: CreateCategoryDto, imageFile?: IFile): Promise<CategoryResponseDto> {
+    this._logger.info(`${LogEvents.CATEGORY_CREATE_INIT} - Name: ${dto.name}`);
+
     const existing = await this._categoryRepo.findByName(dto.name);
     if (existing) {
+      this._logger.warn(`${LogEvents.CATEGORY_CREATE_FAILED} - ${LogEvents.CATEGORY_ALREADY_EXISTS} - Name: ${dto.name}`);
       throw new Error(ErrorMessages.CATEGORY_ALREADY_EXISTS);
     }
 
     if (!imageFile) {
+      this._logger.error(`${LogEvents.CATEGORY_CREATE_FAILED} - Image required`);
       throw new Error("Category icon/image is required");
     }
 
@@ -32,10 +39,13 @@ export class CreateCategoryUseCase {
       imageFile.originalName,
       imageFile.mimeType
     );
+    this._logger.info(LogEvents.CATEGORY_IMAGE_UPLOAD_SUCCESS);
 
     const newCategory = CategoryMapper.toDomain(dto, iconUrl);
 
     const savedCategory = await this._categoryRepo.create(newCategory);
+    
+    this._logger.info(`${LogEvents.CATEGORY_CREATED} - ID: ${savedCategory.getId()}`);
     return CategoryMapper.toResponse(savedCategory);
   }
 }

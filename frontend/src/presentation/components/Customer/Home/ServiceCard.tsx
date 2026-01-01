@@ -12,7 +12,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
   const navigate = useNavigate()
   return (
     <div
-      onClick={() => { navigate(`/services/${service._id}`) }}
+      onClick={() => { navigate(`/services/${service.id}`) }}
       className="min-w-[200px] w-[200px] md:min-w-[240px] md:w-[240px] bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden shrink-0 group cursor-pointer hover:shadow-md hover:border-blue-100 transition-all duration-300"
     >
       {/* Image Section */}

@@ -1,48 +1,50 @@
 import { IServiceItemRepository } from '../../../domain/repositories/IServiceItemRepository';
 import { IImageService } from '../../interfaces/IImageService';
-import { ServiceItem, ServiceSpecification } from '../../../domain/entities/ServiceItem';
+import { CreateServiceItemDto } from '../../dto/serviceItem/CreateServiceItemDto';
+import { ServiceItemResponseDto } from '../../dto/serviceItem/ServiceItemResponseDto';
+import { ServiceItemMapper } from '../../mappers/ServiceItemMapper';
+import { ILogger } from '../../interfaces/ILogger';
+import { LogEvents } from '../../../../../shared/constants/LogEvents';
+import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 
-interface CreateServiceRequest {
-  categoryId: string;
-  name: string;
-  description: string;
-  basePrice: number;
-  specifications: ServiceSpecification[];
-  imageFiles: { buffer: Buffer; originalName: string; mimeType: string }[]; 
-  isActive: boolean;
+export interface IFile {
+  buffer: Buffer;
+  originalName: string;
+  mimeType: string;
 }
 
 export class CreateServiceItemUseCase {
   constructor(
     private readonly _serviceRepo: IServiceItemRepository,
-    private readonly _imageService: IImageService
+    private readonly _imageService: IImageService,
+    private readonly _logger: ILogger
   ) {}
 
-  async execute(request: CreateServiceRequest): Promise<ServiceItem> {
-    const existing = await this._serviceRepo.findByNameAndCategory(request.name, request.categoryId);
+  async execute(dto: CreateServiceItemDto, imageFiles: IFile[]): Promise<ServiceItemResponseDto> {
+    this._logger.info(`${LogEvents.SERVICE_CREATE_INIT} - Name: ${dto.name}`);
+
+    const existing = await this._serviceRepo.findByNameAndCategory(dto.name, dto.categoryId);
     if (existing) {
-      throw new Error(`Service '${request.name}' already exists in this category.`);
+      this._logger.warn(`${LogEvents.SERVICE_CREATE_FAILED} - ${LogEvents.SERVICE_ALREADY_EXISTS}`);
+      throw new Error(ErrorMessages.SERVICE_ALREADY_EXISTS);
     }
 
-    const uploadPromises = request.imageFiles.map(file => 
+    if (!imageFiles || imageFiles.length === 0) {
+      this._logger.error(`${LogEvents.SERVICE_CREATE_FAILED} - No images provided`);
+      throw new Error(ErrorMessages.INVALID_IMAGES);
+    }
+
+    const uploadPromises = imageFiles.map(file => 
       this._imageService.uploadImage(file.buffer, file.originalName, file.mimeType)
     );
     
     const imageUrls = await Promise.all(uploadPromises);
+    this._logger.info(LogEvents.SERVICE_IMAGE_UPLOAD_SUCCESS);
 
-    const newService = new ServiceItem(
-      '', 
-      request.categoryId,
-      request.name,
-      request.description,
-      request.basePrice,
-      request.specifications,
-      imageUrls,
-      request.isActive,
-      new Date(),
-      new Date()
-    );
+    const newService = ServiceItemMapper.toDomain(dto, imageUrls);
+    const savedService = await this._serviceRepo.create(newService);
 
-    return this._serviceRepo.create(newService);
+    this._logger.info(`${LogEvents.SERVICE_CREATED} - ID: ${savedService.getId()}`);
+    return ServiceItemMapper.toResponse(savedService);
   }
 }

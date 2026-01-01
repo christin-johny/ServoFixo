@@ -1,15 +1,24 @@
 import { IServiceCategoryRepository } from '../../../domain/repositories/IServiceCategoryRepository';
+import { ILogger } from "../../interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 
 export class DeleteCategoryUseCase {
   constructor(
     private readonly _categoryRepo: IServiceCategoryRepository,
-
+    private readonly _logger: ILogger
   ) {}
 
   async execute(id: string): Promise<void> {
+    this._logger.info(`${LogEvents.CATEGORY_DELETE_INIT} - ID: ${id}`);
+
     const category = await this._categoryRepo.findById(id);
-    if (!category) throw new Error('Category not found');
+    if (!category) {
+      this._logger.warn(`${LogEvents.CATEGORY_DELETE_FAILED} - ${LogEvents.CATEGORY_NOT_FOUND} - ID: ${id}`);
+      throw new Error(ErrorMessages.CATEGORY_NOT_FOUND);
+    }
 
     await this._categoryRepo.delete(id);
+    this._logger.info(`${LogEvents.CATEGORY_DELETED} - ID: ${id}`);
   }
 }

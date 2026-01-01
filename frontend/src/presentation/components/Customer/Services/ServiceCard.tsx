@@ -17,7 +17,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
 
   return (
     <article
-      onClick={() => navigate(`/services/${service._id}`)}
+      onClick={() => navigate(`/services/${service.id}`)}
       className="
 group relative flex flex-col w-full h-full
  bg-white rounded-xl

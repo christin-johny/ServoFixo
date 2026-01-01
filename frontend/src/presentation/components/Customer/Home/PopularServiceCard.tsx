@@ -9,7 +9,7 @@ const PopularServiceCard: React.FC<Props> = ({ service }) => {
   const navigate = useNavigate()
   return (
     <article
-    onClick={()=>{navigate(`/services/${service._id}`)}}
+    onClick={()=>{navigate(`/services/${service.id}`)}}
       className="
         group relative flex flex-col
         w-full h-full

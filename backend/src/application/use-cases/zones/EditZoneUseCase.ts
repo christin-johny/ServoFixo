@@ -3,25 +3,31 @@ import { UpdateZoneDto } from "../../dto/zone/UpdateZoneDto";
 import { ZoneResponseDto } from "../../dto/zone/ZoneResponseDto";
 import { ZoneMapper } from "../../mappers/ZoneMapper";
 import { Zone } from "../../../domain/entities/Zone";
+import { ILogger } from "../../interfaces/ILogger";
+import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class EditZoneUseCase {
-  constructor(private readonly _zoneRepository: IZoneRepository) {}
+  constructor(
+    private readonly _zoneRepository: IZoneRepository,
+    private readonly _logger: ILogger
+  ) {}
 
   async execute(id: string, input: UpdateZoneDto): Promise<ZoneResponseDto> {
     const existingZone = await this._zoneRepository.findById(id);
     if (!existingZone) {
-      throw new Error("Zone not found");
+      this._logger.warn(LogEvents.ZONE_NOT_FOUND, { id });
+      throw new Error(ErrorMessages.ZONE_NOT_FOUND);
     }
 
-    // Name Duplicate Check
     if (input.name && input.name !== existingZone.getName()) {
       const duplicate = await this._zoneRepository.findByName(input.name);
       if (duplicate) {
-        throw new Error("Zone with this name already exists");
+        this._logger.warn(LogEvents.ZONE_ALREADY_EXISTS, { name: input.name });
+        throw new Error(ErrorMessages.ZONE_ALREADY_EXISTS);
       }
     }
 
-    // Immutable Update using Props
     const updatedEntity = new Zone({
       ...existingZone.toProps(),
       ...input,
@@ -29,6 +35,9 @@ export class EditZoneUseCase {
     });
 
     const savedZone = await this._zoneRepository.update(updatedEntity);
+    
+    this._logger.info(LogEvents.ZONE_UPDATE_SUCCESS, { id });
+    
     return ZoneMapper.toResponse(savedZone);
   }
 }

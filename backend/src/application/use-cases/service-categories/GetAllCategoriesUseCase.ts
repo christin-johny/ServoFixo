@@ -1,6 +1,8 @@
 import { IServiceCategoryRepository, CategoryQueryParams } from '../../../domain/repositories/IServiceCategoryRepository';
 import { CategoryResponseDto } from '../../dto/category/CategoryResponseDto';
 import { CategoryMapper } from '../../mappers/CategoryMapper';
+import { ILogger } from "../../interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export interface PaginatedCategoriesResponse {
   categories: CategoryResponseDto[]; 
@@ -10,9 +12,14 @@ export interface PaginatedCategoriesResponse {
 }
 
 export class GetAllCategoriesUseCase {
-  constructor(private readonly _categoryRepo: IServiceCategoryRepository) {}
+  constructor(
+    private readonly _categoryRepo: IServiceCategoryRepository,
+    private readonly _logger: ILogger
+  ) {}
 
   async execute(params: CategoryQueryParams): Promise<PaginatedCategoriesResponse> {
+    this._logger.info(`${LogEvents.CATEGORY_GET_ALL_INIT} - Params: ${JSON.stringify(params)}`);
+    
     const result = await this._categoryRepo.findAll(params);
     
     return {

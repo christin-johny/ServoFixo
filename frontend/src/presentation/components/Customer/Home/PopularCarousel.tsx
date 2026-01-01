@@ -18,7 +18,7 @@ const PopularCarousel: React.FC<Props> = ({ services }) => {
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-6">
         {services.map(s => (
-          <div key={s._id} className="w-full">
+          <div key={s.id} className="w-full">
             <PopularServiceCard service={s} />
           </div>
         ))}

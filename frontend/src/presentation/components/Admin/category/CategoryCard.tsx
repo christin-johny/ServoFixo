@@ -125,9 +125,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
             <div className="space-y-2 sm:space-y-3">
               {services.map((service) => (
                 <div 
-                    // IMPORTANT: We will fix ServiceItem IDs later, leaving as _id for now if not refactored yet
-                    // If you refactored Service Items too, change this to service.id
-                    key={service._id} 
+                    key={service.id} 
                     className={`
                         bg-white p-2 sm:p-3 rounded-lg sm:rounded-xl border flex gap-3 transition-colors group relative overflow-hidden
                         hover:border-blue-300 
@@ -188,7 +186,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
                     <button onClick={() => onEditService(service)} className="p-1 sm:p-1.5 text-gray-400 hover:text-blue-600">
                         <Edit2 className="w-3.5 h-3.5 sm:w-[14px] sm:h-[14px]" />
                     </button>
-                    <button onClick={() => onDeleteService(service._id)} className="p-1 sm:p-1.5 text-gray-400 hover:text-red-600">
+                    <button onClick={() => onDeleteService(service.id)} className="p-1 sm:p-1.5 text-gray-400 hover:text-red-600">
                         <Trash2 className="w-3.5 h-3.5 sm:w-[14px] sm:h-[14px]" />
                     </button>
                   </div>

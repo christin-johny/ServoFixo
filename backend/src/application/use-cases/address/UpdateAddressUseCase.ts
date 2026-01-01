@@ -5,21 +5,25 @@ import { AddressResponseDto } from "../../dto/address/AddressResponseDto";
 import { AddressMapper } from "../../mappers/AddressMapper";
 import { Address } from "../../../domain/entities/Address";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ILogger } from "../../interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class UpdateAddressUseCase {
   constructor(
     private _addressRepository: IAddressRepository,
-    private _zoneService: ZoneService
+    private _zoneService: ZoneService,
+    private _logger: ILogger 
   ) {}
 
   async execute(id: string, userId: string, input: UpdateAddressDto): Promise<AddressResponseDto> {
     
-    // 1. Fetch Existing
     const existing = await this._addressRepository.findById(id);
-    if (!existing) throw new Error(ErrorMessages.ADDRESS_NOT_FOUND);
+    if (!existing) {
+        this._logger.warn(LogEvents.ADDRESS_NOT_FOUND, { addressId: id });
+        throw new Error(ErrorMessages.ADDRESS_NOT_FOUND);
+    }
     if (existing.getUserId() !== userId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
-    // 2. Calculate New Zone/Serviceability (only if location changed)
     let zoneId = existing.getZoneId();
     let isServiceable = existing.getIsServiceable();
     let newLocation = existing.getLocation();
@@ -31,7 +35,6 @@ export class UpdateAddressUseCase {
       newLocation = { type: "Point", coordinates: [input.lng, input.lat] };
     }
 
-    // 3. Handle Default Toggle
     if (input.isDefault === true && !existing.getIsDefault()) {
       const oldDefault = await this._addressRepository.findDefaultByUserId(userId);
       if (oldDefault && oldDefault.getId() !== id) {
@@ -39,15 +42,12 @@ export class UpdateAddressUseCase {
       }
     }
 
-    // 4. Create Updated Entity (Immutable Update)
-    // We combine existing props + input DTO
     const updatedEntity = new Address({
-      ...existing.toProps(), // Start with existing data
-      ...input,              // Overwrite with inputs (TS will ignore undefined/nulls here if configured, else be careful)
-      location: newLocation, // Overwrite complex fields manually
+      ...existing.toProps(),
+      ...input,
+      location: newLocation,
       zoneId: zoneId,
       isServiceable: isServiceable,
-      // Ensure we don't accidentally overwrite strict fields with undefined if input is partial
       tag: input.tag ?? existing.getTag(),
       name: input.name ?? existing.getName(),
       phone: input.phone ?? existing.getPhone(),
@@ -60,8 +60,10 @@ export class UpdateAddressUseCase {
       isDefault: input.isDefault ?? existing.getIsDefault(),
     });
 
-    // 5. Save & Return
     const saved = await this._addressRepository.update(updatedEntity);
+    
+    this._logger.info(LogEvents.ADDRESS_UPDATED, { addressId: saved.getId() });
+
     return AddressMapper.toResponse(saved);
   }
 }

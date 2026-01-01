@@ -3,70 +3,38 @@ export interface ServiceSpecification {
   value: string;
 }
 
+export interface ServiceItemProps {
+  id: string;
+  categoryId: string;
+  name: string;
+  description: string;
+  basePrice: number;
+  specifications: ServiceSpecification[];
+  imageUrls: string[];
+  isActive: boolean;
+  rating: number;
+  reviewCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export class ServiceItem {
-  constructor(
-    private readonly _id: string,
-    private categoryId: string,
-    private name: string,
-    private description: string,
-    private basePrice: number,
-    private specifications: ServiceSpecification[],
-    private imageUrls: string[],
-    private isActive: boolean,
-    private readonly createdAt: Date,
-    private updatedAt: Date
-  ) {}
+  constructor(private readonly props: ServiceItemProps) {}
 
-  getId(): string {
-    return this._id;
-  }
-  getCategoryId(): string {
-    return this.categoryId;
-  }
-  getName(): string {
-    return this.name;
-  }
-  getDescription(): string {
-    return this.description;
-  }
-  getBasePrice(): number {
-    return this.basePrice;
-  }
-  getSpecifications(): ServiceSpecification[] {
-    return this.specifications;
-  }
-  getImageUrls(): string[] {
-    return this.imageUrls;
-  }
-  getIsActive(): boolean {
-    return this.isActive;
-  }
+  getId(): string { return this.props.id; }
+  getCategoryId(): string { return this.props.categoryId; }
+  getName(): string { return this.props.name; }
+  getDescription(): string { return this.props.description; }
+  getBasePrice(): number { return this.props.basePrice; }
+  getSpecifications(): ServiceSpecification[] { return this.props.specifications; }
+  getImageUrls(): string[] { return this.props.imageUrls; }
+  getIsActive(): boolean { return this.props.isActive; }
+  getRating(): number { return this.props.rating; }
+  getReviewCount(): number { return this.props.reviewCount; }
+  getCreatedAt(): Date { return this.props.createdAt; }
+  getUpdatedAt(): Date { return this.props.updatedAt; }
 
-  updateDetails(
-    name: string,
-    description: string,
-    basePrice: number,
-    specifications: ServiceSpecification[],
-    isActive: boolean
-  ): void {
-    if (basePrice < 0) throw new Error("Price cannot be negative.");
-    if (name.length < 3) throw new Error("Name must be at least 3 characters.");
-
-    this.name = name;
-    this.description = description;
-    this.basePrice = basePrice;
-    this.specifications = specifications;
-    this.isActive = isActive;
-    this.updatedAt = new Date();
-  }
-
-  addImages(newUrls: string[]): void {
-    this.imageUrls = [...this.imageUrls, ...newUrls];
-    this.updatedAt = new Date();
-  }
-
-  removeImage(urlToRemove: string): void {
-    this.imageUrls = this.imageUrls.filter((url) => url !== urlToRemove);
-    this.updatedAt = new Date();
+  toProps(): ServiceItemProps {
+    return { ...this.props };
   }
 }

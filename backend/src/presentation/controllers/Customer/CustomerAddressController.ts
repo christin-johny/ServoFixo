@@ -5,12 +5,13 @@ import { GetAddressesUseCase } from "../../../application/use-cases/address/GetA
 import { DeleteAddressUseCase } from "../../../application/use-cases/address/DeleteAddressUseCase";
 import { CreateAddressDto } from "../../../application/dto/address/CreateAddressDto";
 import { UpdateAddressDto } from "../../../application/dto/address/UpdateAddressDto";
-import { SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages"; // Adjust path as needed
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes"; // Adjust path as needed
+import { ILogger } from "../../../application/interfaces/ILogger"; 
+import { LogEvents } from "../../../../../shared/constants/LogEvents"; 
+import { SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
+import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes"; 
 
-// 1. Strict Request Type (No 'any' for userId)
 export interface AuthenticatedRequest extends Request {
-  userId?: string; // Populated by your Auth Middleware
+  userId?: string; 
 }
 
 export class CustomerAddressController {
@@ -18,19 +19,18 @@ export class CustomerAddressController {
     private _addAddressUseCase: AddAddressUseCase,
     private _updateAddressUseCase: UpdateAddressUseCase,
     private _getAddressesUseCase: GetAddressesUseCase,
-    private _deleteAddressUseCase: DeleteAddressUseCase
+    private _deleteAddressUseCase: DeleteAddressUseCase,
+    private _logger: ILogger 
   ) {}
 
-  /**
-   * CREATE ADDRESS
-   */
   addAddress = async (req: Request, res: Response): Promise<Response> => {
     try {
       const userId = (req as AuthenticatedRequest).userId;
       if (!userId) throw new Error("Unauthorized");
 
-      // Validate this with middleware (e.g. class-validator) in production
       const dto = req.body as CreateAddressDto;
+      
+      this._logger.info(LogEvents.ADDRESS_ADD_INIT, { userId, dto });
 
       const resultDto = await this._addAddressUseCase.execute(dto, userId);
 
@@ -43,39 +43,40 @@ export class CustomerAddressController {
         message, 
         data: resultDto 
       });
-    } catch (error: any) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: error.message });
+    } catch (error: unknown) {
+      this._logger.error(LogEvents.ADDRESS_ADD_FAILED, undefined, { error });
+      const msg = error instanceof Error ? error.message : 'Unknown Error';
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: msg });
     }
   };
 
-  /**
-   * GET ALL ADDRESSES
-   */
   getMyAddresses = async (req: Request, res: Response): Promise<Response> => {
     try {
       const userId = (req as AuthenticatedRequest).userId;
       if (!userId) throw new Error("Unauthorized");
 
-      // Use Case now returns AddressResponseDto[], not Entities
+      this._logger.info(LogEvents.ADDRESS_FETCH_ALL, { userId });
+
       const addressDtos = await this._getAddressesUseCase.execute(userId);
 
       return res.status(StatusCodes.OK).json({ 
         success: true, 
         data: addressDtos 
       });
-    } catch (error: any) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: error.message });
+    } catch (error: unknown) {
+      this._logger.error(LogEvents.ADDRESS_FETCH_FAILED, undefined, { error });
+      const msg = error instanceof Error ? error.message : 'Unknown Error';
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: msg });
     }
   };
 
-  /**
-   * DELETE ADDRESS
-   */
   deleteAddress = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
       const userId = (req as AuthenticatedRequest).userId;
       if (!userId) throw new Error("Unauthorized");
+
+      this._logger.info(LogEvents.ADDRESS_DELETE_INIT, { addressId: id, userId });
 
       await this._deleteAddressUseCase.execute(id, userId);
 
@@ -83,14 +84,13 @@ export class CustomerAddressController {
         success: true, 
         message: SuccessMessages.ADDRESS_DELETED 
       });
-    } catch (error: any) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: error.message });
+    } catch (error: unknown) {
+      this._logger.error(LogEvents.ADDRESS_DELETE_FAILED, undefined, { error, addressId: req.params.id });
+      const msg = error instanceof Error ? error.message : 'Unknown Error';
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: msg });
     }
   };
 
-  /**
-   * UPDATE ADDRESS
-   */
   updateAddress = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
@@ -99,6 +99,8 @@ export class CustomerAddressController {
 
       const dto = req.body as UpdateAddressDto;
 
+      this._logger.info(LogEvents.ADDRESS_UPDATE_INIT, { addressId: id, userId });
+
       const resultDto = await this._updateAddressUseCase.execute(id, userId, dto);
 
       return res.status(StatusCodes.OK).json({
@@ -106,22 +108,21 @@ export class CustomerAddressController {
         message: SuccessMessages.ADDRESS_UPDATED,
         data: resultDto,
       });
-    } catch (error: any) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: error.message });
+    } catch (error: unknown) {
+      this._logger.error(LogEvents.ADDRESS_UPDATE_FAILED, undefined, { error, addressId: req.params.id });
+      const msg = error instanceof Error ? error.message : 'Unknown Error';
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: msg });
     }
   };
 
-  /**
-   * SET DEFAULT ADDRESS
-   * Note: This reuses UpdateAddressUseCase but forces a specific DTO.
-   */
   setDefaultAddress = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
       const userId = (req as AuthenticatedRequest).userId;
       if (!userId) throw new Error("Unauthorized");
 
-      // Construct a strict DTO for this specific action
+      this._logger.info(LogEvents.ADDRESS_SET_DEFAULT, { addressId: id, userId });
+
       const dto: UpdateAddressDto = { isDefault: true };
 
       await this._updateAddressUseCase.execute(id, userId, dto);
@@ -130,8 +131,9 @@ export class CustomerAddressController {
         success: true, 
         message: SuccessMessages.DEFAULT_ADDRESS_UPDATED 
       });
-    } catch (error: any) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: error.message });
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Unknown Error';
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: msg });
     }
   };
 }

@@ -1,33 +1,54 @@
 import { IServiceItemRepository } from "../../../domain/repositories/IServiceItemRepository";
 import { IImageService } from "../../interfaces/IImageService";
-import { ServiceSpecification } from "../../../domain/entities/ServiceItem";
+import { UpdateServiceItemDto } from "../../dto/serviceItem/UpdateServiceItemDto";
+import { ServiceItemResponseDto } from "../../dto/serviceItem/ServiceItemResponseDto";
+import { ServiceItem } from "../../../domain/entities/ServiceItem";
+import { ServiceItemMapper } from "../../mappers/ServiceItemMapper";
+import { ILogger } from "../../interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { IFile } from "./CreateServiceItemUseCase";
 
 interface EditServiceRequest {
   id: string;
-  categoryId: string;
-  name: string;
-  description: string;
-  basePrice: number;
-  specifications: ServiceSpecification[];
-  newImageFiles: { buffer: Buffer; originalName: string; mimeType: string }[];
+  dto: UpdateServiceItemDto;
+  newImageFiles: IFile[];
   imagesToDelete?: string[];
-  isActive: boolean;
 }
 
 export class EditServiceItemUseCase {
   constructor(
     private readonly _serviceRepo: IServiceItemRepository,
-    private readonly _imageService: IImageService
+    private readonly _imageService: IImageService,
+    private readonly _logger: ILogger
   ) {}
 
-  async execute(request: EditServiceRequest): Promise<any> {
-    const service = await this._serviceRepo.findById(request.id);
-    if (!service) throw new Error("Service Item not found");
+  async execute(request: EditServiceRequest): Promise<ServiceItemResponseDto> {
+    this._logger.info(`${LogEvents.SERVICE_UPDATE_INIT} - ID: ${request.id}`);
+
+    const existingService = await this._serviceRepo.findById(request.id);
+    if (!existingService) {
+      this._logger.error(
+        `${LogEvents.SERVICE_UPDATE_FAILED} - ${LogEvents.SERVICE_NOT_FOUND}`
+      );
+      throw new Error(ErrorMessages.SERVICE_NOT_FOUND);
+    }
+
+    let currentImages = [...existingService.getImageUrls()];
 
     if (request.imagesToDelete && request.imagesToDelete.length > 0) {
       const deletePromises = request.imagesToDelete.map(async (url) => {
-        await this._imageService.deleteImage(url);
-        service.removeImage(url);
+        try {
+          await this._imageService.deleteImage(url);
+          currentImages = currentImages.filter((img) => img !== url);
+        } catch (e: unknown) {
+          const errorMessage = e instanceof Error ? e.message : String(e);
+
+          this._logger.error(
+            LogEvents.SERVICE_IMAGE_DELETE_FAILED,
+            errorMessage
+          );
+        }
       });
       await Promise.all(deletePromises);
     }
@@ -41,17 +62,33 @@ export class EditServiceItemUseCase {
         )
       );
       const newUrls = await Promise.all(uploadPromises);
-      service.addImages(newUrls);
+      currentImages = [...currentImages, ...newUrls];
+      this._logger.info(LogEvents.SERVICE_IMAGE_UPLOAD_SUCCESS);
     }
 
-    service.updateDetails(
-      request.name,
-      request.description,
-      request.basePrice,
-      request.specifications,
-      request.isActive
-    );
+    // Creating new Immutable Entity with updated props
+    const updatedEntity = new ServiceItem({
+      ...existingService.toProps(),
+      categoryId: request.dto.categoryId || existingService.getCategoryId(),
+      name: request.dto.name || existingService.getName(),
+      description: request.dto.description || existingService.getDescription(),
+      basePrice:
+        request.dto.basePrice !== undefined
+          ? request.dto.basePrice
+          : existingService.getBasePrice(),
+      specifications:
+        request.dto.specifications || existingService.getSpecifications(),
+      isActive:
+        request.dto.isActive !== undefined
+          ? request.dto.isActive
+          : existingService.getIsActive(),
+      imageUrls: currentImages,
+      updatedAt: new Date(),
+    });
 
-    return this._serviceRepo.update(service);
+    const savedService = await this._serviceRepo.update(updatedEntity);
+    this._logger.info(`${LogEvents.SERVICE_UPDATED} - ID: ${request.id}`);
+
+    return ServiceItemMapper.toResponse(savedService);
   }
 }
