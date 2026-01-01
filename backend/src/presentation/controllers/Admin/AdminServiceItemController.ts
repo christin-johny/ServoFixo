@@ -1,9 +1,5 @@
 import { Request, Response } from "express";
-import { CreateServiceItemUseCase } from "../../../application/use-cases/service-items/CreateServiceItemUseCase";
-import { GetAllServiceItemsUseCase } from "../../../application/use-cases/service-items/GetAllServiceItemsUseCase";
-import { DeleteServiceItemUseCase } from "../../../application/use-cases/service-items/DeleteServiceItemUseCase";
-import { EditServiceItemUseCase } from "../../../application/use-cases/service-items/EditServiceItemUseCase";
-import { ToggleServiceItemStatusUseCase } from "../../../application/use-cases/service-items/ToggleServiceItemStatus";
+import { IUseCase } from "../../../application/interfaces/IUseCase";  
 import { CreateServiceItemDto } from "../../../application/dto/serviceItem/CreateServiceItemDto";
 import { UpdateServiceItemDto } from "../../../application/dto/serviceItem/UpdateServiceItemDto";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
@@ -14,13 +10,34 @@ import {
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
+interface FileData {
+  buffer: Buffer;
+  originalName: string;
+  mimeType: string;
+}
+
+interface ServiceQueryParams {
+  page: number;
+  limit: number;
+  search?: string;
+  categoryId?: string;
+  isActive?: boolean;
+}
+
+interface UpdateServiceParams {
+    id: string;
+    dto: UpdateServiceItemDto;
+    newImageFiles: FileData[];
+    imagesToDelete: string[];
+}
+
 export class AdminServiceItemController {
-  constructor(
-    private readonly _createUseCase: CreateServiceItemUseCase,
-    private readonly _getAllUseCase: GetAllServiceItemsUseCase,
-    private readonly _deleteUseCase: DeleteServiceItemUseCase,
-    private readonly _editUseCase: EditServiceItemUseCase,
-    private readonly _toggleStatusUseCase: ToggleServiceItemStatusUseCase,
+  constructor( 
+    private readonly _createUseCase: IUseCase<unknown, [CreateServiceItemDto, FileData[]]>, 
+    private readonly _getAllUseCase: IUseCase<unknown, [ServiceQueryParams]>, 
+    private readonly _deleteUseCase: IUseCase<void, [string]>, 
+    private readonly _editUseCase: IUseCase<unknown, [UpdateServiceParams]>, 
+    private readonly _toggleStatusUseCase: IUseCase<boolean, [string, boolean]>,
     private readonly _logger: ILogger
   ) {}
 
@@ -233,24 +250,23 @@ export class AdminServiceItemController {
         .status(StatusCodes.OK)
         .json({ message: SuccessMessages.SERVICE_DELETED });
     } catch (err: unknown) {
-  const errorMessage =
-    err instanceof Error ? err.message : String(err);
+      const errorMessage =
+        err instanceof Error ? err.message : String(err);
 
-  this._logger.error(
-    LogEvents.SERVICE_DELETE_FAILED,
-    errorMessage
-  );
+      this._logger.error(
+        LogEvents.SERVICE_DELETE_FAILED,
+        errorMessage
+      );
 
-  if (errorMessage === ErrorMessages.SERVICE_NOT_FOUND) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ error: errorMessage });
-  }
+      if (errorMessage === ErrorMessages.SERVICE_NOT_FOUND) {
+        return res
+          .status(StatusCodes.NOT_FOUND)
+          .json({ error: errorMessage });
+      }
 
-  return res
-    .status(StatusCodes.INTERNAL_SERVER_ERROR)
-    .json({ error: ErrorMessages.INTERNAL_ERROR });
-}
-
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: ErrorMessages.INTERNAL_ERROR });
+    }
   };
 }

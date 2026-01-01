@@ -1,5 +1,5 @@
 import { IAddressRepository } from "../../../domain/repositories/IAddressRepository";
-import { ZoneService } from "../../services/ZoneService";
+import { IZoneService } from "../../interfaces/IZoneService"; 
 import { CreateAddressDto } from "../../dto/address/CreateAddressDto";
 import { AddressResponseDto } from "../../dto/address/AddressResponseDto";
 import { AddressMapper } from "../../mappers/AddressMapper";
@@ -9,12 +9,12 @@ import { LogEvents } from "../../../../../shared/constants/LogEvents";
 export class AddAddressUseCase {
   constructor(
     private _addressRepository: IAddressRepository,
-    private _zoneService: ZoneService,
+    private _zoneService: IZoneService,  
     private _logger: ILogger 
   ) {}
 
   async execute(input: CreateAddressDto, userId: string): Promise<AddressResponseDto> {
-    
+     
     const zoneResult = await this._zoneService.checkServiceability(input.lat, input.lng);
 
     if (input.isDefault) {

@@ -1,5 +1,5 @@
-import { IAddressRepository } from "../../../domain/repositories/IAddressRepository";
-import { ZoneService } from "../../services/ZoneService";
+import { IAddressRepository } from "../../../domain/repositories/IAddressRepository"; 
+import { IZoneService } from "../../interfaces/IZoneService"; 
 import { UpdateAddressDto } from "../../dto/address/UpdateAddressDto";
 import { AddressResponseDto } from "../../dto/address/AddressResponseDto";
 import { AddressMapper } from "../../mappers/AddressMapper";
@@ -11,7 +11,7 @@ import { LogEvents } from "../../../../../shared/constants/LogEvents";
 export class UpdateAddressUseCase {
   constructor(
     private _addressRepository: IAddressRepository,
-    private _zoneService: ZoneService,
+    private _zoneService: IZoneService, 
     private _logger: ILogger 
   ) {}
 
@@ -28,13 +28,13 @@ export class UpdateAddressUseCase {
     let isServiceable = existing.getIsServiceable();
     let newLocation = existing.getLocation();
 
-    if (input.lat !== undefined && input.lng !== undefined) {
+    if (input.lat !== undefined && input.lng !== undefined) { 
       const result = await this._zoneService.checkServiceability(input.lat, input.lng);
       zoneId = result.zoneId || undefined;
       isServiceable = result.isServiceable;
       newLocation = { type: "Point", coordinates: [input.lng, input.lat] };
     }
-
+ 
     if (input.isDefault === true && !existing.getIsDefault()) {
       const oldDefault = await this._addressRepository.findDefaultByUserId(userId);
       if (oldDefault && oldDefault.getId() !== id) {

@@ -1,20 +1,29 @@
 import { Request, Response } from "express";
-import { GetMostBookedServicesUseCase } from "../../../application/use-cases/service-items/GetMostBookedServicesUseCase";
-import { GetServiceListingUseCase } from "../../../application/use-cases/service-items/GetServiceListingUseCase";
-import { GetServiceByIdUseCase } from "../../../application/use-cases/service-items/GetServiceByIdUseCase";
+import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
+// Define Filter Interface for type safety
+interface ServiceFilters {
+  searchTerm: string;
+  categoryId: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: "price_asc" | "price_desc" | "newest" | "popular";
+  page: number;
+  limit: number;
+  isActive: boolean;
+}
+
 export class CustomerServiceController {
   constructor(
-    private readonly _getMostBookedUseCase: GetMostBookedServicesUseCase,
-    private readonly _getServiceListingUseCase: GetServiceListingUseCase,
-    private readonly _getServiceByIdUseCase: GetServiceByIdUseCase,
+    private readonly _getMostBookedUseCase: IUseCase<unknown[], [number]>,
+    private readonly _getServiceListingUseCase: IUseCase<unknown[], [ServiceFilters]>,
+    private readonly _getServiceByIdUseCase: IUseCase<unknown | null, [string]>,
     private readonly _logger: ILogger
   ) {}
-
   getMostBooked = async (req: Request, res: Response): Promise<Response> => {
     try {
       const limit = parseInt(req.query.limit as string) || 5;

@@ -1,13 +1,17 @@
 import { Request, Response } from "express";
-import { GetCustomerProfileUseCase } from "../../../application/use-cases/customer/GetCustomerProfileUseCase";
-import { UpdateCustomerUseCase } from "../../../application/use-cases/customer/UpdateCustomerUseCase";
-import { DeleteCustomerUseCase } from "../../../application/use-cases/customer/DeleteCustomerUseCase";
-import { UploadAvatarUseCase } from "../../../application/use-cases/customer/UploadAvatarUseCase";
-import { ChangePasswordUseCase } from "../../../application/use-cases/customer/ChangePasswordUseCase";
+import { IUseCase } from "../../../application/interfaces/IUseCase"; // ✅ Import
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
+
+// Define the interface for the Customer Entity used in updateProfile
+interface ICustomerEntity {
+  getId(): string;
+  getName(): string;
+  getEmail(): string;
+  getPhone(): string;
+}
 
 export interface AuthenticatedRequest extends Request {
   userId?: string; 
@@ -15,11 +19,11 @@ export interface AuthenticatedRequest extends Request {
 
 export class CustomerProfileController {
   constructor(
-    private readonly _getCustomerProfileUseCase: GetCustomerProfileUseCase,
-    private readonly _updateCustomerUseCase: UpdateCustomerUseCase,
-    private readonly _deleteCustomerUseCase: DeleteCustomerUseCase,
-    private readonly _uploadAvatarUseCase: UploadAvatarUseCase,
-    private readonly _changePasswordUseCase: ChangePasswordUseCase,
+    private readonly _getCustomerProfileUseCase: IUseCase<unknown, [string]>,
+    private readonly _updateCustomerUseCase: IUseCase<ICustomerEntity, [string, unknown]>,
+    private readonly _deleteCustomerUseCase: IUseCase<void, [string]>,
+    private readonly _uploadAvatarUseCase: IUseCase<string, [string, { buffer: Buffer; originalName: string; mimeType: string }]>,
+    private readonly _changePasswordUseCase: IUseCase<void, [string, unknown]>,
     private readonly _logger: ILogger
   ) {}
 
@@ -149,8 +153,6 @@ export class CustomerProfileController {
       });
     } catch (error: unknown) {
       this._logger.error(LogEvents.ACCOUNT_DELETE_FAILED, undefined, { error });
-      // Depending on your global strategy, you might want next(error) here, 
-      // but sticking to the file pattern which uses manual response:
       const msg = error instanceof Error ? error.message : 'Unknown Error';
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: msg });
     }

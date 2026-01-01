@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { FindZoneByLocationUseCase } from "../../../application/use-cases/zones/FindZoneByLocationUseCase";
+import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
@@ -7,7 +7,7 @@ import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class CustomerZoneController {
   constructor(
-    private readonly _findZoneByLocationUseCase: FindZoneByLocationUseCase,
+    private readonly _findZoneByLocationUseCase: IUseCase<unknown, [number, number]>,
     private readonly _logger: ILogger
   ) {}
 

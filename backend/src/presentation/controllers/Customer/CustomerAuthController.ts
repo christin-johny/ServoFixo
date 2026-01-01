@@ -1,10 +1,5 @@
 import type { Request, Response } from "express";
-import { RequestCustomerRegistrationOtpUseCase } from "../../../application/use-cases/auth/RequestCustomerRegistrationOtpUseCase";
-import { VerifyCustomerRegistrationOtpUseCase } from "../../../application/use-cases/auth/VerifyCustomerRegistrationOtpUseCase";
-import { CustomerLoginUseCase } from "../../../application/use-cases/auth/CustomerLoginUseCase";
-import { RequestCustomerForgotPasswordOtpUseCase } from "../../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase";
-import { VerifyCustomerForgotPasswordOtpUseCase } from "../../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase";
-import { CustomerGoogleLoginUseCase } from "../../../application/use-cases/auth/CustomerGoogleLoginUseCase";
+import { IUseCase } from "../../../application/interfaces/IUseCase"; 
 import {
   ErrorMessages,
   SuccessMessages,
@@ -15,14 +10,20 @@ import redis from "../../../infrastructure/redis/redisClient";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
+interface AuthResult {
+  accessToken: string;
+  refreshToken?: string;
+  user?: unknown;
+}
+
 export class CustomerAuthController {
   constructor(
-    private readonly _requestRegisterOtpUseCase: RequestCustomerRegistrationOtpUseCase,
-    private readonly _verifyRegisterOtpUseCase: VerifyCustomerRegistrationOtpUseCase,
-    private readonly _customerLoginUseCase: CustomerLoginUseCase,
-    private readonly _requestForgotPasswordOtpUseCase: RequestCustomerForgotPasswordOtpUseCase,
-    private readonly _verifyForgotPasswordOtpUseCase: VerifyCustomerForgotPasswordOtpUseCase,
-    private readonly _customerGoogleLoginUseCase: CustomerGoogleLoginUseCase,
+    private readonly _requestRegisterOtpUseCase: IUseCase<unknown, [{ email: string; phone: string }]>,
+    private readonly _verifyRegisterOtpUseCase: IUseCase<AuthResult, [{ email: string; otp: string; sessionId: string; name: string; password: string; phone: string }]>,
+    private readonly _customerLoginUseCase: IUseCase<AuthResult, [{ email: string; password: string }]>,
+    private readonly _requestForgotPasswordOtpUseCase: IUseCase<unknown, [{ email: string }]>,
+    private readonly _verifyForgotPasswordOtpUseCase: IUseCase<unknown, [{ email: string; otp: string; sessionId: string; newPassword: string }]>,
+    private readonly _customerGoogleLoginUseCase: IUseCase<AuthResult, [{ token?: string; customer?: unknown }]>,
     private readonly _logger: ILogger
   ) {}
 
@@ -46,7 +47,6 @@ export class CustomerAuthController {
       this._logger.info(`${LogEvents.AUTH_OTP_SENT} - Registration`);
       return res.status(StatusCodes.OK).json(result);
     } catch (err: unknown) {
-      // Type guarding for logger: extract stack or string message
       const trace = err instanceof Error ? err.stack : String(err);
       this._logger.error(LogEvents.AUTH_OTP_INIT_FAILED, trace);
 

@@ -1,19 +1,26 @@
 import redis from "../../../infrastructure/redis/redisClient";
 import { Request, Response } from "express";
-import { AdminLoginUseCase } from "../../../application/use-cases/auth/AdminLoginUseCase";
+import { IUseCase } from "../../../application/interfaces/IUseCase";
 import {
   ErrorMessages,
   SuccessMessages,
 } from "../../../../../shared/types/enums/ErrorMessages";
-
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { refreshCookieOptions } from "../../../infrastructure/config/Cookie";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
+interface AdminLoginResult {
+  accessToken: string;
+  refreshToken: string;
+}
+
 export class AdminAuthController {
   constructor(
-    private readonly _adminLoginUseCase: AdminLoginUseCase,
+    private readonly _adminLoginUseCase: IUseCase<
+      AdminLoginResult,
+      [{ email: string; password: string }]
+    >,
     private readonly _logger: ILogger
   ) {}
 
@@ -42,25 +49,23 @@ export class AdminAuthController {
         accessToken: result.accessToken,
       });
     } catch (err: unknown) {
-  const errorMessage =
-    err instanceof Error ? err.message : String(err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
 
-  this._logger.error(
-    `${LogEvents.AUTH_LOGIN_FAILED} (Admin)`,
-    errorMessage
-  );
+      this._logger.error(
+        `${LogEvents.AUTH_LOGIN_FAILED} (Admin)`,
+        errorMessage
+      );
 
-  if (errorMessage === ErrorMessages.INVALID_CREDENTIALS) {
-    return res.status(StatusCodes.UNAUTHORIZED).json({
-      message: ErrorMessages.INVALID_CREDENTIALS,
-    });
-  }
+      if (errorMessage === ErrorMessages.INVALID_CREDENTIALS) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+          message: ErrorMessages.INVALID_CREDENTIALS,
+        });
+      }
 
-  return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-    message: ErrorMessages.INTERNAL_ERROR,
-  });
-}
-
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: ErrorMessages.INTERNAL_ERROR,
+      });
+    }
   };
 
   logout = async (req: Request, res: Response): Promise<Response> => {
@@ -89,22 +94,17 @@ export class AdminAuthController {
         message: SuccessMessages.LOGOUT_SUCCESS,
       });
     } catch (err: unknown) {
-  const errorMessage =
-    err instanceof Error ? err.message : String(err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
 
-  this._logger.error(
-    "Admin Logout Error",
-    errorMessage
-  );
+      this._logger.error("Admin Logout Error", errorMessage);
 
-  res.clearCookie("refreshToken", {
-    path: refreshCookieOptions.path ?? "/",
-  });
+      res.clearCookie("refreshToken", {
+        path: refreshCookieOptions.path ?? "/",
+      });
 
-  return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-    message: ErrorMessages.INTERNAL_ERROR,
-  });
-}
-
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: ErrorMessages.INTERNAL_ERROR,
+      });
+    }
   };
 }

@@ -1,14 +1,15 @@
 import { Request, Response } from "express";
-import { AddAddressUseCase } from "../../../application/use-cases/address/AddAddressUseCase";
-import { UpdateAddressUseCase } from "../../../application/use-cases/address/UpdateAddressUseCase";
-import { GetAddressesUseCase } from "../../../application/use-cases/address/GetAddressesUseCase";
-import { DeleteAddressUseCase } from "../../../application/use-cases/address/DeleteAddressUseCase";
+import { IUseCase } from "../../../application/interfaces/IUseCase"; 
 import { CreateAddressDto } from "../../../application/dto/address/CreateAddressDto";
 import { UpdateAddressDto } from "../../../application/dto/address/UpdateAddressDto";
 import { ILogger } from "../../../application/interfaces/ILogger"; 
 import { LogEvents } from "../../../../../shared/constants/LogEvents"; 
 import { SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes"; 
+interface AddressResultDto {
+  isServiceable: boolean;
+  [key: string]: unknown;
+}
 
 export interface AuthenticatedRequest extends Request {
   userId?: string; 
@@ -16,11 +17,11 @@ export interface AuthenticatedRequest extends Request {
 
 export class CustomerAddressController {
   constructor(
-    private _addAddressUseCase: AddAddressUseCase,
-    private _updateAddressUseCase: UpdateAddressUseCase,
-    private _getAddressesUseCase: GetAddressesUseCase,
-    private _deleteAddressUseCase: DeleteAddressUseCase,
-    private _logger: ILogger 
+    private readonly _addAddressUseCase: IUseCase<AddressResultDto, [CreateAddressDto, string]>,
+    private readonly _updateAddressUseCase: IUseCase<AddressResultDto, [string, string, UpdateAddressDto]>,
+    private readonly _getAddressesUseCase: IUseCase<unknown[], [string]>, 
+    private readonly _deleteAddressUseCase: IUseCase<void, [string, string]>,
+    private readonly _logger: ILogger 
   ) {}
 
   addAddress = async (req: Request, res: Response): Promise<Response> => {

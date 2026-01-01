@@ -1,26 +1,31 @@
 import { Request, Response } from "express";
+import { IUseCase } from "../../../application/interfaces/IUseCase";  
 import {
   CustomerFilterSchema,
   CustomerUpdateSchema,
 } from "../../../application/dto/Customer/AdminCustomerDtos";
-import { GetAllCustomersUseCase } from "../../../application/use-cases/customer/GetAllCustomersUseCase";
-import { UpdateCustomerUseCase } from "../../../application/use-cases/customer/UpdateCustomerUseCase";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { mapToResponseDto } from "../../../application/use-cases/customer/GetAllCustomersUseCase";
-import { GetCustomerByIdUseCase } from "../../../application/use-cases/customer/GetCustomerByIdUseCase";
-import { DeleteCustomerUseCase } from "../../../application/use-cases/customer/DeleteCustomerUseCase";
-import { GetAddressesUseCase } from "../../../application/use-cases/address/GetAddressesUseCase";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
+interface CustomerFilterDto {
+  search?: string;
+  suspended?: boolean;
+}
+
+interface CustomerUpdateDto {
+  [key: string]: unknown;
+}
+
 export class AdminCustomerController {
   constructor(
-    private readonly _getAllCustomersUseCase: GetAllCustomersUseCase,
-    private readonly _updateCustomerUseCase: UpdateCustomerUseCase,
-    private readonly _getCustomerByIdUseCase: GetCustomerByIdUseCase,
-    private readonly _deleteCustomerUseCase: DeleteCustomerUseCase,
-    private readonly _getAddressesByUserIdUseCase: GetAddressesUseCase,
+    private readonly _getAllCustomersUseCase: IUseCase<unknown,[CustomerFilterDto]>, 
+    private readonly _updateCustomerUseCase: IUseCase<unknown,[string, CustomerUpdateDto]>, 
+    private readonly _getCustomerByIdUseCase: IUseCase<unknown, [string]>, 
+    private readonly _deleteCustomerUseCase: IUseCase<void, [string]>, 
+    private readonly _getAddressesByUserIdUseCase: IUseCase<unknown[],[string]>,
     private readonly _logger: ILogger
   ) {}
 
@@ -79,7 +84,6 @@ export class AdminCustomerController {
 
       const updateDto = validationResult.data;
 
-      // Log only keys to protect PII
       this._logger.info(LogEvents.ADMIN_CUSTOMER_UPDATE_INIT, {
         customerId,
         fields: Object.keys(updateDto),
@@ -90,7 +94,7 @@ export class AdminCustomerController {
         updateDto
       );
 
-      res.status(StatusCodes.OK).json(mapToResponseDto(updatedCustomer));
+      res.status(StatusCodes.OK).json(mapToResponseDto(updatedCustomer as any));
     } catch (error) {
       this._logger.error(LogEvents.ADMIN_CUSTOMER_UPDATE_FAILED, undefined, {
         error,
@@ -120,7 +124,7 @@ export class AdminCustomerController {
 
       const customer = await this._getCustomerByIdUseCase.execute(customerId);
 
-      res.status(StatusCodes.OK).json(mapToResponseDto(customer));
+      res.status(StatusCodes.OK).json(mapToResponseDto(customer as any));
     } catch (error) {
       this._logger.error(
         LogEvents.ADMIN_CUSTOMER_FETCH_BY_ID_FAILED,

@@ -1,13 +1,24 @@
 import { Request, Response } from 'express';
-import { GetAllCategoriesUseCase } from '../../../application/use-cases/service-categories/GetAllCategoriesUseCase';
+import { IUseCase } from '../../../application/interfaces/IUseCase';
 import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 import { ILogger } from '../../../application/interfaces/ILogger';
 import { LogEvents } from '../../../../../shared/constants/LogEvents';
 
+interface CategoryQueryParams {
+  isActive: boolean;
+  page: number;
+  limit: number;
+}
+
+interface CategoryResult {
+  categories: unknown[];
+  [key: string]: unknown;
+}
+
 export class CustomerCategoryController {
   constructor(
-    private readonly _getAllCategoriesUseCase: GetAllCategoriesUseCase,
+    private readonly _getAllCategoriesUseCase: IUseCase<CategoryResult, [CategoryQueryParams]>,
     private readonly _logger: ILogger
   ) {}
 

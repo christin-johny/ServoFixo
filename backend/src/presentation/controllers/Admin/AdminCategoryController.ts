@@ -1,9 +1,5 @@
 import { Request, Response } from "express";
-import { CreateCategoryUseCase } from "../../../application/use-cases/service-categories/CreateCategoryUseCase";
-import { GetAllCategoriesUseCase } from "../../../application/use-cases/service-categories/GetAllCategoriesUseCase";
-import { EditCategoryUseCase } from "../../../application/use-cases/service-categories/EditCategoryUseCase";
-import { DeleteCategoryUseCase } from "../../../application/use-cases/service-categories/DeleteCategoryUseCase";
-import { ToggleCategoryStatusUseCase } from "../../../application/use-cases/service-categories/ToggleCategoryStatus";
+import { IUseCase } from "../../../application/interfaces/IUseCase";  
 import { CreateCategoryDto } from "../../../application/dto/category/CreateCategoryDto";
 import { UpdateCategoryDto } from "../../../application/dto/category/UpdateCategoryDto";
 import { CategoryQueryParams } from "../../../domain/repositories/IServiceCategoryRepository";
@@ -12,13 +8,24 @@ import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enum
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
+interface FileData {
+  buffer: Buffer;
+  originalName: string;
+  mimeType: string;
+}
+
+interface CategoryPaginatedResult {
+    categories: unknown[];
+    total: number;
+}
+
 export class AdminCategoryController {
   constructor(
-    private readonly _createUseCase: CreateCategoryUseCase,
-    private readonly _getAllUseCase: GetAllCategoriesUseCase,
-    private readonly _editUseCase: EditCategoryUseCase,
-    private readonly _deleteUseCase: DeleteCategoryUseCase,
-    private readonly _toggleStatusUseCase: ToggleCategoryStatusUseCase,
+    private readonly _createUseCase: IUseCase<unknown, [CreateCategoryDto, FileData | undefined]>,
+    private readonly _getAllUseCase: IUseCase<CategoryPaginatedResult, [CategoryQueryParams]>,
+    private readonly _editUseCase: IUseCase<unknown, [string, UpdateCategoryDto, FileData | undefined]>,
+    private readonly _deleteUseCase: IUseCase<void, [string]>,
+    private readonly _toggleStatusUseCase: IUseCase<boolean, [string, boolean]>,
     private readonly _logger: ILogger
   ) {}
 

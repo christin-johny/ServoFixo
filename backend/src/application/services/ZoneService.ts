@@ -1,12 +1,8 @@
-import { IZoneRepository } from "../../domain/repositories/IZoneRepository";
 
-export interface ServiceabilityResult {
-  isServiceable: boolean;
-  zoneId: string | null;
-  zoneName?: string;
-}
-
-export class ZoneService {
+import { IZoneRepository } from "../../domain/repositories/IZoneRepository"; 
+import { IZoneService, ServiceabilityResult } from "../interfaces/IZoneService";
+ 
+export class ZoneService implements IZoneService {
   constructor(private _zoneRepository: IZoneRepository) {}
 
   async checkServiceability(lat: number, lng: number): Promise<ServiceabilityResult> {

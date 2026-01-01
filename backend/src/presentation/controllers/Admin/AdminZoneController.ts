@@ -1,22 +1,19 @@
 import { Request, Response } from "express";
-import { CreateZoneUseCase } from "../../../application/use-cases/zones/CreateZoneUseCase";
-import { GetAllZonesUseCase } from "../../../application/use-cases/zones/GetAllZonesUseCase";
-import { DeleteZoneUseCase } from "../../../application/use-cases/zones/DeleteZoneUseCase";
-import { EditZoneUseCase } from "../../../application/use-cases/zones/EditZoneUseCase";
+import { IUseCase } from "../../../application/interfaces/IUseCase"; 
 import { CreateZoneDto } from "../../../application/dto/zone/CreateZoneDto";
 import { UpdateZoneDto } from "../../../application/dto/zone/UpdateZoneDto";
 import { ILogger } from '../../../application/interfaces/ILogger';
 import { ZoneQueryParams } from "../../../domain/repositories/IZoneRepository";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { LogEvents } from "../../../../../shared/constants/LogEvents"; // Import Constants
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class AdminZoneController {
   constructor(
-    private readonly _createZoneUseCase: CreateZoneUseCase,
-    private readonly _getAllZonesUseCase: GetAllZonesUseCase,
-    private readonly _deleteZoneUseCase: DeleteZoneUseCase,
-    private readonly _editZoneUseCase: EditZoneUseCase,
+    private readonly _createZoneUseCase: IUseCase<unknown, [CreateZoneDto]>,
+    private readonly _getAllZonesUseCase: IUseCase<unknown, [ZoneQueryParams]>,
+    private readonly _deleteZoneUseCase: IUseCase<void, [string]>,
+    private readonly _editZoneUseCase: IUseCase<unknown, [string, UpdateZoneDto]>,
     private readonly _logger: ILogger
   ) {}
 
