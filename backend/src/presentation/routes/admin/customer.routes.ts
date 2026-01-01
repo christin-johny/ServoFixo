@@ -3,23 +3,14 @@ import { adminCustomerController } from "../../../infrastructure/di/Container";
 
 const router = Router();
 
-router.get("/", (req, res) =>
-  adminCustomerController.getAllCustomers(req, res)
-);
+router.get("/", adminCustomerController.getAllCustomers.bind(adminCustomerController));
 
-router.get("/:id", (req, res) =>
-  adminCustomerController.getCustomerById(req, res)
-);
+router.get("/:id", adminCustomerController.getCustomerById.bind(adminCustomerController));
 
-router.put("/:id", (req, res) =>
-  adminCustomerController.updateCustomer(req, res)
-);
+router.put("/:id", adminCustomerController.updateCustomer.bind(adminCustomerController));
 
-router.delete("/:id", (req, res) =>
-  adminCustomerController.deleteCustomer(req, res)
-);
-router.get("/:id/addresses", (req, res) =>
-  adminCustomerController.getCustomerAddresses(req, res) 
-);
+router.delete("/:id", adminCustomerController.deleteCustomer.bind(adminCustomerController));
+
+router.get("/:id/addresses", adminCustomerController.getCustomerAddresses.bind(adminCustomerController));
 
 export default router;

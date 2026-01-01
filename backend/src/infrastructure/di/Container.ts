@@ -95,7 +95,7 @@ const deleteZoneUseCase = new DeleteZoneUseCase(zoneRepo);
 
 export const zoneService = new ZoneService(zoneRepo);
 const findZoneByLocationUseCase = new FindZoneByLocationUseCase(zoneService);
-export const CustomerzoneController = new CustomerZoneController(
+export const customerZoneController = new CustomerZoneController(
   findZoneByLocationUseCase
 );
 export const adminZoneController = new AdminZoneController(

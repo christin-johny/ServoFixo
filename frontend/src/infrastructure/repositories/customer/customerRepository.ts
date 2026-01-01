@@ -42,7 +42,7 @@ export const getZoneByLocation = async (
   const response = await api.get(`/customer/zones/find-by-location`, {
     params: { lat, lng },
   });
-  return response.data.data?.name || "Outside Service Area";
+  return response.data.data?.zoneName || "Outside Service Area";
 };
 
 export const getMyAddresses = async (): Promise<Address[]> => {

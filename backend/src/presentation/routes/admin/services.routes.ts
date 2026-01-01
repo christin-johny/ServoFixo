@@ -10,22 +10,20 @@ router.post(
   "/",
   upload.array("images", 5),
   validateRequest(createServiceItemSchema),
-  adminServiceItemController.create
+  adminServiceItemController.create.bind(adminServiceItemController)
 );
 
-router.get("/", adminServiceItemController.getAll);
+router.get("/", adminServiceItemController.getAll.bind(adminServiceItemController));
 
 router.put(
   "/:id",
   upload.array("images", 5),
   validateRequest(createServiceItemSchema),
-  adminServiceItemController.update
+  adminServiceItemController.update.bind(adminServiceItemController)
 );
 
-router.delete("/:id", adminServiceItemController.delete);
+router.delete("/:id", adminServiceItemController.delete.bind(adminServiceItemController));
 
-router.patch("/:id/toggle", (req, res) =>
-  adminServiceItemController.toggleStatus(req, res)
-);
+router.patch("/:id/toggle", adminServiceItemController.toggleStatus.bind(adminServiceItemController));
 
 export default router;

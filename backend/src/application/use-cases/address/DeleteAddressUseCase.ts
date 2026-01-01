@@ -1,5 +1,6 @@
 import { IAddressRepository } from "../../../domain/repositories/IAddressRepository";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+
 export class DeleteAddressUseCase {
   constructor(private _addressRepository: IAddressRepository) {}
 

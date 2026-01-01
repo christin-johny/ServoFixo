@@ -1,7 +1,8 @@
 import { Router } from 'express';
-import { CustomerzoneController } from '../../../infrastructure/di/Container';
+import { customerZoneController } from '../../../infrastructure/di/Container';
 
 const router = Router();
-router.get('/find-by-location',CustomerzoneController.findByLocation)
+
+router.get('/find-by-location', customerZoneController.findByLocation.bind(customerZoneController));
 
 export default router;

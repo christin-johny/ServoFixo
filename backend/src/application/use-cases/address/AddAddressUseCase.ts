@@ -1,22 +1,8 @@
 import { IAddressRepository } from "../../../domain/repositories/IAddressRepository";
 import { ZoneService } from "../../services/ZoneService";
-import { Address } from "../../../domain/entities/Address";
-
-export interface AddAddressDTO {
-  userId: string;
-  tag: string;
-  name: string;
-  phone: string;
-  houseNumber: string;
-  street: string;
-  landmark?: string;
-  city: string;
-  pincode: string;
-  state: string;
-  lat: number;
-  lng: number;
-  isDefault: boolean;
-}
+import { CreateAddressDto } from "../../dto/address/CreateAddressDto";
+import { AddressResponseDto } from "../../dto/address/AddressResponseDto";
+import { AddressMapper } from "../../mappers/AddressMapper";
 
 export class AddAddressUseCase {
   constructor(
@@ -24,56 +10,33 @@ export class AddAddressUseCase {
     private _zoneService: ZoneService
   ) {}
 
-  async execute(input: AddAddressDTO): Promise<Address> {
+  async execute(input: CreateAddressDto, userId: string): Promise<AddressResponseDto> {
     
+    // 1. Check Serviceability (External Logic)
     const zoneResult = await this._zoneService.checkServiceability(input.lat, input.lng);
 
+    // 2. Handle "Default Address" Logic
     if (input.isDefault) {
-      const oldDefault = await this._addressRepository.findDefaultByUserId(input.userId);
-
+      const oldDefault = await this._addressRepository.findDefaultByUserId(userId);
       if (oldDefault) {
-        const updatedOldAddress = new Address(
-            oldDefault.getId(),
-            oldDefault.getUserId(),
-            oldDefault.getTag(),
-            false,
-            oldDefault.getName(),
-            oldDefault.getPhone(),
-            oldDefault.getHouseNumber(),
-            oldDefault.getStreet(),
-            oldDefault.getCity(),
-            oldDefault.getPincode(),
-            oldDefault.getState(),
-            oldDefault.getLocation(),
-            oldDefault.getLandmark(),
-            oldDefault.getZoneId(),
-            oldDefault.getIsServiceable()
-        );
-        await this._addressRepository.update(updatedOldAddress);
+        // Mark old address as non-default using Domain Method
+        await this._addressRepository.update(oldDefault.markAsNonDefault());
       }
     }
 
-    const newAddress = new Address(
-      "", 
-      input.userId,
-      input.tag,
-      input.isDefault,
-      input.name,
-      input.phone, 
-      input.houseNumber,
-      input.street,
-      input.city,
-      input.pincode,
-      input.state,
-      
-      { type: "Point", coordinates: [input.lng, input.lat] }, 
-      
-      input.landmark,
-      
-      zoneResult.zoneId || undefined, 
-      zoneResult.isServiceable 
+    // 3. Create New Entity using Mapper
+    const newAddress = AddressMapper.toDomain(
+      input,
+      userId,
+      "",
+      zoneResult.zoneId || undefined,
+      zoneResult.isServiceable
     );
 
-    return await this._addressRepository.create(newAddress);
+    // 4. Save to Repository
+    const savedAddress = await this._addressRepository.create(newAddress);
+
+    // 5. Return Safe DTO
+    return AddressMapper.toResponse(savedAddress);
   }
 }

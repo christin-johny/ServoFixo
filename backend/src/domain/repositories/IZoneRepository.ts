@@ -8,7 +8,7 @@ export interface ZoneQueryParams {
 }
 
 export interface PaginatedZones {
-  data: Zone[];
+  zones: Zone[]; // <--- CHANGED from 'data' to 'zones' to match Use Case
   total: number;
   currentPage: number;
   totalPages: number;

@@ -1,5 +1,8 @@
 import { IAddressRepository } from "../../../domain/repositories/IAddressRepository";
 import { ZoneService } from "../../services/ZoneService";
+import { UpdateAddressDto } from "../../dto/address/UpdateAddressDto";
+import { AddressResponseDto } from "../../dto/address/AddressResponseDto";
+import { AddressMapper } from "../../mappers/AddressMapper";
 import { Address } from "../../../domain/entities/Address";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
@@ -9,73 +12,56 @@ export class UpdateAddressUseCase {
     private _zoneService: ZoneService
   ) {}
 
-  async execute(id: string, userId: string, input: any): Promise<Address> {
+  async execute(id: string, userId: string, input: UpdateAddressDto): Promise<AddressResponseDto> {
+    
+    // 1. Fetch Existing
     const existing = await this._addressRepository.findById(id);
     if (!existing) throw new Error(ErrorMessages.ADDRESS_NOT_FOUND);
-    if (existing.getUserId() !== userId)
-      throw new Error(ErrorMessages.UNAUTHORIZED);
+    if (existing.getUserId() !== userId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
-    const lat = input.lat || input.location?.coordinates[1];
-    const lng = input.lng || input.location?.coordinates[0];
-
+    // 2. Calculate New Zone/Serviceability (only if location changed)
     let zoneId = existing.getZoneId();
     let isServiceable = existing.getIsServiceable();
+    let newLocation = existing.getLocation();
 
-    if (lat && lng) {
-    const result = await this._zoneService.checkServiceability(lat, lng);
-    zoneId = result.zoneId || undefined;
-    isServiceable = result.isServiceable;
-  }
+    if (input.lat !== undefined && input.lng !== undefined) {
+      const result = await this._zoneService.checkServiceability(input.lat, input.lng);
+      zoneId = result.zoneId || undefined;
+      isServiceable = result.isServiceable;
+      newLocation = { type: "Point", coordinates: [input.lng, input.lat] };
+    }
 
-    if (input.isDefault && !existing.getIsDefault()) {
-      const oldDefault = await this._addressRepository.findDefaultByUserId(
-        userId
-      );
+    // 3. Handle Default Toggle
+    if (input.isDefault === true && !existing.getIsDefault()) {
+      const oldDefault = await this._addressRepository.findDefaultByUserId(userId);
       if (oldDefault && oldDefault.getId() !== id) {
-        await this._addressRepository.update(
-          this.createNonDefaultCopy(oldDefault)
-        );
+        await this._addressRepository.update(oldDefault.markAsNonDefault());
       }
     }
 
-    const updated = new Address(
-      id,
-      userId,
-      input.tag ?? existing.getTag(),
-      input.isDefault ?? existing.getIsDefault(),
-      input.name ?? existing.getName(),
-      input.phone ?? existing.getPhone(),
-      input.houseNumber ?? existing.getHouseNumber(),
-      input.street ?? existing.getStreet(),
-      input.city ?? existing.getCity(),
-      input.pincode ?? existing.getPincode(),
-      input.state ?? existing.getState(),
-      lat && lng ? { type: "Point", coordinates: [lng, lat] } : existing.getLocation(),
-      input.landmark ?? existing.getLandmark(),
-      zoneId,
-      isServiceable
-    );
+    // 4. Create Updated Entity (Immutable Update)
+    // We combine existing props + input DTO
+    const updatedEntity = new Address({
+      ...existing.toProps(), // Start with existing data
+      ...input,              // Overwrite with inputs (TS will ignore undefined/nulls here if configured, else be careful)
+      location: newLocation, // Overwrite complex fields manually
+      zoneId: zoneId,
+      isServiceable: isServiceable,
+      // Ensure we don't accidentally overwrite strict fields with undefined if input is partial
+      tag: input.tag ?? existing.getTag(),
+      name: input.name ?? existing.getName(),
+      phone: input.phone ?? existing.getPhone(),
+      houseNumber: input.houseNumber ?? existing.getHouseNumber(),
+      street: input.street ?? existing.getStreet(),
+      landmark: input.landmark ?? existing.getLandmark(),
+      city: input.city ?? existing.getCity(),
+      pincode: input.pincode ?? existing.getPincode(),
+      state: input.state ?? existing.getState(),
+      isDefault: input.isDefault ?? existing.getIsDefault(),
+    });
 
-    return await this._addressRepository.update(updated);
-  }
-
-  private createNonDefaultCopy(addr: Address): Address {
-    return new Address(
-      addr.getId(),
-      addr.getUserId(),
-      addr.getTag(),
-      false,
-      addr.getName(),
-      addr.getPhone(),
-      addr.getHouseNumber(),
-      addr.getStreet(),
-      addr.getCity(),
-      addr.getPincode(),
-      addr.getState(),
-      addr.getLocation(),
-      addr.getLandmark(),
-      addr.getZoneId(),
-      addr.getIsServiceable()
-    );
+    // 5. Save & Return
+    const saved = await this._addressRepository.update(updatedEntity);
+    return AddressMapper.toResponse(saved);
   }
 }

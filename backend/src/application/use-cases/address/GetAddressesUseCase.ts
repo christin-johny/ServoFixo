@@ -1,12 +1,20 @@
 import { IAddressRepository } from "../../../domain/repositories/IAddressRepository";
-import { Address } from "../../../domain/entities/Address";
+import { AddressResponseDto } from "../../dto/address/AddressResponseDto";
+import { AddressMapper } from "../../mappers/AddressMapper";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+
 export class GetAddressesUseCase {
   constructor(private _addressRepository: IAddressRepository) {}
 
-  async execute(userId: string): Promise<Address[]> {
+  async execute(userId: string): Promise<AddressResponseDto[]> {
     const addresses = await this._addressRepository.findAllByUserId(userId);
-    if (!addresses) throw new Error(ErrorMessages.ADDRESS_NOT_FOUND);
-    return addresses?.sort((a, b) => (b.getIsDefault() ? 1 : 0) - (a.getIsDefault() ? 1 : 0));
+    
+    if (!addresses || addresses.length === 0) {
+        throw new Error(ErrorMessages.ADDRESS_NOT_FOUND); 
+    }
+
+    const sorted = addresses.sort((a, b) => (b.getIsDefault() ? 1 : 0) - (a.getIsDefault() ? 1 : 0));
+    
+    return sorted.map(addr => AddressMapper.toResponse(addr));
   }
 }

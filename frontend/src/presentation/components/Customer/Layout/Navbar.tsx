@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { MapPin, Search, Bell, User, ChevronDown, Menu, X, LogIn, LogOut, Home, Briefcase, Info, ChevronRight } from "lucide-react";
+import { MapPin, Search, Bell, User, ChevronDown, Menu, X, LogIn, LogOut, Home, Briefcase, Info, ChevronRight, type LucideIcon } from "lucide-react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../../../../store/store";
@@ -54,7 +54,7 @@ const Navbar: React.FC = () => {
                     try {
                         const zoneName = await getZoneByLocation(latitude, longitude);
                         dispatch(setCurrentLocation(zoneName));
-                    } catch (err:unknown) {
+                    } catch (err: unknown) {
                         dispatch(setCurrentLocation("Location Error"));
                     }
                 },
@@ -65,7 +65,7 @@ const Navbar: React.FC = () => {
         }
     }, [dispatch]);
 
-    //INITIAL PROFILE FETC
+    //INITIAL PROFILE FETCH
     useEffect(() => {
         if (isLoggedIn && !profile) {
             const loadProfile = async () => {
@@ -74,7 +74,7 @@ const Navbar: React.FC = () => {
                     const data = await getProfile();
                     dispatch(fetchProfileSuccess(data));
                 } catch (err: unknown) {
-                    const message =err instanceof Error ? err.message : "Failed to load profile";
+                    const message = err instanceof Error ? err.message : "Failed to load profile";
                     dispatch(fetchProfileFailure(message));
                 }
 
@@ -107,6 +107,7 @@ const Navbar: React.FC = () => {
             window.removeEventListener("mousedown", onClickOutside);
         };
     }, [drawerOpen]);
+    
     useEffect(() => {
         function handleClickOutside(e: MouseEvent) {
             if (
@@ -329,32 +330,53 @@ const Navbar: React.FC = () => {
     );
 };
 
+// --- STICTLY TYPED HELPER COMPONENTS ---
 
-const SearchBar = ({ query, setQuery, onSubmit, className = "" }: any) => (
+interface SearchBarProps {
+    query: string;
+    setQuery: (query: string) => void;
+    onSubmit: (e?: React.FormEvent) => void;
+    className?: string;
+}
+
+const SearchBar: React.FC<SearchBarProps> = ({ query, setQuery, onSubmit, className = "" }) => (
     <form onSubmit={onSubmit} className={`flex items-center gap-3 bg-[#F3F4F6] rounded-full px-4 py-2.5 transition-all focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:bg-white focus-within:shadow-md ${className}`}>
         <Search size={18} className="text-gray-400 flex-shrink-0" />
         <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search services..." className="bg-transparent border-none outline-none text-sm font-medium text-gray-700 w-full" />
     </form>
 );
 
-const NavLink = ({ label, active, onClick }: any) => (
+interface NavLinkProps {
+    label: string;
+    active: boolean;
+    onClick: () => void;
+}
+
+const NavLink: React.FC<NavLinkProps> = ({ label, active, onClick }) => (
     <button onClick={onClick} className={`text-sm font-bold transition-colors ${active ? "text-blue-600" : "text-gray-600 hover:text-black"}`}>{label}</button>
 );
 
-const IconButton = ({ icon: Icon, onClick, badge }: any) => (
+interface IconButtonProps {
+    icon: LucideIcon;
+    onClick: () => void;
+    badge?: boolean;
+}
+
+const IconButton: React.FC<IconButtonProps> = ({ icon: Icon, onClick, badge }) => (
     <button onClick={onClick} className="relative p-2.5 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
         <Icon size={20} />
         {badge && <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white" />}
     </button>
 );
 
-// const ProfileAvatar = ({ onClick }: any) => (
-//     <button onClick={onClick} className="p-1 rounded-full border border-transparent hover:border-gray-200 transition-all">
-//         <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"><User size={18} /></div>
-//     </button>
-// );
+interface DrawerItemProps {
+    icon: LucideIcon;
+    label: string;
+    onClick: () => void;
+    active: boolean;
+}
 
-const DrawerItem = ({ icon: Icon, label, onClick, active }: any) => (
+const DrawerItem: React.FC<DrawerItemProps> = ({ icon: Icon, label, onClick, active }) => (
     <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${active ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-100"}`}>
         <Icon size={20} className={active ? "text-blue-600" : "text-gray-500"} />
         <span className="flex-1 text-left">{label}</span>

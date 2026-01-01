@@ -11,6 +11,7 @@ export interface CreateZoneDTO {
   name: string;
   description: string;
   boundaries: { lat: number; lng: number }[];
+  isActive:boolean;
 }
  
 export interface UpdateZoneDTO {

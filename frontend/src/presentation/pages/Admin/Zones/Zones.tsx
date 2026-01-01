@@ -41,6 +41,16 @@ const Zones: React.FC = () => {
   const [zoneIsActive, setZoneIsActive] = useState(true);
   const [zonePoints, setZonePoints] = useState<{ lat: number; lng: number }[]>([]);
   const [error, setError] = useState<string | null>(null);
+ 
+  const getErrorMessage = (err: unknown, fallbackMessage = "Operation failed") => {
+    if (typeof err === 'object' && err !== null && 'response' in err) { 
+      const apiError = err as { response: { data?: { error?: string; message?: string } } };
+      if (apiError.response.data?.error) return apiError.response.data.error;
+      if (apiError.response.data?.message) return apiError.response.data.message;
+    }
+    if (err instanceof Error) return err.message;
+    return fallbackMessage;
+  };
 
   useEffect(() => {
     loadZones();
@@ -55,12 +65,12 @@ const Zones: React.FC = () => {
         search: debouncedSearch,
         isActive: filterStatus
       });
-      setZones(result.data);
+      setZones(result.zones || []);
       setTotalZones(result.total);
-      setTotalPages(result.totalPages);
-    } catch (err: any) {
+      setTotalPages(result.totalPages || 1);
+    } catch (err: unknown) {
       console.error(err);
-      showError(err?.message ?? "Failed to load zones list.");
+      showError(getErrorMessage(err, "Failed to load zones list."));
     } finally {
       setLoading(false);
     }
@@ -102,14 +112,7 @@ const Zones: React.FC = () => {
     setZonePoints(points);
   };
 
-  const getErrorMessage = (err: any) => {
-    if (err.response?.data?.error) return err.response.data.error;
-    if (err.response?.data?.message) return err.response.data.message;
-    if (err.message) return err.message;
-    return "Failed to save zone";
-  };
-
-  const handleSave = async () => {
+const handleSave = async () => {
     setError(null);
     const validationResult = zoneNameSchema.safeParse(zoneName);
 
@@ -125,18 +128,31 @@ const Zones: React.FC = () => {
 
     try {
       const validName = validationResult.data;
+       
       if (editingZoneId) {
-        const payload: UpdateZoneDTO = { id: editingZoneId, name: validName, description: zoneDesc, boundaries: zonePoints, isActive: zoneIsActive };
+        const payload: UpdateZoneDTO = { 
+            id: editingZoneId, 
+            name: validName, 
+            description: zoneDesc, 
+            boundaries: zonePoints, 
+            isActive: zoneIsActive 
+        };
         await zoneRepo.updateZone(payload);
         showSuccess("Zone updated successfully");
-      } else {
-        await zoneRepo.createZone({ name: validName, description: zoneDesc, boundaries: zonePoints });
+      } else { 
+        await zoneRepo.createZone({ 
+            name: validName, 
+            description: zoneDesc, 
+            boundaries: zonePoints,
+            isActive: zoneIsActive  
+        });
         showSuccess("New zone created successfully");
       }
+      
       await loadZones();
       handleCancel();
     } catch (err: unknown) {
-      const errMsg = getErrorMessage(err);
+      const errMsg = getErrorMessage(err, "Failed to save zone");
       setError(errMsg);
     }
   };
@@ -179,8 +195,8 @@ const Zones: React.FC = () => {
       }
       showSuccess("Zone deleted successfully");
       setDeleteModalOpen(false);
-    } catch (err: any) {
-      showError(getErrorMessage(err));
+    } catch (err: unknown) {
+      showError(getErrorMessage(err, "Failed to delete zone"));
     } finally {
       setIsDeleting(false);
       setZoneToDelete(null);

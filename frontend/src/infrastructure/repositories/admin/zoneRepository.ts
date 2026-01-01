@@ -13,7 +13,7 @@ export interface ZoneQueryParams {
 }
 
 export interface PaginatedResponse {
-  data: Zone[];
+  zones: Zone[];
   total: number;
   currentPage: number;
   totalPages: number;

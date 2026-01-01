@@ -3,8 +3,11 @@ import { CreateZoneUseCase } from "../../../application/use-cases/zones/CreateZo
 import { GetAllZonesUseCase } from "../../../application/use-cases/zones/GetAllZonesUseCase";
 import { DeleteZoneUseCase } from "../../../application/use-cases/zones/DeleteZoneUseCase";
 import { EditZoneUseCase } from "../../../application/use-cases/zones/EditZoneUseCase";
+import { CreateZoneDto } from "../../../application/dto/zone/CreateZoneDto";
+import { UpdateZoneDto } from "../../../application/dto/zone/UpdateZoneDto";
+import { ZoneQueryParams } from "../../../domain/repositories/IZoneRepository";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages,SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
 export class AdminZoneController {
   constructor(
@@ -16,41 +19,35 @@ export class AdminZoneController {
 
   create = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { name, description, boundaries, isActive } = req.body;
+      // 1. Strict Typing using DTO
+      const dto = req.body as CreateZoneDto;
 
+      // 2. Controller Validation (Or use Middleware like class-validator)
       if (
-        !name ||
-        !boundaries ||
-        !Array.isArray(boundaries) ||
-        boundaries.length < 3
+        !dto.name ||
+        !dto.boundaries ||
+        !Array.isArray(dto.boundaries) ||
+        dto.boundaries.length < 3
       ) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-          error:
-            ErrorMessages.MISSING_REQUIRED_FIELDS +
-            " (Valid boundaries required)",
+          error: ErrorMessages.MISSING_REQUIRED_FIELDS + " (Valid boundaries required)",
         });
       }
 
-      const zone = await this._createZoneUseCase.execute({
-        name,
-        description,
-        boundaries,
-        isActive,
-      });
+      // 3. Execute returns ZoneResponseDto
+      const resultDto = await this._createZoneUseCase.execute(dto);
 
       return res.status(StatusCodes.CREATED).json({
         message: SuccessMessages.ZONE_CREATED,
-        zone,
+        data: resultDto, // Consistency: always use 'data'
       });
     } catch (err: any) {
       if (err.message === ErrorMessages.ZONE_ALREADY_EXISTS) {
         return res.status(StatusCodes.CONFLICT).json({ error: err.message });
       }
-
       if (err.message && err.message.includes(ErrorMessages.INVALID_ZONE)) {
         return res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
       }
-
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });
@@ -59,20 +56,15 @@ export class AdminZoneController {
 
   getAll = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const search = req.query.search as string | undefined;
+      // Strict Query Param extraction
+      const params: ZoneQueryParams = {
+        page: parseInt(req.query.page as string) || 1,
+        limit: parseInt(req.query.limit as string) || 10,
+        search: req.query.search as string | undefined,
+        isActive: req.query.isActive === "true" ? true : req.query.isActive === "false" ? false : undefined
+      };
 
-      let isActive: boolean | undefined;
-      if (req.query.isActive === "true") isActive = true;
-      if (req.query.isActive === "false") isActive = false;
-
-      const result = await this._getAllZonesUseCase.execute({
-        page,
-        limit,
-        search,
-        isActive,
-      });
+      const result = await this._getAllZonesUseCase.execute(params);
 
       return res.status(StatusCodes.OK).json(result);
     } catch (err) {
@@ -90,10 +82,8 @@ export class AdminZoneController {
         .status(StatusCodes.OK)
         .json({ message: SuccessMessages.ZONE_DELETED });
     } catch (err: any) {
-      if (err.message === ErrorMessages.ZONE_DELETE_FAILED) {
-        return res
-          .status(StatusCodes.NOT_FOUND)
-          .json({ error: ErrorMessages.ZONE_NOT_FOUND });
+      if (err.message === ErrorMessages.ZONE_DELETE_FAILED || err.message === 'Zone not found or could not be deleted') {
+        return res.status(StatusCodes.NOT_FOUND).json({ error: ErrorMessages.ZONE_NOT_FOUND });
       }
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
@@ -104,39 +94,28 @@ export class AdminZoneController {
   update = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      const { name, description, boundaries, isActive } = req.body;
+      const dto = req.body as UpdateZoneDto;
 
-      if (boundaries && (!Array.isArray(boundaries) || boundaries.length < 3)) {
+      // Controller Validation for Update
+      if (dto.boundaries && (!Array.isArray(dto.boundaries) || dto.boundaries.length < 3)) {
         return res.status(StatusCodes.BAD_REQUEST).json({
-          error:ErrorMessages.INVALID_BOUNDARIES
+          error: ErrorMessages.INVALID_BOUNDARIES
         });
       }
 
-      const updatedZone = await this._editZoneUseCase.execute({
-        id,
-        name,
-        description,
-        boundaries,
-        isActive,
-      });
+      const resultDto = await this._editZoneUseCase.execute(id, dto);
 
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.ZONE_UPDATED,
-        zone: updatedZone,
+        data: resultDto, // Consistency: always use 'data'
       });
     } catch (err: any) {
       if (err.message === ErrorMessages.ZONE_NOT_FOUND) {
         return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
       }
-
       if (err.message === ErrorMessages.ZONE_ALREADY_EXISTS) {
         return res.status(StatusCodes.CONFLICT).json({ error: err.message });
       }
-
-      if (err.message && err.message.includes(ErrorMessages.INVALID_ZONE)) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ error: err.message });
-      }
-
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });

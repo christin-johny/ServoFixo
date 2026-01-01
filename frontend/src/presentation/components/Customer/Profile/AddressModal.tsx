@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-lea
 import L, { type LeafletEvent } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { getZoneByLocation } from '../../../../infrastructure/repositories/customer/customerRepository';
-
+import type { IAddress, IAddressFormInput } from '../../../../domain/types/AddressTypes';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
@@ -25,29 +25,12 @@ interface NominatimResult {
   };
 }
 
-interface AddressData {
-  id?: string;
-  name: string;
-  phone: string;
-  tag: string;
-  houseNumber: string;
-  street: string;
-  landmark?: string;
-  city: string;
-  pincode: string;
-  state: string;
-  location?: {
-    type: string;
-    coordinates: [number, number];
-  };
-  isDefault: boolean;
-}
 
 interface AddressModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: unknown) => Promise<void>;
-  initialData?: AddressData | null;
+  onSubmit: (data: IAddressFormInput) => Promise<void>;
+  initialData?: IAddress | null;
   isLoading?: boolean;
 }
 
@@ -97,6 +80,7 @@ const InputField = ({ label, icon: Icon, error, ...props }: InputFieldProps) => 
 
 const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, initialData, isLoading }) => {
   const isLocked = useRef(true);
+
   const [formData, setFormData] = useState({
     name: '', phone: '', tag: 'Home', houseNumber: '', street: '',
     landmark: '', city: '', pincode: '', state: '', lat: 12.9716, lng: 77.5946, isDefault: false
@@ -153,6 +137,7 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
 
   useEffect(() => {
     const sync = async () => {
+      // Logic for service zone check
       const zone = await getZoneByLocation(mapPosition.lat, mapPosition.lng);
       setServiceZone(zone);
       setFormData(prev => ({ ...prev, lat: mapPosition.lat, lng: mapPosition.lng }));
@@ -164,15 +149,19 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   }, [mapPosition, isOpen, reverseGeocode]);
 
+  // 3. FIX: Handling Initial Data (Populating the Modal)
   useEffect(() => {
     if (isOpen) {
-      if (initialData?.location?.coordinates) {
-        const [lng, lat] = initialData.location.coordinates;
+      // Check if we have location data in the new object format { lat, lng }
+      if (initialData?.location && typeof initialData.location.lat === 'number') {
+        const { lat, lng } = initialData.location;
+
         isLocked.current = true;
         setMapPosition(new L.LatLng(lat, lng));
+
         setFormData({
           name: initialData.name || '',
-          phone: initialData.phone || '',
+          phone: typeof initialData.phone === 'string' ? initialData.phone : '', // Handle phone object/string mismatch if any
           tag: initialData.tag || 'Home',
           houseNumber: initialData.houseNumber || '',
           street: initialData.street || '',
@@ -185,6 +174,7 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
           isDefault: initialData.isDefault || false
         });
       } else {
+        // Reset form for "Add New Address"
         isLocked.current = false;
         setFormData(prev => ({ ...prev, name: '', phone: '', houseNumber: '', street: '', landmark: '', city: '', pincode: '', state: '', isDefault: false }));
         setSearchQuery('');
@@ -219,6 +209,7 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
 
         <div className="overflow-y-auto p-6 space-y-6">
           <div className="space-y-3">
+            {/* ... (Search and Map code remains the same) ... */}
             <div className="relative z-[1002]">
               <Search className="absolute left-4 top-3.5 text-gray-400" size={18} />
               <input
@@ -279,6 +270,7 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
           </div>
 
           <div className="space-y-3">
+            {/* ... (Address fields remain the same) ... */}
             <div className="flex gap-2">
               {['Home', 'Work', 'Other'].map(t => (
                 <button key={t} type="button" onClick={() => setFormData({ ...formData, tag: t })} className={`flex-1 py-2.5 rounded-xl text-xs font-black border transition-all ${formData.tag === t ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-400 border-gray-100'}`}>{t}</button>
@@ -306,7 +298,13 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
             disabled={isLoading || isOutside || isFetchingDetails}
             onClick={() => {
               if (validate()) {
-                onSubmit({ ...formData, location: { type: "Point", coordinates: [formData.lng, formData.lat] }, isServiceable: !isOutside });
+                // 4. FIX: Send data matching the CreateAddressDto / UpdateAddressDto
+                // We send 'lat' and 'lng' directly. No nested 'location' object.
+                onSubmit({
+                  ...formData,
+                  // No need to wrap in 'location: { coordinates: ... }' anymore
+                  // The backend DTO expects 'lat' and 'lng' at the root
+                });
               }
             }}
             className={`w-full py-4 rounded-2xl font-black text-sm shadow-xl transition-all flex items-center justify-center gap-2 ${isOutside || isFetchingDetails ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200 active:scale-95'}`}

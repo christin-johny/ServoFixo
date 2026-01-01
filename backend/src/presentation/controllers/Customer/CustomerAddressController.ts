@@ -3,8 +3,15 @@ import { AddAddressUseCase } from "../../../application/use-cases/address/AddAdd
 import { UpdateAddressUseCase } from "../../../application/use-cases/address/UpdateAddressUseCase";
 import { GetAddressesUseCase } from "../../../application/use-cases/address/GetAddressesUseCase";
 import { DeleteAddressUseCase } from "../../../application/use-cases/address/DeleteAddressUseCase";
-import { SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
+import { CreateAddressDto } from "../../../application/dto/address/CreateAddressDto";
+import { UpdateAddressDto } from "../../../application/dto/address/UpdateAddressDto";
+import { SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages"; // Adjust path as needed
+import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes"; // Adjust path as needed
+
+// 1. Strict Request Type (No 'any' for userId)
+export interface AuthenticatedRequest extends Request {
+  userId?: string; // Populated by your Auth Middleware
+}
 
 export class CustomerAddressController {
   constructor(
@@ -14,75 +21,117 @@ export class CustomerAddressController {
     private _deleteAddressUseCase: DeleteAddressUseCase
   ) {}
 
-  addAddress=async (req: Request, res: Response): Promise<Response> =>{
+  /**
+   * CREATE ADDRESS
+   */
+  addAddress = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const userId = (req as any).userId;
-      const address = await this._addAddressUseCase.execute({
-        ...req.body,
-        userId,
-      });
+      const userId = (req as AuthenticatedRequest).userId;
+      if (!userId) throw new Error("Unauthorized");
 
-      const message = address.getIsServiceable()
+      // Validate this with middleware (e.g. class-validator) in production
+      const dto = req.body as CreateAddressDto;
+
+      const resultDto = await this._addAddressUseCase.execute(dto, userId);
+
+      const message = resultDto.isServiceable
         ? SuccessMessages.ADDRESS_ADDED
         : SuccessMessages.ADDRESS_OUTSIDE_ZONE;
 
-      return res.status(StatusCodes.CREATED).json({ success: true, message, data: address });
+      return res.status(StatusCodes.CREATED).json({ 
+        success: true, 
+        message, 
+        data: resultDto 
+      });
     } catch (error: any) {
       return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: error.message });
     }
-  }
+  };
 
-  getMyAddresses=async (req: Request, res: Response): Promise<Response> =>{
+  /**
+   * GET ALL ADDRESSES
+   */
+  getMyAddresses = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const userId = (req as any).userId;
-      const addresses = await this._getAddressesUseCase.execute(userId);
+      const userId = (req as AuthenticatedRequest).userId;
+      if (!userId) throw new Error("Unauthorized");
 
-      return res.status(StatusCodes.OK).json({ success: true, data: addresses });
+      // Use Case now returns AddressResponseDto[], not Entities
+      const addressDtos = await this._getAddressesUseCase.execute(userId);
+
+      return res.status(StatusCodes.OK).json({ 
+        success: true, 
+        data: addressDtos 
+      });
     } catch (error: any) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: error.message });
     }
-  }
+  };
 
-  deleteAddress=async (req: Request, res: Response): Promise<Response> =>{
+  /**
+   * DELETE ADDRESS
+   */
+  deleteAddress = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      const userId = (req as any).userId;
+      const userId = (req as AuthenticatedRequest).userId;
+      if (!userId) throw new Error("Unauthorized");
 
       await this._deleteAddressUseCase.execute(id, userId);
 
-      return res.status(StatusCodes.OK).json({ success: true, message: SuccessMessages.ADDRESS_DELETED });
+      return res.status(StatusCodes.OK).json({ 
+        success: true, 
+        message: SuccessMessages.ADDRESS_DELETED 
+      });
     } catch (error: any) {
       return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: error.message });
     }
-  }
+  };
 
-  updateAddress =async (req: Request, res: Response): Promise<Response> =>{
+  /**
+   * UPDATE ADDRESS
+   */
+  updateAddress = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      const userId = (req as any).userId;
+      const userId = (req as AuthenticatedRequest).userId;
+      if (!userId) throw new Error("Unauthorized");
 
-      const address = await this._updateAddressUseCase.execute(id, userId, req.body);
+      const dto = req.body as UpdateAddressDto;
+
+      const resultDto = await this._updateAddressUseCase.execute(id, userId, dto);
 
       return res.status(StatusCodes.OK).json({
         success: true,
         message: SuccessMessages.ADDRESS_UPDATED,
-        data: address,
+        data: resultDto,
       });
     } catch (error: any) {
       return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: error.message });
     }
-  }
+  };
 
- setDefaultAddress= async (req: Request, res: Response): Promise<Response>=> {
+  /**
+   * SET DEFAULT ADDRESS
+   * Note: This reuses UpdateAddressUseCase but forces a specific DTO.
+   */
+  setDefaultAddress = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      const userId = (req as any).userId;
+      const userId = (req as AuthenticatedRequest).userId;
+      if (!userId) throw new Error("Unauthorized");
 
-      await this._updateAddressUseCase.execute(id, userId, { isDefault: true });
+      // Construct a strict DTO for this specific action
+      const dto: UpdateAddressDto = { isDefault: true };
 
-      return res.status(StatusCodes.OK).json({ success: true, message: SuccessMessages.DEFAULT_ADDRESS_UPDATED });
+      await this._updateAddressUseCase.execute(id, userId, dto);
+
+      return res.status(StatusCodes.OK).json({ 
+        success: true, 
+        message: SuccessMessages.DEFAULT_ADDRESS_UPDATED 
+      });
     } catch (error: any) {
       return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: error.message });
     }
-  }
+  };
 }

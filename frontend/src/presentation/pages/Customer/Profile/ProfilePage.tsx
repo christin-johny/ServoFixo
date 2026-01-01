@@ -2,25 +2,10 @@ import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { User, Camera, ChevronRight, Mail, Phone, MapPin, Pencil, Trash2, type LucideIcon } from "lucide-react";
-
+import type { IAddress, IAddressFormInput } from "../../../../domain/types/AddressTypes";
 import type { RootState } from "../../../../store/store";
-import {
-  fetchAddressesStart,
-  setAddresses,
-  clearCustomerData,
-  updateAvatar,
-  updateProfileSuccess
-} from "../../../../store/customerSlice";
-import {
-  getMyAddresses,
-  deleteAddress,
-  setDefaultAddress,
-  addAddress,
-  updateAddress,
-  updateProfile,
-  uploadAvatar,
-  changePassword
-} from "../../../../infrastructure/repositories/customer/customerRepository";
+import { fetchAddressesStart, setAddresses, clearCustomerData, updateAvatar, updateProfileSuccess } from "../../../../store/customerSlice";
+import { getMyAddresses, deleteAddress, setDefaultAddress, addAddress, updateAddress, updateProfile, uploadAvatar, changePassword } from "../../../../infrastructure/repositories/customer/customerRepository";
 import { logout } from "../../../../store/authSlice";
 import { useNotification } from "../../../hooks/useNotification";
 
@@ -32,30 +17,18 @@ import AddressModal from '../../../../presentation/components/Customer/Profile/A
 import UpdateDetailsModal from '../../../../presentation/components/Customer/Profile/UpdateDetailsModal';
 import ChangePasswordModal from "../../../../presentation/components/Customer/Profile/ChangePasswordModal";
 
+interface ChangePasswordInput {
+  currentPassword?: string;
+  newPassword?: string;
+  confirmPassword?: string;
+}
+
 const Pill = ({ text, icon: Icon, }: { text?: string; icon?: LucideIcon; }) => (
   <div className="bg-gray-100 rounded-md px-4 py-2 text-sm text-gray-900 flex items-center gap-2">
     {Icon && <Icon size={14} className="text-gray-500" />}
     <span className="truncate">{text || "-"}</span>
   </div>
 );
-
-interface AddressData {
-  id?: string;
-  name: string;
-  phone: string;
-  tag: string;
-  houseNumber: string;
-  street: string;
-  landmark?: string;
-  city: string;
-  pincode: string;
-  state: string;
-  location?: {
-    type: string;
-    coordinates: [number, number]; 
-  };
-  isDefault: boolean;
-}
 
 const ProfilePage: React.FC = () => {
   const dispatch = useDispatch();
@@ -76,7 +49,7 @@ const ProfilePage: React.FC = () => {
   const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
 
   const [isSaving, setIsSaving] = useState(false);
-  const [editingAddress, setEditingAddress] = useState<AddressData | null>(null);
+  const [editingAddress, setEditingAddress] = useState<IAddress | null>(null);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   useEffect(() => {
@@ -91,7 +64,6 @@ const ProfilePage: React.FC = () => {
     };
     loadAddresses();
   }, [dispatch]);
-
 
   const handleUpdateProfile = async (formData: { name: string; phone: string }) => {
     try {
@@ -131,19 +103,18 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  const handleChangePassword = async (data: any) => {
+  const handleChangePassword = async (data: ChangePasswordInput) => {
     try {
       await changePassword(data);
       showSuccess("Password updated successfully!");
       setIsChangePasswordOpen(false);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to change password";
-      showError(errorMessage);
+      showError('Failed to change password');
       throw err;
     }
   };
 
-  const handleAddAddress = async (formData: unknown) => {
+  const handleAddAddress = async (formData: IAddressFormInput) => {
     setIsSaving(true);
     try {
       if (editingAddress && editingAddress.id) {
@@ -310,7 +281,10 @@ const ProfilePage: React.FC = () => {
                     </div>
                     <div className="flex justify-end gap-2 mt-5">
                       <button
-                        onClick={() => { setEditingAddress(addr as any); setIsAddressModalOpen(true); }}
+                        onClick={() => {
+                          setEditingAddress(addr as IAddress);
+                          setIsAddressModalOpen(true);
+                        }}
                         className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                       >
                         <Pencil size={18} />

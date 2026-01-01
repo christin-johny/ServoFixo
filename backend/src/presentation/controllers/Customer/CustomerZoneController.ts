@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { FindZoneByLocationUseCase } from "../../../application/use-cases/zones/FindZoneByLocationUseCase";
+import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
+import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
 export class CustomerZoneController {
   constructor(private _findZoneByLocationUseCase: FindZoneByLocationUseCase) {}
@@ -10,24 +12,20 @@ export class CustomerZoneController {
       const lng = parseFloat(req.query.lng as string);
 
       if (isNaN(lat) || isNaN(lng)) {
-        res.status(400).json({ success: false, message: "Invalid coordinates" });
+        res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Invalid coordinates" });
         return;
       }
 
-      const result = await this._findZoneByLocationUseCase.execute(lat, lng);
+      const resultDto = await this._findZoneByLocationUseCase.execute(lat, lng);
       
-      res.status(200).json({
+      res.status(StatusCodes.OK).json({
         success: true,
-        data: {
-          name: result.isServiceable ? result.zoneName : "Outside Service Area",
-          isServiceable: result.isServiceable,
-          zoneId: result.zoneId
-        }
+        data: resultDto 
       });
     } catch (error: any) {
-      res.status(500).json({ 
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
         success: false, 
-        message: error.message || "Internal Server Error" 
+        message: error.message || ErrorMessages.INTERNAL_ERROR
       });
     }
   }

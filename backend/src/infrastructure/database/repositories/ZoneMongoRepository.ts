@@ -8,11 +8,15 @@ import { ZoneModel, IZoneDocument } from "../mongoose/models/ZoneModel";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
 export class ZoneMongoRepository implements IZoneRepository {
+  
   async create(zone: Zone): Promise<Zone> {
     try {
+      // 1. Convert Entity -> DB Format
       const persistenceData = this.toPersistence(zone);
       const doc = await ZoneModel.create(persistenceData);
-      return this.toEntity(doc);
+      
+      // 2. Convert DB Format -> Entity
+      return this.toDomain(doc);
     } catch (err: any) {
       if (
         err.code === 16755 ||
@@ -30,7 +34,7 @@ export class ZoneMongoRepository implements IZoneRepository {
       isDeleted: { $ne: true },
     }).exec();
     if (!doc) return null;
-    return this.toEntity(doc);
+    return this.toDomain(doc);
   }
 
   async findByName(name: string): Promise<Zone | null> {
@@ -42,13 +46,13 @@ export class ZoneMongoRepository implements IZoneRepository {
     }).exec();
 
     if (!doc) return null;
-    return this.toEntity(doc);
+    return this.toDomain(doc);
   }
 
   async findZoneByCoordinates(lat: number, lng: number): Promise<Zone | null> {
     const point = {
       type: "Point",
-      coordinates: [lng, lat],
+      coordinates: [lng, lat], // GeoJSON is [lng, lat]
     };
 
     const doc = await ZoneModel.findOne({
@@ -62,11 +66,13 @@ export class ZoneMongoRepository implements IZoneRepository {
     }).exec();
 
     if (!doc) return null;
-    return this.toEntity(doc);
+    return this.toDomain(doc);
   }
 
   async update(zone: Zone): Promise<Zone> {
+    // Extract data cleanly using toProps()
     const persistenceData = this.toPersistence(zone);
+    
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { _id, ...updateData } = persistenceData as any;
 
@@ -76,7 +82,7 @@ export class ZoneMongoRepository implements IZoneRepository {
       }).exec();
 
       if (!doc) throw new Error(ErrorMessages.ZONE_NOT_FOUND);
-      return this.toEntity(doc);
+      return this.toDomain(doc);
     } catch (err: any) {
       if (
         err.code === 16755 ||
@@ -93,71 +99,6 @@ export class ZoneMongoRepository implements IZoneRepository {
       isDeleted: true,
     }).exec();
     return !!result;
-  }
-
-  private toEntity(doc: IZoneDocument): Zone {
-    const points = doc.location.coordinates[0].map((p: number[]) => ({
-      lng: p[0],
-      lat: p[1],
-    }));
-
-    return new Zone(
-      doc._id.toString(),
-      doc.name,
-      doc.description,
-      points,
-      doc.isActive,
-      doc.additionalInfo,
-      doc.createdAt,
-      doc.updatedAt,
-      doc.isDeleted
-    );
-  }
-
-  private toPersistence(zone: Zone) {
-    const points = zone.getBoundaries();
-    let ring = points.map((p) => [p.lng, p.lat]);
-
-    ring = ring.filter((point, index) => {
-      if (index === 0) return true;
-      const prev = ring[index - 1];
-      return point[0] !== prev[0] || point[1] !== prev[1];
-    });
-
-    if (ring.length < 3) {
-      throw new Error(ErrorMessages.INVALID_ZONE);
-    } 
-    
-    const first = ring[0];
-    let closingIndex = -1;
-    
-    for (let i = 2; i < ring.length; i++) {
-      if (ring[i][0] === first[0] && ring[i][1] === first[1]) {
-        closingIndex = i;
-        break;
-      }
-    }
-
-    if (closingIndex !== -1) {
-      ring = ring.slice(0, closingIndex + 1);
-    } else {
-      const last = ring[ring.length - 1];
-      if (last[0] !== first[0] || last[1] !== first[1]) {
-        ring.push(first);
-      }
-    }
-
-    return {
-      name: zone.getName(),
-      description: zone.getDescription(),
-      isActive: zone.getIsActive(),
-      additionalInfo: zone.getAdditionalInfo(),
-      location: {
-        type: "Polygon",
-        coordinates: [ring],
-      },
-      isDeleted: zone.getIsDeleted(), 
-    };
   }
 
   async findAll(params: ZoneQueryParams): Promise<PaginatedZones> {
@@ -187,10 +128,88 @@ export class ZoneMongoRepository implements IZoneRepository {
     ]);
 
     return {
-      data: docs.map((doc) => this.toEntity(doc)),
+      zones: docs.map((doc) => this.toDomain(doc)), // <--- Mapped to 'zones'
       total,
       currentPage: page,
       totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  // --- MAPPERS ---
+
+  // DB Document -> Domain Entity
+  private toDomain(doc: IZoneDocument): Zone {
+    // GeoJSON Polygon is [[[lng, lat], [lng, lat]]]
+    // We Map back to { lat, lng } for Domain
+    const points = doc.location.coordinates[0].map((p: number[]) => ({
+      lng: p[0],
+      lat: p[1],
+    }));
+
+    // Uses the new strict constructor
+    return new Zone({
+      id: doc._id.toString(),
+      name: doc.name,
+      description: doc.description,
+      boundaries: points,
+      isActive: doc.isActive,
+      additionalInfo: doc.additionalInfo,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
+      isDeleted: doc.isDeleted
+    });
+  }
+
+  // Domain Entity -> DB Document
+  private toPersistence(zone: Zone) {
+    const props = zone.toProps(); // Access data via props
+    const points = props.boundaries;
+    
+    // Convert { lat, lng } -> [lng, lat] for GeoJSON
+    let ring = points.map((p) => [p.lng, p.lat]);
+
+    // 1. Remove adjacent duplicates
+    ring = ring.filter((point, index) => {
+      if (index === 0) return true;
+      const prev = ring[index - 1];
+      return point[0] !== prev[0] || point[1] !== prev[1];
+    });
+
+    if (ring.length < 3) {
+      throw new Error(ErrorMessages.INVALID_ZONE);
+    } 
+    
+    // 2. Ensure Ring is Closed (First point == Last point)
+    const first = ring[0];
+    let closingIndex = -1;
+    
+    // Check if the loop closes naturally somewhere in the middle (invalid loop)
+    for (let i = 2; i < ring.length; i++) {
+      if (ring[i][0] === first[0] && ring[i][1] === first[1]) {
+        closingIndex = i;
+        break;
+      }
+    }
+
+    if (closingIndex !== -1) {
+      ring = ring.slice(0, closingIndex + 1);
+    } else {
+      const last = ring[ring.length - 1];
+      if (last[0] !== first[0] || last[1] !== first[1]) {
+        ring.push(first);
+      }
+    }
+
+    return {
+      name: props.name,
+      description: props.description,
+      isActive: props.isActive,
+      additionalInfo: props.additionalInfo,
+      location: {
+        type: "Polygon",
+        coordinates: [ring], // Mongo expects Array of Rings
+      },
+      isDeleted: props.isDeleted, 
     };
   }
 }

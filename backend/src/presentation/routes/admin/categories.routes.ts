@@ -6,23 +6,23 @@ import { validateRequest } from '../../../infrastructure/middleware/validateRequ
 
 const router = Router();
 
-
 router.post(
   '/', 
   upload.single('image'), 
   validateRequest(createCategorySchema), 
-  adminCategoryController.create
+  adminCategoryController.create.bind(adminCategoryController)
 );
 
-router.get('/', adminCategoryController.getAll);
+router.get('/', adminCategoryController.getAll.bind(adminCategoryController));
 
 router.put(
   '/:id', 
   upload.single('image'), 
-  adminCategoryController.update
+  adminCategoryController.update.bind(adminCategoryController)
 );
 
-router.delete('/:id', adminCategoryController.delete);
-router.patch('/:id/toggle', (req, res) => adminCategoryController.toggleStatus(req, res));
+router.delete('/:id', adminCategoryController.delete.bind(adminCategoryController));
+
+router.patch('/:id/toggle', adminCategoryController.toggleStatus.bind(adminCategoryController));
 
 export default router;

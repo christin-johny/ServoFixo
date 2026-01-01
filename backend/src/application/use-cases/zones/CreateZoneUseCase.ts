@@ -1,36 +1,21 @@
 import { IZoneRepository } from "../../../domain/repositories/IZoneRepository";
-import { Zone } from "../../../domain/entities/Zone";
-
-export interface CreateZoneDto {
-  name: string;
-  description?: string;
-  boundaries: { lat: number; lng: number }[];
-  isActive?: boolean;
-}
+import { CreateZoneDto } from "../../dto/zone/CreateZoneDto";
+import { ZoneResponseDto } from "../../dto/zone/ZoneResponseDto";
+import { ZoneMapper } from "../../mappers/ZoneMapper";
 
 export class CreateZoneUseCase {
   constructor(private readonly _zoneRepository: IZoneRepository) {}
 
-  async execute(input: CreateZoneDto): Promise<Zone> {
-    const { name, description, boundaries, isActive } = input;
-
-    const existing = await this._zoneRepository.findByName(name);
+  async execute(input: CreateZoneDto): Promise<ZoneResponseDto> {
+    const existing = await this._zoneRepository.findByName(input.name);
     if (existing) {
       throw new Error("Zone with this name already exists");
     }
 
-    const newZone = new Zone(
-      "",
-      name,
-      description || "",
-      boundaries,
-      isActive !== undefined ? isActive : true,
-      {}, 
-      new Date(),
-      new Date(),
-      false
-    );
+    const newZoneEntity = ZoneMapper.toDomain(input);
 
-    return this._zoneRepository.create(newZone);
+    const savedZone = await this._zoneRepository.create(newZoneEntity);
+
+    return ZoneMapper.toResponse(savedZone);
   }
 }
