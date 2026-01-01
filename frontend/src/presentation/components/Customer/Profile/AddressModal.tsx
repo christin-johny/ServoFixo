@@ -137,7 +137,6 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
 
   useEffect(() => {
     const sync = async () => {
-      // Logic for service zone check
       const zone = await getZoneByLocation(mapPosition.lat, mapPosition.lng);
       setServiceZone(zone);
       setFormData(prev => ({ ...prev, lat: mapPosition.lat, lng: mapPosition.lng }));
@@ -149,10 +148,8 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
     }
   }, [mapPosition, isOpen, reverseGeocode]);
 
-  // 3. FIX: Handling Initial Data (Populating the Modal)
   useEffect(() => {
     if (isOpen) {
-      // Check if we have location data in the new object format { lat, lng }
       if (initialData?.location && typeof initialData.location.lat === 'number') {
         const { lat, lng } = initialData.location;
 
@@ -161,7 +158,7 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
 
         setFormData({
           name: initialData.name || '',
-          phone: typeof initialData.phone === 'string' ? initialData.phone : '', // Handle phone object/string mismatch if any
+          phone: typeof initialData.phone === 'string' ? initialData.phone : '',  
           tag: initialData.tag || 'Home',
           houseNumber: initialData.houseNumber || '',
           street: initialData.street || '',
@@ -174,7 +171,6 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
           isDefault: initialData.isDefault || false
         });
       } else {
-        // Reset form for "Add New Address"
         isLocked.current = false;
         setFormData(prev => ({ ...prev, name: '', phone: '', houseNumber: '', street: '', landmark: '', city: '', pincode: '', state: '', isDefault: false }));
         setSearchQuery('');
@@ -298,12 +294,8 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, onSubmit, 
             disabled={isLoading || isOutside || isFetchingDetails}
             onClick={() => {
               if (validate()) {
-                // 4. FIX: Send data matching the CreateAddressDto / UpdateAddressDto
-                // We send 'lat' and 'lng' directly. No nested 'location' object.
                 onSubmit({
                   ...formData,
-                  // No need to wrap in 'location: { coordinates: ... }' anymore
-                  // The backend DTO expects 'lat' and 'lng' at the root
                 });
               }
             }}

@@ -4,6 +4,8 @@ import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepos
 import { JwtService } from "../../../infrastructure/security/JwtService";
 import { Customer } from "../../../domain/entities/Customer";
 import { Email } from "../../../../../shared/types/value-objects/ContactTypes";
+import { ILogger } from "../../interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 interface GoogleLoginRequest {
   token?: string;
@@ -28,7 +30,8 @@ export class CustomerGoogleLoginUseCase {
   constructor(
     private _customerRepository: ICustomerRepository,
     private _jwtService: JwtService,
-    clientId: string
+    clientId: string,
+    private _logger: ILogger
   ) {
     this._clientId = clientId;
     this._googleClient = new OAuth2Client(clientId);
@@ -36,6 +39,7 @@ export class CustomerGoogleLoginUseCase {
 
   async execute(request: GoogleLoginRequest): Promise<GoogleLoginResponse> {
     try {
+      this._logger.info(LogEvents.AUTH_GOOGLE_LOGIN_INIT);
       let customer: Customer | null = null;
       let picture: string | undefined;
 
@@ -111,7 +115,9 @@ export class CustomerGoogleLoginUseCase {
         type: "customer",
       };
 
-      const accessToken = await this._jwtService.generateAccessToken(jwtPayload);
+      const accessToken = await this._jwtService.generateAccessToken(
+        jwtPayload
+      );
       const refreshToken = await this._jwtService.generateRefreshToken({
         sub: customerId,
         type: "customer",
@@ -128,21 +134,33 @@ export class CustomerGoogleLoginUseCase {
           "EX",
           ttlSeconds
         );
-      } catch (err) {
-        console.error("Failed to store refresh token in redis:", err);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+
+        this._logger.error(
+          "Failed to store refresh token in redis:",
+          errorMessage
+        );
       }
 
+      this._logger.info(
+        `${LogEvents.AUTH_GOOGLE_LOGIN_SUCCESS} - ID: ${customerId}`
+      );
       return {
         accessToken,
         refreshToken,
         user: {
           id: customerId,
           name: customer.getName(),
-          email: typeof customer.getEmail === 'function' ? (customer.getEmail() as any) : customer.getEmail(),
+          email:
+            typeof customer.getEmail === "function"
+              ? (customer.getEmail() as any)
+              : customer.getEmail(),
           avatarUrl: picture,
         },
       };
     } catch (err: any) {
+      this._logger.error("Google Login Error", err);
       throw new Error(
         `CustomerGoogleLoginUseCase error: ${err.message || err}`
       );

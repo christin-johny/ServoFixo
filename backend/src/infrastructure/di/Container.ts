@@ -103,7 +103,8 @@ const findZoneByLocationUseCase = new FindZoneByLocationUseCase(
   logger
 );
 export const customerZoneController = new CustomerZoneController(
-  findZoneByLocationUseCase
+  findZoneByLocationUseCase,
+  logger
 );
 export const adminZoneController = new AdminZoneController(
   createZoneUseCase,
@@ -187,25 +188,32 @@ export const adminServiceItemController = new AdminServiceItemController(
 // CUSTOMER MODULE WIRING (Admin & Profile)
 const addressRepo = new AddressMongoRepository();
 const customerRepo = new CustomerMongoRepository();
-const getAllCustomersUseCase = new GetAllCustomersUseCase(customerRepo);
-const updateCustomerUseCase = new UpdateCustomerUseCase(customerRepo);
-const getCustomerByIdUseCase = new GetCustomerByIdUseCase(customerRepo);
-const deleteCustomerUseCase = new DeleteCustomerUseCase(customerRepo);
+const getAllCustomersUseCase = new GetAllCustomersUseCase(customerRepo, logger);
+const updateCustomerUseCase = new UpdateCustomerUseCase(customerRepo, logger);
+const getCustomerByIdUseCase = new GetCustomerByIdUseCase(customerRepo, logger);
+const deleteCustomerUseCase = new DeleteCustomerUseCase(customerRepo, logger);
 const getCustomerProfileUseCase = new GetCustomerProfileUseCase(
   customerRepo,
-  addressRepo
+  addressRepo,
+  logger
 );
-const uploadAvatarUseCase = new UploadAvatarUseCase(customerRepo, imageService);
+const uploadAvatarUseCase = new UploadAvatarUseCase(
+  customerRepo,
+  imageService,
+  logger
+);
 const changePasswordUseCase = new ChangePasswordUseCase(
   customerRepo,
-  passwordHasher
+  passwordHasher,
+  logger
 );
 export const customerProfileController = new CustomerProfileController(
   getCustomerProfileUseCase,
   updateCustomerUseCase,
   deleteCustomerUseCase,
   uploadAvatarUseCase,
-  changePasswordUseCase
+  changePasswordUseCase,
+  logger
 );
 
 const getAddressesUseCase = new GetAddressesUseCase(addressRepo, logger);
@@ -215,7 +223,8 @@ export const adminCustomerController = new AdminCustomerController(
   updateCustomerUseCase,
   getCustomerByIdUseCase,
   deleteCustomerUseCase,
-  getAddressesUseCase
+  getAddressesUseCase,
+  logger
 );
 
 // CUSTOMER AUTH MODULE WIRING
@@ -223,33 +232,39 @@ export const adminCustomerController = new AdminCustomerController(
 const reqRegOtpUseCase = new RequestCustomerRegistrationOtpUseCase(
   customerRepo,
   otpSessionRepo,
-  emailService
+  emailService,
+  logger
 );
 const verRegOtpUseCase = new VerifyCustomerRegistrationOtpUseCase(
   customerRepo,
   otpSessionRepo,
   passwordHasher,
-  jwtService
+  jwtService,
+  logger
 );
 const custLoginUseCase = new CustomerLoginUseCase(
   customerRepo,
   passwordHasher,
-  jwtService
+  jwtService,
+  logger
 );
 const reqForgotOtpUseCase = new RequestCustomerForgotPasswordOtpUseCase(
   customerRepo,
   otpSessionRepo,
-  emailService
+  emailService,
+  logger
 );
 const verForgotOtpUseCase = new VerifyCustomerForgotPasswordOtpUseCase(
   customerRepo,
   otpSessionRepo,
-  passwordHasher
+  passwordHasher,
+  logger
 );
 const googleLoginUseCase = new CustomerGoogleLoginUseCase(
   customerRepo,
   jwtService,
-  process.env.GOOGLE_CLIENT_ID || ""
+  process.env.GOOGLE_CLIENT_ID || "",
+  logger
 );
 
 export const customerAuthController = new CustomerAuthController(
@@ -258,7 +273,8 @@ export const customerAuthController = new CustomerAuthController(
   custLoginUseCase,
   reqForgotOtpUseCase,
   verForgotOtpUseCase,
-  googleLoginUseCase
+  googleLoginUseCase,
+  logger
 );
 
 // CUSTOMER SERVICE MODULE WIRING (Home/Listing)
@@ -284,7 +300,8 @@ export const customerCategoryController = new CustomerCategoryController(
 export const customerServiceController = new CustomerServiceController(
   getMostBookedUseCase,
   getServiceListingUseCase,
-  getServiceByIdUseCase
+  getServiceByIdUseCase,
+  logger
 );
 
 const addAddressUseCase = new AddAddressUseCase(
@@ -312,13 +329,24 @@ const adminRepo = new AdminMongoRepository();
 const adminLoginUseCase = new AdminLoginUseCase(
   adminRepo,
   passwordHasher,
-  jwtService
+  jwtService,
+  logger
 );
 
-export const adminAuthController = new AdminAuthController(adminLoginUseCase);
+export const adminAuthController = new AdminAuthController(
+  adminLoginUseCase,
+  logger
+);
 
 // TOKEN MANAGEMENT WIRING
 
-const refreshTokenUseCase = new RefreshTokenUseCase(jwtService, customerRepo);
+const refreshTokenUseCase = new RefreshTokenUseCase(
+  jwtService,
+  customerRepo,
+  logger
+);
 
-export const authTokenController = new AuthTokenController(refreshTokenUseCase);
+export const authTokenController = new AuthTokenController(
+  refreshTokenUseCase,
+  logger
+);

@@ -1,14 +1,26 @@
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { Customer } from "../../../domain/entities/Customer";
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-
+import { ILogger } from "../../interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class UpdateCustomerUseCase {
-  constructor(private readonly _customerRepository: ICustomerRepository) {}
+  constructor(
+    private readonly _customerRepository: ICustomerRepository,
+    private readonly _logger: ILogger
+  ) {}
 
   async execute(customerId: string, updateDto: any): Promise<Customer> {
+    this._logger.info(LogEvents.PROFILE_UPDATE_INIT, { 
+        customerId, 
+        updatedFields: Object.keys(updateDto) 
+    });
+
     const existing = await this._customerRepository.findById(customerId);
-    if (!existing) throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
+    if (!existing) {
+        this._logger.warn(LogEvents.PROFILE_UPDATE_FAILED, { customerId, reason: "Customer Not Found" });
+        throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
+    }
 
     const nameToUpdate = updateDto.name ?? existing.getName();
     const phoneToUpdate = updateDto.phone ?? existing.getPhone();
@@ -22,6 +34,7 @@ export class UpdateCustomerUseCase {
     if (updateDto.phone && updateDto.phone !== existing.getPhone()) {
       const customerByPhone = await this._customerRepository.findByPhone(updateDto.phone);
       if (customerByPhone && customerByPhone.getId() !== customerId) {
+        this._logger.warn(LogEvents.PROFILE_UPDATE_FAILED, { customerId, reason: "Phone Already Exists" });
         throw new Error(ErrorMessages.PHONE_ALREADY_EXISTS);
       }
     }
@@ -42,6 +55,8 @@ export class UpdateCustomerUseCase {
       existing.getIsDeleted()
     );
 
-    return await this._customerRepository.update(updatedCustomer);
+    const result = await this._customerRepository.update(updatedCustomer);
+    this._logger.info(LogEvents.PROFILE_UPDATED, { customerId });
+    return result;
   }
 }

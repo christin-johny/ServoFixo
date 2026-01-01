@@ -8,18 +8,22 @@ import { AuthResultDto } from "../../dto/auth/AuthResultDto";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { OtpContext } from "../../../../../shared/types/enums/OtpContext";
 import { Customer } from "../../../domain/entities/Customer";
+import { ILogger } from "../../interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class VerifyCustomerRegistrationOtpUseCase {
   constructor(
     private readonly _customerRepository: ICustomerRepository,
     private readonly _otpSessionRepository: IOtpSessionRepository,
     private readonly _passwordHasher: IPasswordHasher,
-    private readonly _jwtService: IJwtService
+    private readonly _jwtService: IJwtService,
+    private readonly _logger: ILogger
   ) {}
 
   async execute(input: CustomerRegisterVerifyDto): Promise<AuthResultDto> {
     const { email, otp, sessionId, name, password, phone } = input;
     const normalizedEmail = email.toLowerCase().trim();
+    this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} (Registration) - Email: ${normalizedEmail}`);
 
     const existingCustomer = await this._customerRepository.findByEmail(
       normalizedEmail
@@ -39,9 +43,11 @@ export class VerifyCustomerRegistrationOtpUseCase {
       OtpContext.Registration
     );
     if (!session) {
+      this._logger.warn("Invalid OTP Session");
       throw new Error(ErrorMessages.OTP_SESSION_INVALID);
     }
     if (session.getOtp() !== otp) {
+      this._logger.warn("Invalid OTP entered");
       throw new Error(ErrorMessages.OTP_INVALID);
     }
     session.markAsUsed();
@@ -86,6 +92,7 @@ export class VerifyCustomerRegistrationOtpUseCase {
       );
     } catch (_) {}
 
+    this._logger.info(`${LogEvents.AUTH_REGISTER_SUCCESS} - ID: ${savedCustomer.getId()}`);
     return { accessToken, refreshToken };
   }
 }

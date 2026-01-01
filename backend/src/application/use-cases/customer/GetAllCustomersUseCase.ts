@@ -1,6 +1,8 @@
 import { ICustomerRepository, PaginatedResult } from '../../../domain/repositories/ICustomerRepository';
 import { Customer } from '../../../domain/entities/Customer';
 import { CustomerFilterDto, CustomerResponseDto } from '../../dto/Customer/AdminCustomerDtos';
+import { ILogger } from '../../interfaces/ILogger';
+import { LogEvents } from '../../../../../shared/constants/LogEvents';
 
 export const mapToResponseDto = (customer: Customer): CustomerResponseDto => {
   return {
@@ -14,11 +16,14 @@ export const mapToResponseDto = (customer: Customer): CustomerResponseDto => {
   };
 };
 
-
 export class GetAllCustomersUseCase {
-  constructor(private readonly _customerRepository: ICustomerRepository) {}
+  constructor(
+    private readonly _customerRepository: ICustomerRepository,
+    private readonly _logger: ILogger
+  ) {}
 
   async execute(filterDto: CustomerFilterDto): Promise<PaginatedResult<CustomerResponseDto>> {
+    this._logger.info(LogEvents.ADMIN_CUSTOMER_FETCH_ALL_INIT, { filters: filterDto });
 
     const page = filterDto.page;
     const limit = filterDto.limit;

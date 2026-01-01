@@ -2,14 +2,19 @@ import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepos
 import { IPasswordHasher } from "../../interfaces/IPasswordHasher";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { Customer } from "../../../domain/entities/Customer";
+import { ILogger } from "../../interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class ChangePasswordUseCase {
   constructor(
     private readonly _customerRepository: ICustomerRepository,
-    private readonly _passwordHasher: IPasswordHasher
+    private readonly _passwordHasher: IPasswordHasher,
+    private readonly _logger: ILogger
   ) {}
 
   async execute(userId: string, data: any): Promise<void> {
+    this._logger.info(LogEvents.PASSWORD_CHANGE_INIT, { userId });
+
     const { currentPassword, newPassword } = data;
     const customer = await this._customerRepository.findById(userId);
     if (!customer) {
@@ -18,6 +23,7 @@ export class ChangePasswordUseCase {
 
     const storedPassword = customer.getPassword();
     if (!storedPassword) {
+      this._logger.warn(LogEvents.PASSWORD_CHANGE_FAILED, { userId, reason: "Google Account" });
       throw new Error(ErrorMessages.GOOGLE_REGISTERED);
     }
 
@@ -26,6 +32,7 @@ export class ChangePasswordUseCase {
       storedPassword
     );
     if (!isMatch) {
+      this._logger.warn(LogEvents.PASSWORD_CHANGE_FAILED, { userId, reason: "Invalid Password" });
       throw new Error(ErrorMessages.INVALID_PASSWORD);
     }
 
@@ -48,5 +55,6 @@ export class ChangePasswordUseCase {
     );
 
     await this._customerRepository.update(updatedCustomer);
+    this._logger.info(LogEvents.PASSWORD_CHANGE_SUCCESS, { userId });
   }
 }

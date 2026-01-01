@@ -15,7 +15,6 @@ import ServiceItemModal from "../../../components/Admin/Modals/ServiceItemModal"
 import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
 import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
 
-// Strict Error Helper
 const getErrorMessage = (error: unknown): string => {
     if (typeof error === 'object' && error !== null && 'response' in error) {
         const apiError = error as { response: { data?: { error?: string; message?: string } } };
@@ -74,7 +73,6 @@ const Services: React.FC = () => {
                 isActive: filterStatus
             });
             
-            // Backend now uses 'categories' and 'id'
             const categoryList = result.categories || []; 
             setCategories(categoryList);
             
@@ -273,7 +271,6 @@ const Services: React.FC = () => {
                             <div className="grid grid-cols-1 gap-4">
                                 {categories.map((cat) => (
                                     <CategoryCard
-                                        // FIX: Use .id
                                         key={cat.id}
                                         category={cat}
                                         isExpanded={expandedId === cat.id}

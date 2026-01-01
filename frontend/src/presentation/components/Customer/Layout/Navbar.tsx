@@ -45,7 +45,6 @@ const Navbar: React.FC = () => {
     const profileMenuRef = useRef<HTMLDivElement | null>(null);
     const drawerRef = useRef<HTMLDivElement | null>(null);
 
-    //GPS LOCATION DETECTION
     useEffect(() => {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
@@ -65,7 +64,6 @@ const Navbar: React.FC = () => {
         }
     }, [dispatch]);
 
-    //INITIAL PROFILE FETCH
     useEffect(() => {
         if (isLoggedIn && !profile) {
             const loadProfile = async () => {
@@ -83,7 +81,6 @@ const Navbar: React.FC = () => {
         }
     }, [isLoggedIn, profile, dispatch]);
 
-    // EVENT LISTENERS & SEARCH 
     useEffect(() => {
         const urlSearch = searchParams.get('search');
         if (location.pathname === '/services' && urlSearch) {
@@ -330,7 +327,6 @@ const Navbar: React.FC = () => {
     );
 };
 
-// --- STICTLY TYPED HELPER COMPONENTS ---
 
 interface SearchBarProps {
     query: string;

@@ -4,22 +4,27 @@ import { GetServiceListingUseCase } from "../../../application/use-cases/service
 import { GetServiceByIdUseCase } from "../../../application/use-cases/service-items/GetServiceByIdUseCase";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
-
+import { ILogger } from "../../../application/interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class CustomerServiceController {
   constructor(
     private readonly _getMostBookedUseCase: GetMostBookedServicesUseCase,
     private readonly _getServiceListingUseCase: GetServiceListingUseCase,
-    private readonly _getServiceByIdUseCase: GetServiceByIdUseCase
+    private readonly _getServiceByIdUseCase: GetServiceByIdUseCase,
+    private readonly _logger: ILogger
   ) {}
 
   getMostBooked = async (req: Request, res: Response): Promise<Response> => {
     try {
       const limit = parseInt(req.query.limit as string) || 5;
+
+      this._logger.info(LogEvents.SERVICE_MOST_BOOKED_FETCH, { limit });
+
       const services = await this._getMostBookedUseCase.execute(limit);
       return res.status(StatusCodes.OK).json({ data: services });
-    } catch (error) {
-      console.error("Error fetching popular services:", error);
+    } catch (error: unknown) {
+      this._logger.error(LogEvents.SERVICE_FETCH_FAILED, undefined, { error });
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });
@@ -28,7 +33,7 @@ export class CustomerServiceController {
 
   getAll = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { search, categoryId, minPrice, maxPrice, sortBy,page,limit } = req.query;
+      const { search, categoryId, minPrice, maxPrice, sortBy, page, limit } = req.query;
       
       const filters = {
         searchTerm: search as string,
@@ -36,10 +41,13 @@ export class CustomerServiceController {
         minPrice: minPrice ? Number(minPrice) : undefined,
         maxPrice: maxPrice ? Number(maxPrice) : undefined,
         sortBy: sortBy as any,
-        page:Number(page),
-        limit:Number(limit),
+        page: Number(page),
+        limit: Number(limit),
         isActive: true,
       };
+
+      this._logger.info(LogEvents.SERVICE_LISTING_FETCH, { filters });
+
       const services = await this._getServiceListingUseCase.execute(filters);
 
       return res.status(StatusCodes.OK).json({
@@ -47,8 +55,8 @@ export class CustomerServiceController {
         count: services.length,
         data: services,
       });
-    } catch (error) {
-      console.error("Error fetching services:", error);
+    } catch (error: unknown) {
+      this._logger.error(LogEvents.SERVICE_FETCH_FAILED, undefined, { error });
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });
@@ -59,6 +67,8 @@ export class CustomerServiceController {
     try {
       const { id } = req.params;
 
+      this._logger.info(LogEvents.SERVICE_BY_ID_FETCH, { serviceId: id });
+
       const service = await this._getServiceByIdUseCase.execute(id);
 
       if (!service) {
@@ -68,8 +78,8 @@ export class CustomerServiceController {
       }
 
       return res.status(StatusCodes.OK).json({ success: true, data: service });
-    } catch (error) {
-      console.error("GetById Error:", error);
+    } catch (error: unknown) {
+      this._logger.error(LogEvents.SERVICE_FETCH_FAILED, undefined, { error, serviceId: req.params.id });
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });

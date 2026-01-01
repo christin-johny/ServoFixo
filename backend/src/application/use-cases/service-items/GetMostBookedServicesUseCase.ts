@@ -11,7 +11,7 @@ export class GetMostBookedServicesUseCase {
   ) {}
 
   async execute(limit: number = 5): Promise<ServiceItemResponseDto[]> {
-    this._logger.info(`${LogEvents.SERVICE_FETCH_MOST_BOOKED} - Limit: ${limit}`);
+    this._logger.info(`${LogEvents.SERVICE_MOST_BOOKED_FETCH} - Limit: ${limit}`);
 
     const services = await this._serviceItemRepo.findMostBooked(limit);
 

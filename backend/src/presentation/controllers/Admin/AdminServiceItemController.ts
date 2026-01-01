@@ -47,7 +47,6 @@ export class AdminServiceItemController {
           .json({ error: ErrorMessages.INVALID_SPECIFICATIONS });
       }
 
-      // Constructing the DTO class
       const dto = new CreateServiceItemDto();
       dto.categoryId = categoryId;
       dto.name = name;

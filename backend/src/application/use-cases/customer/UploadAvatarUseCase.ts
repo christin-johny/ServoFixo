@@ -2,17 +2,25 @@ import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepos
 import { IImageService } from "../../interfaces/IImageService";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { Customer } from "../../../domain/entities/Customer";
+import { ILogger } from "../../interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class UploadAvatarUseCase {
   constructor(
     private readonly _customerRepository: ICustomerRepository,
-    private readonly _imageService: IImageService
+    private readonly _imageService: IImageService,
+    private readonly _logger: ILogger
   ) {}
 
   async execute(
     userId: string,
     file: { buffer: Buffer; originalName: string; mimeType: string }
   ): Promise<string> {
+    this._logger.info(LogEvents.AVATAR_UPLOAD_INIT, { 
+        userId, 
+        fileName: file.originalName 
+    });
+
     const customer = await this._customerRepository.findById(userId);
     if (!customer) throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
 
@@ -39,6 +47,7 @@ export class UploadAvatarUseCase {
     );
 
     await this._customerRepository.update(updatedCustomer);
+    this._logger.info(LogEvents.AVATAR_UPLOAD_SUCCESS, { userId, avatarUrl });
     return avatarUrl;
   }
 }

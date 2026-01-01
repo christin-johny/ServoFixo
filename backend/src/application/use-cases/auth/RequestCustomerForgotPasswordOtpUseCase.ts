@@ -5,6 +5,8 @@ import { OtpSession } from '../../../domain/entities/OtpSession';
 import { OtpContext } from '../../../../../shared/types/enums/OtpContext';
 import { CustomerForgotPasswordInitDto } from '../../../../../shared/types/dto/AuthDtos';
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
+import { ILogger } from '../../interfaces/ILogger';
+import { LogEvents } from '../../../../../shared/constants/LogEvents';
 
 export class RequestCustomerForgotPasswordOtpUseCase {
   private readonly _otpExpiryMinutes = 2;
@@ -14,7 +16,8 @@ export class RequestCustomerForgotPasswordOtpUseCase {
   constructor(
     private readonly _customerRepository: ICustomerRepository,
     private readonly _otpSessionRepository: IOtpSessionRepository,
-    private readonly _emailService: IEmailService
+    private readonly _emailService: IEmailService,
+    private readonly _logger: ILogger
   ) {}
 
   async execute(
@@ -22,9 +25,11 @@ export class RequestCustomerForgotPasswordOtpUseCase {
   ): Promise<{ message: string; sessionId: string }> {
     const { email } = input;
     const normalizedEmail = email.toLowerCase().trim();
+    this._logger.info(`${LogEvents.AUTH_FORGOT_PASSWORD_INIT} - Email: ${normalizedEmail}`);
 
     const customer = await this._customerRepository.findByEmail(normalizedEmail);
     if (!customer) {
+      this._logger.warn(`Forgot Password failed - Customer not found: ${normalizedEmail}`);
       throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
     }
 
@@ -34,6 +39,7 @@ export class RequestCustomerForgotPasswordOtpUseCase {
         this._rateLimitWindowMinutes
       );
       if (recentCount >= this._rateLimitMax) {
+        this._logger.warn(`Rate Limit Exceeded for OTP: ${normalizedEmail}`);
         throw new Error('TOO_MANY_OTP_REQUESTS');
       }
     } catch (err) {
@@ -62,6 +68,7 @@ export class RequestCustomerForgotPasswordOtpUseCase {
 
     await this._emailService.sendTextEmail(normalizedEmail, subject, text);
 
+    this._logger.info(`${LogEvents.AUTH_OTP_SENT} (Forgot Password) - SessionID: ${sessionId}`);
     return {
       message: 'OTP sent to email for password reset',
       sessionId,

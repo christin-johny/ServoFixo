@@ -5,6 +5,8 @@ import { OtpContext } from '../../../../../shared/types/enums/OtpContext';
 import { OtpLoginInitDto, AuthResponse } from '../../../../../shared/types/dto/AuthDtos';
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 import { OtpSession } from '../../../domain/entities/OtpSession';
+import { ILogger } from '../../interfaces/ILogger';
+import { LogEvents } from '../../../../../shared/constants/LogEvents';
 
 export class RequestCustomerEmailOtpUseCase {
   private readonly otpExpiryMinutes = 5;
@@ -12,15 +14,18 @@ export class RequestCustomerEmailOtpUseCase {
   constructor(
     private readonly _customerRepository: ICustomerRepository,
     private readonly _otpSessionRepository: IOtpSessionRepository,
-    private readonly _emailService: IEmailService
+    private readonly _emailService: IEmailService,
+    private readonly _logger: ILogger
   ) {}
 
   async execute(input: OtpLoginInitDto): Promise<AuthResponse> {
     const { email } = input;
     const normalizedEmail = email.toLowerCase().trim();
+    this._logger.info(`${LogEvents.AUTH_OTP_REQUEST_INIT} (Login) - Email: ${normalizedEmail}`);
 
     const customer = await this._customerRepository.findByEmail(normalizedEmail);
     if (!customer) {
+      this._logger.warn(`OTP Request Failed - Customer not found: ${normalizedEmail}`);
       throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
     }
 
@@ -44,6 +49,7 @@ export class RequestCustomerEmailOtpUseCase {
 
     await this._emailService.sendTextEmail(normalizedEmail, subject, text);
 
+    this._logger.info(`${LogEvents.AUTH_OTP_SENT} - SessionID: ${sessionId}`);
     return {
       message: 'OTP sent to email',
       sessionId,

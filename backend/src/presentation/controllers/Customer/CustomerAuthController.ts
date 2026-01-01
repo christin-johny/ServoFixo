@@ -5,11 +5,15 @@ import { CustomerLoginUseCase } from "../../../application/use-cases/auth/Custom
 import { RequestCustomerForgotPasswordOtpUseCase } from "../../../application/use-cases/auth/RequestCustomerForgotPasswordOtpUseCase";
 import { VerifyCustomerForgotPasswordOtpUseCase } from "../../../application/use-cases/auth/VerifyCustomerForgotPasswordOtpUseCase";
 import { CustomerGoogleLoginUseCase } from "../../../application/use-cases/auth/CustomerGoogleLoginUseCase";
-import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import {
+  ErrorMessages,
+  SuccessMessages,
+} from "../../../../../shared/types/enums/ErrorMessages";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { refreshCookieOptions } from "../../../infrastructure/config/Cookie";
-
 import redis from "../../../infrastructure/redis/redisClient";
+import { ILogger } from "../../../application/interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class CustomerAuthController {
   constructor(
@@ -18,21 +22,31 @@ export class CustomerAuthController {
     private readonly _customerLoginUseCase: CustomerLoginUseCase,
     private readonly _requestForgotPasswordOtpUseCase: RequestCustomerForgotPasswordOtpUseCase,
     private readonly _verifyForgotPasswordOtpUseCase: VerifyCustomerForgotPasswordOtpUseCase,
-    private readonly _customerGoogleLoginUseCase: CustomerGoogleLoginUseCase
+    private readonly _customerGoogleLoginUseCase: CustomerGoogleLoginUseCase,
+    private readonly _logger: ILogger
   ) {}
 
   registerInitOtp = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { email,phone } = req.body;
+      const { email, phone } = req.body;
+      this._logger.info(
+        `${LogEvents.AUTH_REGISTER_INIT} - Requesting OTP for: ${email}`
+      );
+
       if (!email) {
         return res.status(StatusCodes.BAD_REQUEST).json({
           error: ErrorMessages.MISSING_REQUIRED_FIELDS,
         });
       }
-      const result = await this._requestRegisterOtpUseCase.execute({ email,phone });
+      const result = await this._requestRegisterOtpUseCase.execute({
+        email,
+        phone,
+      });
 
+      this._logger.info(`${LogEvents.AUTH_OTP_SENT} - Registration`);
       return res.status(StatusCodes.OK).json(result);
     } catch (err: any) {
+      this._logger.error("Register OTP Init Failed", err);
       if (
         err instanceof Error &&
         err.message === ErrorMessages.EMAIL_ALREADY_EXISTS
@@ -42,8 +56,10 @@ export class CustomerAuthController {
         });
       }
       if (err.message === ErrorMessages.PHONE_ALREADY_EXISTS) {
-             return res.status(StatusCodes.CONFLICT).json({ error: ErrorMessages.PHONE_ALREADY_EXISTS });
-        }
+        return res
+          .status(StatusCodes.CONFLICT)
+          .json({ error: ErrorMessages.PHONE_ALREADY_EXISTS });
+      }
 
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
@@ -56,8 +72,9 @@ export class CustomerAuthController {
     res: Response
   ): Promise<Response> => {
     try {
+      this._logger.info(LogEvents.AUTH_OTP_VERIFY_INIT);
       const { email, otp, sessionId, name, password, phone } = req.body;
-  
+
       if (!email || !otp || !sessionId || !name || !password) {
         return res.status(StatusCodes.BAD_REQUEST).json({
           error: ErrorMessages.MISSING_REQUIRED_FIELDS,
@@ -75,11 +92,14 @@ export class CustomerAuthController {
       if (result.refreshToken) {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
+
+      this._logger.info(`${LogEvents.AUTH_REGISTER_SUCCESS} - Email: ${email}`);
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.REGISTRATION_SUCCESS,
         accessToken: result.accessToken,
       });
     } catch (err: any) {
+      this._logger.error(LogEvents.AUTH_REGISTER_FAILED, err);
       if (err instanceof Error) {
         if (err.message === ErrorMessages.OTP_INVALID) {
           return res.status(StatusCodes.UNAUTHORIZED).json({
@@ -113,6 +133,7 @@ export class CustomerAuthController {
 
   login = async (req: Request, res: Response): Promise<Response> => {
     try {
+      this._logger.info(`${LogEvents.AUTH_LOGIN_INIT} (Customer)`);
       const { email, password } = req.body;
 
       if (!email || !password) {
@@ -130,11 +151,15 @@ export class CustomerAuthController {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
 
+      this._logger.info(
+        `${LogEvents.AUTH_LOGIN_SUCCESS} (Customer) - Email: ${email}`
+      );
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.LOGIN_SUCCESS,
         accessToken: result.accessToken,
       });
     } catch (err: any) {
+      this._logger.error(`${LogEvents.AUTH_LOGIN_FAILED} (Customer)`, err);
       if (
         err instanceof Error &&
         err.message === ErrorMessages.INVALID_CREDENTIALS
@@ -143,12 +168,14 @@ export class CustomerAuthController {
           error: ErrorMessages.INVALID_CREDENTIALS,
         });
       }
-      if(err instanceof Error &&
-        err.message === ErrorMessages.ACCOUNT_BLOCKED){
-         return res.status(StatusCodes.UNAUTHORIZED).json({
+      if (
+        err instanceof Error &&
+        err.message === ErrorMessages.ACCOUNT_BLOCKED
+      ) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
           error: ErrorMessages.ACCOUNT_BLOCKED,
-        }); 
-        }
+        });
+      }
 
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
@@ -162,6 +189,9 @@ export class CustomerAuthController {
   ): Promise<Response> => {
     try {
       const { email } = req.body;
+      this._logger.info(
+        `${LogEvents.AUTH_FORGOT_PASSWORD_INIT} - Email: ${email}`
+      );
 
       if (!email) {
         return res.status(StatusCodes.BAD_REQUEST).json({
@@ -173,8 +203,10 @@ export class CustomerAuthController {
         email,
       });
 
+      this._logger.info(`${LogEvents.AUTH_OTP_SENT} - Forgot Password`);
       return res.status(StatusCodes.OK).json(result);
     } catch (err: any) {
+      this._logger.error("Forgot Password OTP Init Failed", err);
       if (
         err instanceof Error &&
         err.message === ErrorMessages.CUSTOMER_NOT_FOUND
@@ -201,6 +233,7 @@ export class CustomerAuthController {
     res: Response
   ): Promise<Response> => {
     try {
+      this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} - Forgot Password`);
       const { email, otp, sessionId, newPassword } = req.body;
 
       if (!email || !otp || !sessionId || !newPassword) {
@@ -216,8 +249,12 @@ export class CustomerAuthController {
         newPassword,
       });
 
+      this._logger.info(
+        `${LogEvents.AUTH_PASSWORD_RESET_SUCCESS} - Email: ${email}`
+      );
       return res.status(StatusCodes.OK).json(result);
     } catch (err: any) {
+      this._logger.error("Forgot Password Verify Failed", err);
       if (err instanceof Error) {
         if (err.message === ErrorMessages.OTP_INVALID) {
           return res.status(StatusCodes.UNAUTHORIZED).json({
@@ -246,6 +283,7 @@ export class CustomerAuthController {
 
   googleLogin = async (req: Request, res: Response): Promise<Response> => {
     try {
+      this._logger.info(LogEvents.AUTH_GOOGLE_LOGIN_INIT);
       const { token } = req.body;
 
       if (!token) {
@@ -260,12 +298,14 @@ export class CustomerAuthController {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
 
+      this._logger.info(LogEvents.AUTH_GOOGLE_LOGIN_SUCCESS);
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.GOOGLE_LOGIN_SUCCESS,
         accessToken: result.accessToken,
         user: result.user,
       });
     } catch (err: any) {
+      this._logger.error("Google Login Failed", err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });
@@ -274,6 +314,7 @@ export class CustomerAuthController {
 
   googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
     try {
+      this._logger.info(`${LogEvents.AUTH_GOOGLE_LOGIN_INIT} (Callback)`);
       const user = req.user as any;
       if (!user) {
         res.redirect(
@@ -295,11 +336,14 @@ export class CustomerAuthController {
       if (result.refreshToken) {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
+      this._logger.info(`${LogEvents.AUTH_GOOGLE_LOGIN_SUCCESS} (Callback)`);
       res.redirect(`${process.env.FRONTEND_ORIGIN}`);
     } catch (err: any) {
+      this._logger.error("Google Login Callback Failed", err);
       res.redirect(`${process.env.FRONTEND_ORIGIN}/login?error=InternalError`);
     }
   };
+
   logout = async (req: Request, res: Response): Promise<Response> => {
     try {
       const refreshToken = req.cookies?.refreshToken as string | undefined;
@@ -307,18 +351,29 @@ export class CustomerAuthController {
       if (refreshToken) {
         try {
           await redis.del(`refresh:${refreshToken}`);
-        } catch (err) {
-          console.error(
+        } catch (err: unknown) {
+          const errorMessage = err instanceof Error ? err.message : String(err);
+
+          this._logger.error(
             "Failed to delete refresh token from redis (logout):",
-            err
+            errorMessage
           );
         }
       }
       res.clearCookie("refreshToken", refreshCookieOptions);
 
-      return res.status(StatusCodes.OK).json({ message: SuccessMessages.LOGOUT_SUCCESS });
-    } catch (err) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: ErrorMessages.INTERNAL_ERROR });
+      this._logger.info(LogEvents.AUTH_LOGOUT_SUCCESS);
+      return res
+        .status(StatusCodes.OK)
+        .json({ message: SuccessMessages.LOGOUT_SUCCESS });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+
+      this._logger.error("Logout Failed", errorMessage);
+
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ message: ErrorMessages.INTERNAL_ERROR });
     }
   };
 }

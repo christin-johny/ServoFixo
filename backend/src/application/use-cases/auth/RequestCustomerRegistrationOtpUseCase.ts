@@ -5,6 +5,8 @@ import { CustomerRegisterInitDto } from "../../../../../shared/types/dto/AuthDto
 import { OtpContext } from "../../../../../shared/types/enums/OtpContext";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { OtpSession } from "../../../domain/entities/OtpSession";
+import { ILogger } from "../../interfaces/ILogger";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class RequestCustomerRegistrationOtpUseCase {
   private readonly _otpExpiryMinutes = 2;
@@ -12,7 +14,8 @@ export class RequestCustomerRegistrationOtpUseCase {
   constructor(
     private readonly _customerRepository: ICustomerRepository,
     private readonly _otpSessionRepository: IOtpSessionRepository,
-    private readonly _emailService: IEmailService
+    private readonly _emailService: IEmailService,
+    private readonly _logger: ILogger
   ) {}
 
   async execute(
@@ -20,6 +23,7 @@ export class RequestCustomerRegistrationOtpUseCase {
   ): Promise<{ message: string; sessionId: string }> {
     const { email,phone } = input;
     const normalizedEmail = email.toLowerCase().trim();
+    this._logger.info(`${LogEvents.AUTH_REGISTER_INIT} - Email: ${normalizedEmail}`);
 
     const existing = await this._customerRepository.findByEmail(normalizedEmail);
     if (existing) {
@@ -49,6 +53,7 @@ export class RequestCustomerRegistrationOtpUseCase {
 
     await this._emailService.sendTextEmail(normalizedEmail, subject, text);
 
+    this._logger.info(`${LogEvents.AUTH_OTP_SENT} (Registration) - SessionID: ${sessionId}`);
     return {
       message: "OTP sent to email for registration",
       sessionId,
