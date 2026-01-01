@@ -1,9 +1,9 @@
 import { OtpSession } from "../entities/OtpSession";
+import { IBaseRepository } from "./IBaseRepository";
 import { OtpContext } from "../../../../shared/types/enums/OtpContext";
 
-export interface IOtpSessionRepository {
-  create(session: OtpSession): Promise<OtpSession>;
-
+export interface IOtpSessionRepository extends Pick<IBaseRepository<OtpSession>, 'create'> {
+  //create(session: OtpSession): Promise<OtpSession>;
   findValidSession(
     email: string,
     sessionId: string,

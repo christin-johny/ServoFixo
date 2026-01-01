@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AnyZodObject, ZodError } from "zod";
 import { StatusCodes } from "../../../../shared/types/enums/StatusCodes";
+import { ErrorMessages } from "../../../../shared/types/enums/ErrorMessages";
 
 export const validateRequest = (schema: AnyZodObject) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -27,14 +28,24 @@ export const validateRequest = (schema: AnyZodObject) => {
       }
 
       next();
-    } catch (error: any) {
-      if (error instanceof ZodError) {
-        const errorMessage = error.errors.map((e: any) => e.message).join(". ");
-        return res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({ error: errorMessage });
-      }
-      return res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
-    }
+    } catch (error: unknown) {
+  if (error instanceof ZodError) {
+    const errorMessage = error.errors
+      .map(e => e.message)
+      .join(". ");
+
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ error: errorMessage });
+  }
+
+  const message =
+    error instanceof Error ? error.message : ErrorMessages.INTERNAL_ERROR;
+
+  return res
+    .status(StatusCodes.BAD_REQUEST)
+    .json({ error: message });
+}
+
   };
 };

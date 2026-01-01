@@ -1,4 +1,5 @@
 import { Zone } from "../entities/Zone";
+import { IBaseRepository } from "./IBaseRepository";
 
 export interface ZoneQueryParams {
   page: number;
@@ -8,18 +9,19 @@ export interface ZoneQueryParams {
 }
 
 export interface PaginatedZones {
-  zones: Zone[]; // <--- CHANGED from 'data' to 'zones' to match Use Case
+  zones: Zone[];
   total: number;
   currentPage: number;
   totalPages: number;
 }
 
-export interface IZoneRepository {
-  create(zone: Zone): Promise<Zone>;
+export interface IZoneRepository extends IBaseRepository<Zone> {
+  // create(zone: Zone): Promise<Zone>;
+  // findById(id: string): Promise<Zone | null>;
+  // update(zone: Zone): Promise<Zone>;
+  // delete(id: string): Promise<boolean>;
+  
   findAll(params: ZoneQueryParams): Promise<PaginatedZones>;
-  findById(id: string): Promise<Zone | null>;
   findByName(name: string): Promise<Zone | null>;
-  update(zone: Zone): Promise<Zone>;
-  delete(id: string): Promise<boolean>;
   findZoneByCoordinates(lat: number, lng: number): Promise<Zone | null>;
 }

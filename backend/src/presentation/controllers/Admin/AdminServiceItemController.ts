@@ -70,11 +70,15 @@ export class AdminServiceItemController {
         message: SuccessMessages.SERVICE_CREATED,
         data: result,
       });
-    } catch (err: any) {
-      this._logger.error(LogEvents.SERVICE_CREATE_FAILED, err);
-      if (err.message === ErrorMessages.SERVICE_ALREADY_EXISTS) {
-        return res.status(StatusCodes.CONFLICT).json({ error: err.message });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+
+      this._logger.error(LogEvents.SERVICE_CREATE_FAILED, errorMessage);
+
+      if (errorMessage === ErrorMessages.SERVICE_ALREADY_EXISTS) {
+        return res.status(StatusCodes.CONFLICT).json({ error: errorMessage });
       }
+
       return res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
         .json({ error: ErrorMessages.INTERNAL_ERROR });
@@ -173,11 +177,15 @@ export class AdminServiceItemController {
         message: SuccessMessages.SERVICE_UPDATED,
         data: result,
       });
-    } catch (err: any) {
-      this._logger.error(LogEvents.SERVICE_UPDATE_FAILED, err);
-      if (err.message === ErrorMessages.SERVICE_NOT_FOUND) {
-        return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+
+      this._logger.error(LogEvents.SERVICE_UPDATE_FAILED, errorMessage);
+
+      if (errorMessage === ErrorMessages.SERVICE_NOT_FOUND) {
+        return res.status(StatusCodes.NOT_FOUND).json({ error: errorMessage });
       }
+
       return res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
         .json({ error: ErrorMessages.INTERNAL_ERROR });
@@ -202,11 +210,15 @@ export class AdminServiceItemController {
       return res
         .status(StatusCodes.OK)
         .json({ message: SuccessMessages.SERVICE_STATUS_UPDATED });
-    } catch (err: any) {
-      this._logger.error(LogEvents.SERVICE_TOGGLE_STATUS_FAILED, err);
-      if (err.message === ErrorMessages.SERVICE_NOT_FOUND) {
-        return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+
+      this._logger.error(LogEvents.SERVICE_TOGGLE_STATUS_FAILED, errorMessage);
+
+      if (errorMessage === ErrorMessages.SERVICE_NOT_FOUND) {
+        return res.status(StatusCodes.NOT_FOUND).json({ error: errorMessage });
       }
+
       return res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
         .json({ error: ErrorMessages.INTERNAL_ERROR });
@@ -220,14 +232,25 @@ export class AdminServiceItemController {
       return res
         .status(StatusCodes.OK)
         .json({ message: SuccessMessages.SERVICE_DELETED });
-    } catch (err: any) {
-      this._logger.error(LogEvents.SERVICE_DELETE_FAILED, err);
-      if (err.message === ErrorMessages.SERVICE_NOT_FOUND) {
-        return res.status(StatusCodes.NOT_FOUND).json({ error: err.message });
-      }
-      return res
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ error: ErrorMessages.INTERNAL_ERROR });
-    }
+    } catch (err: unknown) {
+  const errorMessage =
+    err instanceof Error ? err.message : String(err);
+
+  this._logger.error(
+    LogEvents.SERVICE_DELETE_FAILED,
+    errorMessage
+  );
+
+  if (errorMessage === ErrorMessages.SERVICE_NOT_FOUND) {
+    return res
+      .status(StatusCodes.NOT_FOUND)
+      .json({ error: errorMessage });
+  }
+
+  return res
+    .status(StatusCodes.INTERNAL_SERVER_ERROR)
+    .json({ error: ErrorMessages.INTERNAL_ERROR });
+}
+
   };
 }

@@ -41,21 +41,26 @@ export class AdminAuthController {
         message: SuccessMessages.LOGIN_SUCCESS,
         accessToken: result.accessToken,
       });
-    } catch (err: any) {
-      this._logger.error(`${LogEvents.AUTH_LOGIN_FAILED} (Admin)`, err);
-      if (
-        err instanceof Error &&
-        err.message === ErrorMessages.INVALID_CREDENTIALS
-      ) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({
-          message: ErrorMessages.INVALID_CREDENTIALS,
-        });
-      }
+    } catch (err: unknown) {
+  const errorMessage =
+    err instanceof Error ? err.message : String(err);
 
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: ErrorMessages.INTERNAL_ERROR,
-      });
-    }
+  this._logger.error(
+    `${LogEvents.AUTH_LOGIN_FAILED} (Admin)`,
+    errorMessage
+  );
+
+  if (errorMessage === ErrorMessages.INVALID_CREDENTIALS) {
+    return res.status(StatusCodes.UNAUTHORIZED).json({
+      message: ErrorMessages.INVALID_CREDENTIALS,
+    });
+  }
+
+  return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+    message: ErrorMessages.INTERNAL_ERROR,
+  });
+}
+
   };
 
   logout = async (req: Request, res: Response): Promise<Response> => {

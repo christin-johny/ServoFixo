@@ -1,9 +1,9 @@
-import winston from 'winston';
-import DailyRotateFile from 'winston-daily-rotate-file';
-import { ILogger } from '../../application/interfaces/ILogger';
+import winston from "winston";
+import DailyRotateFile from "winston-daily-rotate-file";
+import { ILogger } from "../../application/interfaces/ILogger";
 
 export class WinstonLogger implements ILogger {
-private logger: winston.Logger;
+  private logger: winston.Logger;
 
   constructor() {
     const logFormat = winston.format.combine(
@@ -12,35 +12,26 @@ private logger: winston.Logger;
     );
 
     const errorTransport = new DailyRotateFile({
-      filename: 'logs/error-%DATE%.log',
-      datePattern: 'YYYY-MM-DD',
-      zippedArchive: true, 
-      maxSize: '5m',     
-      maxFiles: '3d',     
-      level: 'error',
+      filename: "logs/error-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
+      zippedArchive: true,
+      maxSize: "5m",
+      maxFiles: "3d",
+      level: "error",
     });
 
     const combinedTransport = new DailyRotateFile({
-      filename: 'logs/combined-%DATE%.log',
-      datePattern: 'YYYY-MM-DD',
+      filename: "logs/combined-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
       zippedArchive: true,
-      maxSize: '5m',       
-      maxFiles: '3d',     
+      maxSize: "5m",
+      maxFiles: "3d",
     });
 
     this.logger = winston.createLogger({
-      level: process.env.LOG_LEVEL || 'info',
+      level: process.env.LOG_LEVEL || "info",
       format: logFormat,
-      transports: [
-        new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.colorize(),
-            winston.format.simple()
-          ),
-        }),
-        errorTransport,
-        combinedTransport,
-      ],
+      transports: [errorTransport, combinedTransport],
     });
   }
 

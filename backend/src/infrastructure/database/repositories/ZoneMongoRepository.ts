@@ -8,22 +8,23 @@ import { ZoneModel, IZoneDocument } from "../mongoose/models/ZoneModel";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
 export class ZoneMongoRepository implements IZoneRepository {
-  
   async create(zone: Zone): Promise<Zone> {
     try {
       // 1. Convert Entity -> DB Format
       const persistenceData = this.toPersistence(zone);
       const doc = await ZoneModel.create(persistenceData);
-      
+
       // 2. Convert DB Format -> Entity
       return this.toDomain(doc);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (
-        err.code === 16755 ||
-        (err.message && err.message.includes("Loop is not valid"))
+        err instanceof Error &&
+        ((err as { code?: number }).code === 16755 ||
+          err.message.includes("Loop is not valid"))
       ) {
         throw new Error(ErrorMessages.INVALID_ZONE);
       }
+
       throw err;
     }
   }
@@ -72,7 +73,7 @@ export class ZoneMongoRepository implements IZoneRepository {
   async update(zone: Zone): Promise<Zone> {
     // Extract data cleanly using toProps()
     const persistenceData = this.toPersistence(zone);
-    
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { _id, ...updateData } = persistenceData as any;
 
@@ -83,13 +84,21 @@ export class ZoneMongoRepository implements IZoneRepository {
 
       if (!doc) throw new Error(ErrorMessages.ZONE_NOT_FOUND);
       return this.toDomain(doc);
-    } catch (err: any) {
-      if (
-        err.code === 16755 ||
-        (err.message && err.message.includes("Loop is not valid"))
-      ) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "";
+
+      const errorCode =
+        typeof err === "object" &&
+        err !== null &&
+        "code" in err &&
+        typeof (err as { code?: unknown }).code === "number"
+          ? (err as { code: number }).code
+          : undefined;
+
+      if (errorCode === 16755 || errorMessage.includes("Loop is not valid")) {
         throw new Error(ErrorMessages.INVALID_ZONE);
       }
+
       throw err;
     }
   }
@@ -156,7 +165,7 @@ export class ZoneMongoRepository implements IZoneRepository {
       additionalInfo: doc.additionalInfo,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
-      isDeleted: doc.isDeleted
+      isDeleted: doc.isDeleted,
     });
   }
 
@@ -164,7 +173,7 @@ export class ZoneMongoRepository implements IZoneRepository {
   private toPersistence(zone: Zone) {
     const props = zone.toProps(); // Access data via props
     const points = props.boundaries;
-    
+
     // Convert { lat, lng } -> [lng, lat] for GeoJSON
     let ring = points.map((p) => [p.lng, p.lat]);
 
@@ -177,12 +186,12 @@ export class ZoneMongoRepository implements IZoneRepository {
 
     if (ring.length < 3) {
       throw new Error(ErrorMessages.INVALID_ZONE);
-    } 
-    
+    }
+
     // 2. Ensure Ring is Closed (First point == Last point)
     const first = ring[0];
     let closingIndex = -1;
-    
+
     // Check if the loop closes naturally somewhere in the middle (invalid loop)
     for (let i = 2; i < ring.length; i++) {
       if (ring[i][0] === first[0] && ring[i][1] === first[1]) {
@@ -209,7 +218,7 @@ export class ZoneMongoRepository implements IZoneRepository {
         type: "Polygon",
         coordinates: [ring], // Mongo expects Array of Rings
       },
-      isDeleted: props.isDeleted, 
+      isDeleted: props.isDeleted,
     };
   }
 }

@@ -50,7 +50,7 @@ export class JwtService implements IJwtService {
       };
 
       return payload;
-    } catch (err: any) {
+    } catch  {
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
   }
@@ -65,7 +65,7 @@ export class JwtService implements IJwtService {
       };
 
       return payload;
-    } catch (err: any) {
+    } catch  {
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
   }

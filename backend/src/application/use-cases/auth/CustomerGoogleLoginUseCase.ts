@@ -154,16 +154,24 @@ export class CustomerGoogleLoginUseCase {
           name: customer.getName(),
           email:
             typeof customer.getEmail === "function"
-              ? (customer.getEmail() as any)
+              ? (customer.getEmail() as string)
               : customer.getEmail(),
           avatarUrl: picture,
         },
       };
-    } catch (err: any) {
-      this._logger.error("Google Login Error", err);
-      throw new Error(
-        `CustomerGoogleLoginUseCase error: ${err.message || err}`
-      );
-    }
+    } catch (err: unknown) {
+  const errorMessage =
+    err instanceof Error ? err.message : String(err);
+
+  this._logger.error(
+    "Google Login Error",
+    errorMessage
+  );
+
+  throw new Error(
+    `CustomerGoogleLoginUseCase error: ${errorMessage}`
+  );
+}
+
   }
 }

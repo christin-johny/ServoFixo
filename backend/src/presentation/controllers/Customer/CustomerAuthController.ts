@@ -45,20 +45,22 @@ export class CustomerAuthController {
 
       this._logger.info(`${LogEvents.AUTH_OTP_SENT} - Registration`);
       return res.status(StatusCodes.OK).json(result);
-    } catch (err: any) {
-      this._logger.error("Register OTP Init Failed", err);
-      if (
-        err instanceof Error &&
-        err.message === ErrorMessages.EMAIL_ALREADY_EXISTS
-      ) {
-        return res.status(StatusCodes.CONFLICT).json({
-          error: ErrorMessages.EMAIL_ALREADY_EXISTS,
-        });
-      }
-      if (err.message === ErrorMessages.PHONE_ALREADY_EXISTS) {
-        return res
-          .status(StatusCodes.CONFLICT)
-          .json({ error: ErrorMessages.PHONE_ALREADY_EXISTS });
+    } catch (err: unknown) {
+      // Type guarding for logger: extract stack or string message
+      const trace = err instanceof Error ? err.stack : String(err);
+      this._logger.error(LogEvents.AUTH_OTP_INIT_FAILED, trace);
+
+      if (err instanceof Error) {
+        if (err.message === ErrorMessages.EMAIL_ALREADY_EXISTS) {
+          return res.status(StatusCodes.CONFLICT).json({
+            error: ErrorMessages.EMAIL_ALREADY_EXISTS,
+          });
+        }
+        if (err.message === ErrorMessages.PHONE_ALREADY_EXISTS) {
+          return res
+            .status(StatusCodes.CONFLICT)
+            .json({ error: ErrorMessages.PHONE_ALREADY_EXISTS });
+        }
       }
 
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -98,8 +100,10 @@ export class CustomerAuthController {
         message: SuccessMessages.REGISTRATION_SUCCESS,
         accessToken: result.accessToken,
       });
-    } catch (err: any) {
-      this._logger.error(LogEvents.AUTH_REGISTER_FAILED, err);
+    } catch (err: unknown) {
+      const trace = err instanceof Error ? err.stack : String(err);
+      this._logger.error(LogEvents.AUTH_REGISTER_FAILED, trace);
+
       if (err instanceof Error) {
         if (err.message === ErrorMessages.OTP_INVALID) {
           return res.status(StatusCodes.UNAUTHORIZED).json({
@@ -158,23 +162,21 @@ export class CustomerAuthController {
         message: SuccessMessages.LOGIN_SUCCESS,
         accessToken: result.accessToken,
       });
-    } catch (err: any) {
-      this._logger.error(`${LogEvents.AUTH_LOGIN_FAILED} (Customer)`, err);
-      if (
-        err instanceof Error &&
-        err.message === ErrorMessages.INVALID_CREDENTIALS
-      ) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({
-          error: ErrorMessages.INVALID_CREDENTIALS,
-        });
-      }
-      if (
-        err instanceof Error &&
-        err.message === ErrorMessages.ACCOUNT_BLOCKED
-      ) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({
-          error: ErrorMessages.ACCOUNT_BLOCKED,
-        });
+    } catch (err: unknown) {
+      const trace = err instanceof Error ? err.stack : String(err);
+      this._logger.error(`${LogEvents.AUTH_LOGIN_FAILED} (Customer)`, trace);
+
+      if (err instanceof Error) {
+        if (err.message === ErrorMessages.INVALID_CREDENTIALS) {
+          return res.status(StatusCodes.UNAUTHORIZED).json({
+            error: ErrorMessages.INVALID_CREDENTIALS,
+          });
+        }
+        if (err.message === ErrorMessages.ACCOUNT_BLOCKED) {
+          return res.status(StatusCodes.UNAUTHORIZED).json({
+            error: ErrorMessages.ACCOUNT_BLOCKED,
+          });
+        }
       }
 
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -205,21 +207,22 @@ export class CustomerAuthController {
 
       this._logger.info(`${LogEvents.AUTH_OTP_SENT} - Forgot Password`);
       return res.status(StatusCodes.OK).json(result);
-    } catch (err: any) {
-      this._logger.error("Forgot Password OTP Init Failed", err);
-      if (
-        err instanceof Error &&
-        err.message === ErrorMessages.CUSTOMER_NOT_FOUND
-      ) {
-        return res.status(StatusCodes.NOT_FOUND).json({
-          message: ErrorMessages.CUSTOMER_NOT_FOUND,
-        });
-      }
+    } catch (err: unknown) {
+      const trace = err instanceof Error ? err.stack : String(err);
+      this._logger.error(LogEvents.AUTH_FORGOT_PASS_INIT_FAILED, trace);
 
-      if (err instanceof Error && err.message === "TOO_MANY_OTP_REQUESTS") {
-        return res.status(429).json({
-          message: "Too many OTP requests. Try again later.",
-        });
+      if (err instanceof Error) {
+        if (err.message === ErrorMessages.CUSTOMER_NOT_FOUND) {
+          return res.status(StatusCodes.NOT_FOUND).json({
+            message: ErrorMessages.CUSTOMER_NOT_FOUND,
+          });
+        }
+
+        if (err.message === "TOO_MANY_OTP_REQUESTS") {
+          return res.status(429).json({
+            message: "Too many OTP requests. Try again later.",
+          });
+        }
       }
 
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -253,8 +256,10 @@ export class CustomerAuthController {
         `${LogEvents.AUTH_PASSWORD_RESET_SUCCESS} - Email: ${email}`
       );
       return res.status(StatusCodes.OK).json(result);
-    } catch (err: any) {
-      this._logger.error("Forgot Password Verify Failed", err);
+    } catch (err: unknown) {
+      const trace = err instanceof Error ? err.stack : String(err);
+      this._logger.error(LogEvents.AUTH_FORGOT_PASS_VERIFY_FAILED, trace);
+
       if (err instanceof Error) {
         if (err.message === ErrorMessages.OTP_INVALID) {
           return res.status(StatusCodes.UNAUTHORIZED).json({
@@ -304,8 +309,10 @@ export class CustomerAuthController {
         accessToken: result.accessToken,
         user: result.user,
       });
-    } catch (err: any) {
-      this._logger.error("Google Login Failed", err);
+    } catch (err: unknown) {
+      const trace = err instanceof Error ? err.stack : String(err);
+      this._logger.error(LogEvents.AUTH_GOOGLE_LOGIN_FAILED, trace);
+      
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         error: ErrorMessages.INTERNAL_ERROR,
       });
@@ -315,15 +322,17 @@ export class CustomerAuthController {
   googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
     try {
       this._logger.info(`${LogEvents.AUTH_GOOGLE_LOGIN_INIT} (Callback)`);
-      const user = req.user as any;
+      const user = req.user as unknown; // Safe cast
+
       if (!user) {
         res.redirect(
           `${process.env.FRONTEND_ORIGIN}/login?error=AuthenticationFailed`
         );
         return;
       }
+
       const result = await this._customerGoogleLoginUseCase.execute({
-        customer: user,
+        customer: user as any, 
       });
 
       if (!result || !result.accessToken || !result.refreshToken) {
@@ -338,8 +347,10 @@ export class CustomerAuthController {
       }
       this._logger.info(`${LogEvents.AUTH_GOOGLE_LOGIN_SUCCESS} (Callback)`);
       res.redirect(`${process.env.FRONTEND_ORIGIN}`);
-    } catch (err: any) {
-      this._logger.error("Google Login Callback Failed", err);
+    } catch (err: unknown) {
+      const trace = err instanceof Error ? err.stack : String(err);
+      this._logger.error(LogEvents.AUTH_GOOGLE_CALLBACK_FAILED, trace);
+      
       res.redirect(`${process.env.FRONTEND_ORIGIN}/login?error=InternalError`);
     }
   };
@@ -352,11 +363,10 @@ export class CustomerAuthController {
         try {
           await redis.del(`refresh:${refreshToken}`);
         } catch (err: unknown) {
-          const errorMessage = err instanceof Error ? err.message : String(err);
-
+          const trace = err instanceof Error ? err.stack : String(err);
           this._logger.error(
-            "Failed to delete refresh token from redis (logout):",
-            errorMessage
+            "Failed to delete refresh token from redis (logout)",
+            trace
           );
         }
       }
@@ -367,9 +377,8 @@ export class CustomerAuthController {
         .status(StatusCodes.OK)
         .json({ message: SuccessMessages.LOGOUT_SUCCESS });
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-
-      this._logger.error("Logout Failed", errorMessage);
+      const trace = err instanceof Error ? err.stack : String(err);
+      this._logger.error(LogEvents.AUTH_LOGOUT_FAILED, trace);
 
       return res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)

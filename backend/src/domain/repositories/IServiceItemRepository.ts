@@ -1,4 +1,5 @@
-import { ServiceItem, ServiceSpecification } from "../entities/ServiceItem";
+import { ServiceItem } from "../entities/ServiceItem";
+import { IBaseRepository } from "./IBaseRepository";
 
 export interface ServiceItemQueryParams {
   page: number;
@@ -26,16 +27,19 @@ export interface PaginatedServiceItems {
   totalPages: number;
 }
 
-export interface IServiceItemRepository {
-  create(serviceItem: ServiceItem): Promise<ServiceItem>;
+export interface IServiceItemRepository extends IBaseRepository<ServiceItem> {
+  // create(serviceItem: ServiceItem): Promise<ServiceItem>;
+  // findById(id: string): Promise<ServiceItem | null>;
+  // update(serviceItem: ServiceItem): Promise<ServiceItem>;
+  // delete(id: string): Promise<boolean>;
+
   findAll(params: ServiceItemQueryParams): Promise<PaginatedServiceItems>;
-  findById(id: string): Promise<ServiceItem | null>;
+
   findByNameAndCategory(
     name: string,
     categoryId: string
   ): Promise<ServiceItem | null>;
-  update(serviceItem: ServiceItem): Promise<ServiceItem>;
-  delete(id: string): Promise<boolean>;
+
   toggleStatus(id: string, isActive: boolean): Promise<boolean>;
   findMostBooked(limit: number): Promise<ServiceItem[]>;
   findWithFilters(filters: ServiceFilters): Promise<ServiceItem[]>;

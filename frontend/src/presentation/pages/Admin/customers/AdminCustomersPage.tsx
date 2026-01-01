@@ -8,6 +8,7 @@ import { useDebounce } from "../../../hooks/useDebounce";
 import CustomerEditModal from "../../../components/Admin/customer/CustomerEditModal";
 import CustomerListTable from "../../../components/Admin/customer/CustomerListTable";
 import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
+import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
 
 const AdminCustomersPage: React.FC = () => {
   const { showSuccess, showError } = useNotification();
@@ -26,6 +27,10 @@ const AdminCustomersPage: React.FC = () => {
   
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [customerToEdit, setCustomerToEdit] = useState<CustomerDto | null>(null);
+
+  // State for Suspension Confirmation
+  const [customerToSuspend, setCustomerToSuspend] = useState<CustomerDto | null>(null);
+  const [isSuspending, setIsSuspending] = useState(false);
 
   useEffect(() => {
     loadCustomers();
@@ -49,36 +54,58 @@ const AdminCustomersPage: React.FC = () => {
       
       setCustomers(result.data);
       setTotalCustomers(result.total);
-      // @ts-ignore
+      
+      // Removed @ts-ignore. 'result.total' is a number, so this is valid TS.
       setTotalPages(Math.ceil(result.total / 7)); 
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      showError(err.message ?? "Failed to load customer list.");
+      // Proper narrowing of 'unknown' type
+      const message = err instanceof Error ? err.message : "Failed to load customer list.";
+      showError(message);
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, filterStatus, page]);
+  }, [debouncedSearch, filterStatus, page, showSuccess, showError]);
 
   const handleStartEdit = (customer: CustomerDto) => {
     setCustomerToEdit(customer);
     setIsEditModalOpen(true);
   };
   
-  const handleToggleStatus = async (customer: CustomerDto) => {
-    const newStatus = !customer.suspended;
+  const handleRequestStatusChange = (customer: CustomerDto) => {
+    setCustomerToSuspend(customer);
+  };
+
+  const handleConfirmStatusChange = async () => {
+    if (!customerToSuspend) return;
+
+    setIsSuspending(true);
+    const newStatus = !customerToSuspend.suspended;
+
     try {
       const payload: CustomerUpdatePayload = {
-        name: customer.name,
-        email: customer.email,
-        phone: customer.phone,
+        name: customerToSuspend.name,
+        email: customerToSuspend.email,
+        phone: customerToSuspend.phone,
         suspended: newStatus,
       };
-      await customerService.updateCustomer(customer.id, payload);
-      showSuccess(`Customer ${customer.name} was ${newStatus ? 'suspended' : 'activated'} successfully.`);
-      await loadCustomers();
-    } catch (err: any) {
-      showError(err.message ?? "Failed to change account status.");
+
+      await customerService.updateCustomer(customerToSuspend.id, payload);
+      
+      showSuccess(`Customer ${customerToSuspend.name} was ${newStatus ? 'suspended' : 'activated'} successfully.`);
+      
+      setCustomers(prev => prev.map(c => 
+        c.id === customerToSuspend.id ? { ...c, suspended: newStatus } : c
+      ));
+
+      setCustomerToSuspend(null); 
+    } catch (err: unknown) {
+      // Proper narrowing of 'unknown' type
+      const message = err instanceof Error ? err.message : "Failed to change account status.";
+      showError(message);
+    } finally {
+      setIsSuspending(false);
     }
   };
 
@@ -98,13 +125,13 @@ const AdminCustomersPage: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex flex-col flex-1 min-h-0">
         
-        {/* 4. REUSABLE COMPONENT: Search & Filters */}
+        {/* Search & Filters */}
         <SearchFilterBar 
             search={search}
-            onSearchChange={(val) => { setSearch(val); setPage(1); }}
+            onSearchChange={(val: string) => { setSearch(val); setPage(1); }}
             searchPlaceholder="Search customers..."
             filterStatus={filterStatus}
-            onFilterChange={(val) => { setFilterStatus(val); setPage(1); }}
+            onFilterChange={(val: string) => { setFilterStatus(val); setPage(1); }}
             onClear={handleClearFilters}
             filterOptions={[
                 { label: "Active", value: "false" }, 
@@ -127,12 +154,12 @@ const AdminCustomersPage: React.FC = () => {
                 customers={customers} 
                 onEdit={handleStartEdit} 
                 onView={(customer) => navigate(`/admin/customers/${customer.id}`)} 
-                onToggleStatus={handleToggleStatus}
+                onToggleStatus={handleRequestStatusChange}
             />
           )}
         </div>
 
-        {/* 5. REUSABLE COMPONENT: Pagination */}
+        {/* Pagination */}
         <PaginationBar 
             page={page}
             totalPages={totalPages}
@@ -149,6 +176,21 @@ const AdminCustomersPage: React.FC = () => {
               setIsEditModalOpen(false);
               loadCustomers();
           }}
+      />
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={!!customerToSuspend}
+        onClose={() => setCustomerToSuspend(null)}
+        onConfirm={handleConfirmStatusChange}
+        title={customerToSuspend?.suspended ? "Activate Customer" : "Suspend Customer"}
+        message={
+            customerToSuspend?.suspended
+                ? `Are you sure you want to reactivate ${customerToSuspend?.name}'s account? They will be able to login again.`
+                : `Are you sure you want to suspend ${customerToSuspend?.name}? They will no longer be able to login.`
+        }
+        confirmText={customerToSuspend?.suspended ? "Activate" : "Suspend"}
+        isLoading={isSuspending}
       />
     </div>
   );

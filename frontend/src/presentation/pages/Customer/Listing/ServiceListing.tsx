@@ -11,6 +11,7 @@ import * as homeRepo from '../../../../infrastructure/repositories/customer/home
 import type { ServiceItem } from '../../../../domain/types/ServiceItem';
 import type { ServiceCategory } from '../../../../domain/types/ServiceCategory';
 
+type SortBy = "price_asc" | "price_desc" | "newest" | "popular";
 const ITEMS_PER_PAGE = 8;
 
 const ServiceListing: React.FC = () => {
@@ -23,9 +24,13 @@ const ServiceListing: React.FC = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
+  const isValidSort = (value: string): value is SortBy =>
+    ["price_asc", "price_desc", "newest", "popular"].includes(value);
+
   const activeCategoryId = searchParams.get('categoryId') || '';
   const activeSearch = searchParams.get('search') || '';
-  const activeSort = searchParams.get('sort') || 'popular';
+  const sortParam = searchParams.get("sort");
+  const activeSort: SortBy = sortParam && isValidSort(sortParam) ? sortParam : "popular";
 
   const navigate = useNavigate()
 
@@ -54,7 +59,7 @@ const ServiceListing: React.FC = () => {
         const data = await serviceRepo.getServices({
           categoryId: activeCategoryId || undefined,
           search: activeSearch,
-          sortBy: activeSort as any,
+          sortBy: activeSort,
           page: page,
           limit: ITEMS_PER_PAGE
         });

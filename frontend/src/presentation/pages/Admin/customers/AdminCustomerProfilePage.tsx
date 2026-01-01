@@ -35,10 +35,15 @@ const AdminCustomerProfilePage: React.FC = () => {
         try {
             const data = await customerService.getCustomerById(customerId);
             setCustomer(data);
-        } catch (err: any) {
-            console.error(err);
-            setError(err.message ?? "Failed to load customer profile.");
-        } finally {
+        } catch (err: unknown) {
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : "Failed to load customer profile.";
+
+            setError(message);
+        }
+        finally {
             setLoading(false);
         }
     }, [customerId]);
@@ -273,8 +278,19 @@ const OrdersList: React.FC<{ customerId: string }> = () => (
     </div>
 );
 
+interface Address {
+    id: string;
+    tag: string;
+    isDefault: boolean;
+    houseNumber: string;
+    street: string;
+    city: string;
+    state: string;
+    pincode: string;
+}
+
 const AddressesList: React.FC<{ customerId: string }> = ({ customerId }) => {
-    const [addresses, setAddresses] = useState<any[]>([]);
+    const [addresses, setAddresses] = useState<Address[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -282,7 +298,7 @@ const AddressesList: React.FC<{ customerId: string }> = ({ customerId }) => {
             setLoading(true);
             try {
                 const data = await customerService.getCustomerAddresses(customerId);
-                setAddresses(data || []);
+                setAddresses((data as Address[]) || []);
             } catch (err) {
                 setAddresses([]);
                 console.error("No addresses found or fetch failed", err);

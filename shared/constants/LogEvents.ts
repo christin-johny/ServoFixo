@@ -11,6 +11,7 @@ export const LogEvents = {
   AUTH_REGISTER_FAILED: 'Registration Failed',
 
   AUTH_LOGOUT_SUCCESS: 'Logout Successful',
+  AUTH_LOGOUT_FAILED: 'Logout Failed', 
 
   AUTH_REFRESH_INIT: 'Token Refresh Initiated',
   AUTH_REFRESH_SUCCESS: 'Token Refresh Successful',
@@ -18,18 +19,25 @@ export const LogEvents = {
 
   AUTH_OTP_REQUEST_INIT: 'OTP Request Initiated',
   AUTH_OTP_SENT: 'OTP Sent Successfully',
+  AUTH_OTP_INIT_FAILED: 'OTP Initialization Failed', 
+
   AUTH_OTP_VERIFY_INIT: 'OTP Verification Initiated',
   AUTH_OTP_VERIFY_SUCCESS: 'OTP Verified Successfully',
   AUTH_OTP_VERIFY_FAILED: 'OTP Verification Failed',
 
   AUTH_GOOGLE_LOGIN_INIT: 'Google Login Initiated',
   AUTH_GOOGLE_LOGIN_SUCCESS: 'Google Login Successful',
+  AUTH_GOOGLE_LOGIN_FAILED: 'Google Login Failed', 
+  AUTH_GOOGLE_CALLBACK_FAILED: 'Google Login Callback Failed', 
 
   AUTH_FORGOT_PASSWORD_INIT: 'Forgot Password Initiated',
+  AUTH_FORGOT_PASS_INIT_FAILED: 'Forgot Password OTP Init Failed', 
+  AUTH_FORGOT_PASS_VERIFY_FAILED: 'Forgot Password Verification Failed', 
+  
   AUTH_PASSWORD_RESET_SUCCESS: 'Password Reset Successful',
 
   // ==========================
-  // CUSTOMER PROFILE MODULE (NEW)
+  // CUSTOMER PROFILE MODULE
   // ==========================
   PROFILE_FETCH_INIT: 'Fetching Customer Profile',
   PROFILE_FETCH_FAILED: 'Failed to Fetch Profile',
@@ -39,12 +47,15 @@ export const LogEvents = {
   PROFILE_UPDATE_FAILED: 'Profile Update Failed',
 
   PASSWORD_CHANGE_INIT: 'Password Change Initiated',
+  PASSWORD_CHANGE_SUCCESS: 'Password Change Successful',
   PASSWORD_CHANGE_FAILED: 'Password Change Failed',
 
   ACCOUNT_DELETE_INIT: 'Account Deletion Initiated',
+  ACCOUNT_DELETE_SUCCESS: 'Account Deletion Successful',
   ACCOUNT_DELETE_FAILED: 'Account Deletion Failed',
 
   AVATAR_UPLOAD_INIT: 'Avatar Upload Initiated',
+  AVATAR_UPLOAD_SUCCESS: 'Avatar Upload Successful',
   AVATAR_UPLOAD_FAILED: 'Avatar Upload Failed',
 
   // ==========================
@@ -71,7 +82,6 @@ export const LogEvents = {
   ZONE_SERVICEABILITY_CHECK_INIT: 'Checking Zone Serviceability',
   ZONE_SERVICEABILITY_CHECK_SUCCESS: 'Serviceability Check Completed',
 
-  // Added for CustomerZoneController
   ZONE_FIND_BY_LOC_INIT: 'Find Zone by Location Initiated',
   ZONE_FIND_FAILED: 'Find Zone by Location Failed',
 
@@ -174,8 +184,4 @@ export const LogEvents = {
 
   ADMIN_CUSTOMER_ADDRESS_FETCH_INIT: 'Admin: Fetch Customer Addresses Initiated',
   ADMIN_CUSTOMER_ADDRESS_FETCH_FAILED: 'Admin: Fetch Customer Addresses Failed',
-
-  PASSWORD_CHANGE_SUCCESS: 'Password Change Successful',
-  AVATAR_UPLOAD_SUCCESS: 'Avatar Upload Successful',
-  ACCOUNT_DELETE_SUCCESS: 'Account Deletion Successful',
 };

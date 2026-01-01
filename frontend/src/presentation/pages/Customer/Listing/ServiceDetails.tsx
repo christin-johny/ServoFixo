@@ -65,12 +65,12 @@ const ServiceDetails: React.FC = () => {
       };
 
       if (navigator.share) {
-         try { await navigator.share(shareData); return; } catch (_) { return; }
+         try { await navigator.share(shareData); return; } catch  { return; }
       }
       try {
          await navigator.clipboard.writeText(shareUrl);
          showSuccess("Link copied to clipboard!");
-      } catch (_) {
+      } catch {
          prompt("Copy this link:", shareUrl);
       }
    };

@@ -53,6 +53,12 @@ const Services: React.FC = () => {
     const [deleteType, setDeleteType] = useState<"CATEGORY" | "SERVICE" | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    const [categoryToToggle, setCategoryToToggle] = useState<ServiceCategory | null>(null);
+    const [isTogglingCategory, setIsTogglingCategory] = useState(false);
+
+    const [serviceToToggle, setServiceToToggle] = useState<ServiceItem | null>(null);
+    const [isTogglingService, setIsTogglingService] = useState(false);
+
     useEffect(() => {
         loadCategories();
     }, [debouncedSearch, filterStatus, page]);
@@ -67,15 +73,15 @@ const Services: React.FC = () => {
         try {
             setLoading(true);
             const result = await categoryRepo.getCategories({
-                page, 
-                limit: 5, 
-                search: debouncedSearch, 
+                page,
+                limit: 5,
+                search: debouncedSearch,
                 isActive: filterStatus
             });
-            
-            const categoryList = result.categories || []; 
+
+            const categoryList = result.categories || [];
             setCategories(categoryList);
-            
+
             setTotal(result.total);
             setTotalPages(result.totalPages);
 
@@ -100,8 +106,8 @@ const Services: React.FC = () => {
         try {
             setLoadingServices(true);
             const result = await serviceRepo.getServices({ categoryId: catId, page: 1, limit: 100 });
-            setServicesMap(prev => ({ ...prev, [catId]: result.data || [] })); 
-        } catch (err: unknown) {
+            setServicesMap(prev => ({ ...prev, [catId]: result.data || [] }));
+        } catch {
             showError("Failed to load services");
         } finally {
             setLoadingServices(false);
@@ -128,18 +134,28 @@ const Services: React.FC = () => {
         }
     };
 
-    const handleToggleCategoryStatus = async (e: React.MouseEvent, category: ServiceCategory) => {
+    const handleRequestToggleCategory = (e: React.MouseEvent, category: ServiceCategory) => {
         e.stopPropagation();
+        setCategoryToToggle(category);
+    };
+
+    const handleConfirmToggleCategory = async () => {
+        if (!categoryToToggle) return;
+
+        setIsTogglingCategory(true);
         try {
-            const newStatus = !category.isActive;
-            await categoryRepo.toggleCategoryStatus(category.id, newStatus);
-            showSuccess(`Category ${category.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
+            const newStatus = !categoryToToggle.isActive;
+            await categoryRepo.toggleCategoryStatus(categoryToToggle.id, newStatus);
+            showSuccess(`Category ${categoryToToggle.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
             loadCategories();
+            setCategoryToToggle(null);
         } catch (err: unknown) {
-            console.error(err);
             showError("Failed to update status. " + getErrorMessage(err));
+        } finally {
+            setIsTogglingCategory(false);
         }
     };
+
 
     const handleAddService = (catId: string) => {
         setEditingService(null);
@@ -173,16 +189,28 @@ const Services: React.FC = () => {
         }
     };
 
-    const handleToggleServiceStatus = async (service: ServiceItem) => {
+    const handleRequestToggleService = (service: ServiceItem) => {
+        setServiceToToggle(service);
+    };
+
+    const handleConfirmToggleService = async () => {
+        if (!serviceToToggle) return;
+
+        setIsTogglingService(true);
         try {
-            const newStatus = !service.isActive;
-            await serviceRepo.toggleServiceStatus(service.id, newStatus);
-            showSuccess(`Service ${service.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
+            const newStatus = !serviceToToggle.isActive;
+            await serviceRepo.toggleServiceStatus(serviceToToggle.id, newStatus);
+            showSuccess(`Service ${serviceToToggle.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
+
             if (expandedId) loadServicesForCategory(expandedId);
-        } catch (err: unknown) {
+            setServiceToToggle(null);
+        } catch {
             showError("Failed to update status");
+        } finally {
+            setIsTogglingService(false);
         }
     };
+
 
     const confirmDeleteCategory = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
@@ -242,7 +270,7 @@ const Services: React.FC = () => {
                 </button>
             </div>
 
-            {/* Responsive Filter Bar */}
+            {/* Filter Bar */}
             <SearchFilterBar
                 search={search}
                 onSearchChange={(val) => { setSearch(val); setPage(1); }}
@@ -277,8 +305,10 @@ const Services: React.FC = () => {
                                         onToggleExpand={() => setExpandedId(expandedId === cat.id ? null : cat.id)}
                                         onEdit={(e) => { e.stopPropagation(); setEditingCategory(cat); setIsCatModalOpen(true); }}
                                         onDelete={(e) => confirmDeleteCategory(e, cat.id)}
-                                        onToggleStatus={(e) => handleToggleCategoryStatus(e, cat)}
-                                        onToggleServiceStatus={handleToggleServiceStatus}
+                                        onToggleStatus={(e) => handleRequestToggleCategory(e, cat)}
+
+                                        onToggleServiceStatus={handleRequestToggleService}
+
                                         services={servicesMap[cat.id] || []}
                                         isLoadingServices={expandedId === cat.id && loadingServices}
                                         onAddService={() => handleAddService(cat.id)}
@@ -324,6 +354,32 @@ const Services: React.FC = () => {
                 title={deleteType === "CATEGORY" ? "Delete Category" : "Delete Service"}
                 message={deleteType === "CATEGORY" ? "Delete this category and all its services? (Archived)" : "Permanently delete this service item?"}
                 confirmText="Delete"
+            />
+
+            <ConfirmModal
+                isOpen={!!categoryToToggle}
+                onClose={() => setCategoryToToggle(null)}
+                onConfirm={handleConfirmToggleCategory}
+                isLoading={isTogglingCategory}
+                title={categoryToToggle?.isActive ? "Deactivate Category" : "Activate Category"}
+                message={categoryToToggle?.isActive
+                    ? `Are you sure you want to deactivate ${categoryToToggle?.name}? All services in this category will be hidden.`
+                    : `Are you sure you want to activate ${categoryToToggle?.name}?`
+                }
+                confirmText={categoryToToggle?.isActive ? "Deactivate" : "Activate"}
+            />
+
+            <ConfirmModal
+                isOpen={!!serviceToToggle}
+                onClose={() => setServiceToToggle(null)}
+                onConfirm={handleConfirmToggleService}
+                isLoading={isTogglingService}
+                title={serviceToToggle?.isActive ? "Deactivate Service" : "Activate Service"}
+                message={serviceToToggle?.isActive
+                    ? `Are you sure you want to deactivate ${serviceToToggle?.name}? It will be hidden from customers.`
+                    : `Are you sure you want to activate ${serviceToToggle?.name}?`
+                }
+                confirmText={serviceToToggle?.isActive ? "Deactivate" : "Activate"}
             />
         </div>
     );

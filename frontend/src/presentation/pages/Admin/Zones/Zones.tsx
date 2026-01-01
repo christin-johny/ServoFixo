@@ -32,18 +32,22 @@ const Zones: React.FC = () => {
 
   const [isCreating, setIsCreating] = useState(false);
   const [editingZoneId, setEditingZoneId] = useState<string | null>(null);
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [zoneToDelete, setZoneToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [zoneToToggle, setZoneToToggle] = useState<Zone | null>(null);
+  const [isToggling, setIsToggling] = useState(false);
 
   const [zoneName, setZoneName] = useState("");
   const [zoneDesc, setZoneDesc] = useState("");
   const [zoneIsActive, setZoneIsActive] = useState(true);
   const [zonePoints, setZonePoints] = useState<{ lat: number; lng: number }[]>([]);
   const [error, setError] = useState<string | null>(null);
- 
+
   const getErrorMessage = (err: unknown, fallbackMessage = "Operation failed") => {
-    if (typeof err === 'object' && err !== null && 'response' in err) { 
+    if (typeof err === 'object' && err !== null && 'response' in err) {
       const apiError = err as { response: { data?: { error?: string; message?: string } } };
       if (apiError.response.data?.error) return apiError.response.data.error;
       if (apiError.response.data?.message) return apiError.response.data.message;
@@ -112,7 +116,7 @@ const Zones: React.FC = () => {
     setZonePoints(points);
   };
 
-const handleSave = async () => {
+  const handleSave = async () => {
     setError(null);
     const validationResult = zoneNameSchema.safeParse(zoneName);
 
@@ -128,27 +132,27 @@ const handleSave = async () => {
 
     try {
       const validName = validationResult.data;
-       
+
       if (editingZoneId) {
-        const payload: UpdateZoneDTO = { 
-            id: editingZoneId, 
-            name: validName, 
-            description: zoneDesc, 
-            boundaries: zonePoints, 
-            isActive: zoneIsActive 
+        const payload: UpdateZoneDTO = {
+          id: editingZoneId,
+          name: validName,
+          description: zoneDesc,
+          boundaries: zonePoints,
+          isActive: zoneIsActive
         };
         await zoneRepo.updateZone(payload);
         showSuccess("Zone updated successfully");
-      } else { 
-        await zoneRepo.createZone({ 
-            name: validName, 
-            description: zoneDesc, 
-            boundaries: zonePoints,
-            isActive: zoneIsActive  
+      } else {
+        await zoneRepo.createZone({
+          name: validName,
+          description: zoneDesc,
+          boundaries: zonePoints,
+          isActive: zoneIsActive
         });
         showSuccess("New zone created successfully");
       }
-      
+
       await loadZones();
       handleCancel();
     } catch (err: unknown) {
@@ -157,24 +161,40 @@ const handleSave = async () => {
     }
   };
 
-  const handleToggleStatus = async (zone: Zone) => {
-    const newStatus = !zone.isActive;
-    const zoneId = zone.id || zone._id;
-    if (!zoneId) return;
+  const handleRequestToggle = (zone: Zone) => {
+    setZoneToToggle(zone);
+  };
+
+  const handleConfirmToggle = async () => {
+    if (!zoneToToggle) return;
+
+    setIsToggling(true);
+    const newStatus = !zoneToToggle.isActive;
+    const zoneId = zoneToToggle.id || zoneToToggle._id;
+
+    if (!zoneId) {
+      setIsToggling(false);
+      return;
+    }
 
     try {
       const payload: UpdateZoneDTO = {
         id: zoneId,
-        name: zone.name,
-        description: zone.description,
-        boundaries: zone.boundaries,
+        name: zoneToToggle.name,
+        description: zoneToToggle.description,
+        boundaries: zoneToToggle.boundaries,
         isActive: newStatus
       };
       await zoneRepo.updateZone(payload);
-      showSuccess(`Zone ${zone.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
+      showSuccess(`Zone ${zoneToToggle.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
+
       await loadZones();
-    } catch (_) {
+      setZoneToToggle(null);
+    } catch {
       showError("Failed to update status");
+    }
+    finally {
+      setIsToggling(false);
     }
   };
 
@@ -350,7 +370,7 @@ const handleSave = async () => {
                         </div>
 
                         <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => handleToggleStatus(zone)} className={`p-1.5 rounded-lg ${zone.isActive ? 'text-green-600 hover:bg-green-100' : 'text-gray-400 hover:bg-gray-100'}`}>
+                          <button onClick={() => handleRequestToggle(zone)} className={`p-1.5 rounded-lg ${zone.isActive ? 'text-green-600 hover:bg-green-100' : 'text-gray-400 hover:bg-gray-100'}`}>
                             {zone.isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
                           </button>
                           <button onClick={() => handleEditZone(zone)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><Edit2 size={16} /></button>
@@ -406,6 +426,21 @@ const handleSave = async () => {
         message="Are you sure?"
         confirmText="Delete"
         isLoading={isDeleting}
+      />
+
+      {/* Confirmation Modal for Toggling Status */}
+      <ConfirmModal
+        isOpen={!!zoneToToggle}
+        onClose={() => setZoneToToggle(null)}
+        onConfirm={handleConfirmToggle}
+        title={zoneToToggle?.isActive ? "Deactivate Zone" : "Activate Zone"}
+        message={
+          zoneToToggle?.isActive
+            ? `Are you sure you want to deactivate ${zoneToToggle?.name}?`
+            : `Are you sure you want to activate ${zoneToToggle?.name}?`
+        }
+        confirmText={zoneToToggle?.isActive ? "Deactivate" : "Activate"}
+        isLoading={isToggling}
       />
     </div>
   );

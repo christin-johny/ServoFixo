@@ -36,23 +36,31 @@ export class AuthTokenController {
         accessToken: result.accessToken,
       });
 
-    } catch (err: any) {
-      this._logger.error(LogEvents.AUTH_REFRESH_FAILED, err);
-      res.clearCookie("refreshToken", {
-        path: refreshCookieOptions.path || "/",
-      });
+    } catch (err: unknown) {
+  const errorMessage =
+    err instanceof Error ? err.message : String(err);
 
-      if (err.message === ErrorMessages.ACCOUNT_BLOCKED) {
-        return res.status(StatusCodes.FORBIDDEN).json({ 
-          error: ErrorMessages.ACCOUNT_BLOCKED 
-        });
-      }
+  this._logger.error(
+    LogEvents.AUTH_REFRESH_FAILED,
+    errorMessage
+  );
 
-      return res
-        .status(StatusCodes.UNAUTHORIZED)
-        .json({ error: ErrorMessages.UNAUTHORIZED });
-    }
-  };
+  res.clearCookie("refreshToken", {
+    path: refreshCookieOptions.path || "/",
+  });
+
+  if (errorMessage === ErrorMessages.ACCOUNT_BLOCKED) {
+    return res.status(StatusCodes.FORBIDDEN).json({
+      error: ErrorMessages.ACCOUNT_BLOCKED
+    });
+  }
+
+  return res
+    .status(StatusCodes.UNAUTHORIZED)
+    .json({ error: ErrorMessages.UNAUTHORIZED });
+}
+
+}
 }
 
 export default AuthTokenController;

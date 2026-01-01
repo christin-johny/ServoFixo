@@ -142,17 +142,37 @@ const CustomerEditModal: React.FC<CustomerEditModalProps> = ({
             onUpdateSuccess();
             onClose();
 
-        } catch (error: any) {
-            const serverMessage = error?.response?.data?.message || error?.message || '';
+        } catch (error: unknown) {
+  let serverMessage = "";
 
-            if (serverMessage.includes('Email is already registered') || serverMessage.includes('Phone number')) {
-                showError(serverMessage);
-            } else {
-                showError("Failed to save changes. Please try again.");
-            }
-        } finally {
-            setLoading(false);
-        }
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error
+  ) {
+    const err = error as {
+      response?: { data?: { message?: string } };
+      message?: string;
+    };
+
+    serverMessage =
+      err.response?.data?.message ||
+      err.message ||
+      "";
+  }
+
+  if (
+    serverMessage.includes("Email is already registered") ||
+    serverMessage.includes("Phone number")
+  ) {
+    showError(serverMessage);
+  } else {
+    showError("Failed to save changes. Please try again.");
+  }
+} finally {
+  setLoading(false);
+}
+
     };
 
     if (!isOpen) return null;
