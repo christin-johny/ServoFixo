@@ -19,7 +19,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({ category }) => {
     let mounted = true;
     const fetchServices = async () => {
       try {
-        const data = await homeRepo.getServicesByCategory(category._id);
+        const data = await homeRepo.getServicesByCategory(category.id);
         if (mounted) setServices(data);
       } catch (err) {
         console.error(`Failed to load services for ${category.name}`, err);
@@ -29,13 +29,13 @@ const CategoryRow: React.FC<CategoryRowProps> = ({ category }) => {
     };
     fetchServices();
     return () => { mounted = false; };
-  }, [category._id]);
+  }, [category.id]);
  
   if (!loading && services.length === 0) return null;
 
   return (
     <section  
-      id={category._id}  
+      id={category.id}  
       className="w-full scroll-mt-32"
     >
       <div className="flex justify-between items-end mb-5 px-1">
@@ -43,7 +43,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({ category }) => {
             <h3 className="text-xl md:text-2xl font-bold text-gray-900">{category.name}</h3>
         </div>
         
-        <button className="text-sm font-semibold text-blue-600 flex items-center gap-1 hover:gap-2 transition-all"onClick={()=>{navigate(`/services?categoryId=${category._id}`)}}>
+        <button className="text-sm font-semibold text-blue-600 flex items-center gap-1 hover:gap-2 transition-all"onClick={()=>{navigate(`/services?categoryId=${category.id}`)}}>
           See All <ArrowRight size={16} />
         </button>
       </div>

@@ -1,14 +1,11 @@
 import { IServiceCategoryRepository } from '../../../domain/repositories/IServiceCategoryRepository';
 import { IImageService } from '../../interfaces/IImageService';
+import { UpdateCategoryDto } from '../../dto/category/UpdateCategoryDto';
+import { CategoryResponseDto } from '../../dto/category/CategoryResponseDto';
 import { ServiceCategory } from '../../../domain/entities/ServiceCategory';
-
-interface EditCategoryRequest {
-  id: string;
-  name?: string;
-  description?: string;
-  imageFile?: { buffer: Buffer; originalName: string; mimeType: string };
-  isActive?: boolean;
-}
+import { CategoryMapper } from '../../mappers/CategoryMapper';
+import { IFile } from './CreateCategoryUseCase';
+import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 
 export class EditCategoryUseCase {
   constructor(
@@ -16,35 +13,40 @@ export class EditCategoryUseCase {
     private readonly _imageService: IImageService
   ) {}
 
-  async execute(request: EditCategoryRequest): Promise<ServiceCategory> {
-    const category = await this._categoryRepo.findById(request.id);
-    if (!category) throw new Error('Category not found');
+  async execute(id: string, dto: UpdateCategoryDto, imageFile?: IFile): Promise<CategoryResponseDto> {
+    const existingCategory = await this._categoryRepo.findById(id);
+    if (!existingCategory) throw new Error(ErrorMessages.CATEGORY_NOT_FOUND);
 
-    if (request.name && request.name !== category.getName()) {
-      const existing = await this._categoryRepo.findByName(request.name);
-      if (existing) throw new Error('Category with this name already exists');
+    if (dto.name && dto.name !== existingCategory.getName()) {
+      const duplicate = await this._categoryRepo.findByName(dto.name);
+      if (duplicate) throw new Error(ErrorMessages.CATEGORY_ALREADY_EXISTS);
     }
 
-    if (request.imageFile) {
+    let iconUrl = existingCategory.getIconUrl();
+
+    if (imageFile) {
       const newUrl = await this._imageService.uploadImage(
-        request.imageFile.buffer,
-        request.imageFile.originalName,
-        request.imageFile.mimeType
+        imageFile.buffer,
+        imageFile.originalName,
+        imageFile.mimeType
       );
 
-      if (category.getIconUrl()) {
-        await this._imageService.deleteImage(category.getIconUrl());
+      if (iconUrl) {
+        try { await this._imageService.deleteImage(iconUrl); } catch (e) { console.error("Failed to delete old image", e); }
       }
-
-      category.updateIcon(newUrl);
+      iconUrl = newUrl;
     }
 
-    category.updateDetails(
-      request.name || category.getName(),
-      request.description || category.getDescription(),
-      request.isActive !== undefined ? request.isActive : category.getIsActive()
-    );
+    const updatedEntity = new ServiceCategory({
+      ...existingCategory.toProps(),
+      name: dto.name || existingCategory.getName(),
+      description: dto.description || existingCategory.getDescription(),
+      isActive: dto.isActive !== undefined ? dto.isActive : existingCategory.getIsActive(),
+      iconUrl: iconUrl,
+      updatedAt: new Date()
+    });
 
-    return this._categoryRepo.update(category);
+    const saved = await this._categoryRepo.update(updatedEntity);
+    return CategoryMapper.toResponse(saved);
   }
 }

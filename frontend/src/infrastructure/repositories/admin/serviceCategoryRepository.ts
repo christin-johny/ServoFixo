@@ -8,8 +8,9 @@ export interface CategoryQueryParams {
   isActive?: string;
 }
 
+// 1. FIX: Update Interface to match Backend DTO
 export interface PaginatedCategories {
-  data: ServiceCategory[];
+  categories: ServiceCategory[]; // CHANGED: 'data' -> 'categories'
   total: number;
   currentPage: number;
   totalPages: number;
@@ -19,7 +20,7 @@ export const getCategories = async (
   params: CategoryQueryParams
 ): Promise<PaginatedCategories> => {
   const response = await api.get("/admin/categories", { params });
-  return response.data;
+  return response.data; // Correctly returns { categories, total... }
 };
 
 export const createCategory = async (
@@ -28,7 +29,8 @@ export const createCategory = async (
   const response = await api.post("/admin/categories", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return response.data.category;
+  // 2. FIX: Read 'data' instead of 'category'
+  return response.data.data; 
 };
 
 export const updateCategory = async (
@@ -38,7 +40,8 @@ export const updateCategory = async (
   const response = await api.put(`/admin/categories/${id}`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return response.data.category;
+  // 3. FIX: Read 'data' instead of 'category'
+  return response.data.data;
 };
 
 export const toggleCategoryStatus = async (

@@ -48,13 +48,12 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
         className="p-2.5 sm:p-4 flex items-center gap-3 sm:gap-4 cursor-pointer group select-none relative"
       >
         
-        {/* Category Icon (Significantly smaller on mobile) */}
+        {/* Category Icon */}
         <div className="w-9 h-9 sm:w-16 sm:h-16 shrink-0 rounded-lg sm:rounded-xl bg-gray-50 border border-gray-100 p-0.5 sm:p-1">
           <img src={category.iconUrl} alt={category.name} className={`w-full h-full object-cover rounded-md sm:rounded-lg ${!category.isActive && "opacity-50 grayscale"}`} loading="lazy" />
         </div>
 
         {/* Category Info */}
-        {/* pr-24 on mobile ensures text truncates BEFORE hitting the buttons */}
         <div className="flex-1 min-w-0 pr-24 sm:pr-0">
           <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
             <h3 className={`text-sm sm:text-base font-bold truncate ${category.isActive ? "text-gray-900" : "text-gray-500"}`}>
@@ -65,17 +64,17 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
             )}
           </div>
           <p className="text-xs text-gray-500 truncate mt-0.5">
-                      {category.description.length > 50
-                        ? `${category.description.substring(0, 80)}...`
-                        : category.description}
-                    </p>
+              {category.description.length > 50
+                ? `${category.description.substring(0, 80)}...`
+                : category.description}
+          </p>
         </div>
 
         {/* Actions Container */}
         <div className="absolute right-8 sm:right-14 top-1/2 -translate-y-1/2 flex items-center gap-1 sm:gap-2
                         opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-200">
             
-            {/* Toggle (Mobile: Compact) */}
+            {/* Toggle Status */}
             <button 
                 onClick={(e) => { e.stopPropagation(); onToggleStatus(e); }} 
                 className={`p-1 sm:p-2 rounded-lg transition-colors ${category.isActive ? 'text-green-600 hover:bg-green-50' : 'text-red-500 hover:bg-red-50'}`}
@@ -97,7 +96,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
             </button>
         </div>
         
-        {/* Chevron Separator & Icon */}
+        {/* Chevron */}
         <div className="hidden sm:block h-8 w-px bg-gray-200 mx-1" />
         <div className={`absolute right-2 sm:static text-gray-400 transition-transform duration-300 ${isExpanded ? "rotate-180 text-blue-500" : ""}`}>
             <ChevronDown className="w-4 h-4 sm:w-6 sm:h-6" />
@@ -126,6 +125,8 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
             <div className="space-y-2 sm:space-y-3">
               {services.map((service) => (
                 <div 
+                    // IMPORTANT: We will fix ServiceItem IDs later, leaving as _id for now if not refactored yet
+                    // If you refactored Service Items too, change this to service.id
                     key={service._id} 
                     className={`
                         bg-white p-2 sm:p-3 rounded-lg sm:rounded-xl border flex gap-3 transition-colors group relative overflow-hidden
@@ -135,16 +136,14 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
                         ${service.isActive ? "border-l-green-500" : "border-l-gray-300"}
                     `}
                 >
-                  {/* Service Image (Very compact on mobile) */}
                   <div className="w-8 h-8 sm:w-12 sm:h-12 shrink-0 rounded bg-gray-100 overflow-hidden relative mt-0.5">
-                    {service.imageUrls[0] ? (
+                    {service.imageUrls?.[0] ? (
                       <img src={service.imageUrls[0]} alt={service.name} className={`w-full h-full object-cover ${!service.isActive && "opacity-50 grayscale"}`} />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-300"><Package size={16} /></div>
                     )}
                   </div>
                   
-                  {/* Details */}
                   <div className="flex-1 min-w-0 pr-20 sm:pr-0">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
                       <div className="flex items-center gap-2">
@@ -164,9 +163,10 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
                         ? `${service.description.substring(0, 80)}...`
                         : service.description}
                     </p>
-                    {/* Specs Pills (Hidden on very small screens) */}
+                    {/* Specs Section */}
                     <div className="hidden sm:flex gap-2 mt-2">
-                      {service.specifications.slice(0, 2).map((spec, idx) => (
+                       {/* Defensive coding in case specifications is undefined */}
+                      {service.specifications?.slice(0, 2).map((spec, idx) => (
                         <span key={idx} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-50 text-gray-600 border border-gray-100">
                           {spec.title === 'Warranty' ? <Shield size={10} /> : <Clock size={10} />}
                           {spec.value}
@@ -175,11 +175,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
                     </div>
                   </div>
 
-                  {/* Service Actions: Always Visible on Mobile */}
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0 
-                                  flex items-center gap-0.5 sm:gap-1 
-                                  opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                    
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0 flex items-center gap-0.5 sm:gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                     <button 
                         onClick={() => onToggleServiceStatus(service)}
                         className={`p-1 sm:p-1.5 rounded-md ${service.isActive ? 'text-green-600' : 'text-red-500'}`}

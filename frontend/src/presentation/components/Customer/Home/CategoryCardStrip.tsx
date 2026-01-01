@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 
 interface Category {
-  _id: string;
+  id: string;
   name: string;
   iconUrl?: string;
 }
@@ -43,8 +43,8 @@ const CategoryCardStrip: React.FC<Props> = ({ categories, loading, images }) => 
                 ))
               : displayed.map((cat) => (
                   <button
-                    key={cat._id}
-                    onClick={() => navigate(`/services?categoryId=${cat._id}`)}
+                    key={cat.id}
+                    onClick={() => navigate(`/services?categoryId=${cat.id}`)}
                     className="w-full bg-gray-50 rounded-xl p-4 flex flex-col items-center gap-3 hover:bg-blue-50 transition"
                   >
                     <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-xl shadow p-2 flex items-center justify-center">

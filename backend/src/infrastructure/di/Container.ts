@@ -78,6 +78,9 @@ import { GetCustomerProfileUseCase } from "../../application/use-cases/customer/
 import { UploadAvatarUseCase } from "../../application/use-cases/customer/UploadAvatarUseCase";
 import { ChangePasswordUseCase } from "../../application/use-cases/customer/ChangePasswordUseCase";
 
+//logger
+import { WinstonLogger } from '../logging/WinstonLogger';
+
 // INFRASTRUCTURE SERVICE INSTANTIATION
 
 const imageService = new S3ImageService();
@@ -85,6 +88,7 @@ const otpSessionRepo = new OtpSessionMongoRepository();
 const emailService = new NodemailerEmailService();
 const passwordHasher = new BcryptPasswordHasher();
 const jwtService = new JwtService();
+const logger = new WinstonLogger();
 
 // ZONE MODULE WIRING
 const zoneRepo = new ZoneMongoRepository();

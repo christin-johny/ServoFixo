@@ -1,5 +1,5 @@
 export interface ServiceCategory {
-  _id: string;
+  id: string;
   name: string;
   description: string;
   iconUrl: string;

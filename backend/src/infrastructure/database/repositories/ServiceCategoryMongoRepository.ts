@@ -1,3 +1,4 @@
+import { FilterQuery } from "mongoose";
 import {
   IServiceCategoryRepository,
   CategoryQueryParams,
@@ -14,22 +15,25 @@ export class ServiceCategoryMongoRepository
   implements IServiceCategoryRepository
 {
   async create(category: ServiceCategory): Promise<ServiceCategory> {
+    const props = category.toProps();
+    
     const persistenceData = {
-      name: category.getName(),
-      description: category.getDescription(),
-      iconUrl: category.getIconUrl(),
-      isActive: category.getIsActive(),
+      name: props.name,
+      description: props.description,
+      iconUrl: props.iconUrl,
+      isActive: props.isActive,
+      isDeleted: props.isDeleted,
     };
 
     const doc = await ServiceCategoryModel.create(persistenceData);
-    return this.toEntity(doc);
+    return this.toDomain(doc);
   }
 
   async findAll(params: CategoryQueryParams): Promise<PaginatedCategories> {
     const { page, limit, search, isActive } = params;
     const skip = (page - 1) * limit;
 
-    const query: any = { isDeleted: { $ne: true } };
+    const query: FilterQuery<IServiceCategoryDocument> = { isDeleted: { $ne: true } };
 
     if (isActive !== undefined) {
       query.isActive = isActive;
@@ -52,7 +56,7 @@ export class ServiceCategoryMongoRepository
     ]);
 
     return {
-      data: docs.map((doc) => this.toEntity(doc)),
+      categories: docs.map((doc) => this.toDomain(doc)),
       total,
       currentPage: page,
       totalPages: Math.ceil(total / limit),
@@ -65,7 +69,7 @@ export class ServiceCategoryMongoRepository
       isDeleted: { $ne: true },
     }).exec();
     if (!doc) return null;
-    return this.toEntity(doc);
+    return this.toDomain(doc);
   }
 
   async findByName(name: string): Promise<ServiceCategory | null> {
@@ -76,24 +80,27 @@ export class ServiceCategoryMongoRepository
     }).exec();
 
     if (!doc) return null;
-    return this.toEntity(doc);
+    return this.toDomain(doc);
   }
 
   async update(category: ServiceCategory): Promise<ServiceCategory> {
+    const props = category.toProps();
+    
     const doc = await ServiceCategoryModel.findByIdAndUpdate(
-      category.getId(),
+      props.id,
       {
-        name: category.getName(),
-        description: category.getDescription(),
-        iconUrl: category.getIconUrl(),
-        isActive: category.getIsActive(),
+        name: props.name,
+        description: props.description,
+        iconUrl: props.iconUrl,
+        isActive: props.isActive,
       },
       { new: true }
     ).exec();
 
     if (!doc) throw new Error(ErrorMessages.CATEGORY_NOT_FOUND);
-    return this.toEntity(doc);
+    return this.toDomain(doc);
   }
+
   async toggleStatus(id: string, isActive: boolean): Promise<boolean> {
     const result = await ServiceCategoryModel.findByIdAndUpdate(id, {
       isActive,
@@ -108,15 +115,16 @@ export class ServiceCategoryMongoRepository
     return !!result;
   }
 
-  private toEntity(doc: IServiceCategoryDocument): ServiceCategory {
-    return new ServiceCategory(
-      doc._id.toString(),
-      doc.name,
-      doc.description,
-      doc.iconUrl,
-      doc.isActive,
-      doc.createdAt,
-      doc.updatedAt
-    );
+  private toDomain(doc: IServiceCategoryDocument): ServiceCategory {
+    return new ServiceCategory({
+      id: doc._id.toString(),
+      name: doc.name,
+      description: doc.description,
+      iconUrl: doc.iconUrl,
+      isActive: doc.isActive,
+      isDeleted: doc.isDeleted,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt
+    });
   }
 }

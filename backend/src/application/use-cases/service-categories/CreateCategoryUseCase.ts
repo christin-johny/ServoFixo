@@ -1,12 +1,14 @@
 import { IServiceCategoryRepository } from "../../../domain/repositories/IServiceCategoryRepository";
 import { IImageService } from "../../interfaces/IImageService";
-import { ServiceCategory } from "../../../domain/entities/ServiceCategory";
+import { CreateCategoryDto } from "../../dto/category/CreateCategoryDto";
+import { CategoryResponseDto } from "../../dto/category/CategoryResponseDto";
+import { CategoryMapper } from "../../mappers/CategoryMapper";
+import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
-interface CreateCategoryRequest {
-  name: string;
-  description: string;
-  imageFile?: { buffer: Buffer; originalName: string; mimeType: string };
-  isActive: boolean;
+export interface IFile {
+  buffer: Buffer;
+  originalName: string;
+  mimeType: string;
 }
 
 export class CreateCategoryUseCase {
@@ -15,33 +17,25 @@ export class CreateCategoryUseCase {
     private readonly _imageService: IImageService
   ) {}
 
-  async execute(request: CreateCategoryRequest): Promise<ServiceCategory> {
-
-    const existing = await this._categoryRepo.findByName(request.name);
+  async execute(dto: CreateCategoryDto, imageFile?: IFile): Promise<CategoryResponseDto> {
+    const existing = await this._categoryRepo.findByName(dto.name);
     if (existing) {
-      throw new Error("Category with this name already exists");
+      throw new Error(ErrorMessages.CATEGORY_ALREADY_EXISTS);
     }
 
-    if (!request.imageFile) {
+    if (!imageFile) {
       throw new Error("Category icon/image is required");
     }
 
     const iconUrl = await this._imageService.uploadImage(
-      request.imageFile.buffer,
-      request.imageFile.originalName,
-      request.imageFile.mimeType
+      imageFile.buffer,
+      imageFile.originalName,
+      imageFile.mimeType
     );
 
-    const newCategory = new ServiceCategory(
-      "",
-      request.name,
-      request.description,
-      iconUrl,
-      request.isActive,
-      new Date(),
-      new Date()
-    );
+    const newCategory = CategoryMapper.toDomain(dto, iconUrl);
 
-    return this._categoryRepo.create(newCategory);
+    const savedCategory = await this._categoryRepo.create(newCategory);
+    return CategoryMapper.toResponse(savedCategory);
   }
 }

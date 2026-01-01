@@ -1,4 +1,4 @@
-import { ServiceCategory } from '../entities/ServiceCategory';
+import { ServiceCategory } from "../entities/ServiceCategory";
 
 export interface CategoryQueryParams {
   page: number;
@@ -8,7 +8,7 @@ export interface CategoryQueryParams {
 }
 
 export interface PaginatedCategories {
-  data: ServiceCategory[];
+  categories: ServiceCategory[]; 
   total: number;
   currentPage: number;
   totalPages: number;

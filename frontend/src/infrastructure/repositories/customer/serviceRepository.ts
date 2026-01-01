@@ -18,6 +18,7 @@ export const getServices = async (
   const response = await api.get("/customer/services", {
     params: filters,
   });
+  console.log(response.data)
   return response.data.data;
 };
 

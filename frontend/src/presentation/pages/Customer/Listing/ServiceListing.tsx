@@ -157,9 +157,9 @@ const ServiceListing: React.FC = () => {
               </button>
               {visibleCategories.map((cat) => (
                 <button
-                  key={cat._id}
-                  onClick={() => updateFilter('categoryId', cat._id)}
-                  className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 snap-start select-none border ${activeCategoryId === cat._id ? 'bg-blue-500 text-white ' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
+                  key={cat.id}
+                  onClick={() => updateFilter('categoryId', cat.id)}
+                  className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 snap-start select-none border ${activeCategoryId === cat.id ? 'bg-blue-500 text-white ' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
                 >
                   {cat.name}
                 </button>

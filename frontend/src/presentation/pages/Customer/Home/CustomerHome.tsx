@@ -70,7 +70,7 @@ const CustomerHome: React.FC = () => {
                     <div id="all-categories-list" className="space-y-12">
                         {categories.map((cat) => (
                             <CategoryRow
-                                key={cat._id}
+                                key={cat.id}
                                 category={cat}
                             />
                         ))}

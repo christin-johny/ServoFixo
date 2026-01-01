@@ -15,11 +15,14 @@ import ServiceItemModal from "../../../components/Admin/Modals/ServiceItemModal"
 import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
 import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
 
-const getErrorMessage = (error: any): string => {
-    if (error.response && error.response.data) {
-        return error.response.data.error || error.response.data.message || "Unknown server error";
+// Strict Error Helper
+const getErrorMessage = (error: unknown): string => {
+    if (typeof error === 'object' && error !== null && 'response' in error) {
+        const apiError = error as { response: { data?: { error?: string; message?: string } } };
+        return apiError.response.data?.error || apiError.response.data?.message || "Unknown server error";
     }
-    return error.message || "Network error";
+    if (error instanceof Error) return error.message;
+    return "Network error";
 };
 
 const Services: React.FC = () => {
@@ -65,16 +68,23 @@ const Services: React.FC = () => {
         try {
             setLoading(true);
             const result = await categoryRepo.getCategories({
-                page, limit: 5, search: debouncedSearch, isActive: filterStatus
+                page, 
+                limit: 5, 
+                search: debouncedSearch, 
+                isActive: filterStatus
             });
-            setCategories(result.data);
+            
+            // Backend now uses 'categories' and 'id'
+            const categoryList = result.categories || []; 
+            setCategories(categoryList);
+            
             setTotal(result.total);
             setTotalPages(result.totalPages);
 
-            if (result.data.length === 0 && page > 1) {
+            if (categoryList.length === 0 && page > 1) {
                 setPage(1);
             }
-        } catch (err) {
+        } catch (err: unknown) {
             console.error(err);
             showError("Failed to load categories");
         } finally {
@@ -92,8 +102,8 @@ const Services: React.FC = () => {
         try {
             setLoadingServices(true);
             const result = await serviceRepo.getServices({ categoryId: catId, page: 1, limit: 100 });
-            setServicesMap(prev => ({ ...prev, [catId]: result.data }));
-        } catch  {
+            setServicesMap(prev => ({ ...prev, [catId]: result.data || [] })); 
+        } catch (err: unknown) {
             showError("Failed to load services");
         } finally {
             setLoadingServices(false);
@@ -104,7 +114,8 @@ const Services: React.FC = () => {
         try {
             setIsSubmitting(true);
             if (editingCategory) {
-                await categoryRepo.updateCategory(editingCategory._id, formData);
+                // FIX: Use .id instead of ._id
+                await categoryRepo.updateCategory(editingCategory.id, formData);
                 showSuccess("Category updated");
             } else {
                 await categoryRepo.createCategory(formData);
@@ -112,7 +123,7 @@ const Services: React.FC = () => {
             }
             setIsCatModalOpen(false);
             loadCategories();
-        } catch (err: any) {
+        } catch (err: unknown) {
             const msg = getErrorMessage(err);
             showError(msg);
         } finally {
@@ -124,10 +135,11 @@ const Services: React.FC = () => {
         e.stopPropagation();
         try {
             const newStatus = !category.isActive;
-            await categoryRepo.toggleCategoryStatus(category._id, newStatus);
+            // FIX: Use .id instead of ._id
+            await categoryRepo.toggleCategoryStatus(category.id, newStatus);
             showSuccess(`Category ${category.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
             loadCategories();
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
             showError("Failed to update status. " + getErrorMessage(err));
         }
@@ -157,7 +169,7 @@ const Services: React.FC = () => {
             }
             setIsServiceModalOpen(false);
             if (activeCategoryId) loadServicesForCategory(activeCategoryId);
-        } catch (err: any) {
+        } catch (err: unknown) {
             const msg = getErrorMessage(err);
             showError(msg);
         } finally {
@@ -171,7 +183,7 @@ const Services: React.FC = () => {
             await serviceRepo.toggleServiceStatus(service._id, newStatus);
             showSuccess(`Service ${service.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
             if (expandedId) loadServicesForCategory(expandedId);
-        } catch (err: any) {
+        } catch (err: unknown) {
             showError("Failed to update status");
         }
     };
@@ -203,8 +215,8 @@ const Services: React.FC = () => {
             }
             setDeleteId(null);
             setDeleteType(null);
-        } catch (err: any) {
-            showError(err.response?.data?.error || "Failed to delete");
+        } catch (err: unknown) {
+            showError(getErrorMessage(err));
         } finally {
             setIsDeleting(false);
         }
@@ -216,14 +228,12 @@ const Services: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-400 mb-1">
                 {debouncedSearch || filterStatus ? "No Categories Match Your Filter" : "No Service Categories Found"}
             </h3>
-
-
         </div>
     );
 
     return (
         <div className="h-full flex flex-col gap-4 sm:gap-6 overflow-hidden">
-            {/* Header & Filters (Unchanged) */}
+            {/* Header & Filters */}
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end shrink-0 border-b border-gray-200 pb-4 gap-4 sm:gap-0">
                 <div>
                     <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
@@ -236,7 +246,7 @@ const Services: React.FC = () => {
                 </button>
             </div>
 
-            {/* Responsive Filter Bar (Unchanged) */}
+            {/* Responsive Filter Bar */}
             <SearchFilterBar
                 search={search}
                 onSearchChange={(val) => { setSearch(val); setPage(1); }}
@@ -265,17 +275,18 @@ const Services: React.FC = () => {
                             <div className="grid grid-cols-1 gap-4">
                                 {categories.map((cat) => (
                                     <CategoryCard
-                                        key={cat._id}
+                                        // FIX: Use .id
+                                        key={cat.id}
                                         category={cat}
-                                        isExpanded={expandedId === cat._id}
-                                        onToggleExpand={() => setExpandedId(expandedId === cat._id ? null : cat._id)}
+                                        isExpanded={expandedId === cat.id}
+                                        onToggleExpand={() => setExpandedId(expandedId === cat.id ? null : cat.id)}
                                         onEdit={(e) => { e.stopPropagation(); setEditingCategory(cat); setIsCatModalOpen(true); }}
-                                        onDelete={(e) => confirmDeleteCategory(e, cat._id)}
+                                        onDelete={(e) => confirmDeleteCategory(e, cat.id)}
                                         onToggleStatus={(e) => handleToggleCategoryStatus(e, cat)}
                                         onToggleServiceStatus={handleToggleServiceStatus}
-                                        services={servicesMap[cat._id] || []}
-                                        isLoadingServices={expandedId === cat._id && loadingServices}
-                                        onAddService={() => handleAddService(cat._id)}
+                                        services={servicesMap[cat.id] || []}
+                                        isLoadingServices={expandedId === cat.id && loadingServices}
+                                        onAddService={() => handleAddService(cat.id)}
                                         onEditService={handleEditService}
                                         onDeleteService={confirmDeleteService}
                                     />
@@ -295,7 +306,7 @@ const Services: React.FC = () => {
                 />
             </div>
 
-            {/* Modals (Unchanged) */}
+            {/* Modals */}
             <CategoryModal
                 isOpen={isCatModalOpen} onClose={() => setIsCatModalOpen(false)}
                 onSave={handleSaveCategory} initialData={editingCategory} isLoading={isSubmitting}
