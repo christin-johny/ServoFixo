@@ -184,4 +184,9 @@ export const LogEvents = {
 
   ADMIN_CUSTOMER_ADDRESS_FETCH_INIT: 'Admin: Fetch Customer Addresses Initiated',
   ADMIN_CUSTOMER_ADDRESS_FETCH_FAILED: 'Admin: Fetch Customer Addresses Failed',
+
+  // Technician Specific
+  TECHNICIAN_CREATE_SUCCESS: 'Technician Entity Created Successfully',
+  AUTH_REGISTER_FAILED_EMAIL_EXISTS: 'Registration Failed - Email Already Exists',
+  AUTH_REGISTER_FAILED_PHONE_EXISTS: 'Registration Failed - Phone Already Exists',
 };

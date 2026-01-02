@@ -8,8 +8,8 @@ import RoleProtectedRoute from "./RoleProtectedRoute";
 import AdminLayout from "../layouts/AdminLayout";
 import Zones from "../pages/Admin/Zones/Zones";
 import Services from "../pages/Admin/Services/Services";
-import Customers from "../pages/Admin/customers/AdminCustomersPage";
-import AdminCustomerProfilePage from "../pages/Admin/customers/AdminCustomerProfilePage";
+import Customers from "../pages/Admin/Customers/AdminCustomersPage";
+import AdminCustomerProfilePage from "../pages/Admin/Customers/AdminCustomerProfilePage";
 
 const AdminRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>

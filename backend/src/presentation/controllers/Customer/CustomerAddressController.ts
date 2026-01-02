@@ -1,12 +1,11 @@
 import { Request, Response } from "express";
 import { IUseCase } from "../../../application/interfaces/IUseCase"; 
 import { CreateAddressDto } from "../../../application/dto/address/CreateAddressDto";
-import { UpdateAddressDto } from "../../../application/dto/address/UpdateAddressDto";
-// ✅ Import the actual DTO
+import { UpdateAddressDto } from "../../../application/dto/address/UpdateAddressDto"; 
 import { AddressResponseDto } from "../../../application/dto/address/AddressResponseDto"; 
 import { ILogger } from "../../../application/interfaces/ILogger"; 
 import { LogEvents } from "../../../../../shared/constants/LogEvents"; 
-import { SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
+import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes"; 
 
 export interface AuthenticatedRequest extends Request {
@@ -14,36 +13,24 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export class CustomerAddressController {
-  constructor(
-    // ✅ FIX: Match AddAddressUseCase return type
-    private readonly _addAddressUseCase: IUseCase<AddressResponseDto, [CreateAddressDto, string]>,
-    
-    // ✅ FIX: Match UpdateAddressUseCase return type
-    private readonly _updateAddressUseCase: IUseCase<AddressResponseDto, [string, string, UpdateAddressDto]>,
-    
-    // ✅ FIX: Match GetAddressesUseCase return type
-    private readonly _getAddressesUseCase: IUseCase<AddressResponseDto[], [string]>, 
-    
-    // ✅ FIX: Match DeleteAddressUseCase return type (it returns Promise<boolean>)
+  constructor( 
+    private readonly _addAddressUseCase: IUseCase<AddressResponseDto, [CreateAddressDto, string]>, 
+    private readonly _updateAddressUseCase: IUseCase<AddressResponseDto, [string, string, UpdateAddressDto]>, 
+    private readonly _getAddressesUseCase: IUseCase<AddressResponseDto[], [string]>,  
     private readonly _deleteAddressUseCase: IUseCase<boolean, [string, string]>,
-    
     private readonly _logger: ILogger 
   ) {}
 
   addAddress = async (req: Request, res: Response): Promise<Response> => {
     try {
       const userId = (req as AuthenticatedRequest).userId;
-      if (!userId) throw new Error("Unauthorized");
+      if (!userId) throw new Error (ErrorMessages.UNAUTHORIZED);
 
       const dto = req.body as CreateAddressDto;
       
       this._logger.info(LogEvents.ADDRESS_ADD_INIT, { userId, dto });
 
-      const resultDto = await this._addAddressUseCase.execute(dto, userId);
-
-      // Accessing isServiceable. Ensure your AddressResponseDto definition includes this field.
-      // If it's strictly defined in the DTO, you don't need 'as any'. 
-      // Using 'as any' here as a safety net in case the DTO definition excludes it but the object has it.
+      const resultDto = await this._addAddressUseCase.execute(dto, userId); 
       const isServiceable = (resultDto as any).isServiceable ?? true;
 
       const message = isServiceable
@@ -65,7 +52,7 @@ export class CustomerAddressController {
   getMyAddresses = async (req: Request, res: Response): Promise<Response> => {
     try {
       const userId = (req as AuthenticatedRequest).userId;
-      if (!userId) throw new Error("Unauthorized");
+      if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
       this._logger.info(LogEvents.ADDRESS_FETCH_ALL, { userId });
 
@@ -86,7 +73,7 @@ export class CustomerAddressController {
     try {
       const { id } = req.params;
       const userId = (req as AuthenticatedRequest).userId;
-      if (!userId) throw new Error("Unauthorized");
+      if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
       this._logger.info(LogEvents.ADDRESS_DELETE_INIT, { addressId: id, userId });
 
@@ -107,7 +94,7 @@ export class CustomerAddressController {
     try {
       const { id } = req.params;
       const userId = (req as AuthenticatedRequest).userId;
-      if (!userId) throw new Error("Unauthorized");
+      if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
       const dto = req.body as UpdateAddressDto;
 

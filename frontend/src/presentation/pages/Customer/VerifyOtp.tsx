@@ -15,7 +15,6 @@ import { useNotification } from "../../../presentation/hooks/useNotification";
 
 const OTP_LENGTH = 6;
 const OTP_EXPIRY_SECONDS = 120;
-const RESEND_DELAY_SECONDS = 60;
 
 const STORAGE_KEY = "otpFlowData";
 
@@ -65,7 +64,6 @@ const VerifyOtp: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const [expiryTimer, setExpiryTimer] = useState<number>(OTP_EXPIRY_SECONDS);
-  const [resendTimer, setResendTimer] = useState<number>(RESEND_DELAY_SECONDS);
   const [resending, setResending] = useState(false);
 
   const [newPassword, setNewPassword] = useState("");
@@ -82,7 +80,6 @@ const VerifyOtp: React.FC = () => {
   useEffect(() => {
     const t = window.setInterval(() => {
       setExpiryTimer((p) => (p > 0 ? p - 1 : 0));
-      setResendTimer((p) => (p > 0 ? p - 1 : 0));
     }, 1000);
     return () => clearInterval(t);
   }, []);
@@ -165,8 +162,6 @@ const VerifyOtp: React.FC = () => {
     }
   };
 
-
-
   const verifyOtp = async () => {
     const code = otp.join("");
     if (code.length !== OTP_LENGTH) {
@@ -220,7 +215,7 @@ const VerifyOtp: React.FC = () => {
 
         try {
           sessionStorage.removeItem(STORAGE_KEY);
-        } catch (_) { }
+        } catch {}
 
         if (access) {
           dispatch(setAccessToken(access));
@@ -264,12 +259,12 @@ const VerifyOtp: React.FC = () => {
   };
 
   const resendOtp = async () => {
-    if (resendTimer > 0) return;
+    if (expiryTimer > 0) return;
     setResending(true);
     setError(null);
 
     try {
-      let newSessionId = ""; // Helper var to capture the ID
+      let newSessionId = ""; 
 
       if (context === "registration") {
         const phone = phoneFromState
@@ -289,7 +284,6 @@ const VerifyOtp: React.FC = () => {
       }
 
       setExpiryTimer(OTP_EXPIRY_SECONDS);
-      setResendTimer(RESEND_DELAY_SECONDS);
     } catch (err: unknown) {
       setError(extractErrorMessage(err, "Verification failed"));
     } finally {
@@ -385,12 +379,21 @@ const VerifyOtp: React.FC = () => {
         {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
 
         <div className="text-right pr-2 mb-4">
-          <button onClick={resendOtp} disabled={resendTimer > 0 || resending} className={`text-sm ${resendTimer === 0 ? "text-blue-600 underline" : "text-gray-400"}`}>
-            {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : resending ? "Resending..." : "Resend OTP"}
+          <button 
+            onClick={resendOtp} 
+            disabled={expiryTimer > 0 || resending} 
+            className={`text-sm ${expiryTimer > 0 ? "text-gray-400 cursor-not-allowed" : "text-blue-600 underline"}`}
+          >
+            {resending ? "Resending..." : "Resend OTP"}
           </button>
         </div>
 
-        <button onClick={verifyOtp} disabled={loading} className={`w-full rounded-lg py-3 text-white font-semibold transition-all ${loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-sm hover:shadow-md"}`}>
+        {/* Verify Button: Disabled when expired */}
+        <button 
+          onClick={verifyOtp} 
+          disabled={loading || expiryTimer === 0} 
+          className={`w-full rounded-lg py-3 text-white font-semibold transition-all ${(loading || expiryTimer === 0) ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-sm hover:shadow-md"}`}
+        >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
               <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

@@ -1,0 +1,23 @@
+import {
+  TechnicianBankDetails,
+  EmergencyContact,
+  TechnicianAvailability
+} from "../../../../../shared/types/value-objects/TechnicianTypes";
+
+export class UpdateTechnicianDto {
+  name?: string;
+  avatarUrl?: string;
+  bio?: string;
+  experienceSummary?: string;
+
+  categoryIds?: string[];
+  subServiceIds?: string[];
+  zoneIds?: string[];
+
+  bankDetails?: TechnicianBankDetails;
+  availability?: TechnicianAvailability; // For toggle online/offline
+  
+  portfolioUrls?: string[];
+  deviceToken?: string;
+  emergencyContact?: EmergencyContact;
+}

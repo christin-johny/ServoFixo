@@ -52,7 +52,14 @@ import { CustomerProfileController } from "../../presentation/controllers/Custom
 import { GetServiceListingUseCase } from "../../application/use-cases/service-items/GetServiceListingUseCase";
 import { GetServiceByIdUseCase } from "../../application/use-cases/service-items/GetServiceByIdUseCase";
 
-// --- Customer Auth---
+// --- Technician Module ---
+import { TechnicianMongoRepository } from "../database/repositories/TechnicianMongoRepository";
+import { RequestTechnicianRegistrationOtpUseCase } from "../../application/use-cases/technician/auth/RequestTechnicianRegistrationOtpUseCase";
+import { VerifyTechnicianRegistrationOtpUseCase } from "../../application/use-cases/technician/auth/VerifyTechnicianRegistrationOtpUseCase";
+import { TechnicianLoginUseCase } from "../../application/use-cases/technician/auth/TechnicianLoginUseCase";
+import { TechnicianAuthController } from "../../presentation/controllers/Technician/TechnicianAuthController";
+
+// --- Admin Auth---
 import { AdminLoginUseCase } from "../../application/use-cases/auth/AdminLoginUseCase";
 import { AdminAuthController } from "../../presentation/controllers/Admin/AdminAuthController";
 import { AdminMongoRepository } from "../database/repositories/AdminMongoRepository";
@@ -80,7 +87,8 @@ import { DeleteAddressUseCase } from "../../application/use-cases/address/Delete
 import { GetCustomerProfileUseCase } from "../../application/use-cases/customer/GetCustomerProfileUseCase";
 import { UploadAvatarUseCase } from "../../application/use-cases/customer/UploadAvatarUseCase";
 import { ChangePasswordUseCase } from "../../application/use-cases/customer/ChangePasswordUseCase";
-
+import { RequestTechnicianForgotPasswordOtpUseCase } from "../../application/use-cases/technician/auth/RequestTechnicianForgotPasswordOtpUseCase";
+import { VerifyTechnicianForgotPasswordOtpUseCase } from "../../application/use-cases/technician/auth/VerifyTechnicianForgotPasswordOtpUseCase";
 //logger
 import { WinstonLogger } from "../logging/WinstonLogger";
 
@@ -93,7 +101,9 @@ const passwordHasher = new BcryptPasswordHasher();
 const jwtService = new JwtService();
 const logger = new WinstonLogger();
 const cacheService = new RedisCacheService(redis);
-const googleAuthService = new GoogleAuthService(process.env.GOOGLE_CLIENT_ID || "");
+const googleAuthService = new GoogleAuthService(
+  process.env.GOOGLE_CLIENT_ID || ""
+);
 
 // ZONE MODULE WIRING
 const zoneRepo = new ZoneMongoRepository();
@@ -268,11 +278,11 @@ const verForgotOtpUseCase = new VerifyCustomerForgotPasswordOtpUseCase(
   logger
 );
 const googleLoginUseCase = new CustomerGoogleLoginUseCase(
-  customerRepo,        
-  jwtService,          
-  googleAuthService,   
-  cacheService,        
-  logger               
+  customerRepo,
+  jwtService,
+  googleAuthService,
+  cacheService,
+  logger
 );
 
 export const customerAuthController = new CustomerAuthController(
@@ -331,6 +341,53 @@ export const customerAddressController = new CustomerAddressController(
   logger
 );
 
+// --- TECHNICIAN MODULE WIRING ---
+const technicianRepo = new TechnicianMongoRepository();
+
+const reqTechnicianRegOtpUseCase = new RequestTechnicianRegistrationOtpUseCase(
+  technicianRepo,
+  otpSessionRepo,
+  emailService,
+  logger
+);
+const verTechnicianRegOtpUseCase = new VerifyTechnicianRegistrationOtpUseCase(
+  technicianRepo,
+  otpSessionRepo,
+  passwordHasher,
+  jwtService,
+  cacheService,
+  logger
+);
+const technicianLoginUseCase = new TechnicianLoginUseCase(
+  technicianRepo,
+  passwordHasher,
+  jwtService,
+  cacheService,
+  logger
+);
+const reqTechForgotOtpUseCase = new RequestTechnicianForgotPasswordOtpUseCase(
+  technicianRepo,
+  otpSessionRepo,
+  emailService,
+  logger
+);
+
+const verTechForgotOtpUseCase = new VerifyTechnicianForgotPasswordOtpUseCase(
+  technicianRepo,
+  otpSessionRepo,
+  passwordHasher,
+  logger // Note: No JWT needed for password reset return
+);
+
+export const technicianAuthController = new TechnicianAuthController(
+  reqTechnicianRegOtpUseCase,
+  verTechnicianRegOtpUseCase,
+  technicianLoginUseCase,
+  reqTechForgotOtpUseCase,
+  verTechForgotOtpUseCase,
+  logger
+);
+
 // --- ADMIN AUTH MODULE WIRING ---
 const adminRepo = new AdminMongoRepository();
 
@@ -349,9 +406,11 @@ export const adminAuthController = new AdminAuthController(
 
 // TOKEN MANAGEMENT WIRING
 
+// ✅ UPDATED: Injected technicianRepo
 const refreshTokenUseCase = new RefreshTokenUseCase(
   jwtService,
   customerRepo,
+  technicianRepo,
   cacheService,
   logger
 );

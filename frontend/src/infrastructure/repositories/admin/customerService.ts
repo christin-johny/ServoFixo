@@ -1,4 +1,5 @@
 import api from "../../api/axiosClient";
+import { ADMIN_CUSTOMER_ENDPOINTS } from "../../api/endpoints/Admin/admin.endpoints";
 
 import type {
   CustomerDto,
@@ -23,11 +24,13 @@ export const getCustomers = async (
   params: CustomerQueryParams
 ): Promise<PaginatedCustomersResult> => {
   try {
-    const response = await api.get("/admin/customers", { params });
+    const response = await api.get(ADMIN_CUSTOMER_ENDPOINTS.CUSTOMERS, {
+      params,
+    });
 
     return response.data;
   } catch (error) {
-    console.error("CustomerService: Error fetching customer list:", error);
+    console.error("AdminCustomerService: Error fetching customer list:", error);
     throw error;
   }
 };
@@ -37,40 +40,57 @@ export const updateCustomer = async (
   payload: CustomerUpdatePayload
 ): Promise<CustomerDto> => {
   try {
-    const response = await api.put(`/admin/customers/${id}`, payload);
+    const response = await api.put(
+      ADMIN_CUSTOMER_ENDPOINTS.CUSTOMER_BY_ID(id),
+      payload
+    );
 
     return response.data;
   } catch (error) {
-    console.error(`CustomerService: Error updating customer ${id}:`, error);
+    console.error(
+      `AdminCustomerService: Error updating customer ${id}:`,
+      error
+    );
     throw error;
   }
 };
 
 export const getCustomerById = async (id: string): Promise<CustomerDto> => {
   try {
-    const response = await api.get(`/admin/customers/${id}`);
+    const response = await api.get(ADMIN_CUSTOMER_ENDPOINTS.CUSTOMER_BY_ID(id));
     return response.data;
   } catch (error) {
-    console.error(`CustomerService: Error fetching customer ${id}:`, error);
-    throw error;
-  }
-};
-export const deleteCustomer = async (id: string): Promise<void> => {
-  try {
-    await api.delete(`/admin/customers/${id}`);
-  } catch (error) {
-    console.error(`Error deleting customer ${id}:`, error);
+    console.error(
+      `AdminCustomerService: Error fetching customer ${id}:`,
+      error
+    );
     throw error;
   }
 };
 
+export const deleteCustomer = async (id: string): Promise<void> => {
+  try {
+    await api.delete(ADMIN_CUSTOMER_ENDPOINTS.CUSTOMER_BY_ID(id));
+  } catch (error) {
+    console.error(
+      `AdminCustomerService: Error deleting customer ${id}:`,
+      error
+    );
+    throw error;
+  }
+};
 
 export const getCustomerAddresses = async (id: string): Promise<unknown[]> => {
   try {
-    const response = await api.get(`/admin/customers/${id}/addresses`);
-    return response.data.data; 
+    const response = await api.get(
+      ADMIN_CUSTOMER_ENDPOINTS.CUSTOMER_ADDRESSES(id)
+    );
+    return response.data.data;
   } catch (error) {
-    console.error(`Error fetching addresses for customer ${id}:`, error);
+    console.error(
+      `AdminCustomerService: Error fetching addresses for customer ${id}:`,
+      error
+    );
     throw error;
   }
 };

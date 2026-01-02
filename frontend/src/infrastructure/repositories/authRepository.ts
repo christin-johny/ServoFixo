@@ -1,5 +1,8 @@
-import api from "../api/axiosClient";
-import { refreshApi } from "../api/axiosClient";
+import api, { refreshApi } from "../api/axiosClient";
+import {
+  CUSTOMER_AUTH_ENDPOINTS,
+  AUTH_ENDPOINTS,
+} from "../api/endpoints/Customer/customer.endpoints";
 import type {
   CustomerLoginRequestDto,
   AuthResponse,
@@ -12,21 +15,27 @@ import type {
 export const customerLogin = async (
   payload: CustomerLoginRequestDto
 ): Promise<AuthResponse> => {
-  const resp = await api.post("/customer/auth/login", payload);
+  const resp = await api.post(CUSTOMER_AUTH_ENDPOINTS.LOGIN, payload);
   return resp.data;
 };
 
 export const customerRegisterInitOtp = async (
   payload: CustomerRegisterInitDto
 ): Promise<AuthResponse> => {
-  const resp = await api.post("/customer/auth/register/init-otp", payload);
+  const resp = await api.post(
+    CUSTOMER_AUTH_ENDPOINTS.REGISTER_INIT_OTP,
+    payload
+  );
   return resp.data;
 };
 
 export const customerRegisterVerifyOtp = async (
   payload: CustomerRegisterVerifyDto
 ): Promise<AuthResponse> => {
-  const resp = await api.post("/customer/auth/register/verify-otp", payload);
+  const resp = await api.post(
+    CUSTOMER_AUTH_ENDPOINTS.REGISTER_VERIFY_OTP,
+    payload
+  );
   return resp.data;
 };
 
@@ -34,7 +43,7 @@ export const customerForgotPasswordInit = async (
   payload: CustomerForgotPasswordInitDto
 ): Promise<AuthResponse> => {
   const resp = await api.post(
-    "/customer/auth/forgot-password/init-otp",
+    CUSTOMER_AUTH_ENDPOINTS.FORGOT_PASSWORD_INIT_OTP,
     payload
   );
   return resp.data;
@@ -44,25 +53,22 @@ export const customerForgotPasswordVerify = async (
   payload: CustomerForgotPasswordVerifyDto
 ): Promise<AuthResponse> => {
   const resp = await api.post(
-    "/customer/auth/forgot-password/verify-otp",
+    CUSTOMER_AUTH_ENDPOINTS.FORGOT_PASSWORD_VERIFY_OTP,
     payload
   );
   return resp.data;
 };
 
-
 export const refresh = async (): Promise<AuthResponse> => {
-  const resp = await refreshApi.post('/auth/refresh'); 
-    
+  const resp = await refreshApi.post(AUTH_ENDPOINTS.REFRESH);
+
   if (resp.data) {
     return resp.data;
   }
-    
   throw new Error("Empty response from server");
 };
 
-
 export const customerLogout = async (): Promise<{ message?: string }> => {
-  const resp = await api.post("/customer/auth/logout");
+  const resp = await api.post(CUSTOMER_AUTH_ENDPOINTS.LOGOUT);
   return resp.data;
 };

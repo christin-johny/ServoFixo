@@ -1,7 +1,8 @@
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import type { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { ICacheService } from "../../interfaces/ICacheService";  
+import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository"; // ✅ Added
+import { ICacheService } from "../../interfaces/ICacheService";
 import { ILogger } from "../../interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
@@ -9,7 +10,8 @@ export class RefreshTokenUseCase {
   constructor(
     private readonly _jwtService: IJwtService,
     private readonly _customerRepository: ICustomerRepository,
-    private readonly _cacheService: ICacheService,  
+    private readonly _technicianRepository: ITechnicianRepository, // ✅ Added Injection
+    private readonly _cacheService: ICacheService,
     private readonly _logger: ILogger
   ) {}
 
@@ -26,33 +28,46 @@ export class RefreshTokenUseCase {
       this._logger.warn(`${LogEvents.AUTH_REFRESH_FAILED} - Invalid Token Signature`);
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
-    
+
     const redisKey = `refresh:${refreshToken}`;
-    
+
+    // --- CHECK USER TYPE ---
     if (payload.type === "customer") {
       const customer = await this._customerRepository.findById(payload.sub);
       if (!customer) {
-        await this._cacheService.del(redisKey);  
-        this._logger.warn(`${LogEvents.AUTH_REFRESH_FAILED} - Customer not found`);
+        await this._cacheService.del(redisKey);
         throw new Error(ErrorMessages.UNAUTHORIZED);
       }
       if (customer.isSuspended()) {
-        await this._cacheService.del(redisKey);  
-        this._logger.warn(`${LogEvents.AUTH_REFRESH_FAILED} - Customer Suspended`);
+        throw new Error(ErrorMessages.ACCOUNT_BLOCKED);
+      }
+    } 
+    // ✅ NEW TECHNICIAN LOGIC
+    else if (payload.type === "technician") {
+      const tech = await this._technicianRepository.findById(payload.sub);
+      if (!tech) {
+        await this._cacheService.del(redisKey);
+        throw new Error(ErrorMessages.UNAUTHORIZED);
+      }
+      // Assuming getIsSuspended() exists on your Entity as we defined
+      if (tech.getIsSuspended()) {
         throw new Error(ErrorMessages.ACCOUNT_BLOCKED);
       }
     }
+    // (Admin check would go here if you merge that logic later)
 
+    // --- REUSE DETECTION ---
     let stored: string | null = null;
     try {
-      stored = await this._cacheService.get(redisKey);  
+      stored = await this._cacheService.get(redisKey);
     } catch (err) {
-      throw new Error(ErrorMessages.UNAUTHORIZED);
+      // Redis fail -> proceed (fail open) or throw (fail secure). Usually proceed.
     }
 
     if (!stored) {
+      // Reuse Detected
       try {
-        const fallbackTtl = Math.max(60, parseInt(process.env.JWT_REFRESH_FALLBACK_SECONDS ?? "120", 10)); 
+        const fallbackTtl = Math.max(60, parseInt(process.env.JWT_REFRESH_FALLBACK_SECONDS ?? "120", 10));
         await this._cacheService.set(redisKey, String(payload.sub), fallbackTtl);
         stored = String(payload.sub);
         this._logger.warn("Refresh Token Reuse Attempt Detected");
@@ -61,6 +76,7 @@ export class RefreshTokenUseCase {
       }
     }
 
+    // --- GENERATE NEW TOKENS ---
     const newAccessToken = await this._jwtService.generateAccessToken({
       sub: payload.sub,
       type: payload.type,
@@ -74,7 +90,7 @@ export class RefreshTokenUseCase {
     const refreshTtlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
     const newRedisKey = `refresh:${newRefreshToken}`;
 
-    try { 
+    try {
       await this._cacheService.set(newRedisKey, String(payload.sub), refreshTtlSeconds);
       await this._cacheService.del(redisKey);
     } catch (err: unknown) {
@@ -83,13 +99,7 @@ export class RefreshTokenUseCase {
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
 
-    this._logger.info(`${LogEvents.AUTH_REFRESH_SUCCESS} - User: ${payload.sub}`);
-    return {
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
-      userId: payload.sub,
-    };
+    this._logger.info(LogEvents.AUTH_REFRESH_SUCCESS);
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   }
 }
-
-export default RefreshTokenUseCase;

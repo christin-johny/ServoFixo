@@ -1,11 +1,43 @@
 import { Technician } from "../entities/Technician";
+import { IBaseRepository } from "./IBaseRepository";
 
-export interface ITechnicianRepository {
-  findById(id: string): Promise<Technician | null>;
+export interface TechnicianFilterParams {
+  search?: string;
+  status?: "PENDING" | "VERIFIED" | "REJECTED";
+  zoneId?: string;
+  categoryId?: string;
+  isOnline?: boolean;
+}
 
+// Consistent with PaginatedResult<T> pattern
+export interface PaginatedTechnicianResult {
+  data: Technician[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface ITechnicianRepository extends IBaseRepository<Technician> {
+  // create(technician: Technician): Promise<Technician>;
+  // update(technician: Technician): Promise<Technician>;
+  // delete(id: string): Promise<boolean>;
+  // findById(id: string): Promise<Technician | null>;
+
+  // Core Lookups
   findByEmail(email: string): Promise<Technician | null>;
+  findByPhone(phone: string): Promise<Technician | null>;
 
-  create(technician: Technician): Promise<Technician>;
+  // Listings
+  findAllPaginated(
+    page: number,
+    limit: number,
+    filters: TechnicianFilterParams
+  ): Promise<PaginatedTechnicianResult>;
 
-  update(technician: Technician): Promise<Technician>;
+  // Specific Geospatial Query (For Job Dispatch)
+  findAvailableInZone(
+    zoneId: string,
+    subServiceId: string,
+    limit?: number
+  ): Promise<Technician[]>;
 }

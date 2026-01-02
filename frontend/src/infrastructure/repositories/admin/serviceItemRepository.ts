@@ -1,4 +1,5 @@
 import api from "../../api/axiosClient";
+import { ADMIN_SERVICE_ENDPOINTS } from "../../api/endpoints/Admin/admin.endpoints";
 import type { ServiceItem } from "../../../domain/types/ServiceItem";
 
 export interface ServiceQueryParams {
@@ -19,14 +20,14 @@ export interface PaginatedServices {
 export const getServices = async (
   params: ServiceQueryParams
 ): Promise<PaginatedServices> => {
-  const response = await api.get("/admin/services", { params });
+  const response = await api.get(ADMIN_SERVICE_ENDPOINTS.SERVICES, { params });
   return response.data;
 };
 
 export const createService = async (
   formData: FormData
 ): Promise<ServiceItem> => {
-  const response = await api.post("/admin/services", formData, {
+  const response = await api.post(ADMIN_SERVICE_ENDPOINTS.SERVICES, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return response.data.serviceItem;
@@ -36,9 +37,11 @@ export const updateService = async (
   id: string,
   formData: FormData
 ): Promise<ServiceItem> => {
-  const response = await api.put(`/admin/services/${id}`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const response = await api.put(
+    ADMIN_SERVICE_ENDPOINTS.SERVICE_BY_ID(id),
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
   return response.data.serviceItem;
 };
 
@@ -46,9 +49,9 @@ export const toggleServiceStatus = async (
   id: string,
   isActive: boolean
 ): Promise<void> => {
-  await api.patch(`/admin/services/${id}/toggle`, { isActive });
+  await api.patch(ADMIN_SERVICE_ENDPOINTS.TOGGLE_STATUS(id), { isActive });
 };
 
 export const deleteService = async (id: string): Promise<void> => {
-  await api.delete(`/admin/services/${id}`);
+  await api.delete(ADMIN_SERVICE_ENDPOINTS.SERVICE_BY_ID(id));
 };

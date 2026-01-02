@@ -1,33 +1,20 @@
 import { Router } from "express";
-import { authTokenController } from "../../../infrastructure/di/Container";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
+import { technicianAuthController } from "../../../infrastructure/di/Container";
 
 const router = Router();
 
-router.post("/refresh", authTokenController.refresh);
+// Registration
+router.post("/register/init-otp", technicianAuthController.register.bind(technicianAuthController));
+router.post("/register/verify-otp", technicianAuthController.verifyRegistration.bind(technicianAuthController));
 
-router.post("/login", (req, res) => {
-  res.status(501).json({
-    error: "Technician login not yet implemented",
-  });
-});
+// Login
+router.post("/login", technicianAuthController.login.bind(technicianAuthController));
 
-router.post("/register", (req, res) => {
-  res.status(StatusCodes.NOT_IMPLEMENTED).json({
-    error: "Technician registration not yet implemented",
-  });
-});
+// ✅ Forgot Password Routes
+router.post("/forgot-password/init-otp", technicianAuthController.forgotPasswordInitOtp.bind(technicianAuthController));
+router.post("/forgot-password/verify-otp", technicianAuthController.forgotPasswordVerifyOtp.bind(technicianAuthController));
 
-router.post("/logout", (req, res) => {
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
-
-  return res.status(200).json({
-    message: "Logged out successfully",
-  });
-});
+// Logout
+router.post("/logout", technicianAuthController.logout.bind(technicianAuthController));
 
 export default router;

@@ -1,4 +1,5 @@
 import api from "../../api/axiosClient";
+import { CUSTOMER_SERVICE_ENDPOINTS } from "../../api/endpoints/Customer/customer.endpoints";
 import type { ServiceItem } from "../../../domain/types/ServiceItem";
 
 export interface ServiceFilters {
@@ -15,17 +16,15 @@ export interface ServiceFilters {
 export const getServices = async (
   filters: ServiceFilters
 ): Promise<ServiceItem[]> => {
-  const response = await api.get("/customer/services", {
+  const response = await api.get(CUSTOMER_SERVICE_ENDPOINTS.SERVICES, {
     params: filters,
   });
-  console.log(response.data)
+
   return response.data.data;
 };
 
 export const getServiceById = async (id: string): Promise<ServiceItem> => {
-  const response = await api.get(`/customer/services/${id}`);
+  const response = await api.get(CUSTOMER_SERVICE_ENDPOINTS.SERVICE_BY_ID(id));
 
   return response.data.data;
 };
-
-

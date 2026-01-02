@@ -1,21 +1,20 @@
 import { Router } from "express";
 import { JwtService } from "../../../infrastructure/security/JwtService";
-import { makeTechnicianAuthMiddleware } from "../../middlewares/technicianAuth.middleware";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
+// You will need to create this middleware similar to customerAuth.middleware.ts
+import { makeTechnicianAuthMiddleware } from "../../middlewares/technicianAuth.middleware"; 
+
+import authRoutes from "./auth.routes";
 
 const router = Router();
 
 const jwtService = new JwtService();
-
 const technicianAuth = makeTechnicianAuthMiddleware(jwtService);
 
-router.get("/me", technicianAuth, (req, res) => {
-  const user = (req as any).user;
+// Public Routes
+router.use("/auth", authRoutes);
 
-  return res.status(StatusCodes.OK).json({
-    message: "Technician profile placeholder",
-    user,
-  });
-});
+// Protected Routes (To be added as we build them)
+// router.use("/profile", technicianAuth, profileRoutes);
+// router.use("/jobs", technicianAuth, jobRoutes);
 
 export default router;
