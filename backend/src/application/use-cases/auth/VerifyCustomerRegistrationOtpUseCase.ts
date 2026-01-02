@@ -1,5 +1,4 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import redis from "../../../infrastructure/redis/redisClient";
 import { IOtpSessionRepository } from "../../../domain/repositories/IOtpSessionRepository";
 import { IPasswordHasher } from "../../interfaces/IPasswordHasher";
 import { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
@@ -8,6 +7,7 @@ import { AuthResultDto } from "../../dto/auth/AuthResultDto";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { OtpContext } from "../../../../../shared/types/enums/OtpContext";
 import { Customer } from "../../../domain/entities/Customer";
+import { ICacheService } from "../../interfaces/ICacheService"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
@@ -17,77 +17,48 @@ export class VerifyCustomerRegistrationOtpUseCase {
     private readonly _otpSessionRepository: IOtpSessionRepository,
     private readonly _passwordHasher: IPasswordHasher,
     private readonly _jwtService: IJwtService,
+    private readonly _cacheService: ICacheService,  
     private readonly _logger: ILogger
   ) {}
 
   async execute(input: CustomerRegisterVerifyDto): Promise<AuthResultDto> {
+    // ... validation logic same as before ...
     const { email, otp, sessionId, name, password, phone } = input;
     const normalizedEmail = email.toLowerCase().trim();
     this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} (Registration) - Email: ${normalizedEmail}`);
 
-    const existingCustomer = await this._customerRepository.findByEmail(
-      normalizedEmail
-    );
-    if (existingCustomer) {
-      throw new Error(ErrorMessages.EMAIL_ALREADY_EXISTS);
-    }
+    const existingCustomer = await this._customerRepository.findByEmail(normalizedEmail);
+    if (existingCustomer) throw new Error(ErrorMessages.EMAIL_ALREADY_EXISTS);
     if (phone) {
-      const existingPhone = await this._customerRepository.findByPhone(phone);
-      if (existingPhone) {
-        throw new Error(ErrorMessages.PHONE_ALREADY_EXISTS);
-      }
+        const existingPhone = await this._customerRepository.findByPhone(phone);
+        if (existingPhone) throw new Error(ErrorMessages.PHONE_ALREADY_EXISTS);
     }
-    const session = await this._otpSessionRepository.findValidSession(
-      normalizedEmail,
-      sessionId,
-      OtpContext.Registration
-    );
-    if (!session) {
-      this._logger.warn("Invalid OTP Session");
-      throw new Error(ErrorMessages.OTP_SESSION_INVALID);
-    }
-    if (session.getOtp() !== otp) {
-      this._logger.warn("Invalid OTP entered");
-      throw new Error(ErrorMessages.OTP_INVALID);
-    }
+
+    const session = await this._otpSessionRepository.findValidSession(normalizedEmail, sessionId, OtpContext.Registration);
+    if (!session) throw new Error(ErrorMessages.OTP_SESSION_INVALID);
+    if (session.getOtp() !== otp) throw new Error(ErrorMessages.OTP_INVALID);
+
     session.markAsUsed();
     await this._otpSessionRepository.save(session);
 
     const hashedPassword = await this._passwordHasher.hash(password);
 
     const customer = new Customer(
-      "",
-      name,
-      normalizedEmail, 
-      hashedPassword,
-      phone,
-      undefined,
-      undefined,
-      false,
-      {},
-      undefined,
-      new Date(),
-      new Date(),
-      false
+      "", name, normalizedEmail, hashedPassword, phone, undefined, undefined, false, {}, undefined, new Date(), new Date(), false
     );
     const savedCustomer = await this._customerRepository.create(customer);
 
-    const payload: JwtPayload = {
-      sub: savedCustomer.getId(),
-      type: "customer",
-    };
+    const payload: JwtPayload = { sub: savedCustomer.getId(), type: "customer" };
     const accessToken = await this._jwtService.generateAccessToken(payload);
     const refreshToken = await this._jwtService.generateRefreshToken(payload);
 
-    const ttlSeconds = parseInt(
-      process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60),
-      10
-    );
+    const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
+    
     try {
-      await redis.set(
+      // ✅ Use Abstract Service
+      await this._cacheService.set(
         `refresh:${refreshToken}`,
         String(savedCustomer.getId()),
-        "EX",
         ttlSeconds
       );
     } catch (_) {}

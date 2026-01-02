@@ -1,7 +1,7 @@
-import { OAuth2Client } from "google-auth-library";
-import redis from "../../../infrastructure/redis/redisClient";
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { JwtService } from "../../../infrastructure/security/JwtService";
+import { IJwtService, JwtPayload } from "../../interfaces/IJwtService";  
+import { IGoogleAuthService } from "../../interfaces/IGoogleAuthService";  
+import { ICacheService } from "../../interfaces/ICacheService";  
 import { Customer } from "../../../domain/entities/Customer";
 import { Email } from "../../../../../shared/types/value-objects/ContactTypes";
 import { ILogger } from "../../interfaces/ILogger";
@@ -24,18 +24,13 @@ interface GoogleLoginResponse {
 }
 
 export class CustomerGoogleLoginUseCase {
-  private _googleClient: OAuth2Client;
-  private _clientId: string;
-
   constructor(
-    private _customerRepository: ICustomerRepository,
-    private _jwtService: JwtService,
-    clientId: string,
-    private _logger: ILogger
-  ) {
-    this._clientId = clientId;
-    this._googleClient = new OAuth2Client(clientId);
-  }
+    private readonly _customerRepository: ICustomerRepository,
+    private readonly _jwtService: IJwtService,
+    private readonly _googleAuthService: IGoogleAuthService,  
+    private readonly _cacheService: ICacheService, 
+    private readonly _logger: ILogger
+  ) {}
 
   async execute(request: GoogleLoginRequest): Promise<GoogleLoginResponse> {
     try {
@@ -43,18 +38,10 @@ export class CustomerGoogleLoginUseCase {
       let customer: Customer | null = null;
       let picture: string | undefined;
 
-      if (request.token) {
-        const ticket = await this._googleClient.verifyIdToken({
-          idToken: request.token,
-          audience: this._clientId,
-        });
-        const payload = ticket.getPayload();
-
-        if (!payload || !payload.email) {
-          throw new Error("Invalid Google Token");
-        }
-
-        const { email, name, sub: googleId, picture: pic } = payload;
+      if (request.token) { 
+        const googlePayload = await this._googleAuthService.verifyToken(request.token);
+        
+        const { email, name, googleId, picture: pic } = googlePayload;
         picture = pic;
 
         customer = await this._customerRepository.findByEmail(email);
@@ -110,7 +97,7 @@ export class CustomerGoogleLoginUseCase {
       if (!customer) throw new Error("Customer resolution failed.");
 
       const customerId = customer.getId();
-      const jwtPayload: any = {
+      const jwtPayload: JwtPayload = {
         sub: customerId,
         type: "customer",
       };
@@ -127,20 +114,15 @@ export class CustomerGoogleLoginUseCase {
         10
       );
 
-      try {
-        await redis.set(
+      try { 
+        await this._cacheService.set(
           `refresh:${refreshToken}`,
           String(customerId),
-          "EX",
           ttlSeconds
         );
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : String(err);
-
-        this._logger.error(
-          "Failed to store refresh token in redis:",
-          errorMessage
-        );
+        this._logger.error("Failed to store refresh token in cache:", errorMessage);
       }
 
       this._logger.info(
@@ -160,18 +142,17 @@ export class CustomerGoogleLoginUseCase {
         },
       };
     } catch (err: unknown) {
-  const errorMessage =
-    err instanceof Error ? err.message : String(err);
+      const errorMessage =
+        err instanceof Error ? err.message : String(err);
 
-  this._logger.error(
-    "Google Login Error",
-    errorMessage
-  );
+      this._logger.error(
+        "Google Login Error",
+        errorMessage
+      );
 
-  throw new Error(
-    `CustomerGoogleLoginUseCase error: ${errorMessage}`
-  );
-}
-
+      throw new Error(
+        `CustomerGoogleLoginUseCase error: ${errorMessage}`
+      );
+    }
   }
 }

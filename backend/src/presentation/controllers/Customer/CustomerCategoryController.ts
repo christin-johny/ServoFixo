@@ -5,20 +5,14 @@ import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 import { ILogger } from '../../../application/interfaces/ILogger';
 import { LogEvents } from '../../../../../shared/constants/LogEvents';
 
-interface CategoryQueryParams {
-  isActive: boolean;
-  page: number;
-  limit: number;
-}
-
-interface CategoryResult {
-  categories: unknown[];
-  [key: string]: unknown;
-}
+// ✅ Import the actual types from Domain/Application layers
+import { CategoryQueryParams } from '../../../domain/repositories/IServiceCategoryRepository';
+import { PaginatedCategoriesResponse } from '../../../application/use-cases/service-categories/GetAllCategoriesUseCase';
 
 export class CustomerCategoryController {
   constructor(
-    private readonly _getAllCategoriesUseCase: IUseCase<CategoryResult, [CategoryQueryParams]>,
+    // ✅ Use strict types: IUseCase<ReturnDto, [InputDto]>
+    private readonly _getAllCategoriesUseCase: IUseCase<PaginatedCategoriesResponse, [CategoryQueryParams]>,
     private readonly _logger: ILogger
   ) {}
 
@@ -26,11 +20,14 @@ export class CustomerCategoryController {
     try {
       this._logger.info(`${LogEvents.CATEGORY_GET_ALL_INIT} - Customer View`);
 
-      const result = await this._getAllCategoriesUseCase.execute({
+      // Construct the params object strictly
+      const params: CategoryQueryParams = {
         isActive: true,
         page: 1,
         limit: 100
-      });
+      };
+
+      const result = await this._getAllCategoriesUseCase.execute(params);
 
       return res.status(StatusCodes.OK).json({ 
         success: true, 

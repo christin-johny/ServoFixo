@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { IUseCase } from "../../../application/interfaces/IUseCase"; 
 import { CreateZoneDto } from "../../../application/dto/zone/CreateZoneDto";
 import { UpdateZoneDto } from "../../../application/dto/zone/UpdateZoneDto";
+import { ZoneResponseDto } from "../../../application/dto/zone/ZoneResponseDto";
+import { PaginatedZonesResponse } from "../../../application/use-cases/zones/GetAllZonesUseCase";
 import { ILogger } from '../../../application/interfaces/ILogger';
 import { ZoneQueryParams } from "../../../domain/repositories/IZoneRepository";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
@@ -10,10 +12,10 @@ import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class AdminZoneController {
   constructor(
-    private readonly _createZoneUseCase: IUseCase<unknown, [CreateZoneDto]>,
-    private readonly _getAllZonesUseCase: IUseCase<unknown, [ZoneQueryParams]>,
-    private readonly _deleteZoneUseCase: IUseCase<void, [string]>,
-    private readonly _editZoneUseCase: IUseCase<unknown, [string, UpdateZoneDto]>,
+    private readonly _createZoneUseCase: IUseCase<ZoneResponseDto, [CreateZoneDto]>,
+    private readonly _getAllZonesUseCase: IUseCase<PaginatedZonesResponse, [ZoneQueryParams]>,
+    private readonly _deleteZoneUseCase: IUseCase<boolean, [string]>, 
+    private readonly _editZoneUseCase: IUseCase<ZoneResponseDto, [string, UpdateZoneDto]>,
     private readonly _logger: ILogger
   ) {}
 

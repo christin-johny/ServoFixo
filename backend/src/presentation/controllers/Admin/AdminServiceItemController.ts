@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { IUseCase } from "../../../application/interfaces/IUseCase";  
 import { CreateServiceItemDto } from "../../../application/dto/serviceItem/CreateServiceItemDto";
 import { UpdateServiceItemDto } from "../../../application/dto/serviceItem/UpdateServiceItemDto";
+import { ServiceItemResponseDto } from "../../../application/dto/serviceItem/ServiceItemResponseDto";
+import { PaginatedServiceResponse } from "../../../application/use-cases/service-items/GetAllServiceItemsUseCase";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import {
   ErrorMessages,
@@ -33,11 +35,11 @@ interface UpdateServiceParams {
 
 export class AdminServiceItemController {
   constructor( 
-    private readonly _createUseCase: IUseCase<unknown, [CreateServiceItemDto, FileData[]]>, 
-    private readonly _getAllUseCase: IUseCase<unknown, [ServiceQueryParams]>, 
+    private readonly _createUseCase: IUseCase<ServiceItemResponseDto, [CreateServiceItemDto, FileData[]]>, 
+    private readonly _getAllUseCase: IUseCase<PaginatedServiceResponse, [ServiceQueryParams]>, 
     private readonly _deleteUseCase: IUseCase<void, [string]>, 
-    private readonly _editUseCase: IUseCase<unknown, [UpdateServiceParams]>, 
-    private readonly _toggleStatusUseCase: IUseCase<boolean, [string, boolean]>,
+    private readonly _editUseCase: IUseCase<ServiceItemResponseDto, [UpdateServiceParams]>, 
+    private readonly _toggleStatusUseCase: IUseCase<void, [string, boolean]>,
     private readonly _logger: ILogger
   ) {}
 

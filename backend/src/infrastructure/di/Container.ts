@@ -1,4 +1,7 @@
 import { S3ImageService } from "../storage/S3ImageService";
+import redis from "../redis/redisClient";
+import { RedisCacheService } from "../services/RedisCacheService";
+import { GoogleAuthService } from "../services/GoogleAuthService";
 
 // --- Zone Module ---
 import { ZoneMongoRepository } from "../database/repositories/ZoneMongoRepository";
@@ -89,6 +92,8 @@ const emailService = new NodemailerEmailService();
 const passwordHasher = new BcryptPasswordHasher();
 const jwtService = new JwtService();
 const logger = new WinstonLogger();
+const cacheService = new RedisCacheService(redis);
+const googleAuthService = new GoogleAuthService(process.env.GOOGLE_CLIENT_ID || "");
 
 // ZONE MODULE WIRING
 const zoneRepo = new ZoneMongoRepository();
@@ -240,12 +245,14 @@ const verRegOtpUseCase = new VerifyCustomerRegistrationOtpUseCase(
   otpSessionRepo,
   passwordHasher,
   jwtService,
+  cacheService,
   logger
 );
 const custLoginUseCase = new CustomerLoginUseCase(
   customerRepo,
   passwordHasher,
   jwtService,
+  cacheService,
   logger
 );
 const reqForgotOtpUseCase = new RequestCustomerForgotPasswordOtpUseCase(
@@ -261,10 +268,11 @@ const verForgotOtpUseCase = new VerifyCustomerForgotPasswordOtpUseCase(
   logger
 );
 const googleLoginUseCase = new CustomerGoogleLoginUseCase(
-  customerRepo,
-  jwtService,
-  process.env.GOOGLE_CLIENT_ID || "",
-  logger
+  customerRepo,        
+  jwtService,          
+  googleAuthService,   
+  cacheService,        
+  logger               
 );
 
 export const customerAuthController = new CustomerAuthController(
@@ -330,6 +338,7 @@ const adminLoginUseCase = new AdminLoginUseCase(
   adminRepo,
   passwordHasher,
   jwtService,
+  cacheService,
   logger
 );
 
@@ -343,6 +352,7 @@ export const adminAuthController = new AdminAuthController(
 const refreshTokenUseCase = new RefreshTokenUseCase(
   jwtService,
   customerRepo,
+  cacheService,
   logger
 );
 

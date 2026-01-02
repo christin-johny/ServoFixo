@@ -1,16 +1,15 @@
 import { Request, Response } from "express";
-import { IUseCase } from "../../../application/interfaces/IUseCase"; // ✅ Import
+import { IUseCase } from "../../../application/interfaces/IUseCase"; 
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
-// Define the interface for the Customer Entity used in updateProfile
 interface ICustomerEntity {
   getId(): string;
   getName(): string;
   getEmail(): string;
-  getPhone(): string;
+  getPhone(): string | undefined;  
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -67,8 +66,7 @@ export class CustomerProfileController {
         return res
           .status(StatusCodes.UNAUTHORIZED)
           .json({ success: false, message: ErrorMessages.UNAUTHORIZED });
-
-      // Only log keys to prevent PII leakage
+ 
       const updatedFields = req.body ? Object.keys(req.body) : [];
       this._logger.info(LogEvents.PROFILE_UPDATE_INIT, { userId, updatedFields });
 

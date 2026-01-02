@@ -4,7 +4,7 @@ import { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
 import { AdminLoginDto } from "../../../../../shared/types/dto/AuthDtos";
 import { AuthResultDto } from "../../dto/auth/AuthResultDto";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import redis from "../../../infrastructure/redis/redisClient";
+import { ICacheService } from "../../interfaces/ICacheService"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
@@ -13,6 +13,7 @@ export class AdminLoginUseCase {
     private readonly _adminRepository: IAdminRepository,
     private readonly _passwordHasher: IPasswordHasher,
     private readonly _jwtService: IJwtService,
+    private readonly _cacheService: ICacheService,  
     private readonly _logger: ILogger
   ) {}
 
@@ -54,13 +55,12 @@ export class AdminLoginUseCase {
       10
     );
 
-    try {
+    try { 
       const redisKey = `refresh:${refreshToken}`;
-      await redis.set(redisKey, String(admin.getId()), "EX", refreshTtlSeconds);
+      await this._cacheService.set(redisKey, String(admin.getId()), refreshTtlSeconds);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-
-      this._logger.error("Redis error during admin login", errorMessage);
+      this._logger.error("Cache error during admin login", errorMessage);
     }
 
     this._logger.info(

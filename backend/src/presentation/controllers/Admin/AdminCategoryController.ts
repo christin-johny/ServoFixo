@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { IUseCase } from "../../../application/interfaces/IUseCase";  
 import { CreateCategoryDto } from "../../../application/dto/category/CreateCategoryDto";
 import { UpdateCategoryDto } from "../../../application/dto/category/UpdateCategoryDto";
+import { CategoryResponseDto } from "../../../application/dto/category/CategoryResponseDto";
+import { PaginatedCategoriesResponse } from "../../../application/use-cases/service-categories/GetAllCategoriesUseCase";
 import { CategoryQueryParams } from "../../../domain/repositories/IServiceCategoryRepository";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
@@ -14,18 +16,14 @@ interface FileData {
   mimeType: string;
 }
 
-interface CategoryPaginatedResult {
-    categories: unknown[];
-    total: number;
-}
-
 export class AdminCategoryController {
   constructor(
-    private readonly _createUseCase: IUseCase<unknown, [CreateCategoryDto, FileData | undefined]>,
-    private readonly _getAllUseCase: IUseCase<CategoryPaginatedResult, [CategoryQueryParams]>,
-    private readonly _editUseCase: IUseCase<unknown, [string, UpdateCategoryDto, FileData | undefined]>,
+    private readonly _createUseCase: IUseCase<CategoryResponseDto, [CreateCategoryDto, FileData | undefined]>,
+    private readonly _getAllUseCase: IUseCase<PaginatedCategoriesResponse, [CategoryQueryParams]>,
+    private readonly _editUseCase: IUseCase<CategoryResponseDto, [string, UpdateCategoryDto, FileData | undefined]>,
     private readonly _deleteUseCase: IUseCase<void, [string]>,
-    private readonly _toggleStatusUseCase: IUseCase<boolean, [string, boolean]>,
+    private readonly _toggleStatusUseCase: IUseCase<void, [string, boolean]>,
+    
     private readonly _logger: ILogger
   ) {}
 

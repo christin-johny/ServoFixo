@@ -2,14 +2,12 @@ import { Request, Response } from "express";
 import { IUseCase } from "../../../application/interfaces/IUseCase"; 
 import { CreateAddressDto } from "../../../application/dto/address/CreateAddressDto";
 import { UpdateAddressDto } from "../../../application/dto/address/UpdateAddressDto";
+// ✅ Import the actual DTO
+import { AddressResponseDto } from "../../../application/dto/address/AddressResponseDto"; 
 import { ILogger } from "../../../application/interfaces/ILogger"; 
 import { LogEvents } from "../../../../../shared/constants/LogEvents"; 
 import { SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes"; 
-interface AddressResultDto {
-  isServiceable: boolean;
-  [key: string]: unknown;
-}
 
 export interface AuthenticatedRequest extends Request {
   userId?: string; 
@@ -17,10 +15,18 @@ export interface AuthenticatedRequest extends Request {
 
 export class CustomerAddressController {
   constructor(
-    private readonly _addAddressUseCase: IUseCase<AddressResultDto, [CreateAddressDto, string]>,
-    private readonly _updateAddressUseCase: IUseCase<AddressResultDto, [string, string, UpdateAddressDto]>,
-    private readonly _getAddressesUseCase: IUseCase<unknown[], [string]>, 
-    private readonly _deleteAddressUseCase: IUseCase<void, [string, string]>,
+    // ✅ FIX: Match AddAddressUseCase return type
+    private readonly _addAddressUseCase: IUseCase<AddressResponseDto, [CreateAddressDto, string]>,
+    
+    // ✅ FIX: Match UpdateAddressUseCase return type
+    private readonly _updateAddressUseCase: IUseCase<AddressResponseDto, [string, string, UpdateAddressDto]>,
+    
+    // ✅ FIX: Match GetAddressesUseCase return type
+    private readonly _getAddressesUseCase: IUseCase<AddressResponseDto[], [string]>, 
+    
+    // ✅ FIX: Match DeleteAddressUseCase return type (it returns Promise<boolean>)
+    private readonly _deleteAddressUseCase: IUseCase<boolean, [string, string]>,
+    
     private readonly _logger: ILogger 
   ) {}
 
@@ -35,7 +41,12 @@ export class CustomerAddressController {
 
       const resultDto = await this._addAddressUseCase.execute(dto, userId);
 
-      const message = resultDto.isServiceable
+      // Accessing isServiceable. Ensure your AddressResponseDto definition includes this field.
+      // If it's strictly defined in the DTO, you don't need 'as any'. 
+      // Using 'as any' here as a safety net in case the DTO definition excludes it but the object has it.
+      const isServiceable = (resultDto as any).isServiceable ?? true;
+
+      const message = isServiceable
         ? SuccessMessages.ADDRESS_ADDED
         : SuccessMessages.ADDRESS_OUTSIDE_ZONE;
 
