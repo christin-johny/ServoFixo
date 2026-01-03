@@ -1,4 +1,4 @@
-import { FilterQuery, HydratedDocument } from "mongoose";
+import { FilterQuery } from "mongoose";
 import {
   ITechnicianRepository,
   TechnicianFilterParams,
@@ -20,7 +20,6 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
 
   async update(technician: Technician): Promise<Technician> {
     const persistenceData = this.toPersistence(technician);
-    // Remove _id from persistence data to avoid immutable field error in Mongo
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { _id, ...updateData } = persistenceData as any;
 
@@ -30,7 +29,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       { new: true }
     ).exec();
 
-    if (!doc) throw new Error("Technician not found");
+    if (!doc) throw new Error("Technician not found for update");
     return this.toDomain(doc);
   }
 
@@ -124,16 +123,27 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     return docs.map((doc) => this.toDomain(doc));
   }
 
-  // --- Mappers ---
+  // --- Internal Mappers ---
 
-  // Converts DB Document -> Domain Entity
   private toDomain(doc: TechnicianDocument): Technician {
-    // ✅ CRITICAL FIX: Safe access to coordinates to prevent "reading '0' of undefined"
+    // Check coordinates existence safely
     const hasCoordinates = 
       doc.currentLocation && 
       doc.currentLocation.coordinates && 
       Array.isArray(doc.currentLocation.coordinates) &&
       doc.currentLocation.coordinates.length >= 2;
+    
+    // Map documents safely
+    const mappedDocuments = Array.isArray(doc.documents) 
+      ? doc.documents.map(d => ({
+          type: d.type,
+          fileUrl: d.fileUrl,
+          fileName: d.fileName,
+          status: d.status,
+          rejectionReason: d.rejectionReason,
+          uploadedAt: d.uploadedAt
+        }))
+      : [];
 
     return new Technician({
       id: doc._id.toString(),
@@ -141,26 +151,32 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       email: doc.email,
       phone: doc.phone,
       password: doc.password,
+      
+      onboardingStep: doc.onboardingStep || 1,
+      experienceSummary: doc.experienceSummary || "",
+      
       avatarUrl: doc.avatarUrl,
       bio: doc.bio,
-      experienceSummary: doc.experienceSummary,
+      
       categoryIds: doc.categoryIds,
       subServiceIds: doc.subServiceIds,
       zoneIds: doc.zoneIds,
-      documents: doc.documents,
+      
+      documents: mappedDocuments,
       bankDetails: doc.bankDetails,
       walletBalance: doc.walletBalance,
       availability: doc.availability,
       ratings: doc.ratings,
+      
       verificationStatus: doc.verificationStatus,
       verificationReason: doc.verificationReason,
       isSuspended: doc.isSuspended,
       suspendReason: doc.suspendReason,
+      
       portfolioUrls: doc.portfolioUrls,
       deviceToken: doc.deviceToken,
       emergencyContact: doc.emergencyContact,
       
-      // Handle optional GeoJSON mapping securely
       currentLocation: hasCoordinates
         ? {
             type: "Point",
@@ -177,27 +193,42 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     });
   }
 
-  // Converts Domain Entity -> DB Persistence Object
   private toPersistence(entity: Technician): Partial<TechnicianDocument> {
     const props = entity.toProps();
     
+    // ✅ Fix: Cast generic string to specific Enum for Documents
+    const persistenceDocuments = props.documents.map((d: any) => ({
+      type: d.type,
+      fileUrl: d.fileUrl,
+      fileName: d.fileName,
+      status: d.status as "PENDING" | "APPROVED" | "REJECTED", // Cast here
+      rejectionReason: d.rejectionReason,
+      uploadedAt: d.uploadedAt || new Date()
+    }));
+
     return {
       name: props.name,
       email: props.email,
       phone: props.phone,
       password: props.password,
+      
+      onboardingStep: props.onboardingStep,
+      experienceSummary: props.experienceSummary,
+      
       avatarUrl: props.avatarUrl,
       bio: props.bio,
-      experienceSummary: props.experienceSummary,
       categoryIds: props.categoryIds,
       subServiceIds: props.subServiceIds,
       zoneIds: props.zoneIds,
-      documents: props.documents,
+      
+      documents: persistenceDocuments, // Use the casted docs
+      
       bankDetails: props.bankDetails,
       walletBalance: props.walletBalance,
       availability: props.availability,
       ratings: props.ratings,
-      verificationStatus: props.verificationStatus,
+      verificationStatus: props.verificationStatus as "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED",
+      
       verificationReason: props.verificationReason,
       isSuspended: props.isSuspended,
       suspendReason: props.suspendReason,
@@ -205,7 +236,6 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       deviceToken: props.deviceToken,
       emergencyContact: props.emergencyContact,
 
-      // Handle optional GeoJSON mapping
       currentLocation: props.currentLocation
         ? {
             type: "Point",
@@ -214,7 +244,6 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
           }
         : undefined,
         
-      // Explicitly allow overriding timestamps if needed, else Mongoose handles it
       createdAt: props.createdAt,
       updatedAt: props.updatedAt,
     };

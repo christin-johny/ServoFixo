@@ -59,6 +59,11 @@ import { VerifyTechnicianRegistrationOtpUseCase } from "../../application/use-ca
 import { TechnicianLoginUseCase } from "../../application/use-cases/technician/auth/TechnicianLoginUseCase";
 import { TechnicianAuthController } from "../../presentation/controllers/Technician/TechnicianAuthController";
 
+// --- Technician Profile Imports ---
+import { TechnicianOnboardingUseCase } from "../../application/use-cases/technician/profile/TechnicianOnboardingUseCase"; // Verify path matches where you saved it
+import { GetTechnicianProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianProfileUseCase";
+import { TechnicianProfileController } from "../../presentation/controllers/Technician/TechnicianProfileController";
+
 // --- Admin Auth---
 import { AdminLoginUseCase } from "../../application/use-cases/auth/AdminLoginUseCase";
 import { AdminAuthController } from "../../presentation/controllers/Admin/AdminAuthController";
@@ -417,5 +422,20 @@ const refreshTokenUseCase = new RefreshTokenUseCase(
 
 export const authTokenController = new AuthTokenController(
   refreshTokenUseCase,
+  logger
+);
+
+const technicianOnboardingUseCase = new TechnicianOnboardingUseCase(
+  technicianRepo, // Already exists in Container
+  logger          // Already exists in Container
+);
+
+const getTechnicianProfileUseCase = new GetTechnicianProfileUseCase(
+  technicianRepo,
+  logger
+);
+// 2. Instantiate & Export Controller
+export const technicianProfileController = new TechnicianProfileController(
+  getTechnicianProfileUseCase,
   logger
 );

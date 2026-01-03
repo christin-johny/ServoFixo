@@ -53,7 +53,7 @@ const Navbar: React.FC = () => {
                     try {
                         const zoneName = await getZoneByLocation(latitude, longitude);
                         dispatch(setCurrentLocation(zoneName));
-                    } catch (err: unknown) {
+                    } catch {
                         dispatch(setCurrentLocation("Location Error"));
                     }
                 },

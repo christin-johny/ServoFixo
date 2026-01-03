@@ -8,7 +8,9 @@ export const TECHNICIAN_AUTH_ENDPOINTS = {
 };
 
 export const TECHNICIAN_PROFILE_ENDPOINTS = {
-  PROFILE: "/technician/profile",
+  PROFILE_BASE: "/technician/profile",
+  
+  GET_STATUS: "/technician/profile/onboarding/status",
   UPDATE_PROFILE: "/technician/profile",
   UPLOAD_DOCUMENT: "/technician/profile/documents",
 };

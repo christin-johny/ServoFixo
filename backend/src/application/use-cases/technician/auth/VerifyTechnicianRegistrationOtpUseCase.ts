@@ -69,6 +69,11 @@ export class VerifyTechnicianRegistrationOtpUseCase {
       subServiceIds: [],
       zoneIds: [],
       documents: [],
+      
+      // Default Onboarding State
+      onboardingStep: 1, 
+      experienceSummary: "",
+
       walletBalance: { currentBalance: 0, frozenAmount: 0, currency: "INR" },
       availability: { isOnline: false },
       ratings: { averageRating: 0, totalReviews: 0 },
@@ -104,7 +109,7 @@ export class VerifyTechnicianRegistrationOtpUseCase {
       );
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      this._logger.error("Failed to cache refresh token", errorMessage);
+      this._logger.error(LogEvents.AUTH_REFRESH_FAILED, errorMessage);
     }
 
     return {

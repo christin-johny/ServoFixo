@@ -8,20 +8,26 @@ export interface TechnicianDocument extends Document {
   password: string;
   avatarUrl?: string;
   bio?: string;
-  experienceSummary?: string;
+  
+  // ✅ Added for Step 1
+  experienceSummary?: string; 
+  // ✅ Added for Resume Logic (Step 1-7)
+  onboardingStep: number; 
 
   // Professional
   categoryIds: string[];
   subServiceIds: string[];
   zoneIds: string[];
 
-  // Complex Objects
+  // ✅ Updated for Step 5 (KYC)
   documents: Array<{
-    name: string;
+    type: string; // e.g., "AADHAAR", "PAN", "DRIVING_LICENSE"
+    fileName: string;
     fileUrl: string;
-    fileType: string;
-    isVerified: boolean;
+    fileType?: string; // MIME type
+    status: "PENDING" | "APPROVED" | "REJECTED";
     rejectionReason?: string;
+    uploadedAt: Date;
   }>;
 
   bankDetails?: {
@@ -50,7 +56,8 @@ export interface TechnicianDocument extends Document {
   };
 
   // Status
-  verificationStatus: VerificationStatus;
+  // ✅ Added VERIFICATION_PENDING for when they finish Step 7
+  verificationStatus: "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
   verificationReason?: string;
   isSuspended: boolean;
   suspendReason?: string;
@@ -91,19 +98,30 @@ const TechnicianSchema: Schema<TechnicianDocument> = new Schema(
     password: { type: String, required: true },
     avatarUrl: { type: String },
     bio: { type: String },
-    experienceSummary: { type: String },
-
+    
+    // ✅ Onboarding Fields
+    experienceSummary: { type: String, default: "" },
+    onboardingStep: { type: Number, default: 1 }, 
+    
+    // Keeping your String ID definition (Change to Schema.Types.ObjectId if using Refs later)
     categoryIds: [{ type: String, index: true }],
     subServiceIds: [{ type: String, index: true }],
     zoneIds: [{ type: String, index: true }],
 
+    // ✅ Updated Document Schema
     documents: [
       {
-        name: String,
-        fileUrl: String,
+        type: { type: String, required: true }, // e.g. "AADHAAR"
+        fileName: String,
+        fileUrl: { type: String, required: true },
         fileType: String,
-        isVerified: { type: Boolean, default: false },
+        status: { 
+          type: String, 
+          enum: ["PENDING", "APPROVED", "REJECTED"], 
+          default: "PENDING" 
+        },
         rejectionReason: String,
+        uploadedAt: { type: Date, default: Date.now }
       },
     ],
 
@@ -140,11 +158,13 @@ const TechnicianSchema: Schema<TechnicianDocument> = new Schema(
 
     verificationStatus: {
       type: String,
-      enum: ["PENDING", "VERIFIED", "REJECTED"],
+      // ✅ Added VERIFICATION_PENDING
+      enum: ["PENDING", "VERIFICATION_PENDING", "VERIFIED", "REJECTED"],
       default: "PENDING",
       index: true,
     },
     verificationReason: String,
+    
     isSuspended: { type: Boolean, default: false },
     suspendReason: String,
 
@@ -165,7 +185,7 @@ const TechnicianSchema: Schema<TechnicianDocument> = new Schema(
       },
       coordinates: {
         type: [Number], // [lng, lat]
-        index: "2dsphere", // ✅ Critical for geospatial queries
+        index: "2dsphere",
       },
       lastUpdated: Date,
     },

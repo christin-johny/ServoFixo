@@ -2,7 +2,7 @@ import { ITechnicianRepository } from "../../../../domain/repositories/ITechnici
 import { IOtpSessionRepository } from "../../../../domain/repositories/IOtpSessionRepository";
 import { IPasswordHasher } from "../../../interfaces/IPasswordHasher";
 import { TechnicianForgotPasswordVerifyDto } from "../../../dto/technician/TechnicianAuthDtos";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages, SuccessMessages } from "../../../../../../shared/types/enums/ErrorMessages";
 import { OtpContext } from "../../../../../../shared/types/enums/OtpContext";
 import { ILogger } from "../../../interfaces/ILogger";
 import { LogEvents } from "../../../../../../shared/constants/LogEvents";
@@ -53,8 +53,6 @@ export class VerifyTechnicianForgotPasswordOtpUseCase {
     const hashedPassword = await this._passwordHasher.hash(newPassword);
 
     // 5. Update Technician Entity
-    // We create a new instance with the updated password, keeping other fields same
-    // (Using the same pattern as Customer toDomain/toPersistence flow)
     const props = technician.toProps();
     
     const updatedTechnician = new Technician({
@@ -68,7 +66,7 @@ export class VerifyTechnicianForgotPasswordOtpUseCase {
     this._logger.info(`${LogEvents.AUTH_PASSWORD_RESET_SUCCESS} - Technician: ${technician.getId()}`);
 
     return {
-      message: "Password reset successful. You can now login.",
+      message: SuccessMessages.PASSWORD_RESET_SUCCESS,
     };
   }
 }

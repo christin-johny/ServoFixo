@@ -9,8 +9,8 @@ import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { 
   TechnicianRegisterInitDto, 
   TechnicianRegisterVerifyDto,
-  TechnicianForgotPasswordInitDto,   // ✅ Added
-  TechnicianForgotPasswordVerifyDto  // ✅ Added
+  TechnicianForgotPasswordInitDto,   
+  TechnicianForgotPasswordVerifyDto  
 } from "../../../application/dto/technician/TechnicianAuthDtos";
 import { TechnicianLoginDto } from "../../../application/use-cases/technician/auth/TechnicianLoginUseCase";
 import { AuthResultDto } from "../../../application/dto/auth/AuthResultDto";
@@ -25,7 +25,6 @@ export class TechnicianAuthController {
     private readonly _requestOtpUseCase: IUseCase<OtpResponse, [TechnicianRegisterInitDto]>,
     private readonly _verifyOtpUseCase: IUseCase<AuthResultDto, [TechnicianRegisterVerifyDto]>,
     private readonly _loginUseCase: IUseCase<AuthResultDto, [TechnicianLoginDto]>,
-    // ✅ Add these two dependencies
     private readonly _requestForgotOtpUseCase: IUseCase<OtpResponse, [TechnicianForgotPasswordInitDto]>,
     private readonly _verifyForgotOtpUseCase: IUseCase<{ message: string }, [TechnicianForgotPasswordVerifyDto]>,
     
@@ -37,7 +36,12 @@ export class TechnicianAuthController {
     try {
       this._logger.info(`${LogEvents.AUTH_REGISTER_INIT} (Technician)`);
       const result = await this._requestOtpUseCase.execute(req.body);
-      return res.status(StatusCodes.OK).json(result);
+      
+      // Note: result.message comes from UseCase, likely "OTP sent..."
+      return res.status(StatusCodes.OK).json({
+        message: SuccessMessages.OTP_SENT,
+        sessionId: result.sessionId
+      });
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       this._logger.error(LogEvents.AUTH_REGISTER_FAILED, errorMessage);
@@ -56,8 +60,10 @@ export class TechnicianAuthController {
     try {
       this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} (Technician)`);
       const result = await this._verifyOtpUseCase.execute(req.body);
+      
       res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       this._logger.info(`${LogEvents.AUTH_REGISTER_SUCCESS} (Technician)`);
+      
       return res.status(StatusCodes.CREATED).json({
         message: SuccessMessages.REGISTRATION_SUCCESS,
         accessToken: result.accessToken,
@@ -80,8 +86,10 @@ export class TechnicianAuthController {
     try {
       this._logger.info(`${LogEvents.AUTH_LOGIN_INIT} (Technician)`);
       const result = await this._loginUseCase.execute(req.body);
+      
       res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       this._logger.info(`${LogEvents.AUTH_LOGIN_SUCCESS} (Technician)`);
+      
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.LOGIN_SUCCESS,
         accessToken: result.accessToken,
@@ -104,7 +112,11 @@ export class TechnicianAuthController {
     try {
       this._logger.info(`${LogEvents.AUTH_FORGOT_PASSWORD_INIT} (Technician)`);
       const result = await this._requestForgotOtpUseCase.execute(req.body);
-      return res.status(StatusCodes.OK).json(result);
+      
+      return res.status(StatusCodes.OK).json({
+          message: SuccessMessages.OTP_SENT,
+          sessionId: result.sessionId
+      });
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       this._logger.error(LogEvents.AUTH_FORGOT_PASS_INIT_FAILED, errorMessage);

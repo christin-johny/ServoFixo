@@ -1,65 +1,69 @@
 import { Technician } from "../../domain/entities/Technician";
-import { CreateTechnicianDto } from "../dto/technician/CreateTechnicianDto";
-import { TechnicianResponseDto } from "../dto/technician/TechnicianResponseDto";
+import { TechnicianResponseDto } from "../../application/dto/technician/TechnicianResponseDto";
+import { VerificationStatus } from "../../../../shared/types/value-objects/TechnicianTypes"; 
 
 export class TechnicianMapper {
 
-  // DTO (Registration) -> Domain Entity
-  static toDomain(
-    dto: CreateTechnicianDto, 
-    id: string = "", 
-    hashedPassword?: string
-  ): Technician {
+  static toDomain(raw: any): Technician {
+    if (!raw) throw new Error("Technician data is null/undefined");
+
+    const documents = Array.isArray(raw.documents) 
+      ? raw.documents.map((d: any) => ({
+          type: d.type,
+          fileUrl: d.fileUrl,
+          fileName: d.fileName,
+          status: d.status,
+          rejectionReason: d.rejectionReason,
+          uploadedAt: d.uploadedAt ? new Date(d.uploadedAt) : new Date()
+        }))
+      : [];
+
     return new Technician({
-      id: id,
-      name: dto.name,
-      email: dto.email, // Validation should happen in UseCase/Middleware
-      phone: dto.phone,
-      password: hashedPassword || dto.password, 
+      id: raw._id ? raw._id.toString() : raw.id,
+      name: raw.name,
+      email: raw.email,
+      phone: raw.phone,
+      password: raw.password,
       
-      // Defaults for new registration
-      avatarUrl: undefined,
-      bio: undefined,
-      experienceSummary: undefined,
+      onboardingStep: raw.onboardingStep || 1,
+      experienceSummary: raw.experienceSummary || "",
+      
+      avatarUrl: raw.avatarUrl,
+      bio: raw.bio,
 
-      categoryIds: [],
-      subServiceIds: [],
-      zoneIds: dto.zoneIds || [], // Allow setting zone if passed, else empty
+      categoryIds: raw.categoryIds ? raw.categoryIds.map((id: any) => id.toString()) : [],
+      subServiceIds: raw.subServiceIds ? raw.subServiceIds.map((id: any) => id.toString()) : [],
+      zoneIds: raw.zoneIds ? raw.zoneIds.map((id: any) => id.toString()) : [],
       
-      documents: [],
-      bankDetails: undefined,
+      documents: documents,
+      bankDetails: raw.bankDetails,
       
-      // ✅ Default Financial State
-      walletBalance: { 
-        currentBalance: 0, 
-        frozenAmount: 0, 
-        currency: "INR" 
-      },
+      walletBalance: raw.walletBalance || { currentBalance: 0, frozenAmount: 0, currency: "INR" },
+      availability: raw.availability || { isOnline: false },
+      ratings: raw.ratings || { averageRating: 0, totalReviews: 0 },
       
-      // ✅ Default Availability State
-      availability: { 
-        isOnline: false 
-      },
+      // ✅ Allow raw string here for Domain, casting happens in toResponse
+      verificationStatus: raw.verificationStatus || 'PENDING',
+      verificationReason: raw.verificationReason,
       
-      // ✅ Default Ratings
-      ratings: { 
-        averageRating: 0, 
-        totalReviews: 0 
-      },
-
-      // ✅ Default Compliance State
-      verificationStatus: 'PENDING',
-      verificationReason: undefined,
-      isSuspended: false,
-      suspendReason: undefined,
-
-      portfolioUrls: [],
-      deviceToken: undefined,
-      currentLocation: undefined,
-      emergencyContact: undefined,
+      isSuspended: !!raw.isSuspended,
+      suspendReason: raw.suspendReason,
       
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      portfolioUrls: raw.portfolioUrls || [],
+      deviceToken: raw.deviceToken,
+      
+      currentLocation: raw.currentLocation && raw.currentLocation.coordinates
+        ? {
+            type: "Point",
+            coordinates: raw.currentLocation.coordinates,
+            lastUpdated: raw.currentLocation.lastUpdated
+          }
+        : undefined,
+        
+      emergencyContact: raw.emergencyContact,
+      
+      createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
+      updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : new Date()
     });
   }
 
@@ -72,6 +76,8 @@ export class TechnicianMapper {
       phone: entity.getPhone(),
       avatarUrl: entity.getAvatarUrl(),
       bio: entity.getBio(),
+      
+      onboardingStep: entity.getOnboardingStep(),
       experienceSummary: entity.getExperienceSummary(),
 
       categoryIds: entity.getCategoryIds(),
@@ -84,7 +90,9 @@ export class TechnicianMapper {
       availability: entity.getAvailability(),
       ratings: entity.getRatings(),
 
-      verificationStatus: entity.getVerificationStatus(),
+      // ✅ FIX: Cast the string to the specific Enum type
+      verificationStatus: entity.getVerificationStatus() as VerificationStatus,
+      
       verificationReason: entity.getVerificationReason(),
       isSuspended: entity.getIsSuspended(),
       suspendReason: entity.getSuspendReason(),

@@ -9,6 +9,8 @@ export const LogEvents = {
   AUTH_REGISTER_INIT: 'Registration Initiated',
   AUTH_REGISTER_SUCCESS: 'Registration Successful',
   AUTH_REGISTER_FAILED: 'Registration Failed',
+  AUTH_REGISTER_FAILED_EMAIL_EXISTS: 'Registration Failed - Email Already Exists',
+  AUTH_REGISTER_FAILED_PHONE_EXISTS: 'Registration Failed - Phone Already Exists',
 
   AUTH_LOGOUT_SUCCESS: 'Logout Successful',
   AUTH_LOGOUT_FAILED: 'Logout Failed', 
@@ -35,6 +37,24 @@ export const LogEvents = {
   AUTH_FORGOT_PASS_VERIFY_FAILED: 'Forgot Password Verification Failed', 
   
   AUTH_PASSWORD_RESET_SUCCESS: 'Password Reset Successful',
+
+  // ==========================
+  // TECHNICIAN ONBOARDING (NEW)
+  // ==========================
+  TECHNICIAN_CREATE_SUCCESS: 'Technician Entity Created Successfully',
+  
+  TECH_ONBOARDING_STEP_1_SUCCESS: 'Technician Step 1 (Personal) Completed',
+  TECH_ONBOARDING_STEP_2_SUCCESS: 'Technician Step 2 (Work Prefs) Completed',
+  TECH_ONBOARDING_STEP_3_SUCCESS: 'Technician Step 3 (Zones) Completed',
+  TECH_ONBOARDING_STEP_4_SUCCESS: 'Technician Step 4 (Rates) Completed',
+  TECH_ONBOARDING_STEP_5_SUCCESS: 'Technician Step 5 (Docs) Completed',
+  TECH_ONBOARDING_STEP_6_SUCCESS: 'Technician Step 6 (Bank) Completed',
+  
+  TECH_DOC_UPLOAD_INIT: 'Technician Document Upload Initiated',
+  TECH_DOC_UPLOAD_SUCCESS: 'Technician Document Upload Successful',
+  TECH_DOC_UPLOAD_FAILED: 'Technician Document Upload Failed',
+  
+  TECH_PROFILE_SUBMITTED: 'Technician Profile Submitted for Verification',
 
   // ==========================
   // CUSTOMER PROFILE MODULE
@@ -184,9 +204,4 @@ export const LogEvents = {
 
   ADMIN_CUSTOMER_ADDRESS_FETCH_INIT: 'Admin: Fetch Customer Addresses Initiated',
   ADMIN_CUSTOMER_ADDRESS_FETCH_FAILED: 'Admin: Fetch Customer Addresses Failed',
-
-  // Technician Specific
-  TECHNICIAN_CREATE_SUCCESS: 'Technician Entity Created Successfully',
-  AUTH_REGISTER_FAILED_EMAIL_EXISTS: 'Registration Failed - Email Already Exists',
-  AUTH_REGISTER_FAILED_PHONE_EXISTS: 'Registration Failed - Phone Already Exists',
 };

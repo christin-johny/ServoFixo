@@ -14,7 +14,6 @@ router.post("/login", technicianAuthController.login.bind(technicianAuthControll
 router.post("/forgot-password/init-otp", technicianAuthController.forgotPasswordInitOtp.bind(technicianAuthController));
 router.post("/forgot-password/verify-otp", technicianAuthController.forgotPasswordVerifyOtp.bind(technicianAuthController));
 
-// Logout
 router.post("/logout", technicianAuthController.logout.bind(technicianAuthController));
 
 export default router;

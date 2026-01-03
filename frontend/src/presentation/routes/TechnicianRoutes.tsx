@@ -1,66 +1,56 @@
 import React, { Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import LoaderFallback from "../components/LoaderFallback";
 import GuestOnlyGuard from "./GuestOnlyGuard";
 import RoleProtectedRoute from "./RoleProtectedRoute";
 
+// Lazy Imports
 const TechLogin = React.lazy(() => import("../pages/Technician/Auth/TechnicianLogin"));
 const TechRegister = React.lazy(() => import("../pages/Technician/Auth/TechnicianRegister"));
 const TechVerifyOtp = React.lazy(() => import("../pages/Technician/Auth/TechnicianVerifyOtp"));
-const TechDashboard = React.lazy(() => import("../pages/Technician/Dashboard/TechnicianDashboard"));
 const TechForgotPassword = React.lazy(() => import("../pages/Technician/Auth/TechnicianForgotPassword"));
+
+// ✅ New Imports for Phase 2
+const TechDashboard = React.lazy(() => import("../pages/Technician/Dashboard/TechnicianDashboard"));
+const TechnicianLayout = React.lazy(() => import("../components/Technician/Layout/TechnicianLayout"));
+
 const TechnicianRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
     <Routes>
 
-      {/* --- Public Auth Routes (Guest Only) --- */}
-      <Route
-        path="login"
-        element={
-          <GuestOnlyGuard>
-            <TechLogin />
-          </GuestOnlyGuard>
-        }
-      />
+      {/* =================================================
+          1. PUBLIC AUTH ROUTES (No Layout, Guest Only)
+      ================================================== */}
+      <Route path="login" element={<GuestOnlyGuard><TechLogin /></GuestOnlyGuard>} />
+      <Route path="register" element={<GuestOnlyGuard><TechRegister /></GuestOnlyGuard>} />
+      <Route path="forgot-password" element={<GuestOnlyGuard><TechForgotPassword /></GuestOnlyGuard>} />
+      <Route path="verify-otp" element={<GuestOnlyGuard><TechVerifyOtp /></GuestOnlyGuard>} />
 
+      {/* =================================================
+          2. PROTECTED APP ROUTES (With Layout)
+      ================================================== */}
       <Route
-        path="register"
-        element={
-          <GuestOnlyGuard>
-            <TechRegister />
-          </GuestOnlyGuard>
-        }
-      />
-      <Route
-        path="forgot-password"
-        element={
-          <GuestOnlyGuard>
-            <TechForgotPassword />
-          </GuestOnlyGuard>
-        }
-      />
-
-      <Route
-        path="verify-otp"
-        element={
-          <GuestOnlyGuard>
-            <TechVerifyOtp />
-          </GuestOnlyGuard>
-        }
-      />
-
-      {/* --- Protected Dashboard --- */}
-      <Route
-        index
+        path="/"
         element={
           <RoleProtectedRoute requiredRole="technician" redirectTo="/technician/login">
-            <TechDashboard />
+            <TechnicianLayout />
           </RoleProtectedRoute>
         }
-      />
+      >
+        {/* Dashboard (Home) */}
+        <Route index element={<TechDashboard />} />
 
-      {/* Catch all redirect to login */}
-      <Route path="*" element={<TechLogin />} />
+        {/* Onboarding Wizard (Next Task) */}
+        <Route path="onboarding" element={<div className="p-8">Onboarding Wizard Loading...</div>} />
+
+        {/* Placeholders for Future Modules */}
+        <Route path="jobs" element={<div className="p-8">Jobs Module (Coming Soon)</div>} />
+        <Route path="wallet" element={<div className="p-8">Wallet Module (Coming Soon)</div>} />
+        <Route path="profile" element={<div className="p-8">Profile Module (Coming Soon)</div>} />
+      </Route>
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/technician/login" replace />} />
 
     </Routes>
   </Suspense>

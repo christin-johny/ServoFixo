@@ -39,6 +39,16 @@ export enum ErrorMessages {
   INVALID_IMAGES = "At least one image is required",
   CATEGORY_ALREADY_EXISTS = "Category with this name already exists",
   INVALID_IS_ACTIVE = "isActive must be a boolean",
+
+  // ✅ TECHNICIAN ONBOARDING ERRORS
+  TECH_INVALID_STEP = "Invalid onboarding step",
+  TECH_MISSING_CATS = "At least one category and service must be selected",
+  TECH_MISSING_ZONES = "At least one operating zone is required",
+  TECH_RATE_DISAGREE = "You must agree to the service rates to proceed",
+  TECH_DOCS_MISSING = "Mandatory documents (Aadhaar/PAN) are missing",
+  TECH_DOC_LIMIT = "Maximum 6 documents allowed",
+  TECH_FILE_TOO_LARGE = "File size exceeds limit (5MB)",
+  TECH_INVALID_FILE_TYPE = "Invalid file type. Only JPG, PNG, PDF allowed",
 }
 
 export enum SuccessMessages {
@@ -67,4 +77,9 @@ export enum SuccessMessages {
   CATEGORY_UPDATED = "Category updated successfully",
   CATEGORY_DELETED = "Category deleted successfully",
   CATEGORY_STATUS_UPDATED = "Category status updated successfully",
+
+  // ✅ TECHNICIAN SUCCESS
+  TECH_STEP_SAVED = "Progress saved successfully",
+  TECH_PROFILE_SUBMITTED = "Profile submitted for verification",
+  TECH_DOC_UPLOADED = "Document uploaded successfully",
 }

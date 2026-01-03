@@ -29,7 +29,7 @@ export class RequestTechnicianForgotPasswordOtpUseCase {
     // 1. Check if Technician exists
     const technician = await this._technicianRepository.findByEmail(normalizedEmail);
     if (!technician) {
-      this._logger.warn(`Forgot Password Failed - Technician Not Found: ${normalizedEmail}`);
+      this._logger.warn(`${LogEvents.AUTH_FORGOT_PASS_INIT_FAILED} - Technician Not Found: ${normalizedEmail}`);
       throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
     }
 

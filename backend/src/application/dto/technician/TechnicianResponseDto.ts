@@ -1,49 +1,76 @@
-import {
-  TechnicianDocument,
-  TechnicianBankDetails,
-  TechnicianLocation,
-  EmergencyContact,
-  TechnicianAvailability,
-  TechnicianRatings,
-  TechnicianWallet,
-  VerificationStatus,
-} from "../../../../../shared/types/value-objects/TechnicianTypes";
+import { VerificationStatus } from "../../../../../shared/types/value-objects/TechnicianTypes";
 
-export class TechnicianResponseDto {
-  id!: string;
-  name!: string;
-  email!: string;
-  phone!: string;
-  // No Password here!
-  
+export interface TechnicianResponseDto {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
   avatarUrl?: string;
   bio?: string;
+  
+  // ✅ New Fields
+  onboardingStep: number;
   experienceSummary?: string;
 
-  // Professional
-  categoryIds!: string[];
-  subServiceIds!: string[];
-  zoneIds!: string[];
+  categoryIds: string[];
+  subServiceIds: string[];
+  zoneIds: string[];
 
-  // Complex Objects
-  documents!: TechnicianDocument[];
-  bankDetails?: TechnicianBankDetails;
-  walletBalance!: TechnicianWallet;
-  availability!: TechnicianAvailability;
-  ratings!: TechnicianRatings;
+  documents: Array<{
+    type: string;
+    fileUrl: string;
+    fileName: string;
+    status: string;
+    rejectionReason?: string;
+    uploadedAt: Date;
+  }>;
 
-  // Status
-  verificationStatus!: VerificationStatus;
+  bankDetails?: {
+    accountHolderName: string;
+    accountNumber: string;
+    bankName: string;
+    ifscCode: string;
+    upiId?: string;
+  };
+
+  walletBalance: {
+    currentBalance: number;
+    frozenAmount: number;
+    currency: string;
+  };
+
+  availability: {
+    isOnline: boolean;
+    lastSeen?: Date;
+    schedule?: Array<{ day: string; startTime: string; endTime: string }>;
+  };
+
+  ratings: {
+    averageRating: number;
+    totalReviews: number;
+  };
+
+  // ✅ Use the Enum here
+  verificationStatus: VerificationStatus;
   verificationReason?: string;
-  isSuspended!: boolean;
+  isSuspended: boolean;
   suspendReason?: string;
 
-  // Extra
-  portfolioUrls!: string[];
+  portfolioUrls: string[];
   deviceToken?: string;
-  currentLocation?: TechnicianLocation;
-  emergencyContact?: EmergencyContact;
+  
+  currentLocation?: {
+    type: "Point";
+    coordinates: number[];
+    lastUpdated: Date;
+  };
 
-  createdAt!: Date;
-  updatedAt!: Date;
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relation: string;
+  };
+
+  createdAt: Date;
+  updatedAt: Date;
 }

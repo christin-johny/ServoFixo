@@ -44,9 +44,16 @@ export class TechnicianLoginUseCase {
       throw new Error(ErrorMessages.ACCOUNT_BLOCKED);
     }
 
+    // ✅ FIX: Handle 'string | undefined' type from getPassword()
+    const storedPassword = technician.getPassword();
+    if (!storedPassword) {
+       this._logger.error("Technician has no password set");
+       throw new Error(ErrorMessages.INVALID_CREDENTIALS);
+    }
+
     const isPasswordValid = await this._passwordHasher.compare(
       password,
-      technician.getPassword()
+      storedPassword
     );
 
     if (!isPasswordValid) {
@@ -77,7 +84,7 @@ export class TechnicianLoginUseCase {
       );
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      this._logger.error("Failed to cache refresh token", errorMessage);
+      this._logger.error(`${LogEvents.AUTH_REFRESH_FAILED} - Cache Error`, errorMessage);
     }
 
     this._logger.info(

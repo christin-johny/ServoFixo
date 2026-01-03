@@ -30,7 +30,8 @@ export function makeTechnicianAuthMiddleware(jwtService: IJwtService) {
         });
       }
 
-      (req as any).user = payload;
+      // ✅ Match Customer Pattern: Use 'userId'
+      (req as any).userId = payload.sub;
 
       return next();
     } catch (err) {

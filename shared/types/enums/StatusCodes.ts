@@ -1,4 +1,3 @@
-
 export enum StatusCodes {
 
   OK = 200,
@@ -11,6 +10,7 @@ export enum StatusCodes {
   FORBIDDEN = 403,
   NOT_FOUND = 404,
   CONFLICT = 409,
+  PAYLOAD_TOO_LARGE = 413, // ✅ Added for File Uploads
   UNPROCESSABLE_ENTITY = 422,
 
   INTERNAL_SERVER_ERROR = 500,
