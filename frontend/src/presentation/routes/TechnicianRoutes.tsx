@@ -13,6 +13,7 @@ const TechForgotPassword = React.lazy(() => import("../pages/Technician/Auth/Tec
 // ✅ New Imports for Phase 2
 const TechDashboard = React.lazy(() => import("../pages/Technician/Dashboard/TechnicianDashboard"));
 const TechnicianLayout = React.lazy(() => import("../components/Technician/Layout/TechnicianLayout"));
+const OnboardingWizard =React.lazy(() => import("../components/Technician/Onboarding/OnboardingWizard"));
 
 const TechnicianRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
@@ -41,7 +42,7 @@ const TechnicianRoutes: React.FC = () => (
         <Route index element={<TechDashboard />} />
 
         {/* Onboarding Wizard (Next Task) */}
-        <Route path="onboarding" element={<div className="p-8">Onboarding Wizard Loading...</div>} />
+        <Route path="onboarding" element={<OnboardingWizard />} />
 
         {/* Placeholders for Future Modules */}
         <Route path="jobs" element={<div className="p-8">Jobs Module (Coming Soon)</div>} />

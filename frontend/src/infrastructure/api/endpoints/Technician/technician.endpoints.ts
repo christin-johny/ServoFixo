@@ -9,8 +9,21 @@ export const TECHNICIAN_AUTH_ENDPOINTS = {
 
 export const TECHNICIAN_PROFILE_ENDPOINTS = {
   PROFILE_BASE: "/technician/profile",
-  
-  GET_STATUS: "/technician/profile/onboarding/status",
+
   UPDATE_PROFILE: "/technician/profile",
-  UPLOAD_DOCUMENT: "/technician/profile/documents",
+
+  // Read Status
+  GET_STATUS: "/technician/profile/onboarding/status",
+
+  // Write Steps (Strictly mapped to Backend)
+  STEP_1_PERSONAL: "/technician/profile/onboarding/step-1",
+  STEP_2_PREFERENCES: "/technician/profile/onboarding/step-2",
+  STEP_3_ZONES: "/technician/profile/onboarding/step-3",
+  STEP_4_RATES: "/technician/profile/onboarding/step-4",
+  STEP_5_DOCUMENTS: "/technician/profile/onboarding/step-5",
+  STEP_6_BANK: "/technician/profile/onboarding/step-6",
+
+  // File Uploads (Two separate endpoints as agreed)
+  UPLOAD_AVATAR: "/technician/profile/onboarding/upload/avatar",
+  UPLOAD_DOCUMENT: "/technician/profile/onboarding/upload/document",
 };

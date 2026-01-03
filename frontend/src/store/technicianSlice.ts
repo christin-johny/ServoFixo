@@ -1,18 +1,52 @@
-import { createSlice,type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 // 1. Define Types matching your Backend DTOs
 export type VerificationStatus = "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
+
+export interface TechnicianDocument {
+  type: string; // ✅ Changed to string as requested (allows custom types)
+  fileUrl: string;
+  fileName: string;
+  status?: "PENDING" | "APPROVED" | "REJECTED"; // Optional for UI display
+  rejectionReason?: string;
+}
+
+export interface BankDetails {
+  accountHolderName: string;
+  accountNumber: string;
+  ifscCode: string;
+  bankName: string;
+}
 
 export interface TechnicianProfile {
   id: string;
   name: string;
   email: string;
   phone: string;
+  
+  // Step 1: Personal
   avatarUrl?: string;
   bio?: string;
   experienceSummary?: string;
+  
+  // State
   onboardingStep: number;
   verificationStatus: VerificationStatus;
+  
+  // Step 2: Work Preferences
+  categoryIds: string[];
+  subServiceIds: string[];
+  
+  // Step 3: Zones
+  zoneIds: string[];
+  
+  // Step 5: Documents
+  documents: TechnicianDocument[];
+  
+  // Step 6: Bank
+  bankDetails?: BankDetails;
+
+  // Dashboard Specifics
   availability: {
     isOnline: boolean;
   };
@@ -67,22 +101,51 @@ const technicianSlice = createSlice({
       state.error = action.payload;
     },
 
-    // --- Onboarding Specific Updates ---
+    // --- Onboarding Specific Updates (Local State Management) ---
+    // Use these to update Redux immediately after a successful API save
+    
     setOnboardingStep(state, action: PayloadAction<number>) {
       if (state.profile) {
         state.profile.onboardingStep = action.payload;
       }
     },
-    updateVerificationStatus(state, action: PayloadAction<VerificationStatus>) {
+
+    updatePersonalDetails(state, action: PayloadAction<{ bio: string; experienceSummary: string; avatarUrl?: string }>) {
       if (state.profile) {
-        state.profile.verificationStatus = action.payload;
+        state.profile.bio = action.payload.bio;
+        state.profile.experienceSummary = action.payload.experienceSummary;
+        if (action.payload.avatarUrl) state.profile.avatarUrl = action.payload.avatarUrl;
       }
     },
 
-    // --- Profile Updates (Partial) ---
-    updateTechnicianProfile(state, action: PayloadAction<Partial<TechnicianProfile>>) {
+    updateWorkPreferences(state, action: PayloadAction<{ categoryIds: string[]; subServiceIds: string[] }>) {
       if (state.profile) {
-        state.profile = { ...state.profile, ...action.payload };
+        state.profile.categoryIds = action.payload.categoryIds;
+        state.profile.subServiceIds = action.payload.subServiceIds;
+      }
+    },
+
+    updateZones(state, action: PayloadAction<string[]>) {
+      if (state.profile) {
+        state.profile.zoneIds = action.payload;
+      }
+    },
+
+    updateDocuments(state, action: PayloadAction<TechnicianDocument[]>) {
+      if (state.profile) {
+        state.profile.documents = action.payload;
+      }
+    },
+
+    updateBankDetails(state, action: PayloadAction<BankDetails>) {
+      if (state.profile) {
+        state.profile.bankDetails = action.payload;
+      }
+    },
+
+    updateVerificationStatus(state, action: PayloadAction<VerificationStatus>) {
+      if (state.profile) {
+        state.profile.verificationStatus = action.payload;
       }
     },
 
@@ -105,8 +168,12 @@ export const {
   fetchTechnicianSuccess,
   fetchTechnicianFailure,
   setOnboardingStep,
+  updatePersonalDetails,
+  updateWorkPreferences,
+  updateZones,
+  updateDocuments,
+  updateBankDetails,
   updateVerificationStatus,
-  updateTechnicianProfile,
   setAvailability,
   clearTechnicianData
 } = technicianSlice.actions;

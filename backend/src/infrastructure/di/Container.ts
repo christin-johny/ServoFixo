@@ -63,7 +63,7 @@ import { TechnicianAuthController } from "../../presentation/controllers/Technic
 import { TechnicianOnboardingUseCase } from "../../application/use-cases/technician/profile/TechnicianOnboardingUseCase"; // Verify path matches where you saved it
 import { GetTechnicianProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianProfileUseCase";
 import { TechnicianProfileController } from "../../presentation/controllers/Technician/TechnicianProfileController";
-
+import { UploadTechnicianFileUseCase } from "../../application/use-cases/technician/profile/UploadTechnicianFileUseCase";
 // --- Admin Auth---
 import { AdminLoginUseCase } from "../../application/use-cases/auth/AdminLoginUseCase";
 import { AdminAuthController } from "../../presentation/controllers/Admin/AdminAuthController";
@@ -434,8 +434,14 @@ const getTechnicianProfileUseCase = new GetTechnicianProfileUseCase(
   technicianRepo,
   logger
 );
+const uploadTechnicianFileUseCase = new UploadTechnicianFileUseCase(
+  imageService, // This relies on 'const imageService = new S3ImageService();' defined earlier in the file
+  logger
+);
 // 2. Instantiate & Export Controller
 export const technicianProfileController = new TechnicianProfileController(
-  getTechnicianProfileUseCase,
+  technicianOnboardingUseCase, // For Saving (Steps 1-6)
+  getTechnicianProfileUseCase, // For Fetching Status
+  uploadTechnicianFileUseCase,
   logger
 );
