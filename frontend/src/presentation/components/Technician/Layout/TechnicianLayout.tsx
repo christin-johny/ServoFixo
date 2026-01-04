@@ -88,7 +88,6 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ onLogoutClick }) => {
   const location = useLocation();
   const authUser = useSelector((state: RootState) => state.auth.user);
   const techProfile = useSelector((state: RootState) => state.technician.profile);
-  console.log(techProfile)
 
   const isActive = (path: string) => {
     if (path === "/technician" && location.pathname !== "/technician") return false;

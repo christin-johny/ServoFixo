@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, Loader2 } from "lucide-react";
-import type { RootState} from "../../../../store/store";
+import type { RootState, AppDispatch } from "../../../../store/store";
 
 // Import Steps
 import Step1_Personal from "./Steps/Step1_Personal";
-// import Step2_WorkPreferences from "./Steps/Step2_WorkPreferences"; 
+import Step2_WorkPreferences from "./Steps/Step2_WorkPreferences";
 // import Step3_Zones from "./Steps/Step3_Zones";
 // import Step4_Rates from "./Steps/Step4_Rates";
 // import Step5_Documents from "./Steps/Step5_Documents";
@@ -23,23 +23,30 @@ const STEPS = [
 
 const OnboardingWizard: React.FC = () => {
   const navigate = useNavigate();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const dispatch = useDispatch<AppDispatch>();
   const { profile, loading } = useSelector((state: RootState) => state.technician);
   
+  // ✅ FIX: Lazy Initialization
+  // This function runs ONLY once when the component mounts.
+  // It grabs the correct step from Redux immediately, so we don't need a useEffect to "sync" it.
   const [currentStep, setCurrentStep] = useState<number>(() => {
-    return profile?.onboardingStep && profile.onboardingStep <= 6 
-      ? profile.onboardingStep 
-      : 1;
+    if (profile?.onboardingStep) {
+      // If step is valid (1-6), use it. If completed (7), default to 1 (handled by redirect below)
+      return profile.onboardingStep <= 6 ? profile.onboardingStep : 1;
+    }
+    return 1;
   });
 
-  // ✅ FIX 2: Removed the 'setCurrentStep' call that caused the error.
-  // We only use this effect to redirect if the user is already fully verified.
+  // ✅ FIX: Effect is now ONLY for Redirects
+  // No setState calls here, so the lint error is gone.
   useEffect(() => {
     if (profile?.onboardingStep && profile.onboardingStep > 6) {
       navigate("/technician");
     }
   }, [profile?.onboardingStep, navigate]);
 
-  // Loading Check: Ensures hooks above run safely before rendering UI
+  // Loading Guard
   if (loading || !profile) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
@@ -52,7 +59,7 @@ const OnboardingWizard: React.FC = () => {
   const renderStepContent = () => {
     switch (currentStep) {
       case 1: return <Step1_Personal onNext={() => setCurrentStep(2)} />;
-      // case 2: return <Step2_WorkPreferences onNext={() => setCurrentStep(3)} onBack={() => setCurrentStep(1)} />;
+      case 2: return <Step2_WorkPreferences onNext={() => setCurrentStep(3)} onBack={() => setCurrentStep(1)} />;
       // case 3: return <Step3_Zones onNext={() => setCurrentStep(4)} onBack={() => setCurrentStep(2)} />;
       // case 4: return <Step4_Rates onNext={() => setCurrentStep(5)} onBack={() => setCurrentStep(3)} />;
       // case 5: return <Step5_Documents onNext={() => setCurrentStep(6)} onBack={() => setCurrentStep(4)} />;

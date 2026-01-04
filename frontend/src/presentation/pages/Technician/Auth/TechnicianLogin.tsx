@@ -168,7 +168,7 @@ const TechnicianLogin: React.FC = () => {
           </div>
 
           {/* RIGHT: Illustration */}
-          <div className="hidden md:block md:w-1/2 bg-[url('/assets/loginpic.png')] bg-cover bg-center" />
+          <div className="hidden md:block md:w-1/2 bg-[url('/assets/techLogin.png')] bg-cover bg-center" />
         </div>
       </div>
     </div>

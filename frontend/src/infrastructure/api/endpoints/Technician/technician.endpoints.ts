@@ -11,6 +11,8 @@ export const TECHNICIAN_PROFILE_ENDPOINTS = {
   PROFILE_BASE: "/technician/profile",
 
   UPDATE_PROFILE: "/technician/profile",
+  GET_CATEGORIES: "/customer/categories", 
+  GET_SERVICES: "/customer/services",
 
   // Read Status
   GET_STATUS: "/technician/profile/onboarding/status",

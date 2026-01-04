@@ -39,6 +39,17 @@ export interface Step6Data {
     bankName: string;
   };
 }
+export interface CategoryOption {
+  iconUrl: string | undefined;
+  id: string; // MongoDB ID
+  name: string;
+}
+
+export interface ServiceOption {
+  id: string;
+  name: string;
+  categoryId: string;
+}
 
 export const technicianOnboardingRepository = {
   // --- Step Updates ---
@@ -94,5 +105,22 @@ export const technicianOnboardingRepository = {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return res.data;
+  },
+
+  getCategories: async (): Promise<CategoryOption[]> => {
+    // Hits /customer/categories
+    const res = await api.get(TECHNICIAN_PROFILE_ENDPOINTS.GET_CATEGORIES);
+    // CustomerCategoryController returns { success: true, data: [...] }
+    return res.data.data; 
+  },
+
+  getServicesByCategory: async (categoryId: string): Promise<ServiceOption[]> => {
+    // Hits /customer/services?categoryId=...
+    const res = await api.get(TECHNICIAN_PROFILE_ENDPOINTS.GET_SERVICES, {
+      params: { categoryId }
+    });
+    // CustomerServiceController returns { success: true, count: ..., data: [...] }
+    return res.data.data;
   }
 };
+
