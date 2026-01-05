@@ -10,6 +10,8 @@ import Zones from "../pages/Admin/Zones/Zones";
 import Services from "../pages/Admin/Services/Services";
 import Customers from "../pages/Admin/Customers/AdminCustomersPage";
 import AdminCustomerProfilePage from "../pages/Admin/Customers/AdminCustomerProfilePage";
+import TechnicianVerificationQueue from "../pages/Admin/Technicians/TechnicianVerificationQueue";
+import TechnicianVerificationDetails from "../pages/Admin/Technicians/TechnicianVerificationDetails";
 
 const AdminRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
@@ -42,6 +44,10 @@ const AdminRoutes: React.FC = () => (
           <Route index element={<Customers />} />
           <Route path=":customerId" element={<AdminCustomerProfilePage />} />
         </Route>
+        <Route path="technicians">
+  <Route path="verification" element={<TechnicianVerificationQueue />} />
+  <Route path="verification/:id" element={<TechnicianVerificationDetails/>} />
+</Route>
 
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Route>

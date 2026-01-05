@@ -7,7 +7,7 @@ export interface TechnicianResponseDto {
   phone: string;
   avatarUrl?: string;
   bio?: string;
-  
+
   // ✅ New Fields
   onboardingStep: number;
   experienceSummary?: string;
@@ -55,10 +55,10 @@ export interface TechnicianResponseDto {
   verificationReason?: string;
   isSuspended: boolean;
   suspendReason?: string;
-
+  isDeleted?: boolean;
   portfolioUrls: string[];
   deviceToken?: string;
-  
+
   currentLocation?: {
     type: "Point";
     coordinates: number[];

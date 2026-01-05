@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle, X, CheckCircle, Info } from 'lucide-react';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -11,6 +10,9 @@ interface ConfirmModalProps {
   confirmText?: string;
   cancelText?: string;
   isLoading?: boolean;
+  // ✅ New Props
+  customContent?: React.ReactNode; 
+  variant?: "danger" | "success" | "info"; 
 }
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -19,11 +21,43 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onConfirm,
   title,
   message,
-  confirmText = "Delete",
+  confirmText = "Confirm",
   cancelText = "Cancel",
   isLoading = false,
+  customContent,
+  variant = "danger", // Default to Red
 }) => {
   if (!isOpen) return null;
+
+  // Dynamic Styles based on Variant
+  const getVariantStyles = () => {
+    switch (variant) {
+      case "success":
+        return {
+          iconBg: "bg-green-50",
+          iconColor: "text-green-600",
+          btnBg: "bg-green-600 hover:bg-green-700 focus:ring-green-500",
+          Icon: CheckCircle
+        };
+      case "info":
+        return {
+          iconBg: "bg-blue-50",
+          iconColor: "text-blue-600",
+          btnBg: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500",
+          Icon: Info
+        };
+      case "danger":
+      default:
+        return {
+          iconBg: "bg-red-50",
+          iconColor: "text-red-600",
+          btnBg: "bg-red-600 hover:bg-red-700 focus:ring-red-500",
+          Icon: AlertTriangle
+        };
+    }
+  };
+
+  const { iconBg, iconColor, btnBg, Icon } = getVariantStyles();
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -34,8 +68,8 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
       >
         <div className="p-8">
           <div className="flex items-start justify-between">
-            <div className="p-3 bg-red-50 rounded-full">
-              <AlertTriangle className="w-8 h-8 text-red-600" />
+            <div className={`p-3 rounded-full ${iconBg}`}>
+              <Icon className={`w-8 h-8 ${iconColor}`} />
             </div>
             <button 
               onClick={onClose}
@@ -52,6 +86,13 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
             <p className="text-lg text-gray-600 mt-3 leading-relaxed">
               {message}
             </p>
+            
+            {/* ✅ Render Custom Content (Rejection Reason Box) */}
+            {customContent && (
+              <div className="mt-4 animate-in fade-in slide-in-from-top-2">
+                {customContent}
+              </div>
+            )}
           </div>
         </div>
 
@@ -66,7 +107,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className="px-6 py-3 text-base font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-all flex items-center gap-2 shadow-sm"
+            className={`px-6 py-3 text-base font-medium text-white rounded-lg focus:ring-2 focus:ring-offset-1 transition-all flex items-center gap-2 shadow-sm ${btnBg}`}
           >
             {isLoading && <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
             {confirmText}
