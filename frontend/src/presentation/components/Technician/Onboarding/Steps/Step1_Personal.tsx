@@ -117,6 +117,7 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext }) => {
             type="file" 
             ref={fileInputRef} 
             className="hidden" 
+            capture="environment"
             accept="image/*"
             onChange={handleFileChange}
           />
