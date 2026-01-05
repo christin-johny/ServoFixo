@@ -8,6 +8,7 @@ import adminZonesRoutes from "./zones.routes";
 import adminCategoryRoutes from "./categories.routes";
 import serviceItemRoutes from './services.routes';
 import adminCustomerRoutes from './customer.routes'
+import adminTechnicianRoutes from "./technician.routes";
 const router = Router();
 
 const jwtService = new JwtService();
@@ -27,4 +28,5 @@ router.use("/zones",adminAuth, adminZonesRoutes);
 router.use("/categories",adminAuth, adminCategoryRoutes);
 router.use('/services', adminAuth, serviceItemRoutes);
 router.use('/customers', adminAuth, adminCustomerRoutes);
+router.use("/technicians", adminAuth, adminTechnicianRoutes);
 export default router;

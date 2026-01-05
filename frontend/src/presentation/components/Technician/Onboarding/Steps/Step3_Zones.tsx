@@ -5,7 +5,7 @@ import type { AppDispatch, RootState } from "../../../../../store/store";
 import { technicianOnboardingRepository, type ZoneOption } from "../../../../../infrastructure/repositories/technician/technicianOnboardingRepository";
 import { updateZones, setOnboardingStep } from "../../../../../store/technicianSlice"; 
 import { useNotification } from "../../../../hooks/useNotification";
-import TechnicianZoneSelectMap from "../Maps/TechnicianZoneSelectMap";
+import TechnicianZoneSelectMap from "../maps/TechnicianZoneSelectMap";
 
 interface Step3Props {
   onNext: () => void;

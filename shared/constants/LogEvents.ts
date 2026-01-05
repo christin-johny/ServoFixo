@@ -212,4 +212,8 @@ export const LogEvents = {
 
   ADMIN_CUSTOMER_ADDRESS_FETCH_INIT: 'Admin: Fetch Customer Addresses Initiated',
   ADMIN_CUSTOMER_ADDRESS_FETCH_FAILED: 'Admin: Fetch Customer Addresses Failed',
+
+  // --- ADMIN: TECHNICIANS ---
+  ADMIN_GET_TECH_QUEUE_INIT: "ADMIN_GET_TECH_QUEUE_INIT",
+  ADMIN_GET_TECH_QUEUE_FAILED: "ADMIN_GET_TECH_QUEUE_FAILED",
 };

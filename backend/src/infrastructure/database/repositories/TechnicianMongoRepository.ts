@@ -3,6 +3,7 @@ import {
   ITechnicianRepository,
   TechnicianFilterParams,
   PaginatedTechnicianResult,
+  VerificationQueueFilters
 } from "../../../domain/repositories/ITechnicianRepository";
 import { Technician } from "../../../domain/entities/Technician";
 import {
@@ -121,6 +122,34 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
 
     const docs = await TechnicianModel.find(query).limit(limit).exec();
     return docs.map((doc) => this.toDomain(doc));
+  }
+async findPendingVerification(filters: VerificationQueueFilters): Promise<{ technicians: Technician[], total: number }> {
+    const skip = (filters.page - 1) * filters.limit;
+    
+    // Base Query
+    const query: any = { verificationStatus: "VERIFICATION_PENDING" };
+
+    if (filters.search) {
+      query.$or = [
+        { name: { $regex: filters.search, $options: "i" } },
+        { email: { $regex: filters.search, $options: "i" } },
+        { phone: { $regex: filters.search, $options: "i" } }
+      ];
+    }
+
+    const [docs, total] = await Promise.all([
+      TechnicianModel.find(query)  // ❌ Removed 'this._model' -> Changed to 'TechnicianModel'
+        .sort({ updatedAt: 1 })
+        .skip(skip)
+        .limit(filters.limit)
+        .exec(), // ❌ Removed '.lean()' to ensure compatibility with toDomain
+      TechnicianModel.countDocuments(query) // ❌ Changed to 'TechnicianModel'
+    ]);
+
+    return {
+      technicians: docs.map(d => this.toDomain(d)), // ❌ Changed 'TechnicianMapper.toDomain' to 'this.toDomain'
+      total
+    };
   }
 
   // --- Internal Mappers ---
@@ -248,4 +277,5 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       updatedAt: props.updatedAt,
     };
   }
+  
 }

@@ -9,6 +9,7 @@ import { ZoneQueryParams } from '../../../domain/repositories/IZoneRepository';
 import { PaginatedZonesResponse } from '../../../application/use-cases/zones/GetAllZonesUseCase';
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
 import { RateCardItem } from '../../../application/use-cases/technician/profile/GetTechnicianRateCardUseCase';
+import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 
 interface ServiceFilters {
   searchTerm: string;
@@ -83,7 +84,7 @@ export class TechnicianDataController {
       const technicianId = authReq.userId;
 
       if (!technicianId) {
-         return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, message: "Unauthorized" });
+         return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, message: ErrorMessages.UNAUTHORIZED });
       }
 
       const rateCard = await this._getRateCardUseCase.execute(technicianId);

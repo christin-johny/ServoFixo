@@ -16,6 +16,11 @@ export interface PaginatedTechnicianResult {
   page: number;
   limit: number;
 }
+export interface VerificationQueueFilters {
+  page: number;
+  limit: number;
+  search?: string;
+}
 
 export interface ITechnicianRepository extends IBaseRepository<Technician> {
   // create(technician: Technician): Promise<Technician>;
@@ -40,4 +45,6 @@ export interface ITechnicianRepository extends IBaseRepository<Technician> {
     subServiceId: string,
     limit?: number
   ): Promise<Technician[]>;
+
+  findPendingVerification(filters: VerificationQueueFilters): Promise<{ technicians: Technician[], total: number }>;
 }

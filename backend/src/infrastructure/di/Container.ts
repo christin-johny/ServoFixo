@@ -66,6 +66,10 @@ import { TechnicianOnboardingUseCase } from "../../application/use-cases/technic
 import { GetTechnicianProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianProfileUseCase";
 import { TechnicianProfileController } from "../../presentation/controllers/Technician/TechnicianProfileController";
 import { UploadTechnicianFileUseCase } from "../../application/use-cases/technician/profile/UploadTechnicianFileUseCase";
+import { GetVerificationQueueUseCase } from "../../application/use-cases/technician/profile/GetVerificationQueueUseCase";
+import { AdminTechnicianController } from "../../presentation/controllers/Admin/AdminTechnicianController";
+import { GetTechnicianFullProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianFullProfileUseCase"; 
+import { VerifyTechnicianUseCase } from "../../application/use-cases/technician/profile/VerifyTechnicianUseCase"; 
 // --- Admin Auth---
 import { AdminLoginUseCase } from "../../application/use-cases/auth/AdminLoginUseCase";
 import { AdminAuthController } from "../../presentation/controllers/Admin/AdminAuthController";
@@ -467,5 +471,17 @@ export const technicianDataController = new TechnicianDataController(
   getServiceListingUseCase,
   getAllZonesUseCase,
   getTechnicianRateCardUseCase, 
+  logger
+);
+
+const getVerificationQueueUseCase = new GetVerificationQueueUseCase(technicianRepo, logger);
+
+const getTechnicianFullProfileUseCase = new GetTechnicianFullProfileUseCase(technicianRepo, logger);
+
+const verifyTechnicianUseCase = new VerifyTechnicianUseCase(technicianRepo, logger);
+export const adminTechnicianController = new AdminTechnicianController(
+  getVerificationQueueUseCase,
+  getTechnicianFullProfileUseCase,
+  verifyTechnicianUseCase,
   logger
 );

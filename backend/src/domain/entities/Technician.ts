@@ -202,6 +202,13 @@ export class Technician {
   public setVerificationStatus(status: string): void {
     this._verificationStatus = status;
   }
+  public updateVerificationStatus(status: string, reason?: string): void {
+    this._verificationStatus = status;
+    if (reason) {
+      this._verificationReason = reason;
+    }
+    this._updatedAt = new Date(); 
+  }
 
   public updateProfile(data: {
     bio: string;
