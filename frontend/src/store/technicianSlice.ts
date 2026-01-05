@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 // 1. Define Types matching your Backend DTOs
-export type VerificationStatus = "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
+export type VerificationStatus = "PENDING"  | "VERIFICATION_PENDING"| "VERIFIED" | "REJECTED";
 
 export interface TechnicianDocument {
   type: string;

@@ -1,4 +1,5 @@
 import api from "../../api/axiosClient";
+import axios from 'axios'
 import { TECHNICIAN_PROFILE_ENDPOINTS } from "../../api/endpoints/Technician/technician.endpoints";
 
 // --- DTO Interfaces (Mirroring Backend DTOs) ---
@@ -64,6 +65,12 @@ export interface RateCardItem {
   technicianShare: number;
   commissionPercentage: number;
 }
+export interface IfscResponse {
+  BANK: string;
+  BRANCH: string;
+  CITY: string;
+  STATE: string;
+}
 
 export const technicianOnboardingRepository = {
   // --- Step Updates ---
@@ -81,7 +88,7 @@ export const technicianOnboardingRepository = {
       data
     );
     return res.data;
-  },
+  }, 
 
   updateStep3: async (data: { zoneIds: string[] }) => {
     const res = await api.patch(
@@ -164,5 +171,11 @@ updateStep4: async (data: { agreedToRates: boolean }) => {
     // Matches the route: router.get("/rate-card", ...)
     const res = await api.get(TECHNICIAN_PROFILE_ENDPOINTS.GET_RATE_CARD);
     return res.data.data;
+  },
+  fetchBankDetailsByIfsc: async (ifscCode: string): Promise<IfscResponse> => {
+    // We use a direct axios call because this is an external public URL, 
+    // not our internal backend API.
+    const res = await axios.get(`https://ifsc.razorpay.com/${ifscCode}`);
+    return res.data;
   },
 };

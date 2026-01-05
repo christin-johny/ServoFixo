@@ -10,7 +10,7 @@ import Step2_WorkPreferences from "./Steps/Step2_WorkPreferences";
 import Step3_Zones from "./Steps/Step3_Zones";
 import Step4_Rates from "./Steps/Step4_Rates";
 import Step5_Documents from "./Steps/Step5_Documents";
-// import Step6_Bank from "./Steps/Step6_Bank";
+import Step6_Bank from "./Steps/Step6_BankDetails";
 
 const STEPS = [
   { number: 1, title: "Personal Details" },
@@ -63,7 +63,7 @@ const OnboardingWizard: React.FC = () => {
       case 3: return <Step3_Zones onNext={() => setCurrentStep(4)} onBack={() => setCurrentStep(2)} />;
       case 4: return <Step4_Rates onNext={() => setCurrentStep(5)} onBack={() => setCurrentStep(3)} />;
       case 5: return <Step5_Documents onNext={() => setCurrentStep(6)} onBack={() => setCurrentStep(4)} />;
-      // case 6: return <Step6_Bank onNext={() => setCurrentStep(7)} onBack={() => setCurrentStep(5)} />;
+      case 6: return <Step6_Bank onNext={() => setCurrentStep(7)} onBack={() => setCurrentStep(5)} />;
       default: return <Step1_Personal onNext={() => setCurrentStep(2)} />;
     }
   };

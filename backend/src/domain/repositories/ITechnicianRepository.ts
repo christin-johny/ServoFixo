@@ -3,7 +3,7 @@ import { IBaseRepository } from "./IBaseRepository";
 
 export interface TechnicianFilterParams {
   search?: string;
-  status?: "PENDING" | "VERIFIED" | "REJECTED";
+  status?: "PENDING"|"VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
   zoneId?: string;
   categoryId?: string;
   isOnline?: boolean;

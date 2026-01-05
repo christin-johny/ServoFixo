@@ -45,4 +45,4 @@ export interface TechnicianWallet {
   currency: string;
 }
 
-export type VerificationStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
+export type VerificationStatus = 'PENDING' | "VERIFICATION_PENDING" | 'VERIFIED' | 'REJECTED';

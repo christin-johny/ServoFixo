@@ -21,7 +21,7 @@ export interface TechnicianDocument extends Document {
     fileName: string;
     fileUrl: string;
     fileType?: string; 
-    status: "PENDING" | "APPROVED" | "REJECTED";
+    status: "PENDING" | "APPROVED" | "VERIFICATION_PENDING" | "REJECTED";
     rejectionReason?: string;
     uploadedAt: Date;
   }>;
@@ -51,7 +51,7 @@ export interface TechnicianDocument extends Document {
     totalReviews: number;
   };
 
-  verificationStatus: "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
+  verificationStatus: "PENDING"   | "VERIFICATION_PENDING" |"VERIFIED" | "REJECTED";
   verificationReason?: string;
   isSuspended: boolean;
   suspendReason?: string;
@@ -106,7 +106,7 @@ const TechnicianSchema: Schema<TechnicianDocument> = new Schema(
         fileType: String,
         status: { 
           type: String, 
-          enum: ["PENDING", "APPROVED", "REJECTED"], 
+          enum: ["PENDING","VERIFICATION_PENDING", "APPROVED", "REJECTED"], 
           default: "PENDING" 
         },
         rejectionReason: String,
@@ -147,7 +147,7 @@ const TechnicianSchema: Schema<TechnicianDocument> = new Schema(
 
     verificationStatus: {
       type: String,
-      enum: ["PENDING", "VERIFICATION_PENDING", "VERIFIED", "REJECTED"],
+      enum: ["PENDING","VERIFICATION_PENDING", "VERIFIED", "REJECTED"],
       default: "PENDING",
       index: true,
     },

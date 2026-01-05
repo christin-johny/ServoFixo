@@ -5,7 +5,7 @@ import { TECHNICIAN_PROFILE_ENDPOINTS } from "../../api/endpoints/Technician/tec
 export interface TechnicianProfileStatusDto {
   id: string;
   onboardingStep: number;
-  verificationStatus: "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
+  verificationStatus: "PENDING"  | "VERIFICATION_PENDING"|"VERIFIED" | "REJECTED";
   availability: {
     isOnline: boolean;
   };

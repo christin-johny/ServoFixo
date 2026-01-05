@@ -201,7 +201,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       type: d.type,
       fileUrl: d.fileUrl,
       fileName: d.fileName,
-      status: d.status as "PENDING" | "APPROVED" | "REJECTED", // Cast here
+      status: d.status as "PENDING" | "VERIFICATION_PENDING" |  "APPROVED" | "REJECTED", // Cast here
       rejectionReason: d.rejectionReason,
       uploadedAt: d.uploadedAt || new Date()
     }));
@@ -227,7 +227,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       walletBalance: props.walletBalance,
       availability: props.availability,
       ratings: props.ratings,
-      verificationStatus: props.verificationStatus as "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED",
+      verificationStatus: props.verificationStatus as "PENDING"  | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED",
       
       verificationReason: props.verificationReason,
       isSuspended: props.isSuspended,
