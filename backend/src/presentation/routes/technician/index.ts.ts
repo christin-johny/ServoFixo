@@ -5,6 +5,7 @@ import { makeTechnicianAuthMiddleware } from "../../middlewares/technicianAuth.m
 
 import authRoutes from "./auth.routes";
 import profileRoutes from'./profile.routes';
+import dataRoutes from'./data.routes';
 const router = Router();
 
 const jwtService = new JwtService();
@@ -14,6 +15,8 @@ const technicianAuth = makeTechnicianAuthMiddleware(jwtService);
 router.use("/auth", authRoutes);
 
 router.use("/profile", technicianAuth, profileRoutes);
+
+router.use("/data", technicianAuth, dataRoutes);
 
 // Protected Routes (To be added as we build them)
 // router.use("/profile", technicianAuth, profileRoutes);

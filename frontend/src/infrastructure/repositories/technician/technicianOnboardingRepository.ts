@@ -50,31 +50,57 @@ export interface ServiceOption {
   name: string;
   categoryId: string;
 }
+export interface ZoneOption {
+  id: string;
+  name: string;
+  isActive: boolean;
+  boundaries: { lat: number; lng: number }[];
+}
+export interface RateCardItem {
+  serviceId: string;
+  name: string;
+  basePrice: number;
+  platformFee: number;
+  technicianShare: number;
+  commissionPercentage: number;
+}
 
 export const technicianOnboardingRepository = {
   // --- Step Updates ---
   updateStep1: async (data: Step1Data) => {
-    const res = await api.patch(TECHNICIAN_PROFILE_ENDPOINTS.STEP_1_PERSONAL, data);
+    const res = await api.patch(
+      TECHNICIAN_PROFILE_ENDPOINTS.STEP_1_PERSONAL,
+      data
+    );
     return res.data;
   },
 
   updateStep2: async (data: Step2Data) => {
-    const res = await api.patch(TECHNICIAN_PROFILE_ENDPOINTS.STEP_2_PREFERENCES, data);
+    const res = await api.patch(
+      TECHNICIAN_PROFILE_ENDPOINTS.STEP_2_PREFERENCES,
+      data
+    );
     return res.data;
   },
 
-  updateStep3: async (data: Step3Data) => {
-    const res = await api.patch(TECHNICIAN_PROFILE_ENDPOINTS.STEP_3_ZONES, data);
+  updateStep3: async (data: { zoneIds: string[] }) => {
+    const res = await api.patch(
+      TECHNICIAN_PROFILE_ENDPOINTS.STEP_3_ZONES,
+      data
+    );
     return res.data;
   },
 
-  updateStep4: async (data: Step4Data) => {
+updateStep4: async (data: { agreedToRates: boolean }) => {
     const res = await api.patch(TECHNICIAN_PROFILE_ENDPOINTS.STEP_4_RATES, data);
     return res.data;
   },
 
   updateStep5: async (data: Step5Data) => {
-    const res = await api.patch(TECHNICIAN_PROFILE_ENDPOINTS.STEP_5_DOCUMENTS, data);
+    const res = await api.patch(
+      TECHNICIAN_PROFILE_ENDPOINTS.STEP_5_DOCUMENTS,
+      data
+    );
     return res.data;
   },
 
@@ -84,15 +110,19 @@ export const technicianOnboardingRepository = {
   },
 
   // --- File Upload Helpers ---
-  
+
   // 1. Avatar Upload (Returns { url: string })
   uploadAvatar: async (file: File) => {
     const formData = new FormData();
     formData.append("file", file); // Must match 'uploadAvatarMiddleware.single("file")'
 
-    const res = await api.post(TECHNICIAN_PROFILE_ENDPOINTS.UPLOAD_AVATAR, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const res = await api.post(
+      TECHNICIAN_PROFILE_ENDPOINTS.UPLOAD_AVATAR,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
     return res.data; // Expected: { message: "...", url: "..." }
   },
 
@@ -101,26 +131,38 @@ export const technicianOnboardingRepository = {
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await api.post(TECHNICIAN_PROFILE_ENDPOINTS.UPLOAD_DOCUMENT, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const res = await api.post(
+      TECHNICIAN_PROFILE_ENDPOINTS.UPLOAD_DOCUMENT,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
     return res.data;
   },
 
   getCategories: async (): Promise<CategoryOption[]> => {
-    // Hits /customer/categories
     const res = await api.get(TECHNICIAN_PROFILE_ENDPOINTS.GET_CATEGORIES);
-    // CustomerCategoryController returns { success: true, data: [...] }
-    return res.data.data; 
+    return res.data.data;
   },
 
-  getServicesByCategory: async (categoryId: string): Promise<ServiceOption[]> => {
-    // Hits /customer/services?categoryId=...
+  getServicesByCategory: async (
+    categoryId: string
+  ): Promise<ServiceOption[]> => {
     const res = await api.get(TECHNICIAN_PROFILE_ENDPOINTS.GET_SERVICES, {
-      params: { categoryId }
+      params: { categoryId },
     });
-    // CustomerServiceController returns { success: true, count: ..., data: [...] }
     return res.data.data;
-  }
-};
+  },
 
+  // ✅ NEW Zone Fetcher
+  getZones: async (): Promise<ZoneOption[]> => {
+    const res = await api.get(TECHNICIAN_PROFILE_ENDPOINTS.GET_ZONES);
+    return res.data.data;
+  },
+  getRateCard: async (): Promise<RateCardItem[]> => {
+    // Matches the route: router.get("/rate-card", ...)
+    const res = await api.get(TECHNICIAN_PROFILE_ENDPOINTS.GET_RATE_CARD);
+    return res.data.data;
+  },
+};

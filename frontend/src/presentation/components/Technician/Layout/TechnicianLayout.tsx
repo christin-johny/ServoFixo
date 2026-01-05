@@ -26,7 +26,7 @@ import LoaderFallback from "../../../components/LoaderFallback";
 import {
   getTechnicianProfileStatus,
 } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
-
+import {technicianLogout} from "../../../../infrastructure/repositories/technician/technicianAuthRepository"
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mapApiDataToProfile = (data: any): TechnicianProfile => {
   return {
@@ -212,17 +212,21 @@ const TechnicianLayout: React.FC = () => {
 
   const activeItem = NAV_ITEMS.find(i => isActive(i.path)) || NAV_ITEMS[0];
 
-  const handleLogoutConfirm = async () => {
-    try {
-      await dispatch(logout());
-      dispatch(clearTechnicianData());
-      showSuccess("Logged out successfully");
-      setIsLogoutModalOpen(false);
-      navigate("/technician/login");
-    } catch {
-      showError("Failed to logout");
-    }
-  };
+const handleLogoutConfirm = async () => {
+  try {
+    await technicianLogout();
+  } catch {
+    showError("logout failed please try again")
+  } finally {
+    dispatch(logout());
+    dispatch(clearTechnicianData());
+    showSuccess("Logged out successfully");
+
+    setIsLogoutModalOpen(false);
+    navigate("/technician/login");
+  }
+};
+
 
   if (loading && !profile) return <LoaderFallback />;
 

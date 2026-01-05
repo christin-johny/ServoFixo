@@ -9,22 +9,18 @@ export interface TechnicianDocument extends Document {
   avatarUrl?: string;
   bio?: string;
   
-  // ✅ Added for Step 1
   experienceSummary?: string; 
-  // ✅ Added for Resume Logic (Step 1-7)
   onboardingStep: number; 
 
-  // Professional
   categoryIds: string[];
   subServiceIds: string[];
   zoneIds: string[];
 
-  // ✅ Updated for Step 5 (KYC)
   documents: Array<{
-    type: string; // e.g., "AADHAAR", "PAN", "DRIVING_LICENSE"
+    type: string; 
     fileName: string;
     fileUrl: string;
-    fileType?: string; // MIME type
+    fileType?: string; 
     status: "PENDING" | "APPROVED" | "REJECTED";
     rejectionReason?: string;
     uploadedAt: Date;
@@ -55,14 +51,11 @@ export interface TechnicianDocument extends Document {
     totalReviews: number;
   };
 
-  // Status
-  // ✅ Added VERIFICATION_PENDING for when they finish Step 7
   verificationStatus: "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
   verificationReason?: string;
   isSuspended: boolean;
   suspendReason?: string;
 
-  // Extra
   portfolioUrls: string[];
   deviceToken?: string;
   emergencyContact?: {
@@ -71,10 +64,9 @@ export interface TechnicianDocument extends Document {
     relation: string;
   };
 
-  // GeoJSON
   currentLocation?: {
     type: "Point";
-    coordinates: [number, number]; // [lng, lat]
+    coordinates: [number, number]; 
     lastUpdated: Date;
   };
 
@@ -99,19 +91,16 @@ const TechnicianSchema: Schema<TechnicianDocument> = new Schema(
     avatarUrl: { type: String },
     bio: { type: String },
     
-    // ✅ Onboarding Fields
     experienceSummary: { type: String, default: "" },
     onboardingStep: { type: Number, default: 1 }, 
     
-    // Keeping your String ID definition (Change to Schema.Types.ObjectId if using Refs later)
     categoryIds: [{ type: String, index: true }],
     subServiceIds: [{ type: String, index: true }],
     zoneIds: [{ type: String, index: true }],
 
-    // ✅ Updated Document Schema
     documents: [
       {
-        type: { type: String, required: true }, // e.g. "AADHAAR"
+        type: { type: String, required: true }, 
         fileName: String,
         fileUrl: { type: String, required: true },
         fileType: String,
@@ -158,7 +147,6 @@ const TechnicianSchema: Schema<TechnicianDocument> = new Schema(
 
     verificationStatus: {
       type: String,
-      // ✅ Added VERIFICATION_PENDING
       enum: ["PENDING", "VERIFICATION_PENDING", "VERIFIED", "REJECTED"],
       default: "PENDING",
       index: true,
@@ -184,7 +172,7 @@ const TechnicianSchema: Schema<TechnicianDocument> = new Schema(
         default: "Point",
       },
       coordinates: {
-        type: [Number], // [lng, lat]
+        type: [Number], 
         index: "2dsphere",
       },
       lastUpdated: Date,

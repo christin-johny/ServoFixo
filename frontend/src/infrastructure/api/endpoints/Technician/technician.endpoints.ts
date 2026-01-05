@@ -11,11 +11,12 @@ export const TECHNICIAN_PROFILE_ENDPOINTS = {
   PROFILE_BASE: "/technician/profile",
 
   UPDATE_PROFILE: "/technician/profile",
-  GET_CATEGORIES: "/customer/categories", 
-  GET_SERVICES: "/customer/services",
-
+  GET_CATEGORIES: "/technician/data/categories",
+  GET_SERVICES: "/technician/data/services",
+  GET_ZONES: "/technician/data/zones",
   // Read Status
   GET_STATUS: "/technician/profile/onboarding/status",
+  GET_RATE_CARD:'/technician/data/rate-card',
 
   // Write Steps (Strictly mapped to Backend)
   STEP_1_PERSONAL: "/technician/profile/onboarding/step-1",

@@ -4,10 +4,10 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 export type VerificationStatus = "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
 
 export interface TechnicianDocument {
-  type: string; // ✅ Changed to string as requested (allows custom types)
+  type: string;
   fileUrl: string;
   fileName: string;
-  status?: "PENDING" | "APPROVED" | "REJECTED"; // Optional for UI display
+  status?: "PENDING" | "APPROVED" | "REJECTED";
   rejectionReason?: string;
 }
 
@@ -39,6 +39,9 @@ export interface TechnicianProfile {
   
   // Step 3: Zones
   zoneIds: string[];
+
+  // Step 4: Rates (✅ Added optional field to store agreement state)
+  isRateCardAgreed?: boolean;
   
   // Step 5: Documents
   documents: TechnicianDocument[];
@@ -101,8 +104,7 @@ const technicianSlice = createSlice({
       state.error = action.payload;
     },
 
-    // --- Onboarding Specific Updates (Local State Management) ---
-    // Use these to update Redux immediately after a successful API save
+    // --- Onboarding Specific Updates ---
     
     setOnboardingStep(state, action: PayloadAction<number>) {
       if (state.profile) {
@@ -131,6 +133,13 @@ const technicianSlice = createSlice({
       }
     },
 
+    // ✅ FIXED: Now we actually use 'state' and 'action' to update the profile
+    updateRateAgreement(state, action: PayloadAction<{ isAgreed: boolean }>) {
+      if (state.profile) {
+        state.profile.isRateCardAgreed = action.payload.isAgreed;
+      }
+    },
+
     updateDocuments(state, action: PayloadAction<TechnicianDocument[]>) {
       if (state.profile) {
         state.profile.documents = action.payload;
@@ -149,14 +158,12 @@ const technicianSlice = createSlice({
       }
     },
 
-    // --- Availability Toggle ---
     setAvailability(state, action: PayloadAction<boolean>) {
       if (state.profile) {
         state.profile.availability.isOnline = action.payload;
       }
     },
 
-    // --- Logout / Cleanup ---
     clearTechnicianData() {
       return initialState;
     },
@@ -171,6 +178,7 @@ export const {
   updatePersonalDetails,
   updateWorkPreferences,
   updateZones,
+  updateRateAgreement, // ✅ Exported correctly
   updateDocuments,
   updateBankDetails,
   updateVerificationStatus,

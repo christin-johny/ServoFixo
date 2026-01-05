@@ -167,7 +167,7 @@ getOnboardingStatus = async (req: Request, res: Response): Promise<Response> => 
   // ==========================================
   private handleError(err: unknown, res: Response): Response {
     const errorMessage = err instanceof Error ? err.message : String(err);
-    this._logger.error("Technician Profile Error", errorMessage);
+    this._logger.error(LogEvents.TECH_PROFILE_ERROR, errorMessage);
     
     // Map known domain errors to 400 Bad Request
     if (Object.values(ErrorMessages).includes(errorMessage as ErrorMessages)) {

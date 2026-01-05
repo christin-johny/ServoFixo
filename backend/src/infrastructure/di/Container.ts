@@ -58,9 +58,11 @@ import { RequestTechnicianRegistrationOtpUseCase } from "../../application/use-c
 import { VerifyTechnicianRegistrationOtpUseCase } from "../../application/use-cases/technician/auth/VerifyTechnicianRegistrationOtpUseCase";
 import { TechnicianLoginUseCase } from "../../application/use-cases/technician/auth/TechnicianLoginUseCase";
 import { TechnicianAuthController } from "../../presentation/controllers/Technician/TechnicianAuthController";
-
+import { TechnicianDataController } from "../../presentation/controllers/Technician/TechnicianDataController";
+import { FixedCommissionStrategy } from "../services/FixedCommissionStrategy";
+import { GetTechnicianRateCardUseCase } from "../../application/use-cases/technician/profile/GetTechnicianRateCardUseCase";
 // --- Technician Profile Imports ---
-import { TechnicianOnboardingUseCase } from "../../application/use-cases/technician/profile/TechnicianOnboardingUseCase"; // Verify path matches where you saved it
+import { TechnicianOnboardingUseCase } from "../../application/use-cases/technician/profile/TechnicianOnboardingUseCase"; 
 import { GetTechnicianProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianProfileUseCase";
 import { TechnicianProfileController } from "../../presentation/controllers/Technician/TechnicianProfileController";
 import { UploadTechnicianFileUseCase } from "../../application/use-cases/technician/profile/UploadTechnicianFileUseCase";
@@ -346,7 +348,7 @@ export const customerAddressController = new CustomerAddressController(
   logger
 );
 
-// --- TECHNICIAN MODULE WIRING ---
+
 const technicianRepo = new TechnicianMongoRepository();
 
 const reqTechnicianRegOtpUseCase = new RequestTechnicianRegistrationOtpUseCase(
@@ -381,7 +383,7 @@ const verTechForgotOtpUseCase = new VerifyTechnicianForgotPasswordOtpUseCase(
   technicianRepo,
   otpSessionRepo,
   passwordHasher,
-  logger // Note: No JWT needed for password reset return
+  logger 
 );
 
 export const technicianAuthController = new TechnicianAuthController(
@@ -411,7 +413,6 @@ export const adminAuthController = new AdminAuthController(
 
 // TOKEN MANAGEMENT WIRING
 
-// ✅ UPDATED: Injected technicianRepo
 const refreshTokenUseCase = new RefreshTokenUseCase(
   jwtService,
   customerRepo,
@@ -426,8 +427,8 @@ export const authTokenController = new AuthTokenController(
 );
 
 const technicianOnboardingUseCase = new TechnicianOnboardingUseCase(
-  technicianRepo, // Already exists in Container
-  logger          // Already exists in Container
+  technicianRepo, 
+  logger          
 );
 
 const getTechnicianProfileUseCase = new GetTechnicianProfileUseCase(
@@ -435,13 +436,36 @@ const getTechnicianProfileUseCase = new GetTechnicianProfileUseCase(
   logger
 );
 const uploadTechnicianFileUseCase = new UploadTechnicianFileUseCase(
-  imageService, // This relies on 'const imageService = new S3ImageService();' defined earlier in the file
+  imageService, 
   logger
 );
-// 2. Instantiate & Export Controller
+
+// 2. Instantiate & Export Profile Controller
 export const technicianProfileController = new TechnicianProfileController(
-  technicianOnboardingUseCase, // For Saving (Steps 1-6)
-  getTechnicianProfileUseCase, // For Fetching Status
+  technicianOnboardingUseCase, 
+  getTechnicianProfileUseCase, 
   uploadTechnicianFileUseCase,
+  logger
+);
+
+// --- RATE CARD & DATA MODULE ---
+
+// 3. Instantiate Commission Strategy
+const commissionStrategy = new FixedCommissionStrategy();
+
+// 4. Instantiate Rate Card Use Case (Injecting Strategy)
+const getTechnicianRateCardUseCase = new GetTechnicianRateCardUseCase(
+  technicianRepo,  
+  serviceItemRepo, 
+  commissionStrategy,
+  logger
+);
+
+// 5. Instantiate Data Controller (Injecting Use Case)
+export const technicianDataController = new TechnicianDataController(
+  getAllCategoriesUseCase,
+  getServiceListingUseCase,
+  getAllZonesUseCase,
+  getTechnicianRateCardUseCase, 
   logger
 );

@@ -42,6 +42,7 @@ export const LogEvents = {
   // TECHNICIAN ONBOARDING (NEW)
   // ==========================
   TECHNICIAN_CREATE_SUCCESS: 'Technician Entity Created Successfully',
+  TECH_PROFILE_ERROR: 'Technician Profile Error',
   
   TECH_ONBOARDING_STEP_1_SUCCESS: 'Technician Step 1 (Personal) Completed',
   TECH_ONBOARDING_STEP_2_SUCCESS: 'Technician Step 2 (Work Prefs) Completed',
@@ -55,6 +56,13 @@ export const LogEvents = {
   TECH_DOC_UPLOAD_FAILED: 'Technician Document Upload Failed',
   
   TECH_PROFILE_SUBMITTED: 'Technician Profile Submitted for Verification',
+
+  // ==========================
+  // TECHNICIAN DATA FETCH (NEW)
+  // ==========================
+  TECH_CATEGORY_FETCH_FAILED: 'Technician Category Fetch Failed',
+  TECH_SERVICE_FETCH_FAILED: 'Technician Service Fetch Failed',
+  TECH_ZONE_FETCH_FAILED: 'Technician Zone Fetch Failed',
 
   // ==========================
   // CUSTOMER PROFILE MODULE
