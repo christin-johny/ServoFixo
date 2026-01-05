@@ -20,6 +20,12 @@ export interface VerifyActionPayload {
   }[];
   globalRejectionReason?: string;
 }
+export interface TechnicianListParams {
+  page: number;
+  limit: number;
+  search?: string;
+  status?: string; // "VERIFIED" | "REJECTED" | etc.
+}
 
 // --- Phase 1: Get Queue ---
 export const getVerificationQueue = async (
@@ -30,6 +36,12 @@ export const getVerificationQueue = async (
   // Adjust this based on your exact interceptor. 
   // Assuming standard response.data based on your other repos:
   return response.data.data; 
+};
+export const getTechnicians = async (
+  params: TechnicianListParams
+): Promise<PaginatedTechnicianQueue> => {
+  const response = await api.get(ADMIN_TECHNICIAN_ENDPOINTS.LIST, { params });
+  return response.data.data;
 };
 
 // --- Phase 2: Get Full Profile ---
