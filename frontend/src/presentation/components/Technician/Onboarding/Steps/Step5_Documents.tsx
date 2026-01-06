@@ -1,9 +1,9 @@
-import React, { useState, useRef } from "react";
-import { useDispatch } from "react-redux";
+import React, { useState, useRef, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { 
-  ArrowRight, ArrowLeft, Loader2, UploadCloud, FileText, CheckCircle2, AlertCircle, Plus, Trash2
+  ArrowRight, ArrowLeft, Loader2, UploadCloud, FileText, CheckCircle2, AlertCircle, Plus, Trash2, Eye, RefreshCw
 } from "lucide-react";
-import type { AppDispatch } from "../../../../../store/store";
+import type { RootState, AppDispatch } from "../../../../../store/store";
 import { 
   technicianOnboardingRepository, 
   type DocumentMeta 
@@ -16,14 +16,18 @@ interface Step5Props {
   onBack: () => void;
 }
 
+// Strictly Typed Document Types
+type DocType = "AADHAAR" | "PAN" | "CERTIFICATE" | "OTHER";
+
 interface DraftDocument {
   id: string;
-  type: "AADHAAR" | "PAN" | "CERTIFICATE" | "OTHER";
-  customName?: string; // Editable for OTHER types
+  type: DocType;
+  customName?: string; 
   file?: File;
   serverUrl?: string; 
-  status: "IDLE" | "UPLOADING" | "SUCCESS" | "ERROR";
+  status: "IDLE" | "UPLOADING" | "SUCCESS" | "ERROR" | "REJECTED";
   errorMessage?: string;
+  rejectionReason?: string;
 }
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -31,6 +35,7 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg", "application/pdf"
 
 const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
   const dispatch = useDispatch<AppDispatch>();
+  const { profile } = useSelector((state: RootState) => state.technician);
   const { showSuccess, showError } = useNotification();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -38,19 +43,60 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
   const [isConsented, setIsConsented] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ✅ Qualification is present but OPTIONAL
+  // Initialize slots
   const [documents, setDocuments] = useState<DraftDocument[]>([
     { id: "doc_aadhaar", type: "AADHAAR", status: "IDLE" },
     { id: "doc_pan", type: "PAN", status: "IDLE" },
-    { id: "doc_cert", type: "CERTIFICATE", status: "IDLE" }, // Optional
   ]);
 
-  // --- 1. Handle File Selection & Immediate Upload ---
+  // ✅ STRICTLY TYPED PRE-FILL LOGIC
+  useEffect(() => {
+    if (profile?.documents && profile.documents.length > 0) {
+      const mergedDocs: DraftDocument[] = [];
+      
+      profile.documents.forEach((d, index) => {
+        // Safe Type Assertion
+        let docType: DocType = "OTHER";
+        if (d.type === "AADHAAR" || d.type === "PAN" || d.type === "CERTIFICATE") {
+            docType = d.type as DocType;
+        }
+
+        let id = "";
+        if (docType === "AADHAAR") id = "doc_aadhaar";
+        else if (docType === "PAN") id = "doc_pan";
+        else if (docType === "CERTIFICATE") id = "doc_cert";
+        else id = `doc_custom_${index}`;
+
+        mergedDocs.push({
+          id,
+          type: docType,
+          customName: docType === "OTHER" ? d.fileName : undefined,
+          serverUrl: d.fileUrl,
+          // Map backend status to local status
+          status: d.status === "REJECTED" ? "REJECTED" : "SUCCESS", 
+          rejectionReason: d.rejectionReason
+        });
+      });
+
+      // Ensure Mandatory slots exist if not present in backend
+      if (!mergedDocs.find(d => d.type === "AADHAAR")) {
+          mergedDocs.unshift({ id: "doc_aadhaar", type: "AADHAAR", status: "IDLE" });
+      }
+      if (!mergedDocs.find(d => d.type === "PAN")) {
+          // Insert after Aadhaar or at start
+          const aadhaarIndex = mergedDocs.findIndex(d => d.type === "AADHAAR");
+          mergedDocs.splice(aadhaarIndex + 1, 0, { id: "doc_pan", type: "PAN", status: "IDLE" });
+      }
+
+      setDocuments(mergedDocs);
+    }
+  }, [profile?.documents]);
+
+  // --- File Selection ---
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !activeSlotId) return;
 
-    // Validation
     if (!ALLOWED_TYPES.includes(file.type)) {
       showError("Invalid file type. JPG, PNG, or PDF only.");
       resetInput();
@@ -62,17 +108,15 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
       return;
     }
 
-    // Set Uploading State
+    // Set Uploading
     setDocuments(prev => prev.map(doc => 
       doc.id === activeSlotId 
-        ? { ...doc, file, status: "UPLOADING", errorMessage: undefined } 
+        ? { ...doc, file, status: "UPLOADING", errorMessage: undefined, rejectionReason: undefined } 
         : doc
     ));
 
-    // Upload to Server
     try {
       const response = await technicianOnboardingRepository.uploadDocument(file);
-      
       setDocuments(prev => prev.map(doc => 
         doc.id === activeSlotId 
           ? { ...doc, status: "SUCCESS", serverUrl: response.url } 
@@ -98,13 +142,10 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
     fileInputRef.current?.click();
   };
 
-  // --- 2. Custom Document Logic ---
+  // --- Helper Actions ---
   const addCustomDoc = () => {
     const newId = `doc_custom_${Date.now()}`;
-    setDocuments(prev => [
-      ...prev, 
-      { id: newId, type: "OTHER", customName: "", status: "IDLE" }
-    ]);
+    setDocuments(prev => [...prev, { id: newId, type: "OTHER", customName: "", status: "IDLE" }]);
   };
 
   const removeDoc = (id: string) => {
@@ -115,22 +156,29 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
     setDocuments(prev => prev.map(d => d.id === id ? { ...d, customName: name } : d));
   };
 
-  // --- 3. Final Submit ---
+  // --- Submit ---
   const handleNext = async () => {
-    // ✅ VALIDATION: Only Aadhaar and PAN are mandatory
     const mandatoryIds = ["doc_aadhaar", "doc_pan"];
+    
+    // Check if mandatory docs have a valid server URL (either newly uploaded or pre-filled)
     const mandatoryDocs = documents.filter(d => mandatoryIds.includes(d.id));
-    const allMandatoryDone = mandatoryDocs.every(d => d.status === "SUCCESS" && d.serverUrl);
+    const allMandatoryDone = mandatoryDocs.every(d => d.serverUrl && (d.status === "SUCCESS" || d.status === "REJECTED")); 
+    
+    // Block submission if any REJECTED documents remain
+    const hasRejections = documents.some(d => d.status === "REJECTED");
+    if (hasRejections) {
+      showError("Please replace the rejected documents before proceeding.");
+      return;
+    }
 
     if (!allMandatoryDone) {
       showError("Aadhaar Card and PAN Card are mandatory.");
       return;
     }
 
-    // Validate Custom Names
     const invalidCustomDocs = documents.find(d => d.type === "OTHER" && !d.customName?.trim());
     if (invalidCustomDocs) {
-      showError("Please give a name to your additional documents.");
+      showError("Please name your additional documents.");
       return;
     }
 
@@ -141,17 +189,15 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
 
     try {
       setIsSubmitting(true);
+      
+      const payload: DocumentMeta[] = documents
+        .filter(d => d.serverUrl) // Only send docs with URLs
+        .map(d => ({
+          type: d.type === "OTHER" ? "OTHER" : d.type,
+          fileName: d.type === "OTHER" ? d.customName! : (d.file?.name || d.type),
+          fileUrl: d.serverUrl!
+        }));
 
-      // Filter only successful uploads
-      const successfulDocs = documents.filter(d => d.status === "SUCCESS" && d.serverUrl);
-
-      const payload: DocumentMeta[] = successfulDocs.map(d => ({
-        type: d.type === "OTHER" ? "OTHER" : d.type,
-        fileName: d.type === "OTHER" ? d.customName! : d.file?.name || "document",
-        fileUrl: d.serverUrl! 
-      }));
-
-      // Save Metadata
       await technicianOnboardingRepository.updateStep5({ documents: payload });
 
       // Update Redux
@@ -159,13 +205,13 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
          type: p.type,
          fileUrl: p.fileUrl,
          fileName: p.fileName,
-         status: "PENDING" as const
+         status: "PENDING" as const 
       }));
       
       dispatch(updateDocuments(reduxDocs));
       dispatch(setOnboardingStep(6));
 
-      showSuccess("Documents uploaded successfully!");
+      showSuccess("Documents saved successfully!");
       onNext();
     } catch {
       showError("Failed to save documents.");
@@ -174,10 +220,11 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
     }
   };
 
-  // --- Render Logic ---
+  // --- Render Row ---
   const renderDocRow = (doc: DraftDocument) => {
     const isMandatory = ["AADHAAR", "PAN"].includes(doc.type);
     const isCustom = doc.type === "OTHER";
+    const isRejected = doc.status === "REJECTED";
 
     let label = "";
     if (!isCustom) {
@@ -187,15 +234,23 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
     }
 
     return (
-      <div key={doc.id} className="border border-gray-200 rounded-xl p-4 bg-white shadow-sm flex flex-col sm:flex-row sm:items-center gap-4 transition-all hover:border-blue-200">
+      <div 
+        key={doc.id} 
+        className={`border rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4 transition-all 
+          ${isRejected ? "border-red-300 bg-red-50" : "border-gray-200 bg-white hover:border-blue-200"}`}
+      >
         
-        {/* Icon & Details */}
+        {/* Status Icon */}
         <div className="flex items-center gap-4 flex-1">
           <div className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-             doc.status === "SUCCESS" ? "bg-green-100 text-green-600" : 
-             doc.status === "ERROR" ? "bg-red-100 text-red-600" : "bg-blue-50 text-blue-600"
+             doc.status === "UPLOADING" ? "bg-blue-50 text-blue-600" :
+             isRejected ? "bg-red-100 text-red-600" :
+             doc.status === "SUCCESS" ? "bg-green-100 text-green-600" :
+             doc.status === "ERROR" ? "bg-red-100 text-red-600" :
+             "bg-gray-100 text-gray-500"
           }`}>
              {doc.status === "UPLOADING" ? <Loader2 className="w-6 h-6 animate-spin" /> :
+              isRejected ? <AlertCircle className="w-6 h-6" /> :
               doc.status === "SUCCESS" ? <CheckCircle2 className="w-6 h-6" /> :
               doc.status === "ERROR" ? <AlertCircle className="w-6 h-6" /> :
               <FileText className="w-6 h-6" />}
@@ -203,57 +258,71 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
 
           <div className="flex flex-col flex-1 min-w-0">
             {isCustom ? (
-               // ✅ Custom Name Input
                <input 
                  type="text" 
-                 placeholder="Enter Document Name (e.g. Driving License)"
-                 className="font-semibold text-gray-900 placeholder:text-gray-400 border-b border-gray-300 focus:border-blue-500 outline-none bg-transparent py-1 w-full max-w-xs transition-colors"
+                 placeholder="Document Name"
+                 className="font-semibold text-gray-900 border-b border-gray-300 focus:border-blue-500 outline-none bg-transparent py-1 w-full max-w-xs"
                  value={doc.customName}
                  onChange={(e) => updateCustomName(doc.id, e.target.value)}
-                 disabled={doc.status === "UPLOADING"} // Disable while uploading
+                 disabled={doc.status === "UPLOADING"} 
                />
             ) : (
-               <h4 className="font-semibold text-gray-900 truncate flex items-center gap-2">
+               <h4 className="font-semibold text-gray-900 flex items-center gap-2">
                  {label} 
-                 {isMandatory ? (
-                    <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full uppercase tracking-wide">Required</span>
-                 ) : (
-                    <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full uppercase tracking-wide">Optional</span>
-                 )}
+                 {isMandatory && <span className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">REQUIRED</span>}
                </h4>
             )}
             
-            {/* Status Text */}
-            <div className="mt-0.5">
-              {doc.status === "IDLE" && <p className="text-xs text-gray-400">Tap 'Select File' to upload</p>}
-              {doc.status === "UPLOADING" && <p className="text-xs text-blue-600 font-medium">Uploading...</p>}
-              {doc.status === "SUCCESS" && <p className="text-xs text-green-600 font-medium truncate">{doc.file?.name}</p>}
-              {doc.status === "ERROR" && <p className="text-xs text-red-600 font-medium">{doc.errorMessage || "Upload failed"}</p>}
+            {/* Status Messages */}
+            <div className="mt-1">
+              {isRejected && (
+                <p className="text-xs font-bold text-red-700">
+                  Rejected: {doc.rejectionReason || "Please re-upload a valid document."}
+                </p>
+              )}
+              {doc.status === "ERROR" && <p className="text-xs text-red-600">{doc.errorMessage}</p>}
+              {doc.status === "SUCCESS" && <p className="text-xs text-green-600 font-medium">Document uploaded</p>}
+              {doc.status === "IDLE" && <p className="text-xs text-gray-400">Tap select to upload</p>}
             </div>
           </div>
         </div>
 
-        {/* Buttons */}
+        {/* Action Buttons */}
         <div className="flex items-center gap-2 self-end sm:self-center">
+           {/* View Button (If URL exists) */}
+           {doc.serverUrl && (
+             <a 
+               href={doc.serverUrl} 
+               target="_blank" 
+               rel="noreferrer"
+               className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+               title="View Current File"
+             >
+               <Eye className="w-5 h-5" />
+             </a>
+           )}
+
            {doc.status !== "UPLOADING" && (
              <>
                <button 
                  onClick={() => triggerFileInput(doc.id)}
-                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all border ${
-                   doc.status === "SUCCESS" 
-                     ? "bg-white border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-300"
-                     : "bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100"
+                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all border flex items-center gap-2 ${
+                   isRejected 
+                     ? "bg-red-600 text-white border-red-600 hover:bg-red-700"
+                     : doc.status === "SUCCESS" 
+                       ? "bg-white border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-300"
+                       : "bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100"
                  }`}
                >
-                 {doc.status === "SUCCESS" ? "Change" : "Select File"}
+                 {isRejected ? <><RefreshCw className="w-4 h-4"/> Replace</> : doc.status === "SUCCESS" ? "Change" : "Select File"}
                </button>
 
-               {/* Delete Button for Custom or Optional files */}
-               {(!isMandatory || doc.status === "SUCCESS") && (
-                  (isCustom || (!isMandatory && doc.status === "SUCCESS")) && ( // Allow clearing optional successful uploads
+               {/* Delete (Only if Custom or Optional) */}
+               {(!isMandatory || (doc.status === "SUCCESS" && !isRejected)) && (
+                  (isCustom || (!isMandatory)) && (
                     <button 
                       onClick={() => isCustom ? removeDoc(doc.id) : setDocuments(prev => prev.map(d => d.id === doc.id ? { ...d, status: "IDLE", file: undefined, serverUrl: undefined } : d))}
-                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
                       title="Remove"
                     >
                       <Trash2 className="w-5 h-5" />
@@ -269,45 +338,31 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
 
   return (
     <div className="space-y-6 animate-fade-in pb-10">
-       <input 
-          type="file" 
-          ref={fileInputRef} 
-          className="hidden" 
-          accept="image/jpeg,image/png,image/jpg,application/pdf"
-          onChange={handleFileSelect}
-       />
+       <input type="file" ref={fileInputRef} className="hidden" accept="image/jpeg,image/png,image/jpg,application/pdf" onChange={handleFileSelect} />
 
        <div className="flex flex-col gap-2">
         <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
           <UploadCloud className="w-5 h-5 text-blue-600" /> Upload Documents
         </h3>
         <p className="text-sm text-gray-500">
-          We need to verify your identity. Aadhaar and PAN are required. You can add other certifications to boost your profile.
+          We need to verify your identity. If a document was rejected, please replace it to proceed.
         </p>
       </div>
 
       <div className="space-y-3">
         {documents.map(renderDocRow)}
-        
-        <button 
-          onClick={addCustomDoc}
-          className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 text-gray-500 font-bold hover:border-blue-400 hover:text-blue-600 transition-all bg-gray-50/50 hover:bg-blue-50/30"
-        >
+        <button onClick={addCustomDoc} className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center gap-2 text-gray-500 font-bold hover:border-blue-400 hover:text-blue-600 bg-gray-50/50 hover:bg-blue-50/30">
           <Plus className="w-5 h-5" /> Add Additional Document
         </button>
       </div>
 
       <div className="bg-blue-50 border border-blue-100 p-5 rounded-xl mt-4">
         <label className="flex items-start gap-3 cursor-pointer group">
-          <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0 ${
-             isConsented ? "bg-blue-600 border-blue-600" : "bg-white border-blue-300 group-hover:border-blue-500"
-          }`}>
+          <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0 ${isConsented ? "bg-blue-600 border-blue-600" : "bg-white border-blue-300 group-hover:border-blue-500"}`}>
             {isConsented && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
           </div>
           <input type="checkbox" className="hidden" checked={isConsented} onChange={(e) => setIsConsented(e.target.checked)} />
-          <span className="text-sm font-bold text-gray-900 select-none">
-             I verify that these documents belong to me and give consent for verification.
-          </span>
+          <span className="text-sm font-bold text-gray-900 select-none">I verify that these documents belong to me and give consent for verification.</span>
         </label>
       </div>
 
@@ -315,13 +370,8 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
         <button onClick={onBack} disabled={isSubmitting} className="flex items-center gap-2 px-6 py-3 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition-all">
           <ArrowLeft className="w-5 h-5" /> Back
         </button>
-
-        <button 
-          onClick={handleNext}
-          disabled={isSubmitting || !isConsented} 
-          className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Next Step <ArrowRight className="w-5 h-5" /></>}
+        <button onClick={handleNext} disabled={isSubmitting || !isConsented} className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg disabled:opacity-50">
+          {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Save & Continue <ArrowRight className="w-5 h-5" /></>}
         </button>
       </div>
     </div>

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { 
   ArrowRight, ArrowLeft, Loader2, Landmark, CheckCircle2, AlertCircle, Search 
 } from "lucide-react";
-import type { AppDispatch } from "../../../../../store/store";
+import type { RootState, AppDispatch } from "../../../../../store/store"; // Access Redux State
 import { 
   technicianOnboardingRepository, 
   type Step6Data 
@@ -22,35 +22,43 @@ interface Step6Props {
 
 const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
   const dispatch = useDispatch<AppDispatch>();
+  const { profile } = useSelector((state: RootState) => state.technician); // ✅ Get Profile
   const { showSuccess, showError } = useNotification();
 
-  // Form State
+  // ✅ FIX 1: Initialize form with Redux data if available
   const [formData, setFormData] = useState({
-    accountHolderName: "",
-    accountNumber: "",
-    confirmAccountNumber: "",
-    ifscCode: "",
-    bankName: "", // Auto-filled
-    branchName: "" // Auto-filled (optional display)
+    accountHolderName: profile?.bankDetails?.accountHolderName || "",
+    accountNumber: profile?.bankDetails?.accountNumber || "",
+    confirmAccountNumber: profile?.bankDetails?.accountNumber || "", // Pre-fill confirm too
+    ifscCode: profile?.bankDetails?.ifscCode || "",
+    bankName: profile?.bankDetails?.bankName || "",
+    branchName: "" 
   });
 
   const [loadingIfsc, setLoadingIfsc] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [ifscVerified, setIfscVerified] = useState(false);
+  
+  // ✅ FIX 2: If we pre-filled data, consider it verified initially
+  const [ifscVerified, setIfscVerified] = useState(!!profile?.bankDetails?.bankName);
 
   // --- IFSC Auto-Fetch Logic ---
   useEffect(() => {
     const fetchIfsc = async () => {
       const code = formData.ifscCode.toUpperCase();
-      
-      // Regex for standard IFSC: 4 letters, 0, 6 alphanumeric
       const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
 
+      // Only fetch if it changed from what we already have, OR if we don't have a bank name yet
       if (code.length === 11) {
         if (!ifscRegex.test(code)) {
           showError("Invalid IFSC format.");
           setIfscVerified(false);
           return;
+        }
+
+        // Optimization: Don't re-fetch if it matches the pre-filled valid data
+        if (profile?.bankDetails?.ifscCode === code && formData.bankName) {
+            setIfscVerified(true);
+            return;
         }
 
         try {
@@ -63,7 +71,7 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
             branchName: data.BRANCH
           }));
           setIfscVerified(true);
-          showSuccess("Bank details found!");
+          showSuccess("Bank details verified!");
         } catch {
           setIfscVerified(false);
           setFormData(prev => ({ ...prev, bankName: "", branchName: "" }));
@@ -72,29 +80,30 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
           setLoadingIfsc(false);
         }
       } else {
-        setIfscVerified(false);
-        setFormData(prev => ({ ...prev, bankName: "", branchName: "" }));
+        // Reset if user clears input
+        if (ifscVerified && code.length < 11) {
+            setIfscVerified(false);
+            setFormData(prev => ({ ...prev, bankName: "", branchName: "" }));
+        }
       }
     };
 
-    // Debounce slightly to avoid API calls on every keystroke if typing fast
     const timeoutId = setTimeout(() => {
       if (formData.ifscCode) fetchIfsc();
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [formData.ifscCode, showError, showSuccess]);
+  }, [formData.ifscCode]); 
+  // removed other deps to prevent loop, logic handles internal checks
 
   // --- Handlers ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     
-    // Constraint: Account number digits only
     if ((name === "accountNumber" || name === "confirmAccountNumber") && !/^\d*$/.test(value)) {
       return;
     }
 
-    // Constraint: IFSC alphanumeric only
     if (name === "ifscCode" && !/^[A-Za-z0-9]*$/.test(value)) {
       return;
     }
@@ -105,7 +114,6 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 1. Validations
     if (!formData.accountHolderName.trim()) {
       showError("Account Holder Name is required.");
       return;
@@ -135,21 +143,23 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
         }
       };
 
-      // 2. Save to Backend
       await technicianOnboardingRepository.updateStep6(payload);
 
-      // 3. Update Redux
       dispatch(updateBankDetails(payload.bankDetails));
-      
-      // Update local state to reflect completion
-      // Backend sets step to 7 and verificationStatus to PENDING
       dispatch(setOnboardingStep(7)); 
+      
+      // ✅ Critical: Only flip to PENDING if we are genuinely done.
+      // If we are in "REJECTED" mode, the resubmit button on dashboard handles the status flip.
+      // But for first-time flow, we set it here.
+      // We can check if status is NOT rejected to set it pending, 
+      // OR just rely on the backend to handle the status transition.
+      // For now, consistent with your previous flow:
       dispatch(updateVerificationStatus("VERIFICATION_PENDING"));
 
-      showSuccess("Application Submitted Successfully!");
-      onNext(); // This should trigger the redirect to Dashboard/Success Page
+      showSuccess("Application Saved!");
+      onNext(); 
     } catch {
-      showError("Failed to submit application.");
+      showError("Failed to save details.");
     } finally {
       setIsSubmitting(false);
     }
@@ -164,7 +174,7 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
           <Landmark className="w-5 h-5 text-blue-600" /> Bank Account Details
         </h3>
         <p className="text-sm text-gray-500">
-          Please provide your bank details for weekly payouts. Ensure the name matches your ID proof.
+          Please provide your bank details for payouts. Ensure the name matches your ID proof.
         </p>
       </div>
 
@@ -184,7 +194,7 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
           />
         </div>
 
-        {/* IFSC Code (With Auto-Fetch UI) */}
+        {/* IFSC Code */}
         <div className="space-y-1.5">
           <label className="text-sm font-semibold text-gray-700">IFSC Code</label>
           <div className="relative">
@@ -212,17 +222,17 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
           {formData.bankName && (
             <div className="flex items-center gap-2 text-xs font-medium text-green-700 bg-green-50 px-3 py-2 rounded-lg mt-2">
               <Landmark className="w-3.5 h-3.5" />
-              <span>{formData.bankName} - {formData.branchName}</span>
+              <span>{formData.bankName} {formData.branchName ? `- ${formData.branchName}` : ""}</span>
             </div>
           )}
         </div>
 
-        {/* Account Numbers Row */}
+        {/* Account Numbers */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Account Number</label>
             <input
-              type="password" // Masked initially for security
+              type="text" // Changed from password to text for easier editing on re-visit
               name="accountNumber"
               value={formData.accountNumber}
               onChange={handleChange}
@@ -235,7 +245,7 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Confirm Account Number</label>
             <input
-              type="text"
+              type="text" // Changed from password to text
               name="confirmAccountNumber"
               value={formData.confirmAccountNumber}
               onChange={handleChange}
@@ -255,15 +265,6 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
           </div>
         </div>
 
-        {/* Info Box */}
-        <div className="bg-yellow-50 border border-yellow-100 p-4 rounded-xl flex gap-3">
-           <AlertCircle className="w-5 h-5 text-yellow-600 shrink-0" />
-           <p className="text-xs text-yellow-800 leading-relaxed">
-             <b>Double-check your details.</b> Incorrect information may lead to payout delays. 
-             The platform is not responsible for transfers to incorrect account numbers provided here.
-           </p>
-        </div>
-
         {/* Navigation */}
         <div className="flex justify-between pt-6 border-t border-gray-100">
           <button
@@ -278,15 +279,15 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
           <button
             type="submit"
             disabled={isSubmitting || !ifscVerified || !formData.accountNumber}
-            className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+            className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" /> Submitting...
+                <Loader2 className="w-5 h-5 animate-spin" /> Saving...
               </>
             ) : (
               <>
-                Submit Application <ArrowRight className="w-5 h-5" />
+                Save & Continue <ArrowRight className="w-5 h-5" />
               </>
             )}
           </button>

@@ -23,8 +23,8 @@ export class VerifyTechnicianUseCase implements IUseCase<void, [string, VerifyTe
       docs.forEach(d => d.status = "APPROVED");
       tech.updateDocuments(docs); 
 
-    } else if (dto.action === "REJECT") {
-      tech.updateVerificationStatus("REJECTED");
+    } else if (dto.action === "REJECT") { 
+      tech.updateVerificationStatus("REJECTED", dto.globalRejectionReason);
       
       if (dto.documentDecisions && dto.documentDecisions.length > 0) {
         const currentDocs = tech.getDocuments();
@@ -32,7 +32,7 @@ export class VerifyTechnicianUseCase implements IUseCase<void, [string, VerifyTe
         dto.documentDecisions.forEach(decision => {
           const docIndex = currentDocs.findIndex(d => d.type === decision.type);
           if (docIndex !== -1) {
-            currentDocs[docIndex].status = decision.status; // Should be REJECTED or APPROVED
+            currentDocs[docIndex].status = decision.status; 
             if (decision.status === "REJECTED") {
               currentDocs[docIndex].rejectionReason = decision.rejectionReason;
             }

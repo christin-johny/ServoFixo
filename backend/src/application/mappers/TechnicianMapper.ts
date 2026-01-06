@@ -51,7 +51,6 @@ export class TechnicianMapper {
       availability: raw.availability || { isOnline: false },
       ratings: raw.ratings || { averageRating: 0, totalReviews: 0 },
 
-      // ✅ Allow raw string here for Domain, casting happens in toResponse
       verificationStatus: raw.verificationStatus || "PENDING",
       verificationReason: raw.verificationReason,
 
@@ -78,7 +77,6 @@ export class TechnicianMapper {
     });
   }
 
-  // Domain Entity -> Response DTO
   static toResponse(entity: Technician): TechnicianResponseDto {
     return {
       id: entity.getId(),
@@ -101,7 +99,6 @@ export class TechnicianMapper {
       availability: entity.getAvailability(),
       ratings: entity.getRatings(),
 
-      // ✅ FIX: Cast the string to the specific Enum type
       verificationStatus: entity.getVerificationStatus() as VerificationStatus,
 
       verificationReason: entity.getVerificationReason(),
@@ -117,12 +114,7 @@ export class TechnicianMapper {
       updatedAt: entity.getUpdatedAt(),
     };
   }
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-}
-=======
-=======
->>>>>>> feature/admin-technician-verification
+
   static toQueueItem(entity: Technician): TechnicianQueueItemDto {
     return {
       id: entity.getId(),
@@ -131,13 +123,11 @@ export class TechnicianMapper {
       phone: entity.getPhone(),
       avatarUrl: entity.getAvatarUrl(),
       status: entity.getVerificationStatus(),
-      // Using updatedAt as the submission timestamp for sorting
       submittedAt: entity.getUpdatedAt(),
       isSuspended: entity.getIsSuspended(),
     };
   }
 
-  // ✅ NEW: Mapper for Admin Verification Console (Detailed View)
   static toAdminProfile(entity: Technician): AdminTechnicianProfileDto {
     const documents = entity.getDocuments();
     const bank = entity.getBankDetails();
@@ -153,12 +143,9 @@ export class TechnicianMapper {
       experienceSummary: entity.getExperienceSummary(),
       zoneIds: entity.getZoneIds(),
       categoryIds: entity.getCategoryIds(),
-<<<<<<< HEAD
-      subServiceIds:entity.getSubServiceIds(),
-=======
->>>>>>> feature/admin-technician-verification
-
-      // Documents (Explicit mapping for Admin UI safety)
+     subServiceIds:entity.getSubServiceIds(),
+      
+      // Documents
       documents: Array.isArray(documents)
         ? documents.map((d: any) => ({
             type: d.type,
@@ -178,7 +165,6 @@ export class TechnicianMapper {
             bankName: bank.bankName,
           }
         : {
-            // Safe Fallback
             accountHolderName: "",
             accountNumber: "",
             ifscCode: "",
@@ -190,7 +176,3 @@ export class TechnicianMapper {
     };
   }
 }
-<<<<<<< HEAD
->>>>>>> Stashed changes
-=======
->>>>>>> feature/admin-technician-verification

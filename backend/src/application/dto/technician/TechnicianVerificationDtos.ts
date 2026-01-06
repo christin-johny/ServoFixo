@@ -8,6 +8,7 @@ export interface AdminTechnicianProfileDto {
   experienceSummary: string;
   zoneIds: string[]; 
   categoryIds: string[];
+  subServiceIds: string[];
   
   documents: {
     type: string;

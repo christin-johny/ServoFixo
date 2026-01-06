@@ -67,6 +67,7 @@ import { UpdateTechnicianUseCase } from "../../application/use-cases/technician/
 import { BlockTechnicianUseCase } from "../../application/use-cases/technician/profile/BlockTechnicianUseCase";
 import { DeleteTechnicianUseCase } from "../../application/use-cases/technician/profile/DeleteTechnicianUseCase";
 import { ToggleOnlineStatusUseCase } from "../../application/use-cases/technician/profile/ToggleOnlineStatusUseCase";
+import { ResubmitProfileUseCase } from "../../application/use-cases/technician/profile/ResubmitProfileUseCase";
 
 import { TechnicianOnboardingUseCase } from "../../application/use-cases/technician/profile/TechnicianOnboardingUseCase"; 
 import { GetTechnicianProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianProfileUseCase";
@@ -455,6 +456,10 @@ const toggleOnlineStatusUseCase = new ToggleOnlineStatusUseCase(
   technicianRepo,
   logger
 );
+const resubmitProfileUseCase = new ResubmitProfileUseCase(
+  technicianRepo,
+  logger
+);
 
 // 2. Instantiate & Export Profile Controller
 export const technicianProfileController = new TechnicianProfileController(
@@ -462,6 +467,7 @@ export const technicianProfileController = new TechnicianProfileController(
   getTechnicianProfileUseCase, 
   uploadTechnicianFileUseCase,
   toggleOnlineStatusUseCase,
+  resubmitProfileUseCase,
   logger
 );
 
@@ -501,8 +507,8 @@ export const adminTechnicianController = new AdminTechnicianController(
   getTechnicianFullProfileUseCase,
   verifyTechnicianUseCase,
   getAllTechniciansUseCase,
-  updateTechnicianUseCase, // Edit
-  deleteTechnicianUseCase, // Delete
-  blockTechnicianUseCase,  // Suspend
+  updateTechnicianUseCase,  
+  deleteTechnicianUseCase,  
+  blockTechnicianUseCase,   
   logger
 );

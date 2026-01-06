@@ -27,24 +27,28 @@ const OnboardingWizard: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { profile, loading } = useSelector((state: RootState) => state.technician);
   
-  // ✅ FIX: Lazy Initialization
-  // This function runs ONLY once when the component mounts.
-  // It grabs the correct step from Redux immediately, so we don't need a useEffect to "sync" it.
+  // Lazy Initialization
   const [currentStep, setCurrentStep] = useState<number>(() => {
     if (profile?.onboardingStep) {
-      // If step is valid (1-6), use it. If completed (7), default to 1 (handled by redirect below)
+      // If step is valid (1-6), use it. 
+      // If completed (>6), default to 1 so they can review from the start
       return profile.onboardingStep <= 6 ? profile.onboardingStep : 1;
     }
     return 1;
   });
 
-  // ✅ FIX: Effect is now ONLY for Redirects
-  // No setState calls here, so the lint error is gone.
+  // ✅ FIX: Logic for Redirects
   useEffect(() => {
+    // If profile is fully completed (>6)
     if (profile?.onboardingStep && profile.onboardingStep > 6) {
-      navigate("/technician");
+      
+      // ✅ CRITICAL FIX: Only redirect if NOT Rejected.
+      // If Rejected, stay here so they can fix inputs.
+      if (profile.verificationStatus !== "REJECTED") {
+        navigate("/technician");
+      }
     }
-  }, [profile?.onboardingStep, navigate]);
+  }, [profile?.onboardingStep, profile?.verificationStatus, navigate]);
 
   // Loading Guard
   if (loading || !profile) {
@@ -72,7 +76,9 @@ const OnboardingWizard: React.FC = () => {
     <div className="max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Complete Your Profile</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          {profile.verificationStatus === "REJECTED" ? "Update Your Profile" : "Complete Your Profile"}
+        </h1>
         <p className="text-gray-500 mt-1">
           Step {currentStep} of 6: {STEPS[currentStep - 1]?.title}
         </p>

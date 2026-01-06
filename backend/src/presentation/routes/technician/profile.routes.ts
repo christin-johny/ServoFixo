@@ -52,5 +52,9 @@ router.patch(
   "/status", 
   technicianProfileController.toggleOnlineStatus.bind(technicianProfileController)
 );
+router.post(
+  "/onboarding/resubmit", 
+  technicianProfileController.resubmitProfile.bind(technicianProfileController)
+);
 
 export default router;

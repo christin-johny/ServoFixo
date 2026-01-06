@@ -12,7 +12,6 @@ import { LogEvents } from "../../../../../shared/constants/LogEvents";
 // Import the DTO from the Use Case file (or a shared DTO file)
 import { UploadTechnicianFileInput } from "../../../application/use-cases/technician/profile/UploadTechnicianFileUseCase";
 import { ToggleStatusInput } from "../../../application/use-cases/technician/profile/ToggleOnlineStatusUseCase";
-
 import {
   TechnicianOnboardingInput,
   OnboardingStep1Dto,
@@ -25,11 +24,20 @@ import {
 
 export class TechnicianProfileController {
   constructor(
-    private readonly _onboardingUseCase: IUseCase<boolean, [TechnicianOnboardingInput]>,
+    private readonly _onboardingUseCase: IUseCase<
+      boolean,
+      [TechnicianOnboardingInput]
+    >,
     private readonly _getProfileUseCase: IUseCase<Technician | null, [string]>,
-    // ✅ FIX: Inject IUseCase interface, NOT the concrete class
-    private readonly _uploadFileUseCase: IUseCase<string, [string, UploadTechnicianFileInput]>,
-    private readonly _toggleStatusUseCase: IUseCase<boolean, [ToggleStatusInput]>,
+    private readonly _uploadFileUseCase: IUseCase<
+      string,
+      [string, UploadTechnicianFileInput]
+    >,
+    private readonly _toggleStatusUseCase: IUseCase<
+      boolean,
+      [ToggleStatusInput]
+    >,
+    private readonly _resubmitProfileUseCase: IUseCase<void, [string]>,
     private readonly _logger: ILogger
   ) {}
 
@@ -39,9 +47,10 @@ export class TechnicianProfileController {
   ): Promise<Response> => {
     try {
       const technicianId = (req as any).userId as string;
-      
-      // ✅ ADDED MISSING LOG
-      this._logger.info(LogEvents.TECH_GET_ONBOARDING_STATUS_INIT, { technicianId });
+
+      this._logger.info(LogEvents.TECH_GET_ONBOARDING_STATUS_INIT, {
+        technicianId,
+      });
 
       if (!technicianId)
         return res
@@ -57,12 +66,10 @@ export class TechnicianProfileController {
       return res.status(StatusCodes.OK).json({
         id: technician.getId(),
 
-        // Status Flags
         onboardingStep: technician.getOnboardingStep(),
         verificationStatus: technician.getVerificationStatus(),
         availability: { isOnline: technician.getIsOnline() },
 
-        // Step 1: Personal
         personalDetails: {
           name: technician.getName(),
           email: technician.getEmail(),
@@ -72,14 +79,11 @@ export class TechnicianProfileController {
           experienceSummary: technician.getExperienceSummary(),
         },
 
-        // Step 2: Work Preferences
         categoryIds: technician.getCategoryIds(),
         subServiceIds: technician.getSubServiceIds(),
 
-        // Step 3: Zones
         zoneIds: technician.getZoneIds(),
 
-        // Step 5: Documents (Safe map)
         documents: technician.getDocuments().map((doc) => ({
           type: doc.type,
           fileName: doc.fileName,
@@ -88,7 +92,6 @@ export class TechnicianProfileController {
           rejectionReason: doc.rejectionReason,
         })),
 
-        // Step 6: Bank Details
         bankDetails: technician.getBankDetails() || null,
       });
     } catch (err) {
@@ -101,8 +104,10 @@ export class TechnicianProfileController {
     res: Response
   ): Promise<Response> => {
     try {
-      // ✅ ADDED MISSING LOG
-      this._logger.info(LogEvents.TECH_UPDATE_DETAILS_INIT, { step: 1, userId: (req as any).userId });
+      this._logger.info(LogEvents.TECH_UPDATE_DETAILS_INIT, {
+        step: 1,
+        userId: (req as any).userId,
+      });
 
       const input: OnboardingStep1Dto = {
         ...req.body,
@@ -123,7 +128,10 @@ export class TechnicianProfileController {
     res: Response
   ): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.TECH_UPDATE_DETAILS_INIT, { step: 2, userId: (req as any).userId });
+      this._logger.info(LogEvents.TECH_UPDATE_DETAILS_INIT, {
+        step: 2,
+        userId: (req as any).userId,
+      });
 
       const input: OnboardingStep2Dto = {
         ...req.body,
@@ -141,7 +149,10 @@ export class TechnicianProfileController {
 
   updateZones = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.TECH_UPDATE_DETAILS_INIT, { step: 3, userId: (req as any).userId });
+      this._logger.info(LogEvents.TECH_UPDATE_DETAILS_INIT, {
+        step: 3,
+        userId: (req as any).userId,
+      });
 
       const input: OnboardingStep3Dto = {
         ...req.body,
@@ -156,13 +167,16 @@ export class TechnicianProfileController {
       return this.handleError(err, res);
     }
   };
-  
+
   updateRateAgreement = async (
     req: Request,
     res: Response
   ): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.TECH_UPDATE_DETAILS_INIT, { step: 4, userId: (req as any).userId });
+      this._logger.info(LogEvents.TECH_UPDATE_DETAILS_INIT, {
+        step: 4,
+        userId: (req as any).userId,
+      });
 
       const input: OnboardingStep4Dto = {
         ...req.body,
@@ -180,7 +194,10 @@ export class TechnicianProfileController {
 
   updateDocuments = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.TECH_UPDATE_DETAILS_INIT, { step: 5, userId: (req as any).userId });
+      this._logger.info(LogEvents.TECH_UPDATE_DETAILS_INIT, {
+        step: 5,
+        userId: (req as any).userId,
+      });
 
       const input: OnboardingStep5Dto = {
         ...req.body,
@@ -201,7 +218,10 @@ export class TechnicianProfileController {
     res: Response
   ): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.TECH_UPDATE_DETAILS_INIT, { step: 6, userId: (req as any).userId });
+      this._logger.info(LogEvents.TECH_UPDATE_DETAILS_INIT, {
+        step: 6,
+        userId: (req as any).userId,
+      });
 
       const input: OnboardingStep6Dto = {
         ...req.body,
@@ -246,8 +266,7 @@ export class TechnicianProfileController {
   uploadDocument = async (req: Request, res: Response): Promise<Response> => {
     try {
       const technicianId = (req as any).userId;
-      
-      // ✅ ADDED MISSING LOG
+
       this._logger.info(LogEvents.TECH_DOC_UPLOAD_INIT, { technicianId });
 
       if (!req.file)
@@ -270,23 +289,47 @@ export class TechnicianProfileController {
       return this.handleError(err, res);
     }
   };
-  toggleOnlineStatus = async (req: Request, res: Response): Promise<Response> => {
+  toggleOnlineStatus = async (
+    req: Request,
+    res: Response
+  ): Promise<Response> => {
     try {
       const technicianId = (req as any).userId;
       const { lat, lng } = req.body;
 
-      this._logger.info(LogEvents.TECH_STATUS_TOGGLE_INIT, { technicianId, lat, lng });
+      this._logger.info(LogEvents.TECH_STATUS_TOGGLE_INIT, {
+        technicianId,
+        lat,
+        lng,
+      });
 
-      const newStatus = await this._toggleStatusUseCase.execute({ 
-        technicianId, 
-        lat: lat ? parseFloat(lat) : undefined, 
-        lng: lng ? parseFloat(lng) : undefined 
+      const newStatus = await this._toggleStatusUseCase.execute({
+        technicianId,
+        lat: lat ? parseFloat(lat) : undefined,
+        lng: lng ? parseFloat(lng) : undefined,
       });
 
       return res.status(StatusCodes.OK).json({
         success: true,
         isOnline: newStatus,
-        message: newStatus ? SuccessMessages.TECH_ONLINE : SuccessMessages.TECH_OFFLINE
+        message: newStatus
+          ? SuccessMessages.TECH_ONLINE
+          : SuccessMessages.TECH_OFFLINE,
+      });
+    } catch (err) {
+      return this.handleError(err, res);
+    }
+  };
+  resubmitProfile = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const technicianId = (req as any).userId;
+      this._logger.info("Technician Resubmission Initiated", { technicianId });
+
+      await this._resubmitProfileUseCase.execute(technicianId);
+
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        message: SuccessMessages.TECH_PROFILE_SUBMITTED,
       });
     } catch (err) {
       return this.handleError(err, res);
