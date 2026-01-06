@@ -48,5 +48,9 @@ router.post(
   uploadDocumentMiddleware.single("file"), 
   technicianProfileController.uploadDocument.bind(technicianProfileController)
 );
+router.patch(
+  "/status", 
+  technicianProfileController.toggleOnlineStatus.bind(technicianProfileController)
+);
 
 export default router;

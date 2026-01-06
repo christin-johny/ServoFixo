@@ -3,7 +3,7 @@ import { IBaseRepository } from "./IBaseRepository";
 
 export interface TechnicianFilterParams {
   search?: string;
-  status?: "PENDING"|"VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
+  status?: "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
   zoneId?: string;
   categoryId?: string;
   isOnline?: boolean;
@@ -17,17 +17,26 @@ export interface PaginatedTechnicianResult {
   limit: number;
 }
 
-export interface ITechnicianRepository extends IBaseRepository<Technician> {
-  // create(technician: Technician): Promise<Technician>;
-  // update(technician: Technician): Promise<Technician>;
-  // delete(id: string): Promise<boolean>;
-  // findById(id: string): Promise<Technician | null>;
+// ✅ Added missing interface required by findPendingVerification
+export interface VerificationQueueFilters {
+  page: number;
+  limit: number;
+  search?: string;
+}
 
+// ✅ Added missing interface required by updateTechnician
+export interface TechnicianUpdatePayload {
+  name?: string;
+  email?: string;
+  phone?: string;
+  experienceSummary?: string;
+}
+
+export interface ITechnicianRepository extends IBaseRepository<Technician> {
   // Core Lookups
   findByEmail(email: string): Promise<Technician | null>;
   findByPhone(phone: string): Promise<Technician | null>;
 
-  // Listings
   findAllPaginated(
     page: number,
     limit: number,
@@ -40,4 +49,29 @@ export interface ITechnicianRepository extends IBaseRepository<Technician> {
     subServiceId: string,
     limit?: number
   ): Promise<Technician[]>;
+
+  // ✅ Merged Methods (Admin & Availability)
+  findPendingVerification(
+    filters: VerificationQueueFilters
+  ): Promise<{ technicians: Technician[]; total: number }>;
+
+  updateTechnician(id: string, payload: TechnicianUpdatePayload): Promise<void>;
+
+  toggleBlockTechnician(
+    id: string,
+    isSuspended: boolean,
+    reason?: string
+  ): Promise<void>;
+
+  updateOnlineStatus(
+    id: string,
+    isOnline: boolean,
+    location?: { lat: number; lng: number }
+  ): Promise<void>;
+
+  verifyZoneAccess(
+    zoneIds: string[],
+    lat: number,
+    lng: number
+  ): Promise<boolean>;
 }

@@ -3,12 +3,15 @@ import {
   ITechnicianRepository,
   TechnicianFilterParams,
   PaginatedTechnicianResult,
+  VerificationQueueFilters,
+  TechnicianUpdatePayload 
 } from "../../../domain/repositories/ITechnicianRepository";
 import { Technician } from "../../../domain/entities/Technician";
 import {
   TechnicianModel,
   TechnicianDocument,
 } from "../mongoose/models/TechnicianModel";
+import { ZoneModel } from "../mongoose/models/ZoneModel";
 
 export class TechnicianMongoRepository implements ITechnicianRepository {
   
@@ -22,94 +25,67 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     const persistenceData = this.toPersistence(technician);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { _id, ...updateData } = persistenceData as any;
-
-    const doc = await TechnicianModel.findByIdAndUpdate(
-      technician.getId(),
-      updateData,
-      { new: true }
-    ).exec();
-
+    const doc = await TechnicianModel.findByIdAndUpdate(technician.getId(), updateData, { new: true }).exec();
     if (!doc) throw new Error("Technician not found for update");
     return this.toDomain(doc);
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await TechnicianModel.findByIdAndUpdate(
-      id,
-      { isDeleted: true },
-      { new: true }
-    ).exec();
+    const result = await TechnicianModel.findByIdAndUpdate(id, { isDeleted: true }, { new: true }).exec();
     return !!result;
   }
 
   async findById(id: string): Promise<Technician | null> {
-    const doc = await TechnicianModel.findOne({
-      _id: id,
-      isDeleted: { $ne: true },
-    }).exec();
+    const doc = await TechnicianModel.findOne({ _id: id, isDeleted: { $ne: true } }).exec();
     if (!doc) return null;
     return this.toDomain(doc);
   }
 
   async findByEmail(email: string): Promise<Technician | null> {
-    const doc = await TechnicianModel.findOne({
-      email: email.toLowerCase(),
-      isDeleted: { $ne: true },
-    }).exec();
+    const doc = await TechnicianModel.findOne({ email: email.toLowerCase(), isDeleted: { $ne: true } }).exec();
     if (!doc) return null;
     return this.toDomain(doc);
   }
 
   async findByPhone(phone: string): Promise<Technician | null> {
-    const doc = await TechnicianModel.findOne({
-      phone,
-      isDeleted: { $ne: true },
-    }).exec();
+    const doc = await TechnicianModel.findOne({ phone, isDeleted: { $ne: true } }).exec();
     if (!doc) return null;
     return this.toDomain(doc);
   }
 
-  async findAllPaginated(
-    page: number,
-    limit: number,
-    filters: TechnicianFilterParams
-  ): Promise<PaginatedTechnicianResult> {
+  async findAllPaginated(page: number, limit: number, filters: TechnicianFilterParams): Promise<PaginatedTechnicianResult> {
     const query: FilterQuery<TechnicianDocument> = { isDeleted: { $ne: true } };
-
     if (filters.search) {
       const searchRegex = new RegExp(filters.search, "i");
-      query.$or = [
-        { name: searchRegex },
-        { email: searchRegex },
-        { phone: searchRegex },
-      ];
+      query.$or = [{ name: searchRegex }, { email: searchRegex }, { phone: searchRegex }];
     }
-
     if (filters.status) query.verificationStatus = filters.status;
     if (filters.zoneId) query.zoneIds = filters.zoneId;
     if (filters.categoryId) query.categoryIds = filters.categoryId;
     if (filters.isOnline !== undefined) query["availability.isOnline"] = filters.isOnline;
 
     const skip = (page - 1) * limit;
-
     const [docs, total] = await Promise.all([
       TechnicianModel.find(query).skip(skip).limit(limit).sort({ createdAt: -1 }).exec(),
       TechnicianModel.countDocuments(query),
     ]);
-
-    return {
-      data: docs.map((doc) => this.toDomain(doc)),
-      total,
-      page,
-      limit,
-    };
+    return { data: docs.map((doc) => this.toDomain(doc)), total, page, limit };
   }
 
-  async findAvailableInZone(
-    zoneId: string,
-    subServiceId: string,
-    limit: number = 10
-  ): Promise<Technician[]> {
+  async findPendingVerification(filters: VerificationQueueFilters): Promise<{ technicians: Technician[], total: number }> {
+    const skip = (filters.page - 1) * filters.limit;
+    const query: any = { verificationStatus: "VERIFICATION_PENDING" };
+    if (filters.search) {
+      query.$or = [{ name: { $regex: filters.search, $options: "i" } }, { email: { $regex: filters.search, $options: "i" } }, { phone: { $regex: filters.search, $options: "i" } }];
+    }
+    const [docs, total] = await Promise.all([
+      TechnicianModel.find(query).sort({ updatedAt: 1 }).skip(skip).limit(filters.limit).exec(), 
+      TechnicianModel.countDocuments(query)
+    ]);
+    return { technicians: docs.map(d => this.toDomain(d)), total };
+  }
+
+  async findAvailableInZone(zoneId: string, subServiceId: string, limit: number = 10): Promise<Technician[]> {
     const query = {
       isDeleted: { $ne: true },
       verificationStatus: "VERIFIED",
@@ -118,13 +94,54 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       zoneIds: zoneId,
       subServiceIds: subServiceId,
     };
-
     const docs = await TechnicianModel.find(query).limit(limit).exec();
     return docs.map((doc) => this.toDomain(doc));
   }
 
-  // --- Internal Mappers ---
+  async updateTechnician(id: string, payload: TechnicianUpdatePayload): Promise<void> {
+    await TechnicianModel.findByIdAndUpdate(id, { $set: payload }).exec();
+  }
 
+  async toggleBlockTechnician(id: string, isSuspended: boolean, reason?: string): Promise<void> {
+    const update = { isSuspended, suspendReason: reason || "" };
+    await TechnicianModel.findByIdAndUpdate(id, { $set: update }).exec();
+  }
+
+  async verifyZoneAccess(zoneIds: string[], lat: number, lng: number): Promise<boolean> {
+    const count = await ZoneModel.countDocuments({
+      _id: { $in: zoneIds },
+      isActive: true,
+      isDeleted: false,
+      location: {
+        $geoIntersects: {
+          $geometry: {
+            type: "Point",
+            coordinates: [lng, lat] 
+          }
+        }
+      }
+    });
+    return count > 0;
+  }
+
+  async updateOnlineStatus(id: string, isOnline: boolean, location?: { lat: number; lng: number }): Promise<void> {
+    const update: any = {
+      "availability.isOnline": isOnline,
+      "availability.lastSeen": new Date()
+    };
+
+    if (location) {
+      update.currentLocation = {
+        type: "Point",
+        coordinates: [location.lng, location.lat], 
+        lastUpdated: new Date()
+      };
+    }
+
+    await TechnicianModel.findByIdAndUpdate(id, { $set: update }).exec();
+  }
+
+  // --- Internal Mappers ---
   private toDomain(doc: TechnicianDocument): Technician {
     // Check coordinates existence safely
     const hasCoordinates = 
@@ -151,32 +168,25 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       email: doc.email,
       phone: doc.phone,
       password: doc.password,
-      
       onboardingStep: doc.onboardingStep || 1,
       experienceSummary: doc.experienceSummary || "",
-      
       avatarUrl: doc.avatarUrl,
       bio: doc.bio,
-      
       categoryIds: doc.categoryIds,
       subServiceIds: doc.subServiceIds,
       zoneIds: doc.zoneIds,
-      
       documents: mappedDocuments,
       bankDetails: doc.bankDetails,
       walletBalance: doc.walletBalance,
       availability: doc.availability,
       ratings: doc.ratings,
-      
       verificationStatus: doc.verificationStatus,
       verificationReason: doc.verificationReason,
       isSuspended: doc.isSuspended,
       suspendReason: doc.suspendReason,
-      
       portfolioUrls: doc.portfolioUrls,
       deviceToken: doc.deviceToken,
       emergencyContact: doc.emergencyContact,
-      
       currentLocation: hasCoordinates
         ? {
             type: "Point",
@@ -187,7 +197,8 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
             lastUpdated: doc.currentLocation!.lastUpdated,
           }
         : undefined,
-
+      isOnline: doc.availability?.isOnline || false, 
+      isDeleted: doc.isDeleted,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
     });
@@ -196,12 +207,12 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
   private toPersistence(entity: Technician): Partial<TechnicianDocument> {
     const props = entity.toProps();
     
-    // ✅ Fix: Cast generic string to specific Enum for Documents
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const persistenceDocuments = props.documents.map((d: any) => ({
       type: d.type,
       fileUrl: d.fileUrl,
       fileName: d.fileName,
-      status: d.status as "PENDING" | "VERIFICATION_PENDING" |  "APPROVED" | "REJECTED", // Cast here
+      status: d.status as "PENDING" | "VERIFICATION_PENDING" |  "APPROVED" | "REJECTED",
       rejectionReason: d.rejectionReason,
       uploadedAt: d.uploadedAt || new Date()
     }));
@@ -211,31 +222,25 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       email: props.email,
       phone: props.phone,
       password: props.password,
-      
       onboardingStep: props.onboardingStep,
       experienceSummary: props.experienceSummary,
-      
       avatarUrl: props.avatarUrl,
       bio: props.bio,
       categoryIds: props.categoryIds,
       subServiceIds: props.subServiceIds,
       zoneIds: props.zoneIds,
-      
-      documents: persistenceDocuments, // Use the casted docs
-      
+      documents: persistenceDocuments,
       bankDetails: props.bankDetails,
       walletBalance: props.walletBalance,
       availability: props.availability,
       ratings: props.ratings,
       verificationStatus: props.verificationStatus as "PENDING"  | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED",
-      
       verificationReason: props.verificationReason,
       isSuspended: props.isSuspended,
       suspendReason: props.suspendReason,
       portfolioUrls: props.portfolioUrls,
       deviceToken: props.deviceToken,
       emergencyContact: props.emergencyContact,
-
       currentLocation: props.currentLocation
         ? {
             type: "Point",
@@ -243,7 +248,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
             lastUpdated: props.currentLocation.lastUpdated,
           }
         : undefined,
-        
+      isDeleted: props.isDeleted,
       createdAt: props.createdAt,
       updatedAt: props.updatedAt,
     };

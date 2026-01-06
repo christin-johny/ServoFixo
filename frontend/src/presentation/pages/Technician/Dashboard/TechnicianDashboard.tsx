@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { 
   Power, 
@@ -7,35 +7,141 @@ import {
   DollarSign, 
   ShieldAlert, 
   Briefcase, 
-  Timer,
-  AlertCircle,
+  Timer, 
+  AlertCircle, 
+  Loader2, 
   type LucideIcon 
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useNotification } from "../../../hooks/useNotification";
 import type { RootState, AppDispatch } from "../../../../store/store";
 import { setAvailability } from "../../../../store/technicianSlice";
+import { toggleOnlineStatus } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
+
+// ✅ 1. Define the structure of an Axios Error
+interface ApiError {
+  response?: {
+    data?: {
+      error?: string;   // Matches {"error": "..."}
+      message?: string; // Matches {"message": "..."}
+    };
+  };
+  message?: string;     // Matches standard JS Error message
+}
+
+// ✅ 2. Robust Error Extractor (No 'any')
+const extractErrorMessage = (error: unknown): string => {
+  if (!error) return "An unknown error occurred.";
+
+  // If it's just a string, return it
+  if (typeof error === "string") return error;
+
+  // Check if it's an object to safely access properties
+  if (typeof error === "object") {
+    const err = error as ApiError; // Safe assertion for checking
+
+    // Priority 1: Backend 'error' field (Your specific case)
+    if (err.response?.data?.error) {
+      return err.response.data.error;
+    }
+
+    // Priority 2: Backend 'message' field
+    if (err.response?.data?.message) {
+      return err.response.data.message;
+    }
+
+    // Priority 3: Standard JS/Axios error message (e.g., "Network Error")
+    if (err.message) {
+      return err.message;
+    }
+  }
+
+  return "Failed to update status. Please try again.";
+};
 
 const TechnicianDashboard: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   
-  // ✅ FIX: Destructure 'stats' separately from 'profile'
   const { profile, stats } = useSelector((state: RootState) => state.technician);
+  const [isLocating, setIsLocating] = useState(false);
+  const { showSuccess, showError } = useNotification();
 
   // Default Fallbacks
   const status = profile?.verificationStatus || "PENDING";
   const onboardingStep = profile?.onboardingStep || 0;
   const isOnline = profile?.availability?.isOnline || false;
 
-  // Determine Dashboard State
   const isVerified = status === "VERIFIED";
   const isPendingVerification = status === "VERIFICATION_PENDING";
   const isRejected = status === "REJECTED";
   const isIncomplete = status === "PENDING" || (status === "REJECTED" && onboardingStep < 7); 
 
-  const handleToggleOnline = () => {
+  const handleToggleOnline = async () => {
     if (!isVerified) return;
-    dispatch(setAvailability(!isOnline));
+
+    // --- CASE 1: Going OFFLINE (No location needed) ---
+    if (isOnline) {
+       try {
+         setIsLocating(true);
+         const response = await toggleOnlineStatus({ isOnline: false });
+         
+         // Sync Redux
+         dispatch(setAvailability(response.isOnline));
+         showSuccess("You are now Offline");
+       } catch (err: unknown) { // ✅ Use unknown
+         const message = extractErrorMessage(err);
+         showError(message);
+       } finally {
+         setIsLocating(false);
+       }
+       return;
+    }
+
+    // --- CASE 2: Going ONLINE (Location Required) ---
+    setIsLocating(true);
+    
+    if (!navigator.geolocation) {
+      showError("Geolocation is not supported by your browser");
+      setIsLocating(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          // 1. Call API
+          const response = await toggleOnlineStatus({ 
+            isOnline: true, 
+            lat: latitude, 
+            lng: longitude 
+          });
+
+          // 2. Dispatch Success to Redux
+          dispatch(setAvailability(response.isOnline));
+          showSuccess("You are now Online!");
+
+        } catch (err: unknown) { // ✅ Use unknown & Trace it down
+           console.error("Online Toggle Error:", err);
+           
+           // Extract specific error (e.g., "Outside Zone")
+           const message = extractErrorMessage(err);
+           showError(message);
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        setIsLocating(false);
+        let msg = "Unable to retrieve location";
+        if (error.code === 1) msg = "Location permission denied. Please enable it.";
+        if (error.code === 2) msg = "Location unavailable. Check your GPS.";
+        showError(msg);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   return (
@@ -50,10 +156,10 @@ const TechnicianDashboard: React.FC = () => {
           </p>
         </div>
         
-        {/* Online/Offline Toggle */}
+        {/* Online/Offline Toggle Button */}
         <button 
           onClick={handleToggleOnline}
-          disabled={!isVerified}
+          disabled={!isVerified || isLocating}
           className={`flex items-center justify-center gap-2 px-6 py-3 rounded-full font-semibold transition-all shadow-sm ${
             !isVerified 
               ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
@@ -62,8 +168,20 @@ const TechnicianDashboard: React.FC = () => {
                 : "bg-gray-200 text-gray-600 hover:bg-gray-300"
           }`}
         >
-          <Power className="w-5 h-5" />
-          {!isVerified ? "Verification Pending" : isOnline ? "You are Online" : "Go Online"}
+          {isLocating ? (
+             <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+             <Power className="w-5 h-5" />
+          )}
+          
+          {!isVerified 
+             ? "Verification Pending" 
+             : isLocating 
+               ? "Locating..." 
+               : isOnline 
+                 ? "You are Online" 
+                 : "Go Online"
+          }
         </button>
       </div>
 
@@ -132,7 +250,6 @@ const TechnicianDashboard: React.FC = () => {
 
       {/* --- STATS GRID --- */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {/* ✅ FIX: Use 'stats' from the destructured Redux state */}
         <StatCard 
           icon={DollarSign} 
           label="Today's Earnings" 
@@ -157,7 +274,6 @@ const TechnicianDashboard: React.FC = () => {
         <StatCard 
           icon={Briefcase} 
           label="Jobs Done" 
-          // ✅ FIX: Use 'stats.completedJobs'
           value={isVerified ? stats.completedJobs : "--"} 
           color="text-purple-600" 
           bg="bg-purple-50" 

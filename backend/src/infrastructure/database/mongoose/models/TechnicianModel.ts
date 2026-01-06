@@ -50,6 +50,7 @@ export interface TechnicianDocument extends Document {
     averageRating: number;
     totalReviews: number;
   };
+  
 
   verificationStatus: "PENDING"   | "VERIFICATION_PENDING" |"VERIFIED" | "REJECTED";
   verificationReason?: string;

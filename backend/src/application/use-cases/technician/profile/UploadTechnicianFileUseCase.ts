@@ -1,6 +1,7 @@
 import { IImageService } from "../../../interfaces/IImageService";
 import { ILogger } from "../../../interfaces/ILogger";
 import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { IUseCase } from "../../../interfaces/IUseCase";
 
 // ✅ STRICT Interface for Input
 export interface UploadTechnicianFileInput {
@@ -10,7 +11,8 @@ export interface UploadTechnicianFileInput {
   folder: "avatars" | "documents";
 }
 
-export class UploadTechnicianFileUseCase {
+// ✅ IMPLEMENTS IUseCase
+export class UploadTechnicianFileUseCase implements IUseCase<string, [string, UploadTechnicianFileInput]> {
   constructor(
     private readonly _imageService: IImageService,
     private readonly _logger: ILogger

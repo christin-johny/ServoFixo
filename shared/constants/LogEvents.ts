@@ -41,9 +41,12 @@ export const LogEvents = {
   // ==========================
   // TECHNICIAN ONBOARDING (NEW)
   // ==========================
-  TECHNICIAN_CREATE_SUCCESS: 'Technician Entity Created Successfully',
+TECHNICIAN_CREATE_SUCCESS: 'Technician Entity Created Successfully',
   TECH_PROFILE_ERROR: 'Technician Profile Error',
   
+  TECH_GET_ONBOARDING_STATUS_INIT: 'Technician: Fetch Onboarding Status Initiated', // NEW
+  TECH_UPDATE_DETAILS_INIT: 'Technician: Update Onboarding Step Initiated', // NEW
+
   TECH_ONBOARDING_STEP_1_SUCCESS: 'Technician Step 1 (Personal) Completed',
   TECH_ONBOARDING_STEP_2_SUCCESS: 'Technician Step 2 (Work Prefs) Completed',
   TECH_ONBOARDING_STEP_3_SUCCESS: 'Technician Step 3 (Zones) Completed',
@@ -56,6 +59,11 @@ export const LogEvents = {
   TECH_DOC_UPLOAD_FAILED: 'Technician Document Upload Failed',
   
   TECH_PROFILE_SUBMITTED: 'Technician Profile Submitted for Verification',
+
+  TECH_STATUS_TOGGLE_INIT: 'Technician Status Toggle Initiated',
+  TECH_STATUS_TOGGLE_SUCCESS: 'Technician Status Updated Successfully',
+  TECH_STATUS_TOGGLE_FAILED: 'Technician Status Toggle Failed',
+  TECH_LOCATION_UPDATE_FAILED: 'Technician Location Update Failed',
 
   // ==========================
   // TECHNICIAN DATA FETCH (NEW)
@@ -212,4 +220,29 @@ export const LogEvents = {
 
   ADMIN_CUSTOMER_ADDRESS_FETCH_INIT: 'Admin: Fetch Customer Addresses Initiated',
   ADMIN_CUSTOMER_ADDRESS_FETCH_FAILED: 'Admin: Fetch Customer Addresses Failed',
+
+  ADMIN_GET_TECH_QUEUE_INIT: "Admin: Fetch Verification Queue Initiated",
+  ADMIN_GET_TECH_QUEUE_FAILED: "Admin: Fetch Verification Queue Failed",
+  
+  ADMIN_GET_ALL_TECHS_INIT: "Admin: Fetch All Technicians Initiated",
+  ADMIN_GET_ALL_TECHS_FAILED: "Admin: Fetch All Technicians Failed",
+
+  ADMIN_GET_TECH_PROFILE_INIT: "Admin: Get Technician Profile Initiated",
+  ADMIN_GET_TECH_PROFILE_FAILED: "Admin: Get Technician Profile Failed",
+
+  ADMIN_VERIFY_TECH_INIT: "Admin: Verify Technician Initiated",
+  ADMIN_VERIFY_TECH_SUCCESS: "Admin: Verify Technician Successful", 
+  ADMIN_VERIFY_TECH_FAILED: "Admin: Verify Technician Failed",
+
+  ADMIN_UPDATE_TECH_INIT: "Admin: Update Technician Initiated",
+  ADMIN_UPDATE_TECH_SUCCESS: "Admin: Update Technician Successful",
+  ADMIN_UPDATE_TECH_FAILED: "Admin: Update Technician Failed",
+
+  ADMIN_BLOCK_TECH_INIT: "Admin: Block/Unblock Technician Initiated",
+  ADMIN_BLOCK_TECH_SUCCESS: "Admin: Block/Unblock Technician Successful", 
+  ADMIN_BLOCK_TECH_FAILED: "Admin: Block/Unblock Technician Failed",
+
+  ADMIN_DELETE_TECH_INIT: "Admin: Delete Technician Initiated",
+  ADMIN_DELETE_TECH_SUCCESS: "Admin: Delete Technician Successful",
+  ADMIN_DELETE_TECH_FAILED: "Admin: Delete Technician Failed",
 };

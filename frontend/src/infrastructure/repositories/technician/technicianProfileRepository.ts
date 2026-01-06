@@ -1,7 +1,6 @@
 import api from "../../api/axiosClient";
 import { TECHNICIAN_PROFILE_ENDPOINTS } from "../../api/endpoints/Technician/technician.endpoints";
 
-// 1. Define Strict DTO
 export interface TechnicianProfileStatusDto {
   id: string;
   onboardingStep: number;
@@ -18,13 +17,17 @@ export interface TechnicianProfileStatusDto {
     experienceSummary?: string;
   };
 }
+export interface ToggleStatusPayload {
+  lat?: number;
+  lng?: number;
+  isOnline?: boolean;
+}
 
-// 2. Repository Function
 export const getTechnicianProfileStatus = async (): Promise<TechnicianProfileStatusDto> => {
-  // ✅ FIX: Removed <TechnicianProfileStatusDto> from .get()
-  // Instead, we let axios return 'any' and cast the .data property
   const response = await api.get(TECHNICIAN_PROFILE_ENDPOINTS.GET_STATUS);
-  
-  // ✅ Explicitly cast the data to your DTO
   return response.data as TechnicianProfileStatusDto;
+};
+export const toggleOnlineStatus = async (payload: ToggleStatusPayload) => {
+  const response = await api.patch("/technician/profile/status", payload);
+  return response.data; 
 };

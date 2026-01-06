@@ -61,6 +61,13 @@ import { TechnicianAuthController } from "../../presentation/controllers/Technic
 import { TechnicianDataController } from "../../presentation/controllers/Technician/TechnicianDataController";
 import { FixedCommissionStrategy } from "../services/FixedCommissionStrategy";
 import { GetTechnicianRateCardUseCase } from "../../application/use-cases/technician/profile/GetTechnicianRateCardUseCase";
+
+// ✅ Resolved Conflicts Here:
+import { UpdateTechnicianUseCase } from "../../application/use-cases/technician/profile/UpdateTechnicianUseCase";
+import { BlockTechnicianUseCase } from "../../application/use-cases/technician/profile/BlockTechnicianUseCase";
+import { DeleteTechnicianUseCase } from "../../application/use-cases/technician/profile/DeleteTechnicianUseCase";
+import { ToggleOnlineStatusUseCase } from "../../application/use-cases/technician/profile/ToggleOnlineStatusUseCase";
+
 // --- Technician Profile Imports ---
 import { TechnicianOnboardingUseCase } from "../../application/use-cases/technician/profile/TechnicianOnboardingUseCase"; 
 import { GetTechnicianProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianProfileUseCase";
@@ -439,12 +446,17 @@ const uploadTechnicianFileUseCase = new UploadTechnicianFileUseCase(
   imageService, 
   logger
 );
+const toggleOnlineStatusUseCase = new ToggleOnlineStatusUseCase(
+  technicianRepo,
+  logger
+);
 
 // 2. Instantiate & Export Profile Controller
 export const technicianProfileController = new TechnicianProfileController(
   technicianOnboardingUseCase, 
   getTechnicianProfileUseCase, 
   uploadTechnicianFileUseCase,
+  toggleOnlineStatusUseCase,
   logger
 );
 

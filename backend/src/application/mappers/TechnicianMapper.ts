@@ -106,4 +106,71 @@ export class TechnicianMapper {
       updatedAt: entity.getUpdatedAt(),
     };
   }
+<<<<<<< Updated upstream
 }
+=======
+  static toQueueItem(entity: Technician): TechnicianQueueItemDto {
+    return {
+      id: entity.getId(),
+      name: entity.getName(),
+      email: entity.getEmail(),
+      phone: entity.getPhone(),
+      avatarUrl: entity.getAvatarUrl(),
+      status: entity.getVerificationStatus(),
+      // Using updatedAt as the submission timestamp for sorting
+      submittedAt: entity.getUpdatedAt(),
+      isSuspended: entity.getIsSuspended(),
+    };
+  }
+
+  // ✅ NEW: Mapper for Admin Verification Console (Detailed View)
+  static toAdminProfile(entity: Technician): AdminTechnicianProfileDto {
+    const documents = entity.getDocuments();
+    const bank = entity.getBankDetails();
+
+    return {
+      id: entity.getId(),
+      name: entity.getName(),
+      email: entity.getEmail(),
+      phone: entity.getPhone(),
+      avatarUrl: entity.getAvatarUrl(),
+
+      // Business Profile
+      experienceSummary: entity.getExperienceSummary(),
+      zoneIds: entity.getZoneIds(),
+      categoryIds: entity.getCategoryIds(),
+      subServiceIds:entity.getSubServiceIds(),
+
+      // Documents (Explicit mapping for Admin UI safety)
+      documents: Array.isArray(documents)
+        ? documents.map((d: any) => ({
+            type: d.type,
+            fileUrl: d.fileUrl,
+            fileName: d.fileName,
+            status: d.status as "PENDING" | "APPROVED" | "REJECTED",
+            rejectionReason: d.rejectionReason,
+          }))
+        : [],
+
+      // Bank Details
+      bankDetails: bank
+        ? {
+            accountHolderName: bank.accountHolderName,
+            accountNumber: bank.accountNumber,
+            ifscCode: bank.ifscCode,
+            bankName: bank.bankName,
+          }
+        : {
+            // Safe Fallback
+            accountHolderName: "",
+            accountNumber: "",
+            ifscCode: "",
+            bankName: "",
+          },
+
+      verificationStatus: entity.getVerificationStatus(),
+      submittedAt: entity.getUpdatedAt(),
+    };
+  }
+}
+>>>>>>> Stashed changes

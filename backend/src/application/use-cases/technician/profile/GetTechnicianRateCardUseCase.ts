@@ -52,7 +52,6 @@ export class GetTechnicianRateCardUseCase implements IUseCase<RateCardItem[], [s
         const basePrice = service.getBasePrice();
         const name = service.getName();
 
-        // ✅ DELEGATE TO STRATEGY (OCP)
         const fee = this._commissionStrategy.calculateCommission(basePrice);
         const rate = this._commissionStrategy.getCommissionRate();
         const share = basePrice - fee;

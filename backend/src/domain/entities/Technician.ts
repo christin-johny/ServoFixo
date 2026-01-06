@@ -29,6 +29,9 @@ export interface TechnicianProps {
   currentLocation?: any;
   emergencyContact?: any;
   isOnline?: boolean;
+  
+  // ✅ Included in Props
+  isDeleted?: boolean;
 
   createdAt?: Date;
   updatedAt?: Date;
@@ -65,6 +68,10 @@ export class Technician {
   private _currentLocation?: any;
   private _emergencyContact?: any;
   private _isOnline: boolean;
+  
+  // ✅ Added missing private property
+  private _isDeleted: boolean;
+
   private _createdAt: Date;
   private _updatedAt: Date;
 
@@ -103,6 +110,10 @@ export class Technician {
     this._currentLocation = props.currentLocation;
     this._emergencyContact = props.emergencyContact;
     this._isOnline = props.isOnline ?? false;
+    
+    // ✅ Initialize isDeleted
+    this._isDeleted = props.isDeleted ?? false;
+
     this._createdAt = props.createdAt || new Date();
     this._updatedAt = props.updatedAt || new Date();
   }
@@ -188,6 +199,12 @@ export class Technician {
   public getIsOnline(): boolean {
     return this._isOnline;
   }
+  
+  // ✅ Added Getter
+  public getIsDeleted(): boolean {
+    return this._isDeleted;
+  }
+
   public getCreatedAt(): Date {
     return this._createdAt;
   }
@@ -270,6 +287,10 @@ export class Technician {
       currentLocation: this._currentLocation,
       emergencyContact: this._emergencyContact,
       isOnline: this._isOnline,
+      
+      // ✅ Added toProps mapping
+      isDeleted: this._isDeleted,
+      
       createdAt: this._createdAt,
       updatedAt: this._updatedAt,
     };

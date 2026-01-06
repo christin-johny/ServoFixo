@@ -40,7 +40,6 @@ export enum ErrorMessages {
   CATEGORY_ALREADY_EXISTS = "Category with this name already exists",
   INVALID_IS_ACTIVE = "isActive must be a boolean",
 
-  // ✅ TECHNICIAN ONBOARDING ERRORS
   TECH_INVALID_STEP = "Invalid onboarding step",
   TECH_MISSING_CATS = "At least one category and service must be selected",
   TECH_MISSING_ZONES = "At least one operating zone is required",
@@ -49,6 +48,9 @@ export enum ErrorMessages {
   TECH_DOC_LIMIT = "Maximum 6 documents allowed",
   TECH_FILE_TOO_LARGE = "File size exceeds limit (5MB)",
   TECH_INVALID_FILE_TYPE = "Invalid file type. Only JPG, PNG, PDF allowed",
+  TECH_NOT_VERIFIED = "You must be verified to go online.",
+  TECH_LOCATION_REQUIRED = "Location access is required to go online.",
+  TECH_OUTSIDE_ZONE = "You are currently outside your selected service zones.",
 }
 
 export enum SuccessMessages {
@@ -78,8 +80,17 @@ export enum SuccessMessages {
   CATEGORY_DELETED = "Category deleted successfully",
   CATEGORY_STATUS_UPDATED = "Category status updated successfully",
 
-  // ✅ TECHNICIAN SUCCESS
   TECH_STEP_SAVED = "Progress saved successfully",
   TECH_PROFILE_SUBMITTED = "Profile submitted for verification",
   TECH_DOC_UPLOADED = "Document uploaded successfully",
+
+  TECH_UPDATED = "Technician updated successfully",
+  TECH_DELETED = "Technician deleted successfully",
+  TECH_VERIFIED = "Technician approved successfully",
+  TECH_REJECTED = "Technician rejected",
+  TECH_SUSPENDED = "Technician suspended",
+  TECH_ACTIVATED = "Technician activated",
+
+  TECH_ONLINE = "You are now Online",
+  TECH_OFFLINE = "You are now Offline",
 }
