@@ -3,8 +3,14 @@ import { IUseCase } from "../../../application/interfaces/IUseCase";
 // DTOs
 import { PaginatedTechnicianQueueResponse } from "../../../application/dto/technician/TechnicianQueueDto";
 import { AdminTechnicianProfileDto, VerifyTechnicianDto } from "../../../application/dto/technician/TechnicianVerificationDtos";
-// Params
-import { VerificationQueueFilters, TechnicianFilterParams } from "../../../domain/repositories/ITechnicianRepository";
+
+// ✅ FIXED IMPORT: Import from Domain Repository, not Frontend Infra
+import { 
+  TechnicianUpdatePayload, 
+  TechnicianFilterParams, 
+  VerificationQueueFilters 
+} from "../../../domain/repositories/ITechnicianRepository";
+
 // Utils
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
@@ -16,8 +22,13 @@ export class AdminTechnicianController {
     private readonly _getQueueUseCase: IUseCase<PaginatedTechnicianQueueResponse, [VerificationQueueFilters]>,
     private readonly _getFullProfileUseCase: IUseCase<AdminTechnicianProfileDto, [string]>, 
     private readonly _verifyTechnicianUseCase: IUseCase<void, [string, VerifyTechnicianDto]>, 
-    // ✅ ADDED THIS MISSING INJECTION
     private readonly _getAllTechniciansUseCase: IUseCase<PaginatedTechnicianQueueResponse, [TechnicianFilterParams & { page: number, limit: number }]>,
+    
+    // Abstracted Actions
+    private readonly _updateTechnicianUseCase: IUseCase<void, [string, TechnicianUpdatePayload]>,
+    private readonly _deleteTechnicianUseCase: IUseCase<void, [string]>,
+    private readonly _blockTechnicianUseCase: IUseCase<void, [string, boolean, string | undefined]>,
+    
     private readonly _logger: ILogger
   ) {}
 
@@ -108,7 +119,6 @@ export class AdminTechnicianController {
         zoneId: req.query.zoneId as string | undefined
       };
 
-      // ✅ Now this works because we injected it in constructor
       const result = await this._getAllTechniciansUseCase.execute(filters); 
 
       return res.status(StatusCodes.OK).json({
@@ -119,6 +129,61 @@ export class AdminTechnicianController {
     } catch (err: unknown) {
       this._logger.error("ADMIN_GET_ALL_TECHS_FAILED", String(err));
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
+    }
+  };
+
+  // --- Phase 4: Management Actions ---
+
+  // 1. Update Details
+  updateTechnician = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const { id } = req.params;
+      const updates = req.body as TechnicianUpdatePayload; // Strict typing
+
+      await this._updateTechnicianUseCase.execute(id, updates);
+
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        message: "Technician updated successfully"
+      });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: errorMessage });
+    }
+  };
+
+  // 2. Toggle Suspension
+  toggleBlockTechnician = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const { id } = req.params;
+      const { isSuspended, reason } = req.body;
+
+      await this._blockTechnicianUseCase.execute(id, isSuspended, reason);
+
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        message: isSuspended ? "Technician Suspended" : "Technician Activated"
+      });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: errorMessage });
+    }
+  };
+
+  // 3. Delete Technician
+  deleteTechnician = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const { id } = req.params;
+      
+      await this._deleteTechnicianUseCase.execute(id);
+
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        message: "Technician Deleted Successfully"
+      });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: errorMessage });
     }
   };
 }

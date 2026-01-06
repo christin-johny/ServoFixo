@@ -11,10 +11,11 @@ import Services from "../pages/Admin/Services/Services";
 import Customers from "../pages/Admin/Customers/AdminCustomersPage";
 import AdminCustomerProfilePage from "../pages/Admin/Customers/AdminCustomerProfilePage";
 
-// Technician Pages
+// --- Technician Pages ---
 import TechnicianVerificationQueue from "../pages/Admin/Technicians/TechnicianVerificationQueue";
 import TechnicianVerificationDetails from "../pages/Admin/Technicians/TechnicianVerificationDetails";
-import TechnicianList from "../pages/Admin/Technicians/TechnicianList"; // ✅ Import the List Page
+import TechnicianList from "../pages/Admin/Technicians/TechnicianList";
+import AdminTechnicianProfilePage from "../pages/Admin/Technicians/AdminTechnicianProfilePage";
 
 const AdminRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
@@ -48,12 +49,17 @@ const AdminRoutes: React.FC = () => (
           <Route path=":customerId" element={<AdminCustomerProfilePage />} />
         </Route>
 
+        {/* ✅ TECHNICIAN ROUTES */}
         <Route path="technicians">
+          {/* 1. Verification Flow (Pending items) */}
           <Route path="verification" element={<TechnicianVerificationQueue />} />
-
           <Route path="verification/:id" element={<TechnicianVerificationDetails />} />
-
+          
+          {/* 2. Management Flow (Master Database) */}
           <Route path="list" element={<TechnicianList />} />
+          
+          {/* 3. The New Profile Page (For viewing verified/suspended users) */}
+          <Route path=":id" element={<AdminTechnicianProfilePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="dashboard" replace />} />

@@ -61,6 +61,9 @@ import { TechnicianAuthController } from "../../presentation/controllers/Technic
 import { TechnicianDataController } from "../../presentation/controllers/Technician/TechnicianDataController";
 import { FixedCommissionStrategy } from "../services/FixedCommissionStrategy";
 import { GetTechnicianRateCardUseCase } from "../../application/use-cases/technician/profile/GetTechnicianRateCardUseCase";
+import { UpdateTechnicianUseCase } from "../../application/use-cases/technician/profile/UpdateTechnicianUseCase";
+import { BlockTechnicianUseCase } from "../../application/use-cases/technician/profile/BlockTechnicianUseCase";
+import { DeleteTechnicianUseCase } from "../../application/use-cases/technician/profile/DeleteTechnicianUseCase";
 // --- Technician Profile Imports ---
 import { TechnicianOnboardingUseCase } from "../../application/use-cases/technician/profile/TechnicianOnboardingUseCase"; 
 import { GetTechnicianProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianProfileUseCase";
@@ -481,10 +484,16 @@ const getTechnicianFullProfileUseCase = new GetTechnicianFullProfileUseCase(tech
 
 const verifyTechnicianUseCase = new VerifyTechnicianUseCase(technicianRepo, logger);
 const getAllTechniciansUseCase = new GetAllTechniciansUseCase(technicianRepo, logger);
+const updateTechnicianUseCase = new UpdateTechnicianUseCase(technicianRepo, logger);
+const deleteTechnicianUseCase = new DeleteTechnicianUseCase(technicianRepo, logger);
+const blockTechnicianUseCase = new BlockTechnicianUseCase(technicianRepo, logger);
 export const adminTechnicianController = new AdminTechnicianController(
   getVerificationQueueUseCase,
   getTechnicianFullProfileUseCase,
   verifyTechnicianUseCase,
   getAllTechniciansUseCase,
+  updateTechnicianUseCase, // Edit
+  deleteTechnicianUseCase, // Delete
+  blockTechnicianUseCase,  // Suspend
   logger
 );

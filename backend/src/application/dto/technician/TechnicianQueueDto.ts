@@ -8,6 +8,7 @@ export interface TechnicianQueueItemDto {
   categoryName?: string; 
   status: string;
   submittedAt: Date; 
+  isSuspended: boolean;
 }
 
 export interface PaginatedTechnicianQueueResponse {

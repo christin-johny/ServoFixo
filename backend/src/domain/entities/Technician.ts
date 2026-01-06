@@ -251,6 +251,11 @@ export class Technician {
     this._isOnline = status;
     this._updatedAt = new Date();
   }
+  public setSuspension(status: boolean, reason?: string): void {
+  this._isSuspended = status;
+  this._suspendReason = reason;
+  this._updatedAt = new Date();
+}
 
   public toProps(): TechnicianProps {
     return {

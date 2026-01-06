@@ -8,7 +8,12 @@ export interface TechnicianFilterParams {
   categoryId?: string;
   isOnline?: boolean;
 }
-
+export interface TechnicianUpdatePayload {
+  name?: string;
+  email?: string;
+  phone?: string;
+  experienceSummary?: string;
+}
 // Consistent with PaginatedResult<T> pattern
 export interface PaginatedTechnicianResult {
   data: Technician[];
@@ -47,4 +52,6 @@ export interface ITechnicianRepository extends IBaseRepository<Technician> {
   ): Promise<Technician[]>;
 
   findPendingVerification(filters: VerificationQueueFilters): Promise<{ technicians: Technician[], total: number }>;
+updateTechnician(id: string, payload: TechnicianUpdatePayload): Promise<void>;
+  toggleBlockTechnician(id: string, isSuspended: boolean, reason?: string): Promise<void>;
 }

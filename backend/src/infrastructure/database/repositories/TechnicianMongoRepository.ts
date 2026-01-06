@@ -3,7 +3,8 @@ import {
   ITechnicianRepository,
   TechnicianFilterParams,
   PaginatedTechnicianResult,
-  VerificationQueueFilters
+  VerificationQueueFilters,
+  TechnicianUpdatePayload // ✅ Import the new type
 } from "../../../domain/repositories/ITechnicianRepository";
 import { Technician } from "../../../domain/entities/Technician";
 import {
@@ -106,6 +107,33 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     };
   }
 
+  async findPendingVerification(filters: VerificationQueueFilters): Promise<{ technicians: Technician[], total: number }> {
+    const skip = (filters.page - 1) * filters.limit;
+    const query: any = { verificationStatus: "VERIFICATION_PENDING" };
+
+    if (filters.search) {
+      query.$or = [
+        { name: { $regex: filters.search, $options: "i" } },
+        { email: { $regex: filters.search, $options: "i" } },
+        { phone: { $regex: filters.search, $options: "i" } }
+      ];
+    }
+
+    const [docs, total] = await Promise.all([
+      TechnicianModel.find(query)
+        .sort({ updatedAt: 1 })
+        .skip(skip)
+        .limit(filters.limit)
+        .exec(), 
+      TechnicianModel.countDocuments(query)
+    ]);
+
+    return {
+      technicians: docs.map(d => this.toDomain(d)),
+      total
+    };
+  }
+
   async findAvailableInZone(
     zoneId: string,
     subServiceId: string,
@@ -123,46 +151,27 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     const docs = await TechnicianModel.find(query).limit(limit).exec();
     return docs.map((doc) => this.toDomain(doc));
   }
-async findPendingVerification(filters: VerificationQueueFilters): Promise<{ technicians: Technician[], total: number }> {
-    const skip = (filters.page - 1) * filters.limit;
-    
-    // Base Query
-    const query: any = { verificationStatus: "VERIFICATION_PENDING" };
 
-    if (filters.search) {
-      query.$or = [
-        { name: { $regex: filters.search, $options: "i" } },
-        { email: { $regex: filters.search, $options: "i" } },
-        { phone: { $regex: filters.search, $options: "i" } }
-      ];
-    }
+  // ✅ NEW: Implement Update
+  async updateTechnician(id: string, payload: TechnicianUpdatePayload): Promise<void> {
+    await TechnicianModel.findByIdAndUpdate(id, { $set: payload }).exec();
+  }
 
-    const [docs, total] = await Promise.all([
-      TechnicianModel.find(query)  // ❌ Removed 'this._model' -> Changed to 'TechnicianModel'
-        .sort({ updatedAt: 1 })
-        .skip(skip)
-        .limit(filters.limit)
-        .exec(), // ❌ Removed '.lean()' to ensure compatibility with toDomain
-      TechnicianModel.countDocuments(query) // ❌ Changed to 'TechnicianModel'
-    ]);
-
-    return {
-      technicians: docs.map(d => this.toDomain(d)), // ❌ Changed 'TechnicianMapper.toDomain' to 'this.toDomain'
-      total
-    };
+  // ✅ NEW: Implement Block/Suspend
+  async toggleBlockTechnician(id: string, isSuspended: boolean, reason?: string): Promise<void> {
+    const update = { isSuspended, suspendReason: reason || "" };
+    await TechnicianModel.findByIdAndUpdate(id, { $set: update }).exec();
   }
 
   // --- Internal Mappers ---
 
   private toDomain(doc: TechnicianDocument): Technician {
-    // Check coordinates existence safely
     const hasCoordinates = 
       doc.currentLocation && 
       doc.currentLocation.coordinates && 
       Array.isArray(doc.currentLocation.coordinates) &&
       doc.currentLocation.coordinates.length >= 2;
     
-    // Map documents safely
     const mappedDocuments = Array.isArray(doc.documents) 
       ? doc.documents.map(d => ({
           type: d.type,
@@ -225,12 +234,12 @@ async findPendingVerification(filters: VerificationQueueFilters): Promise<{ tech
   private toPersistence(entity: Technician): Partial<TechnicianDocument> {
     const props = entity.toProps();
     
-    // ✅ Fix: Cast generic string to specific Enum for Documents
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const persistenceDocuments = props.documents.map((d: any) => ({
       type: d.type,
       fileUrl: d.fileUrl,
       fileName: d.fileName,
-      status: d.status as "PENDING" | "VERIFICATION_PENDING" |  "APPROVED" | "REJECTED", // Cast here
+      status: d.status as "PENDING" | "VERIFICATION_PENDING" |  "APPROVED" | "REJECTED",
       rejectionReason: d.rejectionReason,
       uploadedAt: d.uploadedAt || new Date()
     }));
@@ -250,7 +259,7 @@ async findPendingVerification(filters: VerificationQueueFilters): Promise<{ tech
       subServiceIds: props.subServiceIds,
       zoneIds: props.zoneIds,
       
-      documents: persistenceDocuments, // Use the casted docs
+      documents: persistenceDocuments,
       
       bankDetails: props.bankDetails,
       walletBalance: props.walletBalance,
@@ -277,5 +286,4 @@ async findPendingVerification(filters: VerificationQueueFilters): Promise<{ tech
       updatedAt: props.updatedAt,
     };
   }
-  
 }

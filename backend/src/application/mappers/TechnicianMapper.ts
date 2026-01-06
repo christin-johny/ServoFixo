@@ -127,6 +127,7 @@ export class TechnicianMapper {
       status: entity.getVerificationStatus(),
       // Using updatedAt as the submission timestamp for sorting
       submittedAt: entity.getUpdatedAt(),
+      isSuspended: entity.getIsSuspended(),
     };
   }
 

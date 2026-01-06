@@ -1,4 +1,8 @@
-export type VerificationStatus = "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
+export type VerificationStatus =
+  | "PENDING"
+  | "VERIFICATION_PENDING"
+  | "VERIFIED"
+  | "REJECTED";
 
 // Matches backend: TechnicianQueueItemDto
 export interface TechnicianQueueItem {
@@ -27,11 +31,11 @@ export interface TechnicianProfileFull {
   email: string;
   phone: string;
   avatarUrl?: string;
-  
+
   experienceSummary: string;
   zoneIds: string[];
   categoryIds: string[];
-  
+
   documents: {
     type: string;
     fileUrl: string;
@@ -39,14 +43,22 @@ export interface TechnicianProfileFull {
     status: "PENDING" | "APPROVED" | "REJECTED";
     rejectionReason?: string;
   }[];
-  
+
   bankDetails: {
     accountHolderName: string;
     accountNumber: string;
     ifscCode: string;
     bankName: string;
   };
-
+  isSuspended: boolean;
+  ratings: {
+    averageRating: number;
+    totalReviews: number;
+  };
+  walletBalance:{
+    currentBalance:number;
+    frozenAmount:number;
+  }
   verificationStatus: VerificationStatus;
   submittedAt: string;
 }
