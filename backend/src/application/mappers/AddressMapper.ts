@@ -3,13 +3,11 @@ import { CreateAddressDto } from "../dto/address/CreateAddressDto";
 import { AddressResponseDto } from "../dto/address/AddressResponseDto";
 
 export class AddressMapper {
-  
-  // Converts DTO (from User) to Domain Entity
   static toDomain(
-    dto: CreateAddressDto, 
-    userId: string, 
-    id: string, 
-    zoneId: string | undefined, 
+    dto: CreateAddressDto,
+    userId: string,
+    id: string,
+    zoneId: string | undefined,
     isServiceable: boolean
   ): Address {
     return new Address({
@@ -27,11 +25,10 @@ export class AddressMapper {
       state: dto.state,
       location: { type: "Point", coordinates: [dto.lng, dto.lat] },
       zoneId: zoneId,
-      isServiceable: isServiceable
+      isServiceable: isServiceable,
     });
   }
 
-  // Converts Domain Entity to Response DTO 
   static toResponse(entity: Address): AddressResponseDto {
     return {
       id: entity.getId(),
@@ -48,10 +45,10 @@ export class AddressMapper {
       state: entity.getState(),
       location: {
         lat: entity.getLocation().coordinates[1],
-        lng: entity.getLocation().coordinates[0]
+        lng: entity.getLocation().coordinates[0],
       },
       isServiceable: entity.getIsServiceable(),
-      fullAddress: entity.getFullAddress()
+      fullAddress: entity.getFullAddress(),
     };
   }
 }

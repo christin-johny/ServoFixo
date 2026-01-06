@@ -4,14 +4,12 @@ import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 import { ILogger } from '../../../application/interfaces/ILogger';
 import { LogEvents } from '../../../../../shared/constants/LogEvents';
-
-// ✅ Import the actual types from Domain/Application layers
+ 
 import { CategoryQueryParams } from '../../../domain/repositories/IServiceCategoryRepository';
 import { PaginatedCategoriesResponse } from '../../../application/use-cases/service-categories/GetAllCategoriesUseCase';
 
 export class CustomerCategoryController {
-  constructor(
-    // ✅ Use strict types: IUseCase<ReturnDto, [InputDto]>
+  constructor( 
     private readonly _getAllCategoriesUseCase: IUseCase<PaginatedCategoriesResponse, [CategoryQueryParams]>,
     private readonly _logger: ILogger
   ) {}
@@ -19,8 +17,7 @@ export class CustomerCategoryController {
   public getAll = async (req: Request, res: Response): Promise<Response> => {
     try {
       this._logger.info(`${LogEvents.CATEGORY_GET_ALL_INIT} - Customer View`);
-
-      // Construct the params object strictly
+ 
       const params: CategoryQueryParams = {
         isActive: true,
         page: 1,

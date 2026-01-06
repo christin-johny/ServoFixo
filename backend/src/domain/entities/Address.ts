@@ -1,6 +1,5 @@
 import { Phone } from "../../../../shared/types/value-objects/ContactTypes";
-
-// Interface for Constructor Arguments
+ 
 export interface AddressProps {
   id: string;
   userId: string;
@@ -14,7 +13,7 @@ export interface AddressProps {
   city: string;
   pincode: string;
   state: string;
-  location: { type: "Point"; coordinates: [number, number] }; // GeoJSON
+  location: { type: "Point"; coordinates: [number, number] }; 
   zoneId?: string;
   isServiceable: boolean;
   createdAt?: Date;
@@ -59,8 +58,7 @@ export class Address {
     this.createdAt = props.createdAt ?? new Date();
     this.updatedAt = props.updatedAt ?? new Date();
   }
-
-  // Helper to clone/export data securely
+ 
   toProps(): AddressProps {
     return {
       id: this.id,
@@ -82,13 +80,11 @@ export class Address {
       updatedAt: this.updatedAt,
     };
   }
-
-  // Semantic Method for toggling default
+ 
   markAsNonDefault(): Address {
     return new Address({ ...this.toProps(), isDefault: false });
   }
-
-  // Getters
+ 
   getId(): string { return this.id; }
   getUserId(): string { return this.userId; }
   getIsDefault(): boolean { return this.isDefault; }

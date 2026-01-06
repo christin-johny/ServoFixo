@@ -21,8 +21,7 @@ const AppInner: React.FC = () => {
     let aborted = false;
 
     const tryRefresh = async () => {
-      try {
-        // ✅ Use the imported type
+      try { 
         const data = (await authRepo.refresh()) as RefreshResponse;
 
         const token = data.accessToken ?? data.token ?? null;

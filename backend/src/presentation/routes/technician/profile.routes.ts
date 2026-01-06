@@ -4,13 +4,13 @@ import { uploadAvatarMiddleware, uploadDocumentMiddleware } from "../../../infra
 
 const router = Router();
 
-// --- READ ---
+// READ 
 router.get(
   "/onboarding/status", 
   technicianProfileController.getOnboardingStatus.bind(technicianProfileController)
 );
 
-// --- WRITE (Step-by-Step) ---
+//  WRITE (Step-by-Step)  
 router.patch("/onboarding/step-1", technicianProfileController.updatePersonalDetails.bind(technicianProfileController));
 
 router.patch(
@@ -40,7 +40,7 @@ router.patch(
 
 router.post(
   "/onboarding/upload/avatar", 
-  uploadAvatarMiddleware.single("file"), // Frontend must send form-data key "file"
+  uploadAvatarMiddleware.single("file"),  
   technicianProfileController.uploadAvatar.bind(technicianProfileController)
 );
 router.post(

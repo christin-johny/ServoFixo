@@ -10,7 +10,7 @@ router.post("/register/verify-otp", technicianAuthController.verifyRegistration.
 // Login
 router.post("/login", technicianAuthController.login.bind(technicianAuthController));
 
-// ✅ Forgot Password Routes
+// Forgot Password Routes
 router.post("/forgot-password/init-otp", technicianAuthController.forgotPasswordInitOtp.bind(technicianAuthController));
 router.post("/forgot-password/verify-otp", technicianAuthController.forgotPasswordVerifyOtp.bind(technicianAuthController));
 

@@ -1,7 +1,7 @@
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import type { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository"; // ✅ Added
+import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";  
 import { ICacheService } from "../../interfaces/ICacheService";
 import { ILogger } from "../../interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
@@ -9,9 +9,9 @@ import { LogEvents } from "../../../../../shared/constants/LogEvents";
 export class RefreshTokenUseCase {
   constructor(
     private readonly _jwtService: IJwtService,
-    private readonly _customerRepository: ICustomerRepository,
-    private readonly _technicianRepository: ITechnicianRepository, // ✅ Added Injection
+    private readonly _customerRepository: ICustomerRepository, 
     private readonly _cacheService: ICacheService,
+    private readonly _technicianRepository:ITechnicianRepository,
     private readonly _logger: ILogger
   ) {}
 
@@ -30,8 +30,7 @@ export class RefreshTokenUseCase {
     }
 
     const redisKey = `refresh:${refreshToken}`;
-
-    // --- CHECK USER TYPE ---
+ 
     if (payload.type === "customer") {
       const customer = await this._customerRepository.findById(payload.sub);
       if (!customer) {
@@ -41,31 +40,25 @@ export class RefreshTokenUseCase {
       if (customer.isSuspended()) {
         throw new Error(ErrorMessages.ACCOUNT_BLOCKED);
       }
-    } 
-    // ✅ NEW TECHNICIAN LOGIC
+    }  
     else if (payload.type === "technician") {
       const tech = await this._technicianRepository.findById(payload.sub);
       if (!tech) {
         await this._cacheService.del(redisKey);
         throw new Error(ErrorMessages.UNAUTHORIZED);
-      }
-      // Assuming getIsSuspended() exists on your Entity as we defined
+      } 
       if (tech.getIsSuspended()) {
         throw new Error(ErrorMessages.ACCOUNT_BLOCKED);
       }
-    }
-    // (Admin check would go here if you merge that logic later)
-
-    // --- REUSE DETECTION ---
+    } 
+ 
     let stored: string | null = null;
     try {
       stored = await this._cacheService.get(redisKey);
-    } catch (err) {
-      // Redis fail -> proceed (fail open) or throw (fail secure). Usually proceed.
+    } catch { 
     }
 
-    if (!stored) {
-      // Reuse Detected
+    if (!stored) { 
       try {
         const fallbackTtl = Math.max(60, parseInt(process.env.JWT_REFRESH_FALLBACK_SECONDS ?? "120", 10));
         await this._cacheService.set(redisKey, String(payload.sub), fallbackTtl);
@@ -75,8 +68,7 @@ export class RefreshTokenUseCase {
         throw new Error(ErrorMessages.UNAUTHORIZED);
       }
     }
-
-    // --- GENERATE NEW TOKENS ---
+ 
     const newAccessToken = await this._jwtService.generateAccessToken({
       sub: payload.sub,
       type: payload.type,

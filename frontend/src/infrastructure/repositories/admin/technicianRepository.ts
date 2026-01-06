@@ -1,10 +1,7 @@
 import api from "../../api/axiosClient";
-import { ADMIN_TECHNICIAN_ENDPOINTS } from "../../api/endpoints/Admin/admin.endpoints";
-// Ideally, move these types to src/domain/types/Technician.ts
+import { ADMIN_TECHNICIAN_ENDPOINTS } from "../../api/endpoints/Admin/admin.endpoints"; 
 import type { TechnicianProfileFull } from "../../../domain/types/Technician";
-
-// --- Strict Types ---
-
+ 
 export interface TechnicianListItem {
   id: string;
   name: string;
@@ -13,8 +10,8 @@ export interface TechnicianListItem {
   avatarUrl?: string;
   status: "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
   isSuspended: boolean;
-  submittedAt: string; // or createdAt
-  experienceSummary?: string; // Needed for Edit Modal
+  submittedAt: string;  
+  experienceSummary?: string;  
 }
 
 export interface PaginatedTechnicianList {
@@ -54,8 +51,7 @@ export interface UpdateTechnicianPayload {
   phone?: string;
   experienceSummary?: string;
 }
-
-// --- Repository Functions ---
+ 
 
 export const getVerificationQueue = async (
   params: VerificationQueueParams

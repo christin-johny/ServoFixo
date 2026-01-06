@@ -18,11 +18,9 @@ import { format } from "date-fns";
 import { useNotification } from "../../../hooks/useNotification";
 import * as techRepo from "../../../../infrastructure/repositories/admin/technicianRepository";
 import type { TechnicianProfileFull } from "../../../../domain/types/Technician";
-
-// UI Components
+ 
 import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
-
-// Local Type for tracking decisions
+ 
 type DocDecision = {
     status: "APPROVED" | "REJECTED";
     reason?: string;
@@ -35,8 +33,7 @@ const TechnicianVerificationDetails: React.FC = () => {
 
     const [profile, setProfile] = useState<TechnicianProfileFull | null>(null);
     const [loading, setLoading] = useState(true);
-
-    // State to track Admin's decisions on each document
+ 
     const [decisions, setDecisions] = useState<Record<string, DocDecision>>({});
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,8 +49,7 @@ const TechnicianVerificationDetails: React.FC = () => {
             setLoading(true);
             const data = await techRepo.getTechnicianProfile(techId);
             setProfile(data);
-
-            // Initialize decisions based on current status
+ 
             const initialDecisions: Record<string, DocDecision> = {};
             data.documents.forEach(doc => {
                 if (doc.status === "APPROVED" || doc.status === "REJECTED") {
@@ -90,8 +86,7 @@ const TechnicianVerificationDetails: React.FC = () => {
 
     const executeDecision = async () => {
         if (!id || !showConfirm) return;
-
-        // Validation for Rejection
+ 
         if (showConfirm === "REJECT") {
             const hasDocRejections = Object.values(decisions).some(d => d.status === "REJECTED");
             if (!hasDocRejections && !globalReason.trim()) {
@@ -118,8 +113,7 @@ const TechnicianVerificationDetails: React.FC = () => {
             showSuccess(showConfirm === "APPROVE" ? "Technician Verified Successfully" : "Technician Application Rejected");
             navigate("/admin/technicians/verification");
 
-        } catch (err: unknown) {
-            // Safe error handling without 'any'
+        } catch (err: unknown) { 
             let message = "Action failed";
             if (err instanceof Error) message = err.message;
             showError(message);
@@ -254,26 +248,22 @@ const TechnicianVerificationDetails: React.FC = () => {
                                             <div className="w-full sm:w-48 h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 shrink-0 relative group">
 
                                                 {/* CONDITION: Check if PDF or Image */}
-                                                {isPdf(doc.fileUrl) ? (
-                                                    // CASE A: It is a PDF -> Show Icon Placeholder
+                                                {isPdf(doc.fileUrl) ? ( 
                                                     <div className="w-full h-full flex flex-col items-center justify-center bg-red-50 text-red-500">
                                                         <FileText size={32} className="mb-2 opacity-80" />
                                                         <span className="text-[10px] font-bold uppercase tracking-wider">PDF Document</span>
                                                     </div>
-                                                ) : (
-                                                    // CASE B: It is an Image -> Show Preview
+                                                ) : ( 
                                                     <img
                                                         src={doc.fileUrl}
                                                         alt={doc.type}
                                                         className="w-full h-full object-cover"
-                                                        onError={(e) => {
-                                                            // Fallback if image fails to load
+                                                        onError={(e) => { 
                                                             (e.target as HTMLImageElement).src = "https://via.placeholder.com/150?text=No+Preview";
                                                         }}
                                                     />
                                                 )}
-
-                                                {/* Overlay: "Open in New Tab" Button (Works for both) */}
+ 
                                                 <a
                                                     href={doc.fileUrl}
                                                     target="_blank"
@@ -380,8 +370,7 @@ const TechnicianVerificationDetails: React.FC = () => {
                     ? "This technician will be marked as Verified and can immediately start accepting jobs."
                     : "The technician will be notified to fix the rejected documents."}
                 confirmText={showConfirm === "APPROVE" ? "Yes, Approve" : "Yes, Reject"}
-                variant={showConfirm === "APPROVE" ? "success" : "danger"}
-                // Custom Content for Global Reason if Rejecting
+                variant={showConfirm === "APPROVE" ? "success" : "danger"} 
                 customContent={showConfirm === "REJECT" ? (
                     <div className="mt-4">
                         <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Overall Note (Optional)</label>
@@ -397,8 +386,7 @@ const TechnicianVerificationDetails: React.FC = () => {
         </div>
     );
 };
-
-// Helper Component for Info Rows
+ 
 const InfoRow = ({ label, value, isMono = false }: { label: string, value?: string, isMono?: boolean }) => (
     <div>
         <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-0.5">{label}</label>

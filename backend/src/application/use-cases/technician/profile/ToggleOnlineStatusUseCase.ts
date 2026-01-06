@@ -21,8 +21,7 @@ export class ToggleOnlineStatusUseCase implements IUseCase<boolean, [ToggleStatu
     
     const tech = await this._technicianRepo.findById(technicianId);
     if (!tech) throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
-
-    // 1. Basic Account Checks
+ 
     if (tech.getIsSuspended()) {
       throw new Error(ErrorMessages.ACCOUNT_BLOCKED);
     }
@@ -33,15 +32,12 @@ export class ToggleOnlineStatusUseCase implements IUseCase<boolean, [ToggleStatu
 
     const currentStatus = tech.getIsOnline();
     const newStatus = !currentStatus;
-
-    // 2. "Going Online" Validations
-    if (newStatus === true) {
-      // Must provide location
+ 
+    if (newStatus === true) { 
       if (lat === undefined || lng === undefined) {
         throw new Error(ErrorMessages.TECH_LOCATION_REQUIRED);
       }
-
-      // Must be inside one of the selected zones
+ 
       const zoneIds = tech.getZoneIds();
       if (!zoneIds || zoneIds.length === 0) {
         throw new Error(ErrorMessages.TECH_MISSING_ZONES);
@@ -54,9 +50,7 @@ export class ToggleOnlineStatusUseCase implements IUseCase<boolean, [ToggleStatu
         throw new Error(ErrorMessages.TECH_OUTSIDE_ZONE);
       }
     }
-
-    // 3. Update DB
-    // Pass location if provided (updates lastKnownLocation even if going offline)
+ 
     const locationData = (lat !== undefined && lng !== undefined) ? { lat, lng } : undefined;
     
     await this._technicianRepo.updateOnlineStatus(technicianId, newStatus, locationData);

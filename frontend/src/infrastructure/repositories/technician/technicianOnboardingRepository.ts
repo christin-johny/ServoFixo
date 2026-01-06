@@ -1,8 +1,7 @@
 import api from "../../api/axiosClient";
-import axios from 'axios'
+import axios from "axios";
 import { TECHNICIAN_PROFILE_ENDPOINTS } from "../../api/endpoints/Technician/technician.endpoints";
 
-// --- DTO Interfaces (Mirroring Backend DTOs) ---
 export interface Step1Data {
   avatarUrl?: string;
   bio: string;
@@ -23,7 +22,7 @@ export interface Step4Data {
 }
 
 export interface DocumentMeta {
-  type: "AADHAAR" | "PAN" | "DRIVING_LICENSE" | "CERTIFICATE" | "OTHER";
+  type: "AADHAAR" | "PAN" | "CERTIFICATE" | "OTHER";
   fileUrl: string;
   fileName: string;
 }
@@ -42,7 +41,7 @@ export interface Step6Data {
 }
 export interface CategoryOption {
   iconUrl: string | undefined;
-  id: string; // MongoDB ID
+  id: string;
   name: string;
 }
 
@@ -73,7 +72,6 @@ export interface IfscResponse {
 }
 
 export const technicianOnboardingRepository = {
-  // --- Step Updates ---
   updateStep1: async (data: Step1Data) => {
     const res = await api.patch(
       TECHNICIAN_PROFILE_ENDPOINTS.STEP_1_PERSONAL,
@@ -88,7 +86,7 @@ export const technicianOnboardingRepository = {
       data
     );
     return res.data;
-  }, 
+  },
 
   updateStep3: async (data: { zoneIds: string[] }) => {
     const res = await api.patch(
@@ -98,8 +96,11 @@ export const technicianOnboardingRepository = {
     return res.data;
   },
 
-updateStep4: async (data: { agreedToRates: boolean }) => {
-    const res = await api.patch(TECHNICIAN_PROFILE_ENDPOINTS.STEP_4_RATES, data);
+  updateStep4: async (data: { agreedToRates: boolean }) => {
+    const res = await api.patch(
+      TECHNICIAN_PROFILE_ENDPOINTS.STEP_4_RATES,
+      data
+    );
     return res.data;
   },
 
@@ -116,12 +117,9 @@ updateStep4: async (data: { agreedToRates: boolean }) => {
     return res.data;
   },
 
-  // --- File Upload Helpers ---
-
-  // 1. Avatar Upload (Returns { url: string })
   uploadAvatar: async (file: File) => {
     const formData = new FormData();
-    formData.append("file", file); // Must match 'uploadAvatarMiddleware.single("file")'
+    formData.append("file", file);
 
     const res = await api.post(
       TECHNICIAN_PROFILE_ENDPOINTS.UPLOAD_AVATAR,
@@ -130,10 +128,9 @@ updateStep4: async (data: { agreedToRates: boolean }) => {
         headers: { "Content-Type": "multipart/form-data" },
       }
     );
-    return res.data; // Expected: { message: "...", url: "..." }
+    return res.data;
   },
 
-  // 2. Document Upload (Returns { url: string })
   uploadDocument: async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -162,19 +159,15 @@ updateStep4: async (data: { agreedToRates: boolean }) => {
     return res.data.data;
   },
 
-  // ✅ NEW Zone Fetcher
   getZones: async (): Promise<ZoneOption[]> => {
     const res = await api.get(TECHNICIAN_PROFILE_ENDPOINTS.GET_ZONES);
     return res.data.data;
   },
   getRateCard: async (): Promise<RateCardItem[]> => {
-    // Matches the route: router.get("/rate-card", ...)
     const res = await api.get(TECHNICIAN_PROFILE_ENDPOINTS.GET_RATE_CARD);
     return res.data.data;
   },
   fetchBankDetailsByIfsc: async (ifscCode: string): Promise<IfscResponse> => {
-    // We use a direct axios call because this is an external public URL, 
-    // not our internal backend API.
     const res = await axios.get(`https://ifsc.razorpay.com/${ifscCode}`);
     return res.data;
   },

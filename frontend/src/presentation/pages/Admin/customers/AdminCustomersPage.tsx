@@ -27,8 +27,7 @@ const AdminCustomersPage: React.FC = () => {
   
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [customerToEdit, setCustomerToEdit] = useState<CustomerDto | null>(null);
-
-  // State for Suspension Confirmation
+ 
   const [customerToSuspend, setCustomerToSuspend] = useState<CustomerDto | null>(null);
   const [isSuspending, setIsSuspending] = useState(false);
 
@@ -54,13 +53,11 @@ const AdminCustomersPage: React.FC = () => {
       
       setCustomers(result.data);
       setTotalCustomers(result.total);
-      
-      // Removed @ts-ignore. 'result.total' is a number, so this is valid TS.
+       
       setTotalPages(Math.ceil(result.total / 7)); 
       
     } catch (err: unknown) {
-      console.error(err);
-      // Proper narrowing of 'unknown' type
+      console.error(err); 
       const message = err instanceof Error ? err.message : "Failed to load customer list.";
       showError(message);
     } finally {
@@ -100,8 +97,7 @@ const AdminCustomersPage: React.FC = () => {
       ));
 
       setCustomerToSuspend(null); 
-    } catch (err: unknown) {
-      // Proper narrowing of 'unknown' type
+    } catch (err: unknown) { 
       const message = err instanceof Error ? err.message : "Failed to change account status.";
       showError(message);
     } finally {

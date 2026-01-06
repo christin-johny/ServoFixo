@@ -14,8 +14,7 @@ export interface OnboardingStatusResponse {
 export interface Step1Data {
   bio: string;
   experienceSummary: string;
-  avatarUrl?: string;
-  // Read-only for display
+  avatarUrl?: string; 
   name?: string;
   email?: string;
   phone?: string;

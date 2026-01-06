@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, User, Mail, Phone, Briefcase } from 'lucide-react';
-// Import types
+import { X, Save, User, Mail, Phone, Briefcase } from 'lucide-react'; 
 import type { TechnicianListItem, UpdateTechnicianPayload } from '../../../../infrastructure/repositories/admin/technicianRepository';
 
 interface TechnicianEditModalProps {

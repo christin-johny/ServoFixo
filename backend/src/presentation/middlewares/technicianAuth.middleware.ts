@@ -29,8 +29,7 @@ export function makeTechnicianAuthMiddleware(jwtService: IJwtService) {
           error: ErrorMessages.FORBIDDEN,
         });
       }
-
-      // ✅ Match Customer Pattern: Use 'userId'
+ 
       (req as any).userId = payload.sub;
 
       return next();

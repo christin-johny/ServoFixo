@@ -17,10 +17,9 @@ export class TechnicianOnboardingUseCase implements IUseCase<boolean, [Technicia
     if (!technician) {
       throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
     }
-
-    // Switch Logic based on Step
+ 
     switch (input.step) {
-      case 1: // Personal Info
+      case 1: 
         technician.updateProfile({
           bio: input.bio,
           experienceSummary: input.experienceSummary,
@@ -30,7 +29,7 @@ export class TechnicianOnboardingUseCase implements IUseCase<boolean, [Technicia
         this._logger.info(`${LogEvents.TECH_ONBOARDING_STEP_1_SUCCESS}: ${technician.getId()}`);
         break;
 
-      case 2: // Work Preferences
+      case 2:  
         if (!input.categoryIds.length || !input.subServiceIds.length) {
             throw new Error(ErrorMessages.TECH_MISSING_CATS);
         }
@@ -39,28 +38,27 @@ export class TechnicianOnboardingUseCase implements IUseCase<boolean, [Technicia
         this._logger.info(`${LogEvents.TECH_ONBOARDING_STEP_2_SUCCESS}: ${technician.getId()}`);
         break;
 
-      case 3: // Zones
+      case 3:  
         if (!input.zoneIds.length) throw new Error(ErrorMessages.TECH_MISSING_ZONES);
         technician.updateZones(input.zoneIds);
         this.updateStep(technician, 4);
         this._logger.info(`${LogEvents.TECH_ONBOARDING_STEP_3_SUCCESS}: ${technician.getId()}`);
         break;
 
-      case 4: // Rate Agreement
+      case 4: 
         if (!input.agreedToRates) throw new Error(ErrorMessages.TECH_RATE_DISAGREE);
         this.updateStep(technician, 5);
         this._logger.info(`${LogEvents.TECH_ONBOARDING_STEP_4_SUCCESS}: ${technician.getId()}`);
         break;
 
-      case 5: // Documents
+      case 5:  
         if (!input.documents || input.documents.length === 0) {
            throw new Error(ErrorMessages.TECH_DOCS_MISSING);
         }
         if (input.documents.length > 6) {
            throw new Error(ErrorMessages.TECH_DOC_LIMIT);
         }
-
-        // Map DTO docs to entity format
+ 
         const docs = input.documents.map(d => ({
             type: d.type,
             fileUrl: d.fileUrl,
@@ -74,11 +72,10 @@ export class TechnicianOnboardingUseCase implements IUseCase<boolean, [Technicia
         this._logger.info(`${LogEvents.TECH_ONBOARDING_STEP_5_SUCCESS}: ${technician.getId()}`);
         break;
 
-      case 6: // Bank Details & Final Submit
+      case 6: 
         technician.updateBankDetails(input.bankDetails);
-        
-        // Finalize
-        technician.setOnboardingStep(7); // 7 = Completed
+         
+        technician.setOnboardingStep(7);  
         technician.setVerificationStatus("VERIFICATION_PENDING");
         
         this._logger.info(`${LogEvents.TECH_ONBOARDING_STEP_6_SUCCESS}: ${technician.getId()}`);

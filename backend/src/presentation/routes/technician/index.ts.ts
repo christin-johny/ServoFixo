@@ -1,6 +1,5 @@
 import { Router } from "express";
-import { JwtService } from "../../../infrastructure/security/JwtService";
-// You will need to create this middleware similar to customerAuth.middleware.ts
+import { JwtService } from "../../../infrastructure/security/JwtService"; 
 import { makeTechnicianAuthMiddleware } from "../../middlewares/technicianAuth.middleware"; 
 
 import authRoutes from "./auth.routes";
@@ -17,9 +16,5 @@ router.use("/auth", authRoutes);
 router.use("/profile", technicianAuth, profileRoutes);
 
 router.use("/data", technicianAuth, dataRoutes);
-
-// Protected Routes (To be added as we build them)
-// router.use("/profile", technicianAuth, profileRoutes);
-// router.use("/jobs", technicianAuth, jobRoutes);
 
 export default router;

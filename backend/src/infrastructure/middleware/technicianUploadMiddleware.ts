@@ -3,8 +3,7 @@ import { Request } from "express";
 import { ErrorMessages } from "../../../../shared/types/enums/ErrorMessages";
 
 const storage = multer.memoryStorage();
-
-// ✅ STRICT TYPING: Use 'Request' and 'FileFilterCallback'
+ 
 const avatarFileFilter = (
   req: Request, 
   file: Express.Multer.File, 
@@ -12,8 +11,7 @@ const avatarFileFilter = (
 ): void => {
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);
-  } else {
-    // Pass error directly
+  } else { 
     cb(new Error(ErrorMessages.TECH_INVALID_FILE_TYPE)); 
   }
 };

@@ -30,14 +30,12 @@ export class TechnicianAuthController {
     
     private readonly _logger: ILogger
   ) {}
-
-  // 1. Register Init
+ 
   register = async (req: Request, res: Response): Promise<Response> => {
     try {
       this._logger.info(`${LogEvents.AUTH_REGISTER_INIT} (Technician)`);
       const result = await this._requestOtpUseCase.execute(req.body);
-      
-      // Note: result.message comes from UseCase, likely "OTP sent..."
+       
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.OTP_SENT,
         sessionId: result.sessionId
@@ -54,8 +52,7 @@ export class TechnicianAuthController {
       return res.status(StatusCodes.BAD_REQUEST).json({ error: errorMessage });
     }
   };
-
-  // 2. Verify Registration
+ 
   verifyRegistration = async (req: Request, res: Response): Promise<Response> => {
     try {
       this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} (Technician)`);
@@ -80,8 +77,7 @@ export class TechnicianAuthController {
       return res.status(StatusCodes.BAD_REQUEST).json({ error: errorMessage });
     }
   };
-
-  // 3. Login
+ 
   login = async (req: Request, res: Response): Promise<Response> => {
     try {
       this._logger.info(`${LogEvents.AUTH_LOGIN_INIT} (Technician)`);
@@ -106,8 +102,7 @@ export class TechnicianAuthController {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
     }
   };
-
-  // 4. Forgot Password Init
+ 
   forgotPasswordInitOtp = async (req: Request, res: Response): Promise<Response> => {
     try {
       this._logger.info(`${LogEvents.AUTH_FORGOT_PASSWORD_INIT} (Technician)`);
@@ -127,8 +122,7 @@ export class TechnicianAuthController {
       return res.status(StatusCodes.BAD_REQUEST).json({ error: errorMessage });
     }
   };
-
-  // 5. Forgot Password Verify
+ 
   forgotPasswordVerifyOtp = async (req: Request, res: Response): Promise<Response> => {
     try {
       this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} (Forgot Password)`);
@@ -144,8 +138,7 @@ export class TechnicianAuthController {
       return res.status(StatusCodes.BAD_REQUEST).json({ error: errorMessage });
     }
   };
-
-  // 6. Logout
+ 
   logout = async (req: Request, res: Response): Promise<Response> => {
     try {
       const refreshToken = req.cookies?.refreshToken as string | undefined;

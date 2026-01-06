@@ -7,8 +7,7 @@ export interface TechnicianResponseDto {
   phone: string;
   avatarUrl?: string;
   bio?: string;
-
-  // ✅ New Fields
+ 
   onboardingStep: number;
   experienceSummary?: string;
 
@@ -49,8 +48,7 @@ export interface TechnicianResponseDto {
     averageRating: number;
     totalReviews: number;
   };
-
-  // ✅ Use the Enum here
+ 
   verificationStatus: VerificationStatus;
   verificationReason?: string;
   isSuspended: boolean;

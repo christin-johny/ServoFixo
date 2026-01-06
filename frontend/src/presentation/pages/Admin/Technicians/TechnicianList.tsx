@@ -3,11 +3,9 @@ import { Users, RefreshCw } from "lucide-react";
 
 import { useDebounce } from "../../../hooks/useDebounce";
 import { useNotification } from "../../../hooks/useNotification";
-import * as techRepo from "../../../../infrastructure/repositories/admin/technicianRepository";
-// Import strict types
+import * as techRepo from "../../../../infrastructure/repositories/admin/technicianRepository"; 
 import type { TechnicianListItem, UpdateTechnicianPayload } from "../../../../infrastructure/repositories/admin/technicianRepository";
-
-// Shared Components
+ 
 import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
 import TechnicianListTable from "../../../components/Admin/technician/TechnicianListTable";
 import TechnicianEditModal from "../../../components/Admin/technician/TechnicianEditModal";
@@ -25,8 +23,7 @@ const TechnicianList: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState("");
   
   const debouncedSearch = useDebounce(search, 500);
-
-  // Modal States
+ 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [techToEdit, setTechToEdit] = useState<TechnicianListItem | null>(null);
 
@@ -57,8 +54,7 @@ const TechnicianList: React.FC = () => {
       setLoading(false);
     }
   };
-
-  // --- Handlers ---
+ 
 
   const handleEdit = (tech: TechnicianListItem) => {
     setTechToEdit(tech);

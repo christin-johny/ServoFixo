@@ -23,20 +23,19 @@ const TechnicianForgotPassword: React.FC = () => {
     try {
       forgotSchema.parse({ email });
     } catch {
-      return; // Basic validation
+      return;  
     }
 
     setLoading(true);
     try {
       const resp = await technicianForgotPasswordInit({ email });
-      
-      // ✅ Type safe access
+       
       const data = resp as unknown as AuthResponse;
       
       const otpFlowData = {
         email,
         sessionId: data.sessionId,
-        context: "forgot_password", // ✅ Important context switch
+        context: "forgot_password", 
       };
 
       sessionStorage.setItem("otpFlowData", JSON.stringify(otpFlowData));

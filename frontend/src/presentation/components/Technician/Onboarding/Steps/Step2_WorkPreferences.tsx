@@ -33,13 +33,11 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { profile } = useSelector((state: RootState) => state.technician);
   const { showSuccess, showError } = useNotification();
-
-  // Data State
+ 
   const [categories, setCategories] = useState<RuntimeCategoryOption[]>([]);
   const [services, setServices] = useState<RuntimeServiceOption[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-
-  // Selection State
+ 
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
     profile?.categoryIds || []
   );
@@ -64,8 +62,7 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
     }
     return "";
   };
-
-  // Fetch Categories
+ 
   useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -80,8 +77,7 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
     };
     loadCategories();
   }, []);
-
-  // Fetch Services
+ 
   useEffect(() => {
     const loadServices = async () => {
       if (selectedCategoryIds.length === 0) {
@@ -110,8 +106,7 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
 
     loadServices();
   }, [selectedCategoryIds]);
-
-  // --- Handlers ---
+ 
 
   const toggleCategory = (catId: string) => {
     const isSelected = selectedCategoryIds.includes(catId);
@@ -159,8 +154,7 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
       };
 
       await technicianOnboardingRepository.updateStep2(payload);
-
-      // Sync Redux
+ 
       setSelectedServiceIds(validServiceIds);
       dispatch(updateWorkPreferences(payload));
       dispatch(setOnboardingStep(3));

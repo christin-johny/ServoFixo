@@ -9,8 +9,7 @@ interface ConfirmModalProps {
   message: string;
   confirmText?: string;
   cancelText?: string;
-  isLoading?: boolean;
-  // ✅ New Props
+  isLoading?: boolean; 
   customContent?: React.ReactNode; 
   variant?: "danger" | "success" | "info"; 
 }
@@ -25,11 +24,10 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   cancelText = "Cancel",
   isLoading = false,
   customContent,
-  variant = "danger", // Default to Red
+  variant = "danger",  
 }) => {
   if (!isOpen) return null;
-
-  // Dynamic Styles based on Variant
+ 
   const getVariantStyles = () => {
     switch (variant) {
       case "success":
@@ -86,8 +84,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
             <p className="text-lg text-gray-600 mt-3 leading-relaxed">
               {message}
             </p>
-            
-            {/* ✅ Render Custom Content (Rejection Reason Box) */}
+             
             {customContent && (
               <div className="mt-4 animate-in fade-in slide-in-from-top-2">
                 {customContent}

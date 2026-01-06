@@ -1,4 +1,4 @@
-// Strict typing for the API Response
+ 
 export interface TechnicianProfileStatusDto {
   id: string;
   onboardingStep: number;

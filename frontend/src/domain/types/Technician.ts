@@ -3,8 +3,7 @@ export type VerificationStatus =
   | "VERIFICATION_PENDING"
   | "VERIFIED"
   | "REJECTED";
-
-// Matches backend: TechnicianQueueItemDto
+ 
 export interface TechnicianQueueItem {
   id: string;
   name: string;
@@ -12,10 +11,9 @@ export interface TechnicianQueueItem {
   phone: string;
   avatarUrl?: string;
   status: VerificationStatus;
-  submittedAt: string; // ISO Date String
+  submittedAt: string; 
 }
-
-// Matches backend: PaginatedTechnicianQueueResponse
+ 
 export interface PaginatedTechnicianQueue {
   data: TechnicianQueueItem[];
   total: number;
@@ -23,8 +21,7 @@ export interface PaginatedTechnicianQueue {
   limit: number;
   totalPages: number;
 }
-
-// Matches backend: AdminTechnicianProfileDto
+ 
 export interface TechnicianProfileFull {
   id: string;
   name: string;
@@ -35,7 +32,7 @@ export interface TechnicianProfileFull {
   experienceSummary: string;
   zoneIds: string[];
   categoryIds: string[];
-  subServiceIds: string[]; // ✅ Added this missing property
+  subServiceIds: string[]; 
 
   documents: {
     type: string;

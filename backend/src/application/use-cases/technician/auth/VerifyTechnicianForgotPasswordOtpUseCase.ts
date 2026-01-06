@@ -21,8 +21,7 @@ export class VerifyTechnicianForgotPasswordOtpUseCase {
     const normalizedEmail = email.toLowerCase().trim();
 
     this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} (Reset Pass) - Email: ${normalizedEmail}`);
-
-    // 1. Validate Session
+ 
     const session = await this._otpSessionRepository.findValidSession(
       normalizedEmail,
       sessionId,
@@ -38,21 +37,17 @@ export class VerifyTechnicianForgotPasswordOtpUseCase {
       this._logger.warn(`Incorrect OTP for: ${normalizedEmail}`);
       throw new Error(ErrorMessages.OTP_INVALID);
     }
-
-    // 2. Mark OTP Used
+ 
     session.markAsUsed();
     await this._otpSessionRepository.save(session);
-
-    // 3. Fetch Technician
+ 
     const technician = await this._technicianRepository.findByEmail(normalizedEmail);
     if (!technician) {
       throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
     }
-
-    // 4. Hash New Password
+ 
     const hashedPassword = await this._passwordHasher.hash(newPassword);
-
-    // 5. Update Technician Entity
+ 
     const props = technician.toProps();
     
     const updatedTechnician = new Technician({

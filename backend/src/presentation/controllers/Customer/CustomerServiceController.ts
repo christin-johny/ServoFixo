@@ -4,8 +4,7 @@ import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
-
-// Define Filter Interface for type safety
+ 
 interface ServiceFilters {
   searchTerm: string;
   categoryId: string;

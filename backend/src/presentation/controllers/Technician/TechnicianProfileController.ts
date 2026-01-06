@@ -7,9 +7,7 @@ import {
 import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { Technician } from "../../../domain/entities/Technician";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
-
-// Import the DTO from the Use Case file (or a shared DTO file)
+import { LogEvents } from "../../../../../shared/constants/LogEvents"; 
 import { UploadTechnicianFileInput } from "../../../application/use-cases/technician/profile/UploadTechnicianFileUseCase";
 import { ToggleStatusInput } from "../../../application/use-cases/technician/profile/ToggleOnlineStatusUseCase";
 import {

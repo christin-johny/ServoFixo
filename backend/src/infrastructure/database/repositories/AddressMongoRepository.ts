@@ -23,10 +23,7 @@ export class AddressMongoRepository implements IAddressRepository {
       state: props.state,
       location: props.location,
       zoneId: props.zoneId || null,
-      isServiceable: props.isServiceable,
-      // Note: We don't save _id here usually, we let Mongo generate it, 
-      // UNLESS your entity already has a specific ID you want to enforce.
-      // If address.id is "", Mongo creates one.
+      isServiceable: props.isServiceable, 
     });
 
     const savedDoc = await newDoc.save();
@@ -47,10 +44,10 @@ export class AddressMongoRepository implements IAddressRepository {
   }
  
   async update(address: Address): Promise<Address> {
-    const props = address.toProps(); // Extract data once
+    const props = address.toProps();  
 
     const updatedDoc = await AddressModel.findByIdAndUpdate(
-      props.id, // Use the ID from the entity
+      props.id, 
       {
         tag: props.tag,
         isDefault: props.isDefault,
@@ -64,8 +61,7 @@ export class AddressMongoRepository implements IAddressRepository {
         state: props.state,
         location: props.location,
         zoneId: props.zoneId,
-        isServiceable: props.isServiceable,
-        // Don't update userId or createdAt typically
+        isServiceable: props.isServiceable, 
       },
       { new: true } 
     ).exec();
@@ -90,9 +86,7 @@ export class AddressMongoRepository implements IAddressRepository {
     if (!doc) return false;
     return doc.isServiceable;
   }
- 
-  // Renamed to 'toDomain' to match the term used in Mappers
-  // This is a "Persistence Mapper" - converting DB Schema to Domain Entity
+  
   private toDomain(doc: AddressDocument): Address {
     return new Address({
       id: doc._id.toString(),
@@ -105,8 +99,7 @@ export class AddressMongoRepository implements IAddressRepository {
       street: doc.street,
       city: doc.city,
       pincode: doc.pincode,
-      state: doc.state,
-      // Ensure specific structure matches GeoLocation interface
+      state: doc.state, 
       location: { 
         type: "Point", 
         coordinates: [doc.location.coordinates[0], doc.location.coordinates[1]] 

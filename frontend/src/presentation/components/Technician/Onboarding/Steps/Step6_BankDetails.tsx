@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { 
   ArrowRight, ArrowLeft, Loader2, Landmark, CheckCircle2, AlertCircle, Search 
 } from "lucide-react";
-import type { RootState, AppDispatch } from "../../../../../store/store"; // Access Redux State
+import type { RootState, AppDispatch } from "../../../../../store/store";  
 import { 
   technicianOnboardingRepository, 
   type Step6Data 
@@ -22,14 +22,13 @@ interface Step6Props {
 
 const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { profile } = useSelector((state: RootState) => state.technician); // ✅ Get Profile
+  const { profile } = useSelector((state: RootState) => state.technician);  
   const { showSuccess, showError } = useNotification();
-
-  // ✅ FIX 1: Initialize form with Redux data if available
+ 
   const [formData, setFormData] = useState({
     accountHolderName: profile?.bankDetails?.accountHolderName || "",
     accountNumber: profile?.bankDetails?.accountNumber || "",
-    confirmAccountNumber: profile?.bankDetails?.accountNumber || "", // Pre-fill confirm too
+    confirmAccountNumber: profile?.bankDetails?.accountNumber || "",  
     ifscCode: profile?.bankDetails?.ifscCode || "",
     bankName: profile?.bankDetails?.bankName || "",
     branchName: "" 
@@ -37,25 +36,21 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
 
   const [loadingIfsc, setLoadingIfsc] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // ✅ FIX 2: If we pre-filled data, consider it verified initially
+   
   const [ifscVerified, setIfscVerified] = useState(!!profile?.bankDetails?.bankName);
-
-  // --- IFSC Auto-Fetch Logic ---
+ 
   useEffect(() => {
     const fetchIfsc = async () => {
       const code = formData.ifscCode.toUpperCase();
       const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
-
-      // Only fetch if it changed from what we already have, OR if we don't have a bank name yet
+ 
       if (code.length === 11) {
         if (!ifscRegex.test(code)) {
           showError("Invalid IFSC format.");
           setIfscVerified(false);
           return;
         }
-
-        // Optimization: Don't re-fetch if it matches the pre-filled valid data
+ 
         if (profile?.bankDetails?.ifscCode === code && formData.bankName) {
             setIfscVerified(true);
             return;
@@ -79,8 +74,7 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
         } finally {
           setLoadingIfsc(false);
         }
-      } else {
-        // Reset if user clears input
+      } else { 
         if (ifscVerified && code.length < 11) {
             setIfscVerified(false);
             setFormData(prev => ({ ...prev, bankName: "", branchName: "" }));
@@ -93,10 +87,8 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [formData.ifscCode]); 
-  // removed other deps to prevent loop, logic handles internal checks
+  }, [formData.ifscCode]);   
 
-  // --- Handlers ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     
@@ -148,12 +140,6 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
       dispatch(updateBankDetails(payload.bankDetails));
       dispatch(setOnboardingStep(7)); 
       
-      // ✅ Critical: Only flip to PENDING if we are genuinely done.
-      // If we are in "REJECTED" mode, the resubmit button on dashboard handles the status flip.
-      // But for first-time flow, we set it here.
-      // We can check if status is NOT rejected to set it pending, 
-      // OR just rely on the backend to handle the status transition.
-      // For now, consistent with your previous flow:
       dispatch(updateVerificationStatus("VERIFICATION_PENDING"));
 
       showSuccess("Application Saved!");
@@ -232,7 +218,7 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Account Number</label>
             <input
-              type="text" // Changed from password to text for easier editing on re-visit
+              type="text"  
               name="accountNumber"
               value={formData.accountNumber}
               onChange={handleChange}
@@ -245,7 +231,7 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Confirm Account Number</label>
             <input
-              type="text" // Changed from password to text
+              type="text"  
               name="confirmAccountNumber"
               value={formData.confirmAccountNumber}
               onChange={handleChange}

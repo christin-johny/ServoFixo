@@ -10,8 +10,7 @@ import Zones from "../pages/Admin/Zones/Zones";
 import Services from "../pages/Admin/Services/Services";
 import Customers from "../pages/Admin/Customers/AdminCustomersPage";
 import AdminCustomerProfilePage from "../pages/Admin/Customers/AdminCustomerProfilePage";
-
-// --- Technician Pages ---
+ 
 import TechnicianVerificationQueue from "../pages/Admin/Technicians/TechnicianVerificationQueue";
 import TechnicianVerificationDetails from "../pages/Admin/Technicians/TechnicianVerificationDetails";
 import TechnicianList from "../pages/Admin/Technicians/TechnicianList";

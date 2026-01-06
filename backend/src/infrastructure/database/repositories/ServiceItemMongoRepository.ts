@@ -96,8 +96,7 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
     ]).exec();
 
     if (!docs || docs.length === 0) return null;
-    
-    // Manual mapping from aggregation result to Entity
+     
     const doc = docs[0];
     return new ServiceItem({
         id: doc._id.toString(),

@@ -62,7 +62,6 @@ import { TechnicianDataController } from "../../presentation/controllers/Technic
 import { FixedCommissionStrategy } from "../services/FixedCommissionStrategy";
 import { GetTechnicianRateCardUseCase } from "../../application/use-cases/technician/profile/GetTechnicianRateCardUseCase";
 
-// ✅ Import resolved use cases
 import { UpdateTechnicianUseCase } from "../../application/use-cases/technician/profile/UpdateTechnicianUseCase";
 import { BlockTechnicianUseCase } from "../../application/use-cases/technician/profile/BlockTechnicianUseCase";
 import { DeleteTechnicianUseCase } from "../../application/use-cases/technician/profile/DeleteTechnicianUseCase";
@@ -429,8 +428,8 @@ export const adminAuthController = new AdminAuthController(
 const refreshTokenUseCase = new RefreshTokenUseCase(
   jwtService,
   customerRepo,
-  technicianRepo,
   cacheService,
+  technicianRepo,
   logger
 );
 

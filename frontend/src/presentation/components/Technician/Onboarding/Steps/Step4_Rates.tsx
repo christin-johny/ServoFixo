@@ -46,13 +46,11 @@ const Step4_Rates: React.FC<Step4Props> = ({ onNext, onBack }) => {
 
     try {
       setIsSaving(true);
-      
-      // 1. Save to Backend
+       
       await technicianOnboardingRepository.updateStep4({ agreedToRates: true });
-
-      // 2. Update Redux
+ 
       dispatch(updateRateAgreement({ isAgreed: true }));
-      dispatch(setOnboardingStep(5)); // Move to Step 5 (Documents)
+      dispatch(setOnboardingStep(5)); 
 
       showSuccess("Rate agreement accepted!");
       onNext();

@@ -1,38 +1,33 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  CheckCircle, 
-  Clock, 
-  Eye, 
+import {
+  CheckCircle,
+  Clock,
+  Eye,
   User
 } from "lucide-react";
-import { format } from "date-fns"; // Ensure date-fns is installed or use native Date
+import { format } from "date-fns";
 
 import { useDebounce } from "../../../hooks/useDebounce";
 import { useNotification } from "../../../hooks/useNotification";
 
-// Repo & Types
 import * as techRepo from "../../../../infrastructure/repositories/admin/technicianRepository";
 import type { TechnicianQueueItem } from "../../../../domain/types/Technician";
-
-// Components
 import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
 
 const TechnicianVerificationQueue: React.FC = () => {
   const navigate = useNavigate();
   const { showError } = useNotification();
-
-  // State
+ 
   const [items, setItems] = useState<TechnicianQueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  
-  const debouncedSearch = useDebounce(search, 500);
 
-  // Fetch Data
+  const debouncedSearch = useDebounce(search, 500);
+ 
   useEffect(() => {
     loadQueue();
   }, [debouncedSearch, page]);
@@ -63,19 +58,19 @@ const TechnicianVerificationQueue: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col gap-4 sm:gap-6 overflow-hidden">
-      
+
       {/* 1. Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end shrink-0 border-b border-gray-200 pb-4 gap-4 sm:gap-0">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            <CheckCircle className="text-blue-600 w-6 h-6 sm:w-8 sm:h-8" /> 
+            <CheckCircle className="text-blue-600 w-6 h-6 sm:w-8 sm:h-8" />
             Verification Queue
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
             Review and approve pending technician applications.
           </p>
         </div>
-        
+
         {/* Stat Badge (Optional) */}
         <div className="bg-orange-50 text-orange-700 px-4 py-2 rounded-lg text-sm font-bold border border-orange-100 flex items-center gap-2">
           <Clock size={16} />
@@ -87,8 +82,7 @@ const TechnicianVerificationQueue: React.FC = () => {
       <SearchFilterBar
         search={search}
         onSearchChange={(val) => { setSearch(val); setPage(1); }}
-        searchPlaceholder="Search by name, email or phone..."
-        // No filter status needed here as this page is strictly for "PENDING" items
+        searchPlaceholder="Search by name, email or phone..." 
         onClear={() => setSearch("")}
         totalItems={total}
         currentCount={items.length}
@@ -98,15 +92,15 @@ const TechnicianVerificationQueue: React.FC = () => {
       {/* 3. Table Content */}
       <div className="flex-1 overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col">
         {loading ? (
-           <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3">
-             <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-             <p className="text-sm font-medium">Loading Queue...</p>
-           </div>
+          <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3">
+            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-sm font-medium">Loading Queue...</p>
+          </div>
         ) : items.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3">
-             <CheckCircle size={48} className="text-gray-200" />
-             <p className="text-lg font-semibold text-gray-500">All Caught Up!</p>
-             <p className="text-sm">No pending applications found.</p>
+            <CheckCircle size={48} className="text-gray-200" />
+            <p className="text-lg font-semibold text-gray-500">All Caught Up!</p>
+            <p className="text-sm">No pending applications found.</p>
           </div>
         ) : (
           <div className="flex-1 overflow-auto">
@@ -152,7 +146,7 @@ const TechnicianVerificationQueue: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button 
+                      <button
                         onClick={() => handleReview(item.id)}
                         className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-all shadow-sm shadow-blue-200"
                       >

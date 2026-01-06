@@ -15,8 +15,7 @@ interface Step5Props {
   onNext: () => void;
   onBack: () => void;
 }
-
-// Strictly Typed Document Types
+ 
 type DocType = "AADHAAR" | "PAN" | "CERTIFICATE" | "OTHER";
 
 interface DraftDocument {
@@ -42,20 +41,17 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
   const [isConsented, setIsConsented] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Initialize slots
+ 
   const [documents, setDocuments] = useState<DraftDocument[]>([
     { id: "doc_aadhaar", type: "AADHAAR", status: "IDLE" },
     { id: "doc_pan", type: "PAN", status: "IDLE" },
   ]);
-
-  // ✅ STRICTLY TYPED PRE-FILL LOGIC
+ 
   useEffect(() => {
     if (profile?.documents && profile.documents.length > 0) {
       const mergedDocs: DraftDocument[] = [];
       
-      profile.documents.forEach((d, index) => {
-        // Safe Type Assertion
+      profile.documents.forEach((d, index) => { 
         let docType: DocType = "OTHER";
         if (d.type === "AADHAAR" || d.type === "PAN" || d.type === "CERTIFICATE") {
             docType = d.type as DocType;
@@ -71,19 +67,16 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
           id,
           type: docType,
           customName: docType === "OTHER" ? d.fileName : undefined,
-          serverUrl: d.fileUrl,
-          // Map backend status to local status
+          serverUrl: d.fileUrl, 
           status: d.status === "REJECTED" ? "REJECTED" : "SUCCESS", 
           rejectionReason: d.rejectionReason
         });
       });
-
-      // Ensure Mandatory slots exist if not present in backend
+ 
       if (!mergedDocs.find(d => d.type === "AADHAAR")) {
           mergedDocs.unshift({ id: "doc_aadhaar", type: "AADHAAR", status: "IDLE" });
       }
-      if (!mergedDocs.find(d => d.type === "PAN")) {
-          // Insert after Aadhaar or at start
+      if (!mergedDocs.find(d => d.type === "PAN")) { 
           const aadhaarIndex = mergedDocs.findIndex(d => d.type === "AADHAAR");
           mergedDocs.splice(aadhaarIndex + 1, 0, { id: "doc_pan", type: "PAN", status: "IDLE" });
       }
@@ -91,8 +84,7 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
       setDocuments(mergedDocs);
     }
   }, [profile?.documents]);
-
-  // --- File Selection ---
+ 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !activeSlotId) return;
@@ -107,8 +99,7 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
       resetInput();
       return;
     }
-
-    // Set Uploading
+ 
     setDocuments(prev => prev.map(doc => 
       doc.id === activeSlotId 
         ? { ...doc, file, status: "UPLOADING", errorMessage: undefined, rejectionReason: undefined } 
@@ -141,8 +132,7 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
     setActiveSlotId(slotId);
     fileInputRef.current?.click();
   };
-
-  // --- Helper Actions ---
+ 
   const addCustomDoc = () => {
     const newId = `doc_custom_${Date.now()}`;
     setDocuments(prev => [...prev, { id: newId, type: "OTHER", customName: "", status: "IDLE" }]);
@@ -155,16 +145,13 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
   const updateCustomName = (id: string, name: string) => {
     setDocuments(prev => prev.map(d => d.id === id ? { ...d, customName: name } : d));
   };
-
-  // --- Submit ---
+ 
   const handleNext = async () => {
     const mandatoryIds = ["doc_aadhaar", "doc_pan"];
-    
-    // Check if mandatory docs have a valid server URL (either newly uploaded or pre-filled)
+     
     const mandatoryDocs = documents.filter(d => mandatoryIds.includes(d.id));
     const allMandatoryDone = mandatoryDocs.every(d => d.serverUrl && (d.status === "SUCCESS" || d.status === "REJECTED")); 
-    
-    // Block submission if any REJECTED documents remain
+     
     const hasRejections = documents.some(d => d.status === "REJECTED");
     if (hasRejections) {
       showError("Please replace the rejected documents before proceeding.");
@@ -191,7 +178,7 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
       setIsSubmitting(true);
       
       const payload: DocumentMeta[] = documents
-        .filter(d => d.serverUrl) // Only send docs with URLs
+        .filter(d => d.serverUrl)  
         .map(d => ({
           type: d.type === "OTHER" ? "OTHER" : d.type,
           fileName: d.type === "OTHER" ? d.customName! : (d.file?.name || d.type),
@@ -199,8 +186,7 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
         }));
 
       await technicianOnboardingRepository.updateStep5({ documents: payload });
-
-      // Update Redux
+ 
       const reduxDocs = payload.map(p => ({
          type: p.type,
          fileUrl: p.fileUrl,
@@ -219,8 +205,7 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack }) => {
       setIsSubmitting(false);
     }
   };
-
-  // --- Render Row ---
+ 
   const renderDocRow = (doc: DraftDocument) => {
     const isMandatory = ["AADHAAR", "PAN"].includes(doc.type);
     const isCustom = doc.type === "OTHER";

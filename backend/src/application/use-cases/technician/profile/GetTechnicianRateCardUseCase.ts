@@ -22,10 +22,10 @@ export interface RateCardItem {
 
 export class GetTechnicianRateCardUseCase implements IUseCase<RateCardItem[], [string]> {
   constructor(
-    private readonly _technicianRepo: ITechnicianRepositoryForRateCard, // Abstract
-    private readonly _serviceRepo: IServiceItemRepositoryForRateCard,   // Abstract
-    private readonly _commissionStrategy: ICommissionStrategy,          // Abstract
-    private readonly _logger: ILogger                                   // Abstract
+    private readonly _technicianRepo: ITechnicianRepositoryForRateCard, 
+    private readonly _serviceRepo: IServiceItemRepositoryForRateCard,    
+    private readonly _commissionStrategy: ICommissionStrategy,           
+    private readonly _logger: ILogger                                   
   ) {}
 
   async execute(technicianId: string): Promise<RateCardItem[]> {
@@ -43,8 +43,7 @@ export class GetTechnicianRateCardUseCase implements IUseCase<RateCardItem[], [s
     }
 
     const rateCard: RateCardItem[] = [];
-
-    // Optimize: In a real scenario, use findAllByIds(ids) instead of a loop
+ 
     for (const serviceId of selectedServiceIds) {
       const service = await this._serviceRepo.findById(serviceId);
       

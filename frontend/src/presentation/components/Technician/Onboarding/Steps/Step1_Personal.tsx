@@ -22,8 +22,7 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { profile } = useSelector((state: RootState) => state.technician);
   const { showSuccess, showError } = useNotification();
-  
-  // Local State initialized with Redux data (Resume Logic)
+   
   const [bio, setBio] = useState(profile?.bio || "");
   const [experience, setExperience] = useState(profile?.experienceSummary || "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl || "");
@@ -31,13 +30,11 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Handle Avatar File Selection
+ 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Validate size (5MB) & Type
+ 
     if (file.size > 5 * 1024 * 1024) {
       showError("Image size must be less than 5MB");
       return;
@@ -48,10 +45,9 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext }) => {
     }
 
     try {
-      setIsUploading(true);
-      // Call our repository helper
+      setIsUploading(true); 
       const response = await technicianOnboardingRepository.uploadAvatar(file);
-      setAvatarUrl(response.url); // Show preview immediately
+      setAvatarUrl(response.url);  
       showSuccess("Avatar uploaded successfully");
     } catch {
       showError("Failed to upload avatar");
@@ -60,8 +56,7 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext }) => {
     }
   };
 
-  const handleNext = async () => {
-    // Validation
+  const handleNext = async () => { 
     if (!bio.trim() || bio.length < 20) {
       showError("Please provide a bio of at least 20 characters.");
       return;
@@ -73,17 +68,15 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext }) => {
 
     try {
       setIsSaving(true);
-      
-      // 1. Send to Backend
+       
       const payload = { bio, experienceSummary: experience, avatarUrl };
       await technicianOnboardingRepository.updateStep1(payload);
-
-      // 2. Update Redux (Optimistic update)
+ 
       dispatch(updatePersonalDetails(payload));
       dispatch(setOnboardingStep(2));
 
       showSuccess("Personal details saved!");
-      onNext(); // Trigger Wizard transition
+      onNext();  
     } catch{
       showError("Failed to save details. Please try again.");
     } finally {

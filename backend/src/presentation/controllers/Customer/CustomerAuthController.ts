@@ -322,7 +322,7 @@ export class CustomerAuthController {
   googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
     try {
       this._logger.info(`${LogEvents.AUTH_GOOGLE_LOGIN_INIT} (Callback)`);
-      const user = req.user as unknown; // Safe cast
+      const user = req.user as unknown; 
 
       if (!user) {
         res.redirect(

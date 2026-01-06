@@ -22,7 +22,7 @@ export class VerifyCustomerRegistrationOtpUseCase {
   ) {}
 
   async execute(input: CustomerRegisterVerifyDto): Promise<AuthResultDto> {
-    // ... validation logic same as before ...
+ 
     const { email, otp, sessionId, name, password, phone } = input;
     const normalizedEmail = email.toLowerCase().trim();
     this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} (Registration) - Email: ${normalizedEmail}`);
@@ -54,8 +54,7 @@ export class VerifyCustomerRegistrationOtpUseCase {
 
     const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
     
-    try {
-      // ✅ Use Abstract Service
+    try { 
       await this._cacheService.set(
         `refresh:${refreshToken}`,
         String(savedCustomer.getId()),

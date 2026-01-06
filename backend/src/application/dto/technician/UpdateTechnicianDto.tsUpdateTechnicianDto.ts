@@ -15,7 +15,7 @@ export class UpdateTechnicianDto {
   zoneIds?: string[];
 
   bankDetails?: TechnicianBankDetails;
-  availability?: TechnicianAvailability; // For toggle online/offline
+  availability?: TechnicianAvailability;  
   
   portfolioUrls?: string[];
   deviceToken?: string;

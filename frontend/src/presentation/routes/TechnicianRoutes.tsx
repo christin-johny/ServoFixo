@@ -3,14 +3,12 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoaderFallback from "../components/LoaderFallback";
 import GuestOnlyGuard from "./GuestOnlyGuard";
 import RoleProtectedRoute from "./RoleProtectedRoute";
-
-// Lazy Imports
+ 
 const TechLogin = React.lazy(() => import("../pages/Technician/Auth/TechnicianLogin"));
 const TechRegister = React.lazy(() => import("../pages/Technician/Auth/TechnicianRegister"));
 const TechVerifyOtp = React.lazy(() => import("../pages/Technician/Auth/TechnicianVerifyOtp"));
 const TechForgotPassword = React.lazy(() => import("../pages/Technician/Auth/TechnicianForgotPassword"));
-
-// ✅ New Imports for Phase 2
+ 
 const TechDashboard = React.lazy(() => import("../pages/Technician/Dashboard/TechnicianDashboard"));
 const TechnicianLayout = React.lazy(() => import("../components/Technician/Layout/TechnicianLayout"));
 const OnboardingWizard =React.lazy(() => import("../components/Technician/Onboarding/OnboardingWizard"));
@@ -18,10 +16,7 @@ const OnboardingWizard =React.lazy(() => import("../components/Technician/Onboar
 const TechnicianRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
     <Routes>
-
-      {/* =================================================
-          1. PUBLIC AUTH ROUTES (No Layout, Guest Only)
-      ================================================== */}
+ 
       <Route path="login" element={<GuestOnlyGuard><TechLogin /></GuestOnlyGuard>} />
       <Route path="register" element={<GuestOnlyGuard><TechRegister /></GuestOnlyGuard>} />
       <Route path="forgot-password" element={<GuestOnlyGuard><TechForgotPassword /></GuestOnlyGuard>} />

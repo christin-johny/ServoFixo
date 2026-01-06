@@ -65,8 +65,7 @@ export class EditServiceItemUseCase {
       currentImages = [...currentImages, ...newUrls];
       this._logger.info(LogEvents.SERVICE_IMAGE_UPLOAD_SUCCESS);
     }
-
-    // Creating new Immutable Entity with updated props
+ 
     const updatedEntity = new ServiceItem({
       ...existingService.toProps(),
       categoryId: request.dto.categoryId || existingService.getCategoryId(),

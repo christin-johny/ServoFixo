@@ -139,13 +139,11 @@ export class TechnicianMapper {
       phone: entity.getPhone(),
       avatarUrl: entity.getAvatarUrl(),
 
-      // Business Profile
       experienceSummary: entity.getExperienceSummary(),
       zoneIds: entity.getZoneIds(),
       categoryIds: entity.getCategoryIds(),
-     subServiceIds:entity.getSubServiceIds(),
-      
-      // Documents
+      subServiceIds: entity.getSubServiceIds(),
+
       documents: Array.isArray(documents)
         ? documents.map((d: any) => ({
             type: d.type,
@@ -156,7 +154,6 @@ export class TechnicianMapper {
           }))
         : [],
 
-      // Bank Details
       bankDetails: bank
         ? {
             accountHolderName: bank.accountHolderName,

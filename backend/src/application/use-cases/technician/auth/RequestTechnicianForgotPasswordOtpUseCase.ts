@@ -25,15 +25,13 @@ export class RequestTechnicianForgotPasswordOtpUseCase {
     const normalizedEmail = email.toLowerCase().trim();
 
     this._logger.info(`${LogEvents.AUTH_FORGOT_PASSWORD_INIT} (Technician) - Email: ${normalizedEmail}`);
-
-    // 1. Check if Technician exists
+ 
     const technician = await this._technicianRepository.findByEmail(normalizedEmail);
     if (!technician) {
       this._logger.warn(`${LogEvents.AUTH_FORGOT_PASS_INIT_FAILED} - Technician Not Found: ${normalizedEmail}`);
       throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
     }
-
-    // 2. Generate OTP & Session
+ 
     const otp = this.generateOtp();
     const sessionId = this.generateSessionId();
     const expiresAt = this.calculateExpiry();
@@ -42,15 +40,13 @@ export class RequestTechnicianForgotPasswordOtpUseCase {
       "",
       normalizedEmail,
       otp,
-      OtpContext.ForgotPassword, // Context is Key
+      OtpContext.ForgotPassword,  
       sessionId,
       expiresAt
     );
-
-    // 3. Save Session
+ 
     await this._otpSessionRepository.create(session);
-
-    // 4. Send Email
+ 
     const subject = "ServoFixo Partner - Reset Your Password";
     const text = `Your OTP to reset your password is: ${otp}. It is valid for ${this._otpExpiryMinutes} minutes.`;
 

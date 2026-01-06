@@ -31,38 +31,29 @@ import {technicianLogout} from "../../../../infrastructure/repositories/technici
 const mapApiDataToProfile = (data: any): TechnicianProfile => {
   return {
     id: data.id,
-    
-    // Personal Info
+     
     name: data.personalDetails.name,
     email: data.personalDetails.email,
     phone: data.personalDetails.phone,
     avatarUrl: data.personalDetails.avatarUrl,
     bio: data.personalDetails.bio,
     experienceSummary: data.personalDetails.experienceSummary,
-    
-    // Status
+     
     onboardingStep: data.onboardingStep,
     verificationStatus: data.verificationStatus,
-    
-    // ✅ RESUME LOGIC: Map the arrays directly from backend
+     
     categoryIds: data.categoryIds || [], 
     subServiceIds: data.subServiceIds || [],
     zoneIds: data.zoneIds || [],
     documents: data.documents || [],
     bankDetails: data.bankDetails || undefined,
-
-    // Dashboard Specifics
+ 
     availability: data.availability || { isOnline: false }, 
     walletBalance: { currentBalance: 0, currency: "INR" },
     rating: { average: 0, count: 0 }
   };
 };
-
-// ... rest of component
-
-// =========================================================
-// 2. CONFIGURATION
-// =========================================================
+ 
 interface NavItem {
   label: string;
   path: string;
@@ -79,10 +70,7 @@ const NAV_ITEMS: NavItem[] = [
 interface SidebarContentProps {
   onLogoutClick: () => void;
 }
-
-// =========================================================
-// 3. SIDEBAR COMPONENT
-// =========================================================
+ 
 const SidebarContent: React.FC<SidebarContentProps> = ({ onLogoutClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -168,10 +156,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ onLogoutClick }) => {
     </div>
   );
 };
-
-// =========================================================
-// 4. MAIN LAYOUT COMPONENT
-// =========================================================
+ 
 const TechnicianLayout: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -181,20 +166,16 @@ const TechnicianLayout: React.FC = () => {
 
   const { profile, loading } = useSelector((state: RootState) => state.technician);
   const { accessToken } = useSelector((state: RootState) => state.auth);
-
-  // ✅ Auto-Fetch with Strict Types
+ 
   useEffect(() => {
     if (accessToken && !profile) {
       const loadProfile = async () => {
         dispatch(fetchTechnicianStart());
-        try {
-          // 1. Fetch DTO (Strictly Typed)
+        try { 
           const data = await getTechnicianProfileStatus();
-
-          // 2. Map to Domain Model
+ 
           const mappedProfile = mapApiDataToProfile(data);
-
-          // 3. Save to Redux
+ 
           dispatch(fetchTechnicianSuccess(mappedProfile));
         } catch (error) {
           console.error("Fetch profile failed", error);

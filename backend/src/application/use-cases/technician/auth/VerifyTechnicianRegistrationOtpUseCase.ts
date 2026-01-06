@@ -69,8 +69,7 @@ export class VerifyTechnicianRegistrationOtpUseCase {
       subServiceIds: [],
       zoneIds: [],
       documents: [],
-      
-      // Default Onboarding State
+       
       onboardingStep: 1, 
       experienceSummary: "",
 

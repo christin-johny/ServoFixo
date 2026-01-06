@@ -3,8 +3,6 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import type { RootState, AppDispatch } from "../../../../store/store";
-
-// Import Steps
 import Step1_Personal from "./Steps/Step1_Personal";
 import Step2_WorkPreferences from "./Steps/Step2_WorkPreferences";
 import Step3_Zones from "./Steps/Step3_Zones";
@@ -26,31 +24,23 @@ const OnboardingWizard: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const dispatch = useDispatch<AppDispatch>();
   const { profile, loading } = useSelector((state: RootState) => state.technician);
-  
-  // Lazy Initialization
+   
   const [currentStep, setCurrentStep] = useState<number>(() => {
-    if (profile?.onboardingStep) {
-      // If step is valid (1-6), use it. 
-      // If completed (>6), default to 1 so they can review from the start
+    if (profile?.onboardingStep) { 
       return profile.onboardingStep <= 6 ? profile.onboardingStep : 1;
     }
     return 1;
   });
-
-  // ✅ FIX: Logic for Redirects
-  useEffect(() => {
-    // If profile is fully completed (>6)
+ 
+  useEffect(() => { 
     if (profile?.onboardingStep && profile.onboardingStep > 6) {
-      
-      // ✅ CRITICAL FIX: Only redirect if NOT Rejected.
-      // If Rejected, stay here so they can fix inputs.
+       
       if (profile.verificationStatus !== "REJECTED") {
         navigate("/technician");
       }
     }
   }, [profile?.onboardingStep, profile?.verificationStatus, navigate]);
-
-  // Loading Guard
+ 
   if (loading || !profile) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
@@ -58,8 +48,7 @@ const OnboardingWizard: React.FC = () => {
       </div>
     );
   }
-
-  // Render the specific step component
+ 
   const renderStepContent = () => {
     switch (currentStep) {
       case 1: return <Step1_Personal onNext={() => setCurrentStep(2)} />;

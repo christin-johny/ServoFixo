@@ -43,8 +43,7 @@ export class TechnicianLoginUseCase {
       );
       throw new Error(ErrorMessages.ACCOUNT_BLOCKED);
     }
-
-    // ✅ FIX: Handle 'string | undefined' type from getPassword()
+ 
     const storedPassword = technician.getPassword();
     if (!storedPassword) {
        this._logger.error("Technician has no password set");

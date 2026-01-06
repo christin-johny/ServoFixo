@@ -17,40 +17,33 @@ import { useNotification } from "../../../hooks/useNotification";
 import type { RootState, AppDispatch } from "../../../../store/store";
 import { setAvailability } from "../../../../store/technicianSlice";
 import { toggleOnlineStatus } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
-
-// ✅ 1. Define the structure of an Axios Error
+ 
 interface ApiError {
   response?: {
     data?: {
-      error?: string;   // Matches {"error": "..."}
-      message?: string; // Matches {"message": "..."}
+      error?: string;    
+      message?: string;  
     };
   };
-  message?: string;     // Matches standard JS Error message
+  message?: string;     
 }
-
-// ✅ 2. Robust Error Extractor (No 'any')
+ 
 const extractErrorMessage = (error: unknown): string => {
   if (!error) return "An unknown error occurred.";
-
-  // If it's just a string, return it
+ 
   if (typeof error === "string") return error;
-
-  // Check if it's an object to safely access properties
+ 
   if (typeof error === "object") {
-    const err = error as ApiError; // Safe assertion for checking
-
-    // Priority 1: Backend 'error' field (Your specific case)
+    const err = error as ApiError; 
+ 
     if (err.response?.data?.error) {
       return err.response.data.error;
     }
-
-    // Priority 2: Backend 'message' field
+ 
     if (err.response?.data?.message) {
       return err.response.data.message;
     }
-
-    // Priority 3: Standard JS/Axios error message (e.g., "Network Error")
+ 
     if (err.message) {
       return err.message;
     }
@@ -66,8 +59,7 @@ const TechnicianDashboard: React.FC = () => {
   const { profile, stats } = useSelector((state: RootState) => state.technician);
   const [isLocating, setIsLocating] = useState(false);
   const { showSuccess, showError } = useNotification();
-
-  // Default Fallbacks
+  
   const status = profile?.verificationStatus || "PENDING";
   const onboardingStep = profile?.onboardingStep || 0;
   const isOnline = profile?.availability?.isOnline || false;
@@ -79,17 +71,15 @@ const TechnicianDashboard: React.FC = () => {
 
   const handleToggleOnline = async () => {
     if (!isVerified) return;
-
-    // --- CASE 1: Going OFFLINE (No location needed) ---
+ 
     if (isOnline) {
        try {
          setIsLocating(true);
          const response = await toggleOnlineStatus({ isOnline: false });
-         
-         // Sync Redux
+          
          dispatch(setAvailability(response.isOnline));
          showSuccess("You are now Offline");
-       } catch (err: unknown) { // ✅ Use unknown
+       } catch (err: unknown) {  
          const message = extractErrorMessage(err);
          showError(message);
        } finally {
@@ -97,8 +87,7 @@ const TechnicianDashboard: React.FC = () => {
        }
        return;
     }
-
-    // --- CASE 2: Going ONLINE (Location Required) ---
+ 
     setIsLocating(true);
     
     if (!navigator.geolocation) {
@@ -111,22 +100,19 @@ const TechnicianDashboard: React.FC = () => {
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
-          
-          // 1. Call API
+           
           const response = await toggleOnlineStatus({ 
             isOnline: true, 
             lat: latitude, 
             lng: longitude 
           });
-
-          // 2. Dispatch Success to Redux
+ 
           dispatch(setAvailability(response.isOnline));
           showSuccess("You are now Online!");
 
-        } catch (err: unknown) { // ✅ Use unknown & Trace it down
+        } catch (err: unknown) {  
            console.error("Online Toggle Error:", err);
-           
-           // Extract specific error (e.g., "Outside Zone")
+            
            const message = extractErrorMessage(err);
            showError(message);
         } finally {
@@ -283,8 +269,7 @@ const TechnicianDashboard: React.FC = () => {
     </div>
   );
 };
-
-// Interface for StatCard
+ 
 interface StatCardProps {
   icon: LucideIcon;
   label: string;

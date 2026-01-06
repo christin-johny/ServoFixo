@@ -6,8 +6,7 @@ import {
 } from 'lucide-react';
 
 import { useNotification } from '../../../hooks/useNotification';
-import * as techRepo from '../../../../infrastructure/repositories/admin/technicianRepository';
-// Ensure this path matches where you saved the type
+import * as techRepo from '../../../../infrastructure/repositories/admin/technicianRepository'; 
 import type { TechnicianProfileFull } from '../../../../domain/types/Technician'; 
 import ConfirmModal from '../../../components/Admin/Modals/ConfirmModal';
 
@@ -42,7 +41,7 @@ const AdminTechnicianProfilePage: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [id, showError]); // Added showError to deps
+    }, [id, showError]); 
 
     useEffect(() => {
         fetchTech();
@@ -51,13 +50,12 @@ const AdminTechnicianProfilePage: React.FC = () => {
     const handleSuspendToggle = async () => {
         if(!tech || !id) return;
         setIsSuspending(true);
-        try {
-             // Toggle logic using the repository
+        try { 
              const newStatus = !tech.isSuspended;
              await techRepo.toggleBlockTechnician(id, newStatus);
              
              showSuccess(`Technician ${newStatus ? 'Suspended' : 'Activated'}`);
-             fetchTech(); // Refresh data
+             fetchTech(); 
              setSuspendModalOpen(false);
         } catch(err: unknown) {
             const message = err instanceof Error ? err.message : "Action failed";
@@ -157,8 +155,7 @@ const AdminTechnicianProfilePage: React.FC = () => {
         </div>
     );
 };
-
-// --- Sub-Components & Interfaces ---
+ 
 
 interface TabProps {
     tech: TechnicianProfileFull;
@@ -223,8 +220,7 @@ const InfoRow: React.FC<InfoRowProps> = ({ icon: Icon, label, value, mono }) => 
         </div>
     </div>
 );
-
-// --- Placeholders for Future Modules ---
+ 
 
 const JobsPlaceholder: React.FC = () => (
     <div className="text-center py-20">

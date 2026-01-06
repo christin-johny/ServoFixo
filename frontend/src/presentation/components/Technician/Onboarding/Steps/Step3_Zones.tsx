@@ -20,10 +20,9 @@ const Step3_Zones: React.FC<Step3Props> = ({ onNext, onBack }) => {
   const [zones, setZones] = useState<ZoneOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-
-  // Resume Logic
+ 
   const [selectedZoneIds, setSelectedZoneIds] = useState<string[]>(
-    profile?.zoneIds || [] // Ensure this matches your interface (zoneIds vs serviceZoneIds)
+    profile?.zoneIds || [] 
   );
 
   useEffect(() => {
@@ -55,13 +54,10 @@ const Step3_Zones: React.FC<Step3Props> = ({ onNext, onBack }) => {
 
     try {
       setIsSaving(true);
-      
-      // 1. Save to Backend (Expects Object: { zoneIds: [...] })
+       
       const apiPayload = { zoneIds: selectedZoneIds };
       await technicianOnboardingRepository.updateStep3(apiPayload);
-
-      // 2. Update Redux (Expects Array: [...])
-      // ✅ FIX 2: Pass only the array to the Redux action
+ 
       dispatch(updateZones(selectedZoneIds));
       dispatch(setOnboardingStep(4));
 

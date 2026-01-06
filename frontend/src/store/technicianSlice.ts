@@ -1,6 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-
-// 1. Define Types matching your Backend DTOs
+ 
 export type VerificationStatus = "PENDING"  | "VERIFICATION_PENDING"| "VERIFIED" | "REJECTED";
 
 export interface TechnicianDocument {
@@ -40,7 +39,7 @@ export interface TechnicianProfile {
   // Step 3: Zones
   zoneIds: string[];
 
-  // Step 4: Rates (✅ Added optional field to store agreement state)
+  // Step 4: Rates   
   isRateCardAgreed?: boolean;
   
   // Step 5: Documents
@@ -132,8 +131,7 @@ const technicianSlice = createSlice({
         state.profile.zoneIds = action.payload;
       }
     },
-
-    // ✅ FIXED: Now we actually use 'state' and 'action' to update the profile
+ 
     updateRateAgreement(state, action: PayloadAction<{ isAgreed: boolean }>) {
       if (state.profile) {
         state.profile.isRateCardAgreed = action.payload.isAgreed;
@@ -178,7 +176,7 @@ export const {
   updatePersonalDetails,
   updateWorkPreferences,
   updateZones,
-  updateRateAgreement, // ✅ Exported correctly
+  updateRateAgreement,  
   updateDocuments,
   updateBankDetails,
   updateVerificationStatus,

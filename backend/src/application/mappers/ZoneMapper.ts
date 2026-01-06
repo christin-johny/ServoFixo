@@ -3,8 +3,6 @@ import { CreateZoneDto } from "../dto/zone/CreateZoneDto";
 import { ZoneResponseDto } from "../dto/zone/ZoneResponseDto";
 
 export class ZoneMapper {
-  
-  // DTO -> Entity
   static toDomain(dto: CreateZoneDto, id: string = ""): Zone {
     return new Zone({
       id: id,
@@ -13,11 +11,10 @@ export class ZoneMapper {
       boundaries: dto.boundaries,
       isActive: dto.isActive ?? true,
       additionalInfo: {},
-      isDeleted: false
+      isDeleted: false,
     });
   }
 
-  // Entity -> Response DTO
   static toResponse(entity: Zone): ZoneResponseDto {
     return {
       id: entity.getId(),
@@ -26,7 +23,7 @@ export class ZoneMapper {
       boundaries: entity.getBoundaries(),
       isActive: entity.getIsActive(),
       createdAt: entity.getCreatedAt().toISOString(),
-      updatedAt: entity.getUpdatedAt().toISOString()
+      updatedAt: entity.getUpdatedAt().toISOString(),
     };
   }
 }

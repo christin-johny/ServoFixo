@@ -16,7 +16,7 @@ const TechnicianZoneSelectMap: React.FC<TechnicianZoneSelectMapProps> = ({
 }) => {
   return (
     <MapContainer
-      center={[12.9716, 77.5946]} // Change to your default city center
+      center={[12.9716, 77.5946]}   
       zoom={11}
       style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
     >
@@ -28,8 +28,7 @@ const TechnicianZoneSelectMap: React.FC<TechnicianZoneSelectMapProps> = ({
       {zones.map((zone) => {
         const isSelected = selectedZoneIds.includes(zone.id);
         const isInactive = !zone.isActive;
-
-        // Visual Logic: Blue (Selected) | Gray (Inactive) | Green (Available)
+ 
         const color = isSelected ? "#2563eb" : isInactive ? "#9ca3af" : "#10b981";
         const fillOpacity = isSelected ? 0.5 : 0.2;
 
