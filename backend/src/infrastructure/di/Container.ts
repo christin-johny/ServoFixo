@@ -62,17 +62,22 @@ import { TechnicianDataController } from "../../presentation/controllers/Technic
 import { FixedCommissionStrategy } from "../services/FixedCommissionStrategy";
 import { GetTechnicianRateCardUseCase } from "../../application/use-cases/technician/profile/GetTechnicianRateCardUseCase";
 
-// ✅ Resolved Conflicts Here:
+// ✅ Import resolved use cases
 import { UpdateTechnicianUseCase } from "../../application/use-cases/technician/profile/UpdateTechnicianUseCase";
 import { BlockTechnicianUseCase } from "../../application/use-cases/technician/profile/BlockTechnicianUseCase";
 import { DeleteTechnicianUseCase } from "../../application/use-cases/technician/profile/DeleteTechnicianUseCase";
 import { ToggleOnlineStatusUseCase } from "../../application/use-cases/technician/profile/ToggleOnlineStatusUseCase";
 
-// --- Technician Profile Imports ---
 import { TechnicianOnboardingUseCase } from "../../application/use-cases/technician/profile/TechnicianOnboardingUseCase"; 
 import { GetTechnicianProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianProfileUseCase";
 import { TechnicianProfileController } from "../../presentation/controllers/Technician/TechnicianProfileController";
 import { UploadTechnicianFileUseCase } from "../../application/use-cases/technician/profile/UploadTechnicianFileUseCase";
+import { GetVerificationQueueUseCase } from "../../application/use-cases/technician/profile/GetVerificationQueueUseCase";
+import { AdminTechnicianController } from "../../presentation/controllers/Admin/AdminTechnicianController";
+import { GetTechnicianFullProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianFullProfileUseCase"; 
+import { VerifyTechnicianUseCase } from "../../application/use-cases/technician/profile/VerifyTechnicianUseCase"; 
+import { GetAllTechniciansUseCase } from "../../application/use-cases/technician/profile/GetAllTechniciansUseCase";
+
 // --- Admin Auth---
 import { AdminLoginUseCase } from "../../application/use-cases/auth/AdminLoginUseCase";
 import { AdminAuthController } from "../../presentation/controllers/Admin/AdminAuthController";
@@ -479,5 +484,25 @@ export const technicianDataController = new TechnicianDataController(
   getServiceListingUseCase,
   getAllZonesUseCase,
   getTechnicianRateCardUseCase, 
+  logger
+);
+
+const getVerificationQueueUseCase = new GetVerificationQueueUseCase(technicianRepo, logger);
+
+const getTechnicianFullProfileUseCase = new GetTechnicianFullProfileUseCase(technicianRepo, logger);
+
+const verifyTechnicianUseCase = new VerifyTechnicianUseCase(technicianRepo, logger);
+const getAllTechniciansUseCase = new GetAllTechniciansUseCase(technicianRepo, logger);
+const updateTechnicianUseCase = new UpdateTechnicianUseCase(technicianRepo, logger);
+const deleteTechnicianUseCase = new DeleteTechnicianUseCase(technicianRepo, logger);
+const blockTechnicianUseCase = new BlockTechnicianUseCase(technicianRepo, logger);
+export const adminTechnicianController = new AdminTechnicianController(
+  getVerificationQueueUseCase,
+  getTechnicianFullProfileUseCase,
+  verifyTechnicianUseCase,
+  getAllTechniciansUseCase,
+  updateTechnicianUseCase, // Edit
+  deleteTechnicianUseCase, // Delete
+  blockTechnicianUseCase,  // Suspend
   logger
 );

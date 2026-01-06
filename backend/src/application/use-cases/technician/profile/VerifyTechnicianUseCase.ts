@@ -3,7 +3,6 @@ import { IUseCase } from "../../../interfaces/IUseCase";
 import { VerifyTechnicianDto } from "../../../dto/technician/TechnicianVerificationDtos";
 import { ILogger } from "../../../interfaces/ILogger";
 import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
 
 export class VerifyTechnicianUseCase implements IUseCase<void, [string, VerifyTechnicianDto]> {
   constructor(
@@ -15,7 +14,7 @@ export class VerifyTechnicianUseCase implements IUseCase<void, [string, VerifyTe
     const tech = await this._technicianRepo.findById(id);
     if (!tech) throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
 
-    this._logger.info(LogEvents.ADMIN_VERIFY_TECH_INIT, { id, action: dto.action });
+    this._logger.info(`Processing Verification for ${id}: ${dto.action}`);
 
     if (dto.action === "APPROVE") {
       tech.updateVerificationStatus("VERIFIED");
@@ -33,7 +32,7 @@ export class VerifyTechnicianUseCase implements IUseCase<void, [string, VerifyTe
         dto.documentDecisions.forEach(decision => {
           const docIndex = currentDocs.findIndex(d => d.type === decision.type);
           if (docIndex !== -1) {
-            currentDocs[docIndex].status = decision.status; 
+            currentDocs[docIndex].status = decision.status; // Should be REJECTED or APPROVED
             if (decision.status === "REJECTED") {
               currentDocs[docIndex].rejectionReason = decision.rejectionReason;
             }
@@ -44,7 +43,5 @@ export class VerifyTechnicianUseCase implements IUseCase<void, [string, VerifyTe
     }
 
     await this._technicianRepo.update(tech);
-  
-    this._logger.info(LogEvents.ADMIN_VERIFY_TECH_SUCCESS, { id, status: dto.action });
   }
 }

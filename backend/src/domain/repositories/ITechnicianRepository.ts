@@ -17,14 +17,12 @@ export interface PaginatedTechnicianResult {
   limit: number;
 }
 
-// ✅ Added missing interface required by findPendingVerification
 export interface VerificationQueueFilters {
   page: number;
   limit: number;
   search?: string;
 }
 
-// ✅ Added missing interface required by updateTechnician
 export interface TechnicianUpdatePayload {
   name?: string;
   email?: string;
@@ -37,6 +35,7 @@ export interface ITechnicianRepository extends IBaseRepository<Technician> {
   findByEmail(email: string): Promise<Technician | null>;
   findByPhone(phone: string): Promise<Technician | null>;
 
+  // Listings
   findAllPaginated(
     page: number,
     limit: number,
@@ -50,28 +49,25 @@ export interface ITechnicianRepository extends IBaseRepository<Technician> {
     limit?: number
   ): Promise<Technician[]>;
 
-  // ✅ Merged Methods (Admin & Availability)
+  // Admin Verification
   findPendingVerification(
     filters: VerificationQueueFilters
   ): Promise<{ technicians: Technician[]; total: number }>;
 
+  // Admin Management
   updateTechnician(id: string, payload: TechnicianUpdatePayload): Promise<void>;
+  toggleBlockTechnician(id: string, isSuspended: boolean, reason?: string): Promise<void>;
 
-  toggleBlockTechnician(
-    id: string,
-    isSuspended: boolean,
-    reason?: string
-  ): Promise<void>;
-
+  // Technician Availability
   updateOnlineStatus(
-    id: string,
-    isOnline: boolean,
+    id: string, 
+    isOnline: boolean, 
     location?: { lat: number; lng: number }
   ): Promise<void>;
 
   verifyZoneAccess(
-    zoneIds: string[],
-    lat: number,
+    zoneIds: string[], 
+    lat: number, 
     lng: number
   ): Promise<boolean>;
 }

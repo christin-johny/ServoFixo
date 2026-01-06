@@ -39,13 +39,13 @@ export const LogEvents = {
   AUTH_PASSWORD_RESET_SUCCESS: 'Password Reset Successful',
 
   // ==========================
-  // TECHNICIAN ONBOARDING (NEW)
+  // TECHNICIAN ONBOARDING
   // ==========================
-TECHNICIAN_CREATE_SUCCESS: 'Technician Entity Created Successfully',
+  TECHNICIAN_CREATE_SUCCESS: 'Technician Entity Created Successfully',
   TECH_PROFILE_ERROR: 'Technician Profile Error',
   
-  TECH_GET_ONBOARDING_STATUS_INIT: 'Technician: Fetch Onboarding Status Initiated', // NEW
-  TECH_UPDATE_DETAILS_INIT: 'Technician: Update Onboarding Step Initiated', // NEW
+  TECH_GET_ONBOARDING_STATUS_INIT: 'Technician: Fetch Onboarding Status Initiated',
+  TECH_UPDATE_DETAILS_INIT: 'Technician: Update Onboarding Step Initiated',
 
   TECH_ONBOARDING_STEP_1_SUCCESS: 'Technician Step 1 (Personal) Completed',
   TECH_ONBOARDING_STEP_2_SUCCESS: 'Technician Step 2 (Work Prefs) Completed',
@@ -60,13 +60,16 @@ TECHNICIAN_CREATE_SUCCESS: 'Technician Entity Created Successfully',
   
   TECH_PROFILE_SUBMITTED: 'Technician Profile Submitted for Verification',
 
+  // ==========================
+  // TECHNICIAN AVAILABILITY
+  // ==========================
   TECH_STATUS_TOGGLE_INIT: 'Technician Status Toggle Initiated',
   TECH_STATUS_TOGGLE_SUCCESS: 'Technician Status Updated Successfully',
   TECH_STATUS_TOGGLE_FAILED: 'Technician Status Toggle Failed',
   TECH_LOCATION_UPDATE_FAILED: 'Technician Location Update Failed',
 
   // ==========================
-  // TECHNICIAN DATA FETCH (NEW)
+  // TECHNICIAN DATA FETCH
   // ==========================
   TECH_CATEGORY_FETCH_FAILED: 'Technician Category Fetch Failed',
   TECH_SERVICE_FETCH_FAILED: 'Technician Service Fetch Failed',
@@ -221,6 +224,9 @@ TECHNICIAN_CREATE_SUCCESS: 'Technician Entity Created Successfully',
   ADMIN_CUSTOMER_ADDRESS_FETCH_INIT: 'Admin: Fetch Customer Addresses Initiated',
   ADMIN_CUSTOMER_ADDRESS_FETCH_FAILED: 'Admin: Fetch Customer Addresses Failed',
 
+  // ==========================
+  // ADMIN TECHNICIAN MODULE
+  // ==========================
   ADMIN_GET_TECH_QUEUE_INIT: "Admin: Fetch Verification Queue Initiated",
   ADMIN_GET_TECH_QUEUE_FAILED: "Admin: Fetch Verification Queue Failed",
   

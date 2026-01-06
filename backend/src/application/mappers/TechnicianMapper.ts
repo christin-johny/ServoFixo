@@ -1,20 +1,21 @@
 import { Technician } from "../../domain/entities/Technician";
 import { TechnicianResponseDto } from "../../application/dto/technician/TechnicianResponseDto";
-import { VerificationStatus } from "../../../../shared/types/value-objects/TechnicianTypes"; 
+import { VerificationStatus } from "../../../../shared/types/value-objects/TechnicianTypes";
+import { TechnicianQueueItemDto } from "../dto/technician/TechnicianQueueDto";
+import { AdminTechnicianProfileDto } from "../dto/technician/TechnicianVerificationDtos";
 
 export class TechnicianMapper {
-
   static toDomain(raw: any): Technician {
     if (!raw) throw new Error("Technician data is null/undefined");
 
-    const documents = Array.isArray(raw.documents) 
+    const documents = Array.isArray(raw.documents)
       ? raw.documents.map((d: any) => ({
           type: d.type,
           fileUrl: d.fileUrl,
           fileName: d.fileName,
           status: d.status,
           rejectionReason: d.rejectionReason,
-          uploadedAt: d.uploadedAt ? new Date(d.uploadedAt) : new Date()
+          uploadedAt: d.uploadedAt ? new Date(d.uploadedAt) : new Date(),
         }))
       : [];
 
@@ -24,46 +25,56 @@ export class TechnicianMapper {
       email: raw.email,
       phone: raw.phone,
       password: raw.password,
-      
+
       onboardingStep: raw.onboardingStep || 1,
       experienceSummary: raw.experienceSummary || "",
-      
+
       avatarUrl: raw.avatarUrl,
       bio: raw.bio,
 
-      categoryIds: raw.categoryIds ? raw.categoryIds.map((id: any) => id.toString()) : [],
-      subServiceIds: raw.subServiceIds ? raw.subServiceIds.map((id: any) => id.toString()) : [],
+      categoryIds: raw.categoryIds
+        ? raw.categoryIds.map((id: any) => id.toString())
+        : [],
+      subServiceIds: raw.subServiceIds
+        ? raw.subServiceIds.map((id: any) => id.toString())
+        : [],
       zoneIds: raw.zoneIds ? raw.zoneIds.map((id: any) => id.toString()) : [],
-      
+
       documents: documents,
       bankDetails: raw.bankDetails,
-      
-      walletBalance: raw.walletBalance || { currentBalance: 0, frozenAmount: 0, currency: "INR" },
+
+      walletBalance: raw.walletBalance || {
+        currentBalance: 0,
+        frozenAmount: 0,
+        currency: "INR",
+      },
       availability: raw.availability || { isOnline: false },
       ratings: raw.ratings || { averageRating: 0, totalReviews: 0 },
-      
+
       // ✅ Allow raw string here for Domain, casting happens in toResponse
-      verificationStatus: raw.verificationStatus || 'PENDING',
+      verificationStatus: raw.verificationStatus || "PENDING",
       verificationReason: raw.verificationReason,
-      
+
       isSuspended: !!raw.isSuspended,
+      isDeleted: !!raw.isDeleted,
       suspendReason: raw.suspendReason,
-      
+
       portfolioUrls: raw.portfolioUrls || [],
       deviceToken: raw.deviceToken,
-      
-      currentLocation: raw.currentLocation && raw.currentLocation.coordinates
-        ? {
-            type: "Point",
-            coordinates: raw.currentLocation.coordinates,
-            lastUpdated: raw.currentLocation.lastUpdated
-          }
-        : undefined,
-        
+
+      currentLocation:
+        raw.currentLocation && raw.currentLocation.coordinates
+          ? {
+              type: "Point",
+              coordinates: raw.currentLocation.coordinates,
+              lastUpdated: raw.currentLocation.lastUpdated,
+            }
+          : undefined,
+
       emergencyContact: raw.emergencyContact,
-      
+
       createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
-      updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : new Date()
+      updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : new Date(),
     });
   }
 
@@ -76,7 +87,7 @@ export class TechnicianMapper {
       phone: entity.getPhone(),
       avatarUrl: entity.getAvatarUrl(),
       bio: entity.getBio(),
-      
+
       onboardingStep: entity.getOnboardingStep(),
       experienceSummary: entity.getExperienceSummary(),
 
@@ -92,11 +103,11 @@ export class TechnicianMapper {
 
       // ✅ FIX: Cast the string to the specific Enum type
       verificationStatus: entity.getVerificationStatus() as VerificationStatus,
-      
+
       verificationReason: entity.getVerificationReason(),
       isSuspended: entity.getIsSuspended(),
       suspendReason: entity.getSuspendReason(),
-
+      isDeleted: entity.getIsDeleted(),
       portfolioUrls: entity.getPortfolioUrls(),
       deviceToken: entity.getDeviceToken(),
       currentLocation: entity.getCurrentLocation(),
@@ -106,9 +117,12 @@ export class TechnicianMapper {
       updatedAt: entity.getUpdatedAt(),
     };
   }
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 }
 =======
+=======
+>>>>>>> feature/admin-technician-verification
   static toQueueItem(entity: Technician): TechnicianQueueItemDto {
     return {
       id: entity.getId(),
@@ -139,7 +153,10 @@ export class TechnicianMapper {
       experienceSummary: entity.getExperienceSummary(),
       zoneIds: entity.getZoneIds(),
       categoryIds: entity.getCategoryIds(),
+<<<<<<< HEAD
       subServiceIds:entity.getSubServiceIds(),
+=======
+>>>>>>> feature/admin-technician-verification
 
       // Documents (Explicit mapping for Admin UI safety)
       documents: Array.isArray(documents)
@@ -173,4 +190,7 @@ export class TechnicianMapper {
     };
   }
 }
+<<<<<<< HEAD
 >>>>>>> Stashed changes
+=======
+>>>>>>> feature/admin-technician-verification

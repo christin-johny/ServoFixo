@@ -1,8 +1,6 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { ILogger } from "../../../interfaces/ILogger";
 import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
-import { IUseCase } from "../../../interfaces/IUseCase";
 
 export interface UpdateTechnicianDto {
   name?: string;
@@ -10,7 +8,8 @@ export interface UpdateTechnicianDto {
   phone?: string;
   experienceSummary?: string;
 }
-export class UpdateTechnicianUseCase implements IUseCase<void, [string, UpdateTechnicianDto]> {
+
+export class UpdateTechnicianUseCase {
   constructor(
     private readonly _technicianRepo: ITechnicianRepository,
     private readonly _logger: ILogger
@@ -19,8 +18,8 @@ export class UpdateTechnicianUseCase implements IUseCase<void, [string, UpdateTe
   async execute(id: string, updates: UpdateTechnicianDto): Promise<void> {
     const tech = await this._technicianRepo.findById(id);
     if (!tech) throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
-    
     const props = tech.toProps();
+    
     
     tech.updateProfile({
         bio: props.bio || "",
@@ -34,7 +33,6 @@ export class UpdateTechnicianUseCase implements IUseCase<void, [string, UpdateTe
     t._updatedAt = new Date();
 
     await this._technicianRepo.update(tech);
-    
-    this._logger.info(LogEvents.ADMIN_UPDATE_TECH_SUCCESS, { id });
+    this._logger.info(`Technician ${id} updated by Admin`);
   }
 }

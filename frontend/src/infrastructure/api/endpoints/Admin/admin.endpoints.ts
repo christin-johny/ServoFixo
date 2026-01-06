@@ -28,3 +28,12 @@ export const ADMIN_ZONE_ENDPOINTS = {
   ZONES: "/admin/zones",
   ZONE_BY_ID: (id: string) => `/admin/zones/${id}`,
 };
+
+export const ADMIN_TECHNICIAN_ENDPOINTS = {
+  QUEUE: "/admin/technicians/queue",
+  
+  PROFILE: (id: string) => `/admin/technicians/${id}`,
+  VERIFY: (id: string) => `/admin/technicians/${id}/verify`,
+  
+  LIST: "/admin/technicians" 
+};

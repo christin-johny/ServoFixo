@@ -75,17 +75,35 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
   async findPendingVerification(filters: VerificationQueueFilters): Promise<{ technicians: Technician[], total: number }> {
     const skip = (filters.page - 1) * filters.limit;
     const query: any = { verificationStatus: "VERIFICATION_PENDING" };
+
     if (filters.search) {
-      query.$or = [{ name: { $regex: filters.search, $options: "i" } }, { email: { $regex: filters.search, $options: "i" } }, { phone: { $regex: filters.search, $options: "i" } }];
+      query.$or = [
+        { name: { $regex: filters.search, $options: "i" } },
+        { email: { $regex: filters.search, $options: "i" } },
+        { phone: { $regex: filters.search, $options: "i" } }
+      ];
     }
+
     const [docs, total] = await Promise.all([
-      TechnicianModel.find(query).sort({ updatedAt: 1 }).skip(skip).limit(filters.limit).exec(), 
+      TechnicianModel.find(query)
+        .sort({ updatedAt: 1 })
+        .skip(skip)
+        .limit(filters.limit)
+        .exec(), 
       TechnicianModel.countDocuments(query)
     ]);
-    return { technicians: docs.map(d => this.toDomain(d)), total };
+
+    return {
+      technicians: docs.map(d => this.toDomain(d)),
+      total
+    };
   }
 
-  async findAvailableInZone(zoneId: string, subServiceId: string, limit: number = 10): Promise<Technician[]> {
+  async findAvailableInZone(
+    zoneId: string,
+    subServiceId: string,
+    limit: number = 10
+  ): Promise<Technician[]> {
     const query = {
       isDeleted: { $ne: true },
       verificationStatus: "VERIFIED",
@@ -98,15 +116,18 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     return docs.map((doc) => this.toDomain(doc));
   }
 
+  // Admin: Update
   async updateTechnician(id: string, payload: TechnicianUpdatePayload): Promise<void> {
     await TechnicianModel.findByIdAndUpdate(id, { $set: payload }).exec();
   }
 
+  // Admin: Block/Suspend
   async toggleBlockTechnician(id: string, isSuspended: boolean, reason?: string): Promise<void> {
     const update = { isSuspended, suspendReason: reason || "" };
     await TechnicianModel.findByIdAndUpdate(id, { $set: update }).exec();
   }
 
+  // Availability: Verify Zone
   async verifyZoneAccess(zoneIds: string[], lat: number, lng: number): Promise<boolean> {
     const count = await ZoneModel.countDocuments({
       _id: { $in: zoneIds },
@@ -124,6 +145,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     return count > 0;
   }
 
+  // Availability: Update Status
   async updateOnlineStatus(id: string, isOnline: boolean, location?: { lat: number; lng: number }): Promise<void> {
     const update: any = {
       "availability.isOnline": isOnline,
@@ -143,14 +165,12 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
 
   // --- Internal Mappers ---
   private toDomain(doc: TechnicianDocument): Technician {
-    // Check coordinates existence safely
     const hasCoordinates = 
       doc.currentLocation && 
       doc.currentLocation.coordinates && 
       Array.isArray(doc.currentLocation.coordinates) &&
       doc.currentLocation.coordinates.length >= 2;
     
-    // Map documents safely
     const mappedDocuments = Array.isArray(doc.documents) 
       ? doc.documents.map(d => ({
           type: d.type,

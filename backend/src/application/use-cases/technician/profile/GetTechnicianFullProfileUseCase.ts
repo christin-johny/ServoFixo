@@ -17,6 +17,8 @@ export class GetTechnicianFullProfileUseCase implements IUseCase<AdminTechnician
     if (!tech) {
       throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
     }
+
+    // ✅ REFACTOR: Single line transformation
     return TechnicianMapper.toAdminProfile(tech);
   }
 }

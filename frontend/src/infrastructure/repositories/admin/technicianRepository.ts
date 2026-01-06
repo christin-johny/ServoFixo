@@ -1,0 +1,101 @@
+import api from "../../api/axiosClient";
+import { ADMIN_TECHNICIAN_ENDPOINTS } from "../../api/endpoints/Admin/admin.endpoints";
+// Ideally, move these types to src/domain/types/Technician.ts
+import type { TechnicianProfileFull } from "../../../domain/types/Technician";
+
+// --- Strict Types ---
+
+export interface TechnicianListItem {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  avatarUrl?: string;
+  status: "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
+  isSuspended: boolean;
+  submittedAt: string; // or createdAt
+  experienceSummary?: string; // Needed for Edit Modal
+}
+
+export interface PaginatedTechnicianList {
+  data: TechnicianListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface TechnicianListParams {
+  page: number;
+  limit: number;
+  search?: string;
+  status?: string;
+}
+
+export interface VerificationQueueParams {
+  page: number;
+  limit: number;
+  search?: string;
+}
+
+export interface VerifyActionPayload {
+  action: "APPROVE" | "REJECT";
+  documentDecisions?: {
+    type: string;
+    status: "APPROVED" | "REJECTED";
+    rejectionReason?: string;
+  }[];
+  globalRejectionReason?: string;
+}
+
+export interface UpdateTechnicianPayload {
+  name?: string;
+  email?: string;
+  phone?: string;
+  experienceSummary?: string;
+}
+
+// --- Repository Functions ---
+
+export const getVerificationQueue = async (
+  params: VerificationQueueParams
+): Promise<PaginatedTechnicianList> => {
+  const response = await api.get(ADMIN_TECHNICIAN_ENDPOINTS.QUEUE, { params });
+  return response.data.data; 
+};
+
+export const getTechnicians = async (
+  params: TechnicianListParams
+): Promise<PaginatedTechnicianList> => {
+  const response = await api.get(ADMIN_TECHNICIAN_ENDPOINTS.LIST, { params });
+  return response.data.data;
+};
+
+export const getTechnicianProfile = async (
+  id: string
+): Promise<TechnicianProfileFull> => {
+  const response = await api.get(ADMIN_TECHNICIAN_ENDPOINTS.PROFILE(id));
+  return response.data.data;
+};
+
+export const verifyTechnician = async (
+  id: string,
+  payload: VerifyActionPayload
+): Promise<void> => {
+  await api.patch(ADMIN_TECHNICIAN_ENDPOINTS.VERIFY(id), payload);
+};
+
+export const updateTechnician = async (
+  id: string, 
+  data: UpdateTechnicianPayload
+): Promise<void> => {
+  await api.patch(ADMIN_TECHNICIAN_ENDPOINTS.PROFILE(id), data);
+};
+
+export const toggleBlockTechnician = async (
+  id: string,
+  isSuspended: boolean,
+  reason?: string
+): Promise<void> => {
+  await api.patch(`/admin/technicians/${id}/block`, { isSuspended, reason });
+};
