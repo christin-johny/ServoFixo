@@ -4,82 +4,110 @@ import { TechnicianOnboardingInput } from "../../../dto/technician/TechnicianOnb
 import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
 import { ILogger } from "../../../interfaces/ILogger";
 import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { Technician } from "../../../../domain/entities/Technician";
+import {
+  TechnicianDocument,
+  DocumentStatus,
+} from "../../../../../../shared/types/value-objects/TechnicianTypes";
 
-export class TechnicianOnboardingUseCase implements IUseCase<boolean, [TechnicianOnboardingInput]> {
+export class TechnicianOnboardingUseCase
+  implements IUseCase<boolean, [TechnicianOnboardingInput]>
+{
   constructor(
     private readonly _technicianRepository: ITechnicianRepository,
     private readonly _logger: ILogger
   ) {}
 
   async execute(input: TechnicianOnboardingInput): Promise<boolean> {
-    const technician = await this._technicianRepository.findById(input.technicianId);
-    
+    const technician = await this._technicianRepository.findById(
+      input.technicianId
+    );
+
     if (!technician) {
       throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
     }
- 
+
     switch (input.step) {
-      case 1: 
+      case 1:
         technician.updateProfile({
           bio: input.bio,
           experienceSummary: input.experienceSummary,
-          avatarUrl: input.avatarUrl
+          avatarUrl: input.avatarUrl,
         });
         this.updateStep(technician, 2);
-        this._logger.info(`${LogEvents.TECH_ONBOARDING_STEP_1_SUCCESS}: ${technician.getId()}`);
+        this._logger.info(
+          `${LogEvents.TECH_ONBOARDING_STEP_1_SUCCESS}: ${technician.getId()}`
+        );
         break;
 
-      case 2:  
+      case 2:
         if (!input.categoryIds.length || !input.subServiceIds.length) {
-            throw new Error(ErrorMessages.TECH_MISSING_CATS);
+          throw new Error(ErrorMessages.TECH_MISSING_CATS);
         }
-        technician.updateWorkPreferences(input.categoryIds, input.subServiceIds);
+        technician.updateWorkPreferences(
+          input.categoryIds,
+          input.subServiceIds
+        );
         this.updateStep(technician, 3);
-        this._logger.info(`${LogEvents.TECH_ONBOARDING_STEP_2_SUCCESS}: ${technician.getId()}`);
+        this._logger.info(
+          `${LogEvents.TECH_ONBOARDING_STEP_2_SUCCESS}: ${technician.getId()}`
+        );
         break;
 
-      case 3:  
-        if (!input.zoneIds.length) throw new Error(ErrorMessages.TECH_MISSING_ZONES);
+      case 3:
+        if (!input.zoneIds.length)
+          throw new Error(ErrorMessages.TECH_MISSING_ZONES);
         technician.updateZones(input.zoneIds);
         this.updateStep(technician, 4);
-        this._logger.info(`${LogEvents.TECH_ONBOARDING_STEP_3_SUCCESS}: ${technician.getId()}`);
+        this._logger.info(
+          `${LogEvents.TECH_ONBOARDING_STEP_3_SUCCESS}: ${technician.getId()}`
+        );
         break;
 
-      case 4: 
-        if (!input.agreedToRates) throw new Error(ErrorMessages.TECH_RATE_DISAGREE);
+      case 4:
+        if (!input.agreedToRates)
+          throw new Error(ErrorMessages.TECH_RATE_DISAGREE);
         this.updateStep(technician, 5);
-        this._logger.info(`${LogEvents.TECH_ONBOARDING_STEP_4_SUCCESS}: ${technician.getId()}`);
+        this._logger.info(
+          `${LogEvents.TECH_ONBOARDING_STEP_4_SUCCESS}: ${technician.getId()}`
+        );
         break;
 
-      case 5:  
+      case 5:
         if (!input.documents || input.documents.length === 0) {
-           throw new Error(ErrorMessages.TECH_DOCS_MISSING);
+          throw new Error(ErrorMessages.TECH_DOCS_MISSING);
         }
         if (input.documents.length > 6) {
-           throw new Error(ErrorMessages.TECH_DOC_LIMIT);
+          throw new Error(ErrorMessages.TECH_DOC_LIMIT);
         }
- 
-        const docs = input.documents.map(d => ({
-            type: d.type,
-            fileUrl: d.fileUrl,
-            fileName: d.fileName,
-            status: 'PENDING',
-            uploadedAt: new Date()
+
+        const docs: TechnicianDocument[] = input.documents.map((d) => ({
+          type: d.type,
+          fileUrl: d.fileUrl,
+          fileName: d.fileName,
+          status: "PENDING" as DocumentStatus,
+          uploadedAt: new Date(),
         }));
-        
+
         technician.updateDocuments(docs);
         this.updateStep(technician, 6);
-        this._logger.info(`${LogEvents.TECH_ONBOARDING_STEP_5_SUCCESS}: ${technician.getId()}`);
+        this._logger.info(
+          `${LogEvents.TECH_ONBOARDING_STEP_5_SUCCESS}: ${technician.getId()}`
+        );
         break;
 
-      case 6: 
+      case 6:
         technician.updateBankDetails(input.bankDetails);
-         
-        technician.setOnboardingStep(7);  
+
+        technician.setOnboardingStep(7);
         technician.setVerificationStatus("VERIFICATION_PENDING");
-        
-        this._logger.info(`${LogEvents.TECH_ONBOARDING_STEP_6_SUCCESS}: ${technician.getId()}`);
-        this._logger.info(`${LogEvents.TECH_PROFILE_SUBMITTED}: ${technician.getId()}`);
+
+        this._logger.info(
+          `${LogEvents.TECH_ONBOARDING_STEP_6_SUCCESS}: ${technician.getId()}`
+        );
+        this._logger.info(
+          `${LogEvents.TECH_PROFILE_SUBMITTED}: ${technician.getId()}`
+        );
         break;
 
       default:
@@ -90,9 +118,9 @@ export class TechnicianOnboardingUseCase implements IUseCase<boolean, [Technicia
     return true;
   }
 
-  private updateStep(technician: any, nextStep: number) {
+  private updateStep(technician: Technician, nextStep: number) {
     if (technician.getOnboardingStep() < nextStep) {
-        technician.setOnboardingStep(nextStep);
+      technician.setOnboardingStep(nextStep);
     }
   }
 }

@@ -1,3 +1,14 @@
+import {
+  TechnicianDocument,
+  TechnicianBankDetails,
+  TechnicianWallet,
+  TechnicianAvailability,
+  TechnicianRatings,
+  VerificationStatus,
+  TechnicianLocation,
+  EmergencyContact
+} from "../../../../shared/types/value-objects/TechnicianTypes";
+
 export interface TechnicianProps {
   id?: string;
   name: string;
@@ -13,21 +24,25 @@ export interface TechnicianProps {
   categoryIds: string[];
   subServiceIds: string[];
   zoneIds: string[];
-  documents: any[];
-  bankDetails?: any;
+   
+  documents: TechnicianDocument[];
+  bankDetails?: TechnicianBankDetails;
 
-  walletBalance?: any;
-  availability?: any;
-  ratings?: any;
+  walletBalance?: TechnicianWallet;
+  availability?: TechnicianAvailability;
+  ratings?: TechnicianRatings;
 
-  verificationStatus?: string;
+  verificationStatus?: VerificationStatus;
   verificationReason?: string;
+  
   isSuspended?: boolean;
   suspendReason?: string;
   portfolioUrls?: string[];
   deviceToken?: string;
-  currentLocation?: any;
-  emergencyContact?: any;
+  
+  currentLocation?: TechnicianLocation;
+  emergencyContact?: EmergencyContact;
+  
   isOnline?: boolean;
   isDeleted?: boolean;
 
@@ -50,21 +65,25 @@ export class Technician {
   private _categoryIds: string[];
   private _subServiceIds: string[];
   private _zoneIds: string[];
-  private _documents: any[];
-  private _bankDetails?: any;
+   
+  private _documents: TechnicianDocument[];
+  private _bankDetails?: TechnicianBankDetails;
 
-  private _walletBalance: any;
-  private _availability: any;
-  private _ratings: any;
+  private _walletBalance: TechnicianWallet;
+  private _availability: TechnicianAvailability;
+  private _ratings: TechnicianRatings;
 
-  private _verificationStatus: string;
+  private _verificationStatus: VerificationStatus;
   private _verificationReason?: string;
+  
   private _isSuspended: boolean;
   private _suspendReason?: string;
   private _portfolioUrls: string[];
   private _deviceToken?: string;
-  private _currentLocation?: any;
-  private _emergencyContact?: any;
+  
+  private _currentLocation?: TechnicianLocation;
+  private _emergencyContact?: EmergencyContact;
+  
   private _isOnline: boolean;
   private _isDeleted: boolean;
 
@@ -86,6 +105,7 @@ export class Technician {
     this._categoryIds = props.categoryIds || [];
     this._subServiceIds = props.subServiceIds || [];
     this._zoneIds = props.zoneIds || [];
+    
     this._documents = props.documents || [];
     this._bankDetails = props.bankDetails;
 
@@ -150,23 +170,29 @@ export class Technician {
   public getZoneIds(): string[] {
     return this._zoneIds;
   }
-  public getDocuments(): any[] {
+  
+  // ✅ Typed Getter
+  public getDocuments(): TechnicianDocument[] {
     return this._documents;
   }
-  public getBankDetails(): any {
+  
+  // ✅ Typed Getter
+  public getBankDetails(): TechnicianBankDetails | undefined {
     return this._bankDetails;
   }
-  public getVerificationStatus(): string {
+  
+  // ✅ Typed Getter
+  public getVerificationStatus(): VerificationStatus {
     return this._verificationStatus;
   }
 
-  public getWalletBalance(): any {
+  public getWalletBalance(): TechnicianWallet {
     return this._walletBalance;
   }
-  public getAvailability(): any {
+  public getAvailability(): TechnicianAvailability {
     return this._availability;
   }
-  public getRatings(): any {
+  public getRatings(): TechnicianRatings {
     return this._ratings;
   }
   public getVerificationReason(): string | undefined {
@@ -184,10 +210,10 @@ export class Technician {
   public getDeviceToken(): string | undefined {
     return this._deviceToken;
   }
-  public getCurrentLocation(): any {
+  public getCurrentLocation(): TechnicianLocation | undefined {
     return this._currentLocation;
   }
-  public getEmergencyContact(): any {
+  public getEmergencyContact(): EmergencyContact | undefined {
     return this._emergencyContact;
   }
   public getIsOnline(): boolean {
@@ -207,11 +233,11 @@ export class Technician {
     this._onboardingStep = step;
   }
 
-  public setVerificationStatus(status: string): void {
+  public setVerificationStatus(status: VerificationStatus): void {
     this._verificationStatus = status;
   }
 
-  public updateVerificationStatus(status: string, reason?: string): void {
+  public updateVerificationStatus(status: VerificationStatus, reason?: string): void {
     this._verificationStatus = status;
     if (reason) {
       this._verificationReason = reason;
@@ -242,12 +268,14 @@ export class Technician {
     this._updatedAt = new Date();
   }
 
-  public updateDocuments(documents: any[]) {
+  // ✅ Typed Setter
+  public updateDocuments(documents: TechnicianDocument[]) {
     this._documents = documents;
     this._updatedAt = new Date();
   }
 
-  public updateBankDetails(details: any) {
+  // ✅ Typed Setter
+  public updateBankDetails(details: TechnicianBankDetails) {
     this._bankDetails = details;
     this._updatedAt = new Date();
   }
@@ -256,7 +284,7 @@ export class Technician {
     this._isOnline = status;
     this._updatedAt = new Date();
   }
- 
+  
   public setSuspension(status: boolean, reason?: string): void {
     this._isSuspended = status;
     this._suspendReason = reason;

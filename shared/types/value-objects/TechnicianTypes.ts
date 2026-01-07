@@ -1,11 +1,21 @@
-// Strict definitions for complex objects to avoid 'any'
+export type VerificationStatus =
+  | "PENDING"
+  | "VERIFICATION_PENDING"
+  | "VERIFIED"
+  | "REJECTED";
+
+export type DocumentStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface TechnicianDocument {
-  name: string;        // e.g., "Aadhaar Card"
-  fileUrl: string;     // S3 URL
-  fileType: string;    // "image/jpeg"
-  isVerified: boolean; // Admin approval status
+  // changed 'name' to 'fileName' to match S3/Multer
+  fileName: string;
+  fileUrl: string;
+  // changed 'fileType' to 'type' (e.g., AADHAAR, PAN)
+  type: string; 
+  // changed 'isVerified' to 'status' to handle Rejection
+  status: DocumentStatus;
   rejectionReason?: string;
+  uploadedAt?: Date;
 }
 
 export interface TechnicianBankDetails {
@@ -18,14 +28,14 @@ export interface TechnicianBankDetails {
 
 export interface TechnicianLocation {
   type: "Point";
-  coordinates: [number, number]; // [longitude, latitude]
+  coordinates: [number, number]; // [lng, lat]
   lastUpdated: Date;
 }
 
 export interface EmergencyContact {
   name: string;
   phone: string;
-  relation: string; 
+  relation: string;
 }
 
 export interface TechnicianAvailability {
@@ -40,9 +50,7 @@ export interface TechnicianRatings {
 }
 
 export interface TechnicianWallet {
-  currentBalance: number; // +ve: Platform owes Tech, -ve: Tech owes Platform
-  frozenAmount: number;   
+  currentBalance: number;
+  frozenAmount: number;
   currency: string;
 }
-
-export type VerificationStatus = 'PENDING' | "VERIFICATION_PENDING" | 'VERIFIED' | 'REJECTED';

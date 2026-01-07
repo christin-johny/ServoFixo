@@ -1,6 +1,9 @@
 import { Technician } from "../../domain/entities/Technician";
 import { TechnicianResponseDto } from "../../application/dto/technician/TechnicianResponseDto";
-import { VerificationStatus } from "../../../../shared/types/value-objects/TechnicianTypes";
+import {
+  VerificationStatus,
+  TechnicianDocument,
+} from "../../../../shared/types/value-objects/TechnicianTypes";
 import { TechnicianQueueItemDto } from "../dto/technician/TechnicianQueueDto";
 import { AdminTechnicianProfileDto } from "../dto/technician/TechnicianVerificationDtos";
 
@@ -8,7 +11,7 @@ export class TechnicianMapper {
   static toDomain(raw: any): Technician {
     if (!raw) throw new Error("Technician data is null/undefined");
 
-    const documents = Array.isArray(raw.documents)
+    const documents: TechnicianDocument[] = Array.isArray(raw.documents)
       ? raw.documents.map((d: any) => ({
           type: d.type,
           fileUrl: d.fileUrl,
@@ -78,6 +81,15 @@ export class TechnicianMapper {
   }
 
   static toResponse(entity: Technician): TechnicianResponseDto {
+    const mappedDocuments = entity.getDocuments().map((doc) => ({
+      type: doc.type,
+      fileUrl: doc.fileUrl,
+      fileName: doc.fileName,
+      status: doc.status || "PENDING",
+      rejectionReason: doc.rejectionReason,
+      uploadedAt: doc.uploadedAt || new Date(),
+    }));
+
     return {
       id: entity.getId(),
       name: entity.getName(),
@@ -93,7 +105,8 @@ export class TechnicianMapper {
       subServiceIds: entity.getSubServiceIds(),
       zoneIds: entity.getZoneIds(),
 
-      documents: entity.getDocuments(),
+      documents: mappedDocuments,
+
       bankDetails: entity.getBankDetails(),
       walletBalance: entity.getWalletBalance(),
       availability: entity.getAvailability(),
@@ -145,7 +158,7 @@ export class TechnicianMapper {
       subServiceIds: entity.getSubServiceIds(),
 
       documents: Array.isArray(documents)
-        ? documents.map((d: any) => ({
+        ? documents.map((d) => ({
             type: d.type,
             fileUrl: d.fileUrl,
             fileName: d.fileName,
