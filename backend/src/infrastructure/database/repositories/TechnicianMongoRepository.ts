@@ -72,10 +72,11 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     return { data: docs.map((doc) => this.toDomain(doc)), total, page, limit };
   }
 
-  async findPendingVerification(filters: VerificationQueueFilters): Promise<{ technicians: Technician[], total: number }> {
+async findPendingVerification(filters: VerificationQueueFilters): Promise<{ technicians: Technician[], total: number }> {
     const skip = (filters.page - 1) * filters.limit;
     const query: any = { verificationStatus: "VERIFICATION_PENDING" };
 
+ 
     if (filters.search) {
       query.$or = [
         { name: { $regex: filters.search, $options: "i" } },
@@ -83,10 +84,13 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
         { phone: { $regex: filters.search, $options: "i" } }
       ];
     }
-
+ 
+    const sortDir = filters.sort === "desc" ? -1 : 1; 
+    const sortField = filters.sortBy || "updatedAt"; 
+ 
     const [docs, total] = await Promise.all([
       TechnicianModel.find(query)
-        .sort({ updatedAt: 1 })
+        .sort({ [sortField]: sortDir })  
         .skip(skip)
         .limit(filters.limit)
         .exec(), 
@@ -97,7 +101,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       technicians: docs.map(d => this.toDomain(d)),
       total
     };
-  }
+}
 
   async findAvailableInZone(
     zoneId: string,
@@ -116,12 +120,10 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     return docs.map((doc) => this.toDomain(doc));
   }
 
-  // Admin: Update
   async updateTechnician(id: string, payload: TechnicianUpdatePayload): Promise<void> {
     await TechnicianModel.findByIdAndUpdate(id, { $set: payload }).exec();
   }
 
-  // Admin: Block/Suspend
   async toggleBlockTechnician(id: string, isSuspended: boolean, reason?: string): Promise<void> {
     const update = { isSuspended, suspendReason: reason || "" };
     await TechnicianModel.findByIdAndUpdate(id, { $set: update }).exec();

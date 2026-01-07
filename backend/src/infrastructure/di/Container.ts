@@ -68,14 +68,14 @@ import { DeleteTechnicianUseCase } from "../../application/use-cases/technician/
 import { ToggleOnlineStatusUseCase } from "../../application/use-cases/technician/profile/ToggleOnlineStatusUseCase";
 import { ResubmitProfileUseCase } from "../../application/use-cases/technician/profile/ResubmitProfileUseCase";
 
-import { TechnicianOnboardingUseCase } from "../../application/use-cases/technician/profile/TechnicianOnboardingUseCase"; 
+import { TechnicianOnboardingUseCase } from "../../application/use-cases/technician/profile/TechnicianOnboardingUseCase";
 import { GetTechnicianProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianProfileUseCase";
 import { TechnicianProfileController } from "../../presentation/controllers/Technician/TechnicianProfileController";
 import { UploadTechnicianFileUseCase } from "../../application/use-cases/technician/profile/UploadTechnicianFileUseCase";
 import { GetVerificationQueueUseCase } from "../../application/use-cases/technician/profile/GetVerificationQueueUseCase";
 import { AdminTechnicianController } from "../../presentation/controllers/Admin/AdminTechnicianController";
-import { GetTechnicianFullProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianFullProfileUseCase"; 
-import { VerifyTechnicianUseCase } from "../../application/use-cases/technician/profile/VerifyTechnicianUseCase"; 
+import { GetTechnicianFullProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianFullProfileUseCase";
+import { VerifyTechnicianUseCase } from "../../application/use-cases/technician/profile/VerifyTechnicianUseCase";
 import { GetAllTechniciansUseCase } from "../../application/use-cases/technician/profile/GetAllTechniciansUseCase";
 
 // --- Admin Auth---
@@ -360,7 +360,6 @@ export const customerAddressController = new CustomerAddressController(
   logger
 );
 
-
 const technicianRepo = new TechnicianMongoRepository();
 
 const reqTechnicianRegOtpUseCase = new RequestTechnicianRegistrationOtpUseCase(
@@ -395,7 +394,7 @@ const verTechForgotOtpUseCase = new VerifyTechnicianForgotPasswordOtpUseCase(
   technicianRepo,
   otpSessionRepo,
   passwordHasher,
-  logger 
+  logger
 );
 
 export const technicianAuthController = new TechnicianAuthController(
@@ -439,8 +438,8 @@ export const authTokenController = new AuthTokenController(
 );
 
 const technicianOnboardingUseCase = new TechnicianOnboardingUseCase(
-  technicianRepo, 
-  logger          
+  technicianRepo,
+  logger
 );
 
 const getTechnicianProfileUseCase = new GetTechnicianProfileUseCase(
@@ -448,7 +447,7 @@ const getTechnicianProfileUseCase = new GetTechnicianProfileUseCase(
   logger
 );
 const uploadTechnicianFileUseCase = new UploadTechnicianFileUseCase(
-  imageService, 
+  imageService,
   logger
 );
 const toggleOnlineStatusUseCase = new ToggleOnlineStatusUseCase(
@@ -462,8 +461,8 @@ const resubmitProfileUseCase = new ResubmitProfileUseCase(
 
 // 2. Instantiate & Export Profile Controller
 export const technicianProfileController = new TechnicianProfileController(
-  technicianOnboardingUseCase, 
-  getTechnicianProfileUseCase, 
+  technicianOnboardingUseCase,
+  getTechnicianProfileUseCase,
   uploadTechnicianFileUseCase,
   toggleOnlineStatusUseCase,
   resubmitProfileUseCase,
@@ -477,8 +476,8 @@ const commissionStrategy = new FixedCommissionStrategy();
 
 // 4. Instantiate Rate Card Use Case (Injecting Strategy)
 const getTechnicianRateCardUseCase = new GetTechnicianRateCardUseCase(
-  technicianRepo,  
-  serviceItemRepo, 
+  technicianRepo,
+  serviceItemRepo,
   commissionStrategy,
   logger
 );
@@ -488,26 +487,50 @@ export const technicianDataController = new TechnicianDataController(
   getAllCategoriesUseCase,
   getServiceListingUseCase,
   getAllZonesUseCase,
-  getTechnicianRateCardUseCase, 
+  getTechnicianRateCardUseCase,
   logger
 );
 
-const getVerificationQueueUseCase = new GetVerificationQueueUseCase(technicianRepo, logger);
+const getVerificationQueueUseCase = new GetVerificationQueueUseCase(
+  technicianRepo,
+  logger
+);
 
-const getTechnicianFullProfileUseCase = new GetTechnicianFullProfileUseCase(technicianRepo, logger);
+const getTechnicianFullProfileUseCase = new GetTechnicianFullProfileUseCase(
+  technicianRepo,
+  zoneRepo,
+  categoryRepo,
+  serviceItemRepo,
+  logger
+);
 
-const verifyTechnicianUseCase = new VerifyTechnicianUseCase(technicianRepo, logger);
-const getAllTechniciansUseCase = new GetAllTechniciansUseCase(technicianRepo, logger);
-const updateTechnicianUseCase = new UpdateTechnicianUseCase(technicianRepo, logger);
-const deleteTechnicianUseCase = new DeleteTechnicianUseCase(technicianRepo, logger);
-const blockTechnicianUseCase = new BlockTechnicianUseCase(technicianRepo, logger);
+const verifyTechnicianUseCase = new VerifyTechnicianUseCase(
+  technicianRepo,
+  logger
+);
+const getAllTechniciansUseCase = new GetAllTechniciansUseCase(
+  technicianRepo,
+  logger
+);
+const updateTechnicianUseCase = new UpdateTechnicianUseCase(
+  technicianRepo,
+  logger
+);
+const deleteTechnicianUseCase = new DeleteTechnicianUseCase(
+  technicianRepo,
+  logger
+);
+const blockTechnicianUseCase = new BlockTechnicianUseCase(
+  technicianRepo,
+  logger
+);
 export const adminTechnicianController = new AdminTechnicianController(
   getVerificationQueueUseCase,
   getTechnicianFullProfileUseCase,
   verifyTechnicianUseCase,
   getAllTechniciansUseCase,
-  updateTechnicianUseCase,  
-  deleteTechnicianUseCase,  
-  blockTechnicianUseCase,   
+  updateTechnicianUseCase,
+  deleteTechnicianUseCase,
+  blockTechnicianUseCase,
   logger
 );

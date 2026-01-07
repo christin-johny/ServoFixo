@@ -21,6 +21,8 @@ export interface VerificationQueueFilters {
   page: number;
   limit: number;
   search?: string;
+  sort?: "asc" | "desc";
+  sortBy?: string;
 }
 
 export interface TechnicianUpdatePayload {

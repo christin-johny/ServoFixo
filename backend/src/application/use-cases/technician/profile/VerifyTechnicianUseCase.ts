@@ -20,17 +20,26 @@ export class VerifyTechnicianUseCase implements IUseCase<void, [string, VerifyTe
       tech.updateVerificationStatus("VERIFIED");
       
       const docs = tech.getDocuments();
-      docs.forEach(d => d.status = "APPROVED");
+      docs.forEach((d) => { d.status = "APPROVED"; });
       tech.updateDocuments(docs); 
 
     } else if (dto.action === "REJECT") { 
-      tech.updateVerificationStatus("REJECTED", dto.globalRejectionReason);
+      
+      // ✅ LOGIC FIX: Auto-fill Global Reason if missing but documents are rejected
+      let finalGlobalReason = dto.globalRejectionReason;
+      const hasDocumentRejections = dto.documentDecisions?.some((d) => d.status === "REJECTED");
+
+      if (!finalGlobalReason && hasDocumentRejections) {
+        finalGlobalReason = "Invalid Documents";
+      }
+
+      tech.updateVerificationStatus("REJECTED", finalGlobalReason);
       
       if (dto.documentDecisions && dto.documentDecisions.length > 0) {
         const currentDocs = tech.getDocuments();
         
-        dto.documentDecisions.forEach(decision => {
-          const docIndex = currentDocs.findIndex(d => d.type === decision.type);
+        dto.documentDecisions.forEach((decision) => {
+          const docIndex = currentDocs.findIndex((d) => d.type === decision.type);
           if (docIndex !== -1) {
             currentDocs[docIndex].status = decision.status; 
             if (decision.status === "REJECTED") {

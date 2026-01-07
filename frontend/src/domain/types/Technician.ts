@@ -3,7 +3,7 @@ export type VerificationStatus =
   | "VERIFICATION_PENDING"
   | "VERIFIED"
   | "REJECTED";
- 
+
 export interface TechnicianQueueItem {
   id: string;
   name: string;
@@ -13,7 +13,7 @@ export interface TechnicianQueueItem {
   status: VerificationStatus;
   submittedAt: string; 
 }
- 
+
 export interface PaginatedTechnicianQueue {
   data: TechnicianQueueItem[];
   total: number;
@@ -21,7 +21,7 @@ export interface PaginatedTechnicianQueue {
   limit: number;
   totalPages: number;
 }
- 
+
 export interface TechnicianProfileFull {
   id: string;
   name: string;
@@ -29,16 +29,23 @@ export interface TechnicianProfileFull {
   phone: string;
   avatarUrl?: string;
 
+  bio?: string; 
   experienceSummary: string;
+  
   zoneIds: string[];
+  zoneNames?: string[]; // Optional in case older data doesn't have it
+
   categoryIds: string[];
-  subServiceIds: string[]; 
+  categoryNames?: string[];
+
+  subServiceIds: string[];
+  subServiceNames?: string[];
 
   documents: {
     type: string;
     fileUrl: string;
     fileName: string;
-    status: "PENDING" | "APPROVED" | "REJECTED";
+    status: "PENDING" | "APPROVED" | "REJECTED" | "VERIFICATION_PENDING";
     rejectionReason?: string;
   }[];
 

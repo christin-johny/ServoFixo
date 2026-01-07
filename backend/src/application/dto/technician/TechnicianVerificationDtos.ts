@@ -5,10 +5,17 @@ export interface AdminTechnicianProfileDto {
   phone: string;
   avatarUrl?: string;
   
+  bio?: string; // ✅ Added Bio
   experienceSummary: string;
+  
   zoneIds: string[]; 
   categoryIds: string[];
   subServiceIds: string[];
+
+  // ✅ ADDED: Resolved Names for UI
+  zoneNames: string[];
+  categoryNames: string[];
+  subServiceNames: string[];
   
   documents: {
     type: string;

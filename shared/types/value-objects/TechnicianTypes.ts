@@ -4,7 +4,7 @@ export type VerificationStatus =
   | "VERIFIED"
   | "REJECTED";
 
-export type DocumentStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type DocumentStatus = "PENDING" | "APPROVED" | "REJECTED"| "VERIFICATION_PENDING";
 
 export interface TechnicianDocument {
   // changed 'name' to 'fileName' to match S3/Multer

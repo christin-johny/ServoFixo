@@ -27,14 +27,16 @@ export class AdminTechnicianController {
     private readonly _logger: ILogger
   ) {}
  
-  getVerificationQueue = async (req: Request, res: Response): Promise<Response> => {
+getVerificationQueue = async (req: Request, res: Response): Promise<Response> => {
     try {
       this._logger.info(LogEvents.ADMIN_GET_TECH_QUEUE_INIT, { query: req.query });
 
       const params: VerificationQueueFilters = {
         page: parseInt(req.query.page as string) || 1,
         limit: parseInt(req.query.limit as string) || 10,
-        search: req.query.search as string | undefined
+        search: req.query.search as string | undefined,
+        sort: (req.query.sort as "asc" | "desc") || "asc", 
+        sortBy: (req.query.sortBy as string) || "submittedAt" 
       };
 
       const result = await this._getQueueUseCase.execute(params);
@@ -50,7 +52,7 @@ export class AdminTechnicianController {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
     }
   };
- 
+
   getTechnicianProfile = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
