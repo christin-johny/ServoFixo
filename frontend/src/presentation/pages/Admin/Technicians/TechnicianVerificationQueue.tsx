@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   CheckCircle,
   Clock,
-  Eye,
+  ClipboardList,
   User,
   Calendar,
   ArrowUpDown,
@@ -184,7 +184,8 @@ const TechnicianVerificationQueue: React.FC = () => {
                         onClick={() => handleReview(item.id)}
                         className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 touch-manipulation"
                       >
-                        <Eye size={16} /> Review Application
+                        <ClipboardList size={14} />
+                            Review Application
                       </button>
                     </div>
 
