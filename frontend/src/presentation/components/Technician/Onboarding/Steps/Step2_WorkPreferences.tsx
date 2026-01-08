@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { ArrowRight, ArrowLeft, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import { 
+  ArrowRight, ArrowLeft, CheckCircle2, Loader2, 
+  AlertCircle, Search, Save 
+} from "lucide-react";
 import type { AppDispatch, RootState } from "../../../../../store/store";
 import { 
   technicianOnboardingRepository, 
@@ -8,36 +11,32 @@ import {
 import { updateWorkPreferences, setOnboardingStep } from "../../../../../store/technicianSlice";
 import { useNotification } from "../../../../hooks/useNotification";
 
+// Import Local Config
+import { 
+  step2Schema, 
+  getId, 
+  type RuntimeCategoryOption, 
+  type RuntimeServiceOption 
+} from "./step2.config";
+
 interface Step2Props {
   onNext: () => void;
   onBack: () => void;
+  onSaveAndExit: () => void; // ✅ Added Prop
 }
 
-interface BaseItem {
-  id?: string;
-  _id?: string;
-  name: string;
-}
-
-interface RuntimeCategoryOption extends BaseItem {
-  imageUrl?: string;
-  iconUrl?: string;
-}
-
-interface RuntimeServiceOption extends BaseItem {
-  categoryId?: string | BaseItem; 
-  category?: string | BaseItem;
-}
-
-const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
+const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack, onSaveAndExit }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { profile } = useSelector((state: RootState) => state.technician);
   const { showSuccess, showError } = useNotification();
  
+  // Data State
   const [categories, setCategories] = useState<RuntimeCategoryOption[]>([]);
   const [services, setServices] = useState<RuntimeServiceOption[]>([]);
   const [loadingData, setLoadingData] = useState(true);
- 
+  const [loadingServices, setLoadingServices] = useState(false);
+  
+  // Selection State
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
     profile?.categoryIds || []
   );
@@ -45,24 +44,17 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
     profile?.subServiceIds || []
   );
 
+  // UI State
+  const [searchTerm, setSearchTerm] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  const getId = (item: BaseItem | string | undefined): string => {
-    if (!item) return "";
-    if (typeof item === 'string') return item;
-    return item.id || item._id || "";
-  };
-
   const getServiceCategoryId = (service: RuntimeServiceOption): string => {
-    if (service.categoryId) {
-      return getId(service.categoryId);
-    }
-    if (service.category) {
-      return getId(service.category);
-    }
+    if (service.categoryId) return getId(service.categoryId);
+    if (service.category) return getId(service.category);
     return "";
   };
  
+  // 1. Load Categories
   useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -78,6 +70,7 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
     loadCategories();
   }, []);
  
+  // 2. Load Services when Categories Change
   useEffect(() => {
     const loadServices = async () => {
       if (selectedCategoryIds.length === 0) {
@@ -85,6 +78,7 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
         return;
       }
 
+      setLoadingServices(true);
       try {
         const promises = selectedCategoryIds.map(id => 
           technicianOnboardingRepository.getServicesByCategory(id)
@@ -92,6 +86,7 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
         const results = await Promise.all(promises);
         const allServices = results.flat() as unknown as RuntimeServiceOption[];
         
+        // Remove duplicates
         const uniqueServicesMap = new Map<string, RuntimeServiceOption>();
         allServices.forEach(s => {
           const id = getId(s);
@@ -101,6 +96,8 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
         setServices(Array.from(uniqueServicesMap.values()));
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoadingServices(false);
       }
     };
 
@@ -112,6 +109,7 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
     const isSelected = selectedCategoryIds.includes(catId);
 
     if (isSelected) {
+      // Remove related services
       const servicesToRemove = services.filter(s => getServiceCategoryId(s) === catId);
       const serviceIdsToRemove = servicesToRemove.map(s => getId(s));
 
@@ -130,20 +128,22 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
     );
   };
 
-  const handleNext = async () => {
+  const validateAndSave = async () => {
+    // 1. Zod Validation
+    const validation = step2Schema.safeParse({
+      categoryIds: selectedCategoryIds,
+      subServiceIds: selectedServiceIds
+    });
+
+    if (!validation.success) {
+      showError(validation.error.errors[0].message);
+      return false;
+    }
+
+    // 2. Cleanup IDs
     const validServiceIds = selectedServiceIds.filter(selectedId => 
       services.some(s => getId(s) === selectedId)
     );
-
-    if (selectedCategoryIds.length === 0) {
-      showError("Please select at least one category.");
-      return;
-    }
-    
-    if (validServiceIds.length === 0) {
-      showError("Please select at least one service.");
-      return;
-    }
 
     try {
       setIsSaving(true);
@@ -157,16 +157,35 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
  
       setSelectedServiceIds(validServiceIds);
       dispatch(updateWorkPreferences(payload));
-      dispatch(setOnboardingStep(3));
-
-      showSuccess("Preferences saved!");
-      onNext();
+      
+      return true;
     } catch {
       showError("Failed to save preferences.");
+      return false;
     } finally {
       setIsSaving(false);
     }
   };
+
+  const handleNextClick = async () => {
+    if (await validateAndSave()) {
+      dispatch(setOnboardingStep(3));
+      showSuccess("Preferences saved!");
+      onNext();
+    }
+  };
+
+  const handleSaveExitClick = async () => {
+    if (await validateAndSave()) {
+      showSuccess("Progress saved.");
+      onSaveAndExit();
+    }
+  };
+
+  // Filter services based on search
+  const filteredServices = services.filter(service => 
+    service.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loadingData) {
     return (
@@ -212,7 +231,9 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
                     </div>
                   )}
                   
-                  <div className="w-12 h-12 mb-3 rounded-full bg-white shadow-sm flex items-center justify-center overflow-hidden p-2">
+                  <div className={`w-12 h-12 mb-3 rounded-full shadow-sm flex items-center justify-center overflow-hidden p-2 transition-colors ${
+                      isSelected ? "bg-white" : "bg-gray-50"
+                  }`}>
                     <img src={cat.imageUrl || cat.iconUrl} alt={cat.name} className="w-full h-full object-contain" />
                   </div>
                   
@@ -231,18 +252,39 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
         <div className="animate-fade-in-up">
           <div className="h-px bg-gray-100 my-6" />
           
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            2. Select Specific Services <span className="text-red-500">*</span>
-          </h3>
+          {/* Header & Search */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                2. Select Specific Services <span className="text-red-500">*</span>
+              </h3>
+            </div>
+            
+            {/* Search Bar */}
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Search services..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              />
+            </div>
+          </div>
 
-          {services.length === 0 ? (
+          {loadingServices ? (
             <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-4 rounded-lg border border-amber-100">
                <Loader2 className="w-4 h-4 animate-spin" />
                <span className="text-sm font-medium">Fetching available services...</span>
             </div>
+          ) : filteredServices.length === 0 ? (
+            <div className="text-center p-8 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-gray-500">
+               {searchTerm ? "No services match your search." : "No services available for selected categories."}
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {services.map((service) => {
+              {filteredServices.map((service) => {
                  const serviceId = getId(service);
                  const isSelected = selectedServiceIds.includes(serviceId);
                  
@@ -283,30 +325,40 @@ const Step2_WorkPreferences: React.FC<Step2Props> = ({ onNext, onBack }) => {
       )}
 
       {/* Actions */}
-      <div className="flex justify-between pt-6 border-t border-gray-100">
+      <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-6 border-t border-gray-100">
         <button
           onClick={onBack}
           disabled={isSaving}
-          className="flex items-center gap-2 px-6 py-3 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition-all"
+          className="flex items-center justify-center gap-2 px-6 py-3 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition-all"
         >
           <ArrowLeft className="w-5 h-5" /> Back
         </button>
 
-        <button
-          onClick={handleNext}
-          disabled={isSaving}
-          className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-600/20"
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" /> Saving...
-            </>
-          ) : (
-            <>
-              Next Step <ArrowRight className="w-5 h-5" />
-            </>
-          )}
-        </button>
+        <div className="flex flex-col-reverse sm:flex-row gap-3">
+            <button
+                onClick={handleSaveExitClick}
+                disabled={isSaving}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-xl font-bold hover:bg-gray-50 hover:text-gray-900 transition-all disabled:opacity-50"
+            >
+                <Save className="w-5 h-5" /> Save & Exit
+            </button>
+
+            <button
+              onClick={handleNextClick}
+              disabled={isSaving}
+              className="flex items-center justify-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-600/20"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" /> Saving...
+                </>
+              ) : (
+                <>
+                  Next Step <ArrowRight className="w-5 h-5" />
+                </>
+              )}
+            </button>
+        </div>
       </div>
     </div>
   );

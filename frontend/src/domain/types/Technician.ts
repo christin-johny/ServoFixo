@@ -28,7 +28,7 @@ export interface TechnicianProfileFull {
   email: string;
   phone: string;
   avatarUrl?: string;
-
+status: VerificationStatus;
   bio?: string; 
   experienceSummary: string;
   

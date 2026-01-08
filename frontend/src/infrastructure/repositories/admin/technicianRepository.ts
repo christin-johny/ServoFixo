@@ -1,7 +1,7 @@
 import api from "../../api/axiosClient";
-import { ADMIN_TECHNICIAN_ENDPOINTS } from "../../api/endpoints/Admin/admin.endpoints"; 
+import { ADMIN_TECHNICIAN_ENDPOINTS } from "../../api/endpoints/Admin/admin.endpoints";
 import type { TechnicianProfileFull } from "../../../domain/types/Technician";
- 
+
 export interface TechnicianListItem {
   id: string;
   name: string;
@@ -10,8 +10,8 @@ export interface TechnicianListItem {
   avatarUrl?: string;
   status: "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
   isSuspended: boolean;
-  submittedAt: string;  
-  experienceSummary?: string;  
+  submittedAt: string;
+  experienceSummary?: string;
 }
 
 export interface PaginatedTechnicianList {
@@ -52,14 +52,23 @@ export interface UpdateTechnicianPayload {
   email?: string;
   phone?: string;
   experienceSummary?: string;
+  zoneIds?: string[];
+  categoryIds?: string[];
+  subServiceIds?: string[];
+  bankDetails?: {
+    accountHolderName: string;
+    accountNumber: string;
+    ifscCode: string;
+    bankName: string;
+  };
+  bio: string;
 }
- 
 
 export const getVerificationQueue = async (
   params: VerificationQueueParams
 ): Promise<PaginatedTechnicianList> => {
   const response = await api.get(ADMIN_TECHNICIAN_ENDPOINTS.QUEUE, { params });
-  return response.data.data; 
+  return response.data.data;
 };
 
 export const getTechnicians = async (
@@ -84,10 +93,10 @@ export const verifyTechnician = async (
 };
 
 export const updateTechnician = async (
-  id: string, 
+  id: string,
   data: UpdateTechnicianPayload
 ): Promise<void> => {
-  await api.patch(ADMIN_TECHNICIAN_ENDPOINTS.PROFILE(id), data);
+  await api.put(ADMIN_TECHNICIAN_ENDPOINTS.PROFILE(id), data);
 };
 
 export const toggleBlockTechnician = async (

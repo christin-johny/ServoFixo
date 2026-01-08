@@ -67,6 +67,7 @@ export class TechnicianProfileController {
         onboardingStep: technician.getOnboardingStep(),
         verificationStatus: technician.getVerificationStatus(),
         availability: { isOnline: technician.getIsOnline() },
+        globalRejectionReason: technician.getVerificationReason(),
 
         personalDetails: {
           name: technician.getName(),

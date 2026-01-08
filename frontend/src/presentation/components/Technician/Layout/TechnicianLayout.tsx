@@ -31,24 +31,28 @@ import {technicianLogout} from "../../../../infrastructure/repositories/technici
 const mapApiDataToProfile = (data: any): TechnicianProfile => {
   return {
     id: data.id,
-     
-    name: data.personalDetails.name,
-    email: data.personalDetails.email,
-    phone: data.personalDetails.phone,
-    avatarUrl: data.personalDetails.avatarUrl,
-    bio: data.personalDetails.bio,
-    experienceSummary: data.personalDetails.experienceSummary,
-     
+
+    // ✅ FIXED: Nest these fields inside 'personalDetails' to match the interface
+    personalDetails: {
+      name: data.personalDetails?.name || "",
+      email: data.personalDetails?.email || "",
+      phone: data.personalDetails?.phone || "",
+      avatarUrl: data.personalDetails?.avatarUrl,
+      bio: data.personalDetails?.bio,
+      experienceSummary: data.personalDetails?.experienceSummary,
+    },
+
     onboardingStep: data.onboardingStep,
     verificationStatus: data.verificationStatus,
-     
-    categoryIds: data.categoryIds || [], 
+    globalRejectionReason: data.globalRejectionReason || null,
+
+    categoryIds: data.categoryIds || [],
     subServiceIds: data.subServiceIds || [],
     zoneIds: data.zoneIds || [],
     documents: data.documents || [],
     bankDetails: data.bankDetails || undefined,
- 
-    availability: data.availability || { isOnline: false }, 
+
+    availability: data.availability || { isOnline: false },
     walletBalance: { currentBalance: 0, currency: "INR" },
     rating: { average: 0, count: 0 }
   };
@@ -96,15 +100,15 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ onLogoutClick }) => {
       <div className="px-5 py-6">
         <div className="flex items-center gap-3 p-2 rounded-xl transition-colors hover:bg-gray-50/80 cursor-default">
           <div className="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center text-blue-600 font-bold text-sm overflow-hidden shrink-0 ring-2 ring-gray-50">
-            {techProfile?.avatarUrl ? (
-              <img src={techProfile.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+            {techProfile?.personalDetails?.avatarUrl ? (
+              <img src={techProfile?.personalDetails?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               (authUser?.email?.slice(0, 2).toUpperCase() || "TC")
             )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-gray-900 truncate">
-              {techProfile?.name || "Partner"}
+              {techProfile?.personalDetails?.name || "Partner"}
             </p>
             <p className="text-xs text-gray-500 truncate font-medium">
               {authUser?.email}

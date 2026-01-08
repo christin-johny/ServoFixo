@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Users, RefreshCw } from "lucide-react";
+import { Users, Eye, Edit2, ClipboardList, Clock, ToggleLeft, ToggleRight, Ban, ShieldCheck, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { useDebounce } from "../../../hooks/useDebounce";
@@ -8,7 +8,7 @@ import * as techRepo from "../../../../infrastructure/repositories/admin/technic
 import type { TechnicianListItem, UpdateTechnicianPayload } from "../../../../infrastructure/repositories/admin/technicianRepository";
 
 import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
-import TechnicianListTable from "../../../components/Admin/technician/TechnicianListTable";
+import { DataTable, type TableColumn } from "../../../components/Admin/Shared/DataTable";
 import TechnicianEditModal from "../../../components/Admin/technician/TechnicianEditModal";
 import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
 
@@ -101,10 +101,107 @@ const TechnicianList: React.FC = () => {
     }
   };
 
-  return (
-    // Removed 'px-4' and 'bg-gray-50' to fix margin issues
-    <div className="h-full flex flex-col gap-4 sm:gap-6 overflow-hidden">
+  // --- UI HELPERS ---
+  const getStatusBadge = (status: string, isSuspended: boolean) => {
+    if (isSuspended) return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200"><Ban size={12} /> Suspended</span>;
+    switch (status) {
+      case "VERIFIED": return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200"><ShieldCheck size={12} /> Verified</span>;
+      case "REJECTED": return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200"><AlertCircle size={12} /> Rejected</span>;
+      case "VERIFICATION_PENDING": return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200"><Clock size={12} /> Review Pending</span>;
+      default: return <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">Pending</span>;
+    }
+  };
 
+  const renderActions = (tech: TechnicianListItem, isMobile = false) => {
+    if (tech.status === 'VERIFICATION_PENDING') {
+      return (
+        <button onClick={() => handleReviewApplication(tech.id)} className={`flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors ${isMobile ? 'w-full py-2' : ''}`}>
+          <ClipboardList size={14} /> Review Application
+        </button>
+      );
+    }
+
+    if (tech.status === 'VERIFIED') {
+      return (
+        // Hover Removed: 'opacity-0' class deleted. Actions are always visible.
+        <div className={`flex gap-2 ${isMobile ? 'w-full' : 'justify-end'}`}>
+          <button onClick={() => navigate(`/admin/technicians/${tech.id}`)} className={`p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors ${isMobile ? 'flex-1 flex items-center justify-center bg-gray-50' : ''}`} title="View">
+            <Eye size={16} /> {isMobile && <span className="ml-2 text-xs font-bold">View</span>}
+          </button>
+
+          <button onClick={() => handleEdit(tech)} className={`p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors ${isMobile ? 'flex-1 flex items-center justify-center bg-gray-50' : ''}`} title="Edit">
+            <Edit2 size={16} /> {isMobile && <span className="ml-2 text-xs font-bold">Edit</span>}
+          </button>
+
+          <button
+            onClick={() => handleToggleStatus(tech)}
+            className={`p-2 rounded-lg transition-colors ${isMobile ? 'flex-1 flex items-center justify-center bg-gray-50' : ''} ${tech.isSuspended
+                ? 'text-green-600 hover:bg-green-50'   // Suspended -> Green (Activate)
+                : 'text-red-600 hover:bg-red-50'       // Active -> Red (Suspend)
+              }`}
+            title={tech.isSuspended ? "Activate" : "Suspend"}
+          >
+            {/* Icon Logic: If Suspended (Action: Activate), show ToggleRight (On), else ToggleLeft (Off) */}
+            {tech.isSuspended ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+
+            {isMobile && (
+              <span className="ml-2 text-xs font-bold">
+                {tech.isSuspended ? "Activate" : "Suspend"}
+              </span>
+            )}
+          </button>
+        </div>
+      );
+    }
+    return <span className="text-gray-300 text-xs italic">No actions</span>;
+  };
+
+  // --- TABLE CONFIGURATION ---
+  const columns: TableColumn<TechnicianListItem>[] = [
+    {
+      header: "Technician",
+      className: "w-[250px]",
+      render: (tech) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gray-200 border border-gray-100 overflow-hidden flex-shrink-0">
+            {tech.avatarUrl ? <img src={tech.avatarUrl} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold">{tech.name[0]}</div>}
+          </div>
+          <div>
+            <p className="font-bold text-gray-900 text-sm">{tech.name}</p>
+            <p className="text-xs text-gray-500 font-mono">ID: {tech.id.slice(-6)}</p>
+          </div>
+        </div>
+      )
+    },
+    {
+      header: "Contact",
+      className: "w-[250px]",
+      render: (tech) => (
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm text-gray-700 font-medium">{tech.email}</span>
+          <span className="text-xs text-gray-500">{tech.phone}</span>
+        </div>
+      )
+    },
+    {
+      header: "Status",
+      className: "w-[150px]",
+      render: (tech) => getStatusBadge(tech.status, tech.isSuspended)
+    },
+    {
+      header: "Joined",
+      className: "w-[150px]",
+      render: (tech) => <span className="text-sm text-gray-500">{new Date(tech.submittedAt).toLocaleDateString()}</span>
+    },
+    {
+      header: "Actions",
+      className: "text-right w-[180px]",
+      render: (tech) => renderActions(tech, false)
+    }
+  ];
+
+  return (
+    <div className="h-full flex flex-col gap-4 sm:gap-6 overflow-hidden">
       {/* Header */}
       <div className="shrink-0 border-b border-gray-200 pb-4">
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
@@ -135,28 +232,39 @@ const TechnicianList: React.FC = () => {
         itemName="Technicians"
       />
 
-      {/* Content */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        {loading ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3">
-            <RefreshCw size={32} className="animate-spin opacity-20" />
-            <p className="text-sm font-medium">Loading Technicians...</p>
-          </div>
-        ) : items.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-            <Users size={48} className="opacity-20 mb-2" />
-            <p>No technicians found.</p>
-          </div>
-        ) : (
-          <div className="flex-1 overflow-auto pr-1 pb-4 scrollbar-thin scrollbar-thumb-gray-200">
-            <TechnicianListTable
-              technicians={items}
-              onEdit={handleEdit}
-              onToggleStatus={handleToggleStatus}
-              onReview={handleReviewApplication}
-            />
-          </div>
-        )}
+      {/* Table */}
+      <div className="flex-1 overflow-hidden">
+        <DataTable
+          data={items}
+          columns={columns}
+          keyField="id"
+          isLoading={loading}
+          emptyMessage="No technicians found."
+          // Mobile Card Render Logic
+          renderMobileCard={(tech) => (
+            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col gap-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 border border-gray-200 overflow-hidden flex-shrink-0">
+                    {tech.avatarUrl ? <img src={tech.avatarUrl} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold">{tech.name[0]}</div>}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900">{tech.name}</h3>
+                    <p className="text-xs text-gray-500 font-mono">ID: {tech.id.slice(-6)}</p>
+                  </div>
+                </div>
+                <div>{getStatusBadge(tech.status, tech.isSuspended)}</div>
+              </div>
+              <div className="space-y-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                <div className="flex items-center gap-2"><span className="truncate">{tech.email}</span></div>
+                <div className="flex items-center gap-2"><span>{tech.phone}</span></div>
+              </div>
+              <div className="pt-2 border-t border-gray-100">
+                {renderActions(tech, true)}
+              </div>
+            </div>
+          )}
+        />
       </div>
 
       {/* Pagination */}
@@ -164,25 +272,14 @@ const TechnicianList: React.FC = () => {
         <PaginationBar page={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
-      {/* Edit Modal */}
-      <TechnicianEditModal
-        isOpen={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-        technician={techToEdit}
-        onSave={handleSaveEdit}
-      />
+      <TechnicianEditModal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} technician={techToEdit} onSave={handleSaveEdit} />
 
-      {/* Suspend Confirmation */}
       <ConfirmModal
         isOpen={suspendModalOpen}
         onClose={() => setSuspendModalOpen(false)}
         onConfirm={confirmSuspend}
         title={techToSuspend?.isSuspended ? "Activate Account" : "Suspend Account"}
-        message={
-          techToSuspend?.isSuspended
-            ? `Are you sure you want to reactivate ${techToSuspend?.name}?`
-            : `Are you sure you want to suspend ${techToSuspend?.name}?`
-        }
+        message={techToSuspend?.isSuspended ? `Are you sure you want to reactivate ${techToSuspend?.name}?` : `Are you sure you want to suspend ${techToSuspend?.name}?`}
         confirmText={techToSuspend?.isSuspended ? "Activate" : "Suspend"}
         variant={techToSuspend?.isSuspended ? "success" : "danger"}
         isLoading={isSuspending}

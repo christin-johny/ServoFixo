@@ -4,7 +4,10 @@ import { TECHNICIAN_PROFILE_ENDPOINTS } from "../../api/endpoints/Technician/tec
 export interface TechnicianProfileStatusDto {
   id: string;
   onboardingStep: number;
-  verificationStatus: "PENDING"  | "VERIFICATION_PENDING"|"VERIFIED" | "REJECTED";
+  verificationStatus: "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
+   
+  globalRejectionReason?: string; 
+
   availability: {
     isOnline: boolean;
   };
@@ -17,6 +20,7 @@ export interface TechnicianProfileStatusDto {
     experienceSummary?: string;
   };
 }
+
 export interface ToggleStatusPayload {
   lat?: number;
   lng?: number;
@@ -27,6 +31,7 @@ export const getTechnicianProfileStatus = async (): Promise<TechnicianProfileSta
   const response = await api.get(TECHNICIAN_PROFILE_ENDPOINTS.GET_STATUS);
   return response.data as TechnicianProfileStatusDto;
 };
+
 export const toggleOnlineStatus = async (payload: ToggleStatusPayload) => {
   const response = await api.patch("/technician/profile/status", payload);
   return response.data; 

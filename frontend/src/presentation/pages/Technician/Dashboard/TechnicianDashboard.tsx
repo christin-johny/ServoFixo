@@ -10,6 +10,7 @@ import {
   Timer, 
   AlertCircle, 
   Loader2, 
+  FileWarning, 
   type LucideIcon 
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -54,11 +55,13 @@ const extractErrorMessage = (error: unknown): string => {
 
 const TechnicianDashboard: React.FC = () => {
   const navigate = useNavigate();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const dispatch = useDispatch<AppDispatch>();
   
   const { profile, stats } = useSelector((state: RootState) => state.technician);
   const [isLocating, setIsLocating] = useState(false);
   const { showSuccess, showError } = useNotification();
+
   
   const status = profile?.verificationStatus || "PENDING";
   const onboardingStep = profile?.onboardingStep || 0;
@@ -67,7 +70,21 @@ const TechnicianDashboard: React.FC = () => {
   const isVerified = status === "VERIFIED";
   const isPendingVerification = status === "VERIFICATION_PENDING";
   const isRejected = status === "REJECTED";
-  const isIncomplete = status === "PENDING" || (status === "REJECTED" && onboardingStep < 7); 
+  // Only consider it "Incomplete" if not Rejected and not Verified/Pending
+  const isIncomplete = status === "PENDING" && onboardingStep < 7; 
+
+  // --- REJECTION LOGIC ---
+  const rejectedDocs = profile?.documents?.filter(d => d.status === "REJECTED") || [];
+  const hasDocRejection = rejectedDocs.length > 0;
+  
+  // Decide where the "Fix" button sends them
+  const handleFixProfile = () => {
+      if (hasDocRejection) {
+          navigate("/technician/onboarding", { state: { step: 5 } }); // Go directly to Docs
+      } else {
+          navigate("/technician/onboarding", { state: { step: 1 } }); // Go to start
+      }
+  };
 
   const handleToggleOnline = async () => {
     if (!isVerified) return;
@@ -138,7 +155,7 @@ const TechnicianDashboard: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-500 text-sm">
-            {profile?.name ? `Welcome back, ${profile.name}.` : "Welcome back, Partner."}
+            {profile?.personalDetails?.name ? `Welcome back, ${profile.personalDetails.name}.` : "Welcome back, Partner."}
           </p>
         </div>
         
@@ -174,7 +191,7 @@ const TechnicianDashboard: React.FC = () => {
       {/* --- DYNAMIC STATUS BANNERS --- */}
 
       {/* Case A: Incomplete Profile */}
-      {isIncomplete && !isRejected && (
+      {isIncomplete && (
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center gap-4 shadow-sm">
           <div className="p-2 bg-orange-100 rounded-full text-orange-600 flex-shrink-0">
             <ShieldAlert className="w-6 h-6" />
@@ -213,23 +230,41 @@ const TechnicianDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Case C: Rejected */}
+      {/* Case C: Rejected (Improved with Details) */}
       {isRejected && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center gap-4 shadow-sm">
-          <div className="p-2 bg-red-100 rounded-full text-red-600 flex-shrink-0">
-            <AlertCircle className="w-6 h-6" />
+        <div className="bg-red-50 border border-red-200 rounded-xl p-5 flex flex-col md:flex-row items-start gap-4 shadow-sm">
+          <div className="p-2 bg-red-100 rounded-full text-red-600 flex-shrink-0 mt-1">
+            {hasDocRejection ? <FileWarning className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
           </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-bold text-red-900">Application Rejected</h3>
-            <p className="text-sm text-red-700 mt-1">
-              Please update your details and resubmit your application.
-            </p>
+          
+          <div className="flex-1 space-y-2">
+            <h3 className="text-base font-bold text-red-900">Application Action Required</h3>
+            
+            {/* Show Document Errors specifically */}
+            {hasDocRejection ? (
+               <div className="space-y-1">
+                  <p className="text-sm text-red-800 font-medium">The following documents were rejected:</p>
+                  <ul className="list-disc list-inside text-sm text-red-700 ml-1">
+                    {rejectedDocs.map((doc, i) => (
+                      <li key={i}>
+                        <span className="font-semibold">{doc.type.replace(/_/g, " ")}:</span> {doc.rejectionReason}
+                      </li>
+                    ))}
+                  </ul>
+               </div>
+            ) : (
+               // Show Global Reason
+               <p className="text-sm text-red-700 leading-relaxed">
+                  {profile?.globalRejectionReason || "Your profile details are incomplete or incorrect. Please review your personal details and experience summary."}
+               </p>
+            )}
           </div>
+
           <button 
-            onClick={() => navigate("/technician/onboarding")}
-            className="w-full md:w-auto text-sm font-semibold bg-white border border-red-300 text-red-700 px-5 py-2.5 rounded-lg hover:bg-red-50 transition-colors"
+            onClick={handleFixProfile}
+            className="w-full md:w-auto self-start md:self-center text-sm font-bold bg-white border border-red-300 text-red-700 px-6 py-3 rounded-lg hover:bg-red-50 transition-colors shadow-sm whitespace-nowrap"
           >
-            Fix Profile
+            {hasDocRejection ? "Fix Documents" : "Update Profile"}
           </button>
         </div>
       )}

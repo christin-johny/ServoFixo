@@ -141,7 +141,7 @@ export class TechnicianMapper {
     };
   }
 
-  static toAdminProfile(entity: Technician): AdminTechnicianProfileDto {
+static toAdminProfile(entity: Technician): AdminTechnicianProfileDto {
     const documents = entity.getDocuments();
     const bank = entity.getBankDetails();
 
@@ -153,9 +153,14 @@ export class TechnicianMapper {
       avatarUrl: entity.getAvatarUrl(),
 
       experienceSummary: entity.getExperienceSummary(),
+       
       zoneIds: entity.getZoneIds(),
       categoryIds: entity.getCategoryIds(),
       subServiceIds: entity.getSubServiceIds(),
+ 
+      zoneNames: [],
+      categoryNames: [],
+      subServiceNames: [], 
 
       documents: Array.isArray(documents)
         ? documents.map((d) => ({

@@ -1,6 +1,10 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
- 
-export type VerificationStatus = "PENDING"  | "VERIFICATION_PENDING"| "VERIFIED" | "REJECTED";
+
+export type VerificationStatus =
+  | "PENDING"
+  | "VERIFICATION_PENDING"
+  | "VERIFIED"
+  | "REJECTED";
 
 export interface TechnicianDocument {
   type: string;
@@ -19,32 +23,32 @@ export interface BankDetails {
 
 export interface TechnicianProfile {
   id: string;
-  name: string;
-  email: string;
-  phone: string;
-  
-  // Step 1: Personal
-  avatarUrl?: string;
-  bio?: string;
-  experienceSummary?: string;
-  
-  // State
+
+  personalDetails: {
+    name: string;
+    email: string;
+    phone: string;
+    avatarUrl?: string;
+    bio?: string;
+    experienceSummary?: string;
+  };
+
   onboardingStep: number;
   verificationStatus: VerificationStatus;
-  
-  // Step 2: Work Preferences
+  globalRejectionReason?: string | null; // ✅ Added this field
+
   categoryIds: string[];
   subServiceIds: string[];
-  
+
   // Step 3: Zones
   zoneIds: string[];
 
-  // Step 4: Rates   
+  // Step 4: Rates
   isRateCardAgreed?: boolean;
-  
+
   // Step 5: Documents
   documents: TechnicianDocument[];
-  
+
   // Step 6: Bank
   bankDetails?: BankDetails;
 
@@ -65,9 +69,9 @@ export interface TechnicianProfile {
 interface TechnicianState {
   profile: TechnicianProfile | null;
   loading: boolean;
-  saveLoading: boolean; 
+  saveLoading: boolean;
   error: string | null;
-  
+
   stats: {
     todayEarnings: number;
     completedJobs: number;
@@ -81,8 +85,8 @@ const initialState: TechnicianState = {
   error: null,
   stats: {
     todayEarnings: 0,
-    completedJobs: 0
-  }
+    completedJobs: 0,
+  },
 };
 
 const technicianSlice = createSlice({
@@ -104,22 +108,36 @@ const technicianSlice = createSlice({
     },
 
     // --- Onboarding Specific Updates ---
-    
+
     setOnboardingStep(state, action: PayloadAction<number>) {
       if (state.profile) {
         state.profile.onboardingStep = action.payload;
       }
     },
 
-    updatePersonalDetails(state, action: PayloadAction<{ bio: string; experienceSummary: string; avatarUrl?: string }>) {
-      if (state.profile) {
-        state.profile.bio = action.payload.bio;
-        state.profile.experienceSummary = action.payload.experienceSummary;
-        if (action.payload.avatarUrl) state.profile.avatarUrl = action.payload.avatarUrl;
+    // ✅ FIXED: Update nested personalDetails object
+    updatePersonalDetails(
+      state,
+      action: PayloadAction<{
+        bio: string;
+        experienceSummary: string;
+        avatarUrl?: string;
+      }>
+    ) {
+      if (state.profile && state.profile.personalDetails) {
+        state.profile.personalDetails.bio = action.payload.bio;
+        state.profile.personalDetails.experienceSummary =
+          action.payload.experienceSummary;
+        if (action.payload.avatarUrl) {
+          state.profile.personalDetails.avatarUrl = action.payload.avatarUrl;
+        }
       }
     },
 
-    updateWorkPreferences(state, action: PayloadAction<{ categoryIds: string[]; subServiceIds: string[] }>) {
+    updateWorkPreferences(
+      state,
+      action: PayloadAction<{ categoryIds: string[]; subServiceIds: string[] }>
+    ) {
       if (state.profile) {
         state.profile.categoryIds = action.payload.categoryIds;
         state.profile.subServiceIds = action.payload.subServiceIds;
@@ -131,7 +149,7 @@ const technicianSlice = createSlice({
         state.profile.zoneIds = action.payload;
       }
     },
- 
+
     updateRateAgreement(state, action: PayloadAction<{ isAgreed: boolean }>) {
       if (state.profile) {
         state.profile.isRateCardAgreed = action.payload.isAgreed;
@@ -150,9 +168,19 @@ const technicianSlice = createSlice({
       }
     },
 
-    updateVerificationStatus(state, action: PayloadAction<VerificationStatus>) {
+    updateVerificationStatus(
+      state,
+      action: PayloadAction<{
+        status: VerificationStatus;
+        globalRejectionReason?: string;
+      }>
+    ) {
       if (state.profile) {
-        state.profile.verificationStatus = action.payload;
+        state.profile.verificationStatus = action.payload.status; 
+        if (action.payload.globalRejectionReason !== undefined) {
+          state.profile.globalRejectionReason =
+            action.payload.globalRejectionReason;
+        }
       }
     },
 
@@ -176,12 +204,12 @@ export const {
   updatePersonalDetails,
   updateWorkPreferences,
   updateZones,
-  updateRateAgreement,  
+  updateRateAgreement,
   updateDocuments,
   updateBankDetails,
   updateVerificationStatus,
   setAvailability,
-  clearTechnicianData
+  clearTechnicianData,
 } = technicianSlice.actions;
 
 export default technicianSlice.reducer;
