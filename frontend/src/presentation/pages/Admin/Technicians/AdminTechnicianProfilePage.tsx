@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   User, Briefcase, Wallet, ChevronLeft, Ban, Shield, CheckCircle, 
-  Star, Edit2, FileText,  ExternalLink, XCircle, AlertCircle
+  Star, Edit2, FileText, AlertCircle
 } from 'lucide-react';
 
 import { useNotification } from '../../../hooks/useNotification';
@@ -13,6 +13,9 @@ import type { UpdateTechnicianPayload } from '../../../../infrastructure/reposit
 import ConfirmModal from '../../../components/Admin/Modals/ConfirmModal';
 import TechnicianEditModal from '../../../components/Admin/technician/TechnicianEditModal';
 import TechnicianProfileSummary from '../../../components/Admin/technician/TechnicianProfileSummary';
+
+// ✅ IMPORT SHARED COMPONENT
+import { FileLightbox } from '../../../components/Shared/FileLightbox/FileLightbox';
 
 const TABS = [
     { key: 'overview', icon: User, label: 'Overview' },
@@ -61,10 +64,7 @@ const AdminTechnicianProfilePage: React.FC = () => {
         try { 
              const newStatus = !tech.isSuspended;
              await techRepo.toggleBlockTechnician(id, newStatus);
-             
-             // Optimistic Update: Update UI immediately
              setTech(prev => prev ? ({ ...prev, isSuspended: newStatus }) : null);
-             
              showSuccess(`Technician ${newStatus ? 'Suspended' : 'Activated'}`);
              setSuspendModalOpen(false);
         } catch(err: unknown) {
@@ -99,11 +99,8 @@ const AdminTechnicianProfilePage: React.FC = () => {
     return (
         <div className="flex flex-col h-full w-full bg-gray-50/50">
              
-            {/* === HEADER === */}
+            {/* HEADER */}
             <div className="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm transition-all">
-                {/* ADDED: max-w-7xl mx-auto px-4 sm:px-6 lg:px-8
-                   This ensures the header content aligns exactly with the body content below.
-                */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                         {/* Back Button */}
@@ -139,14 +136,11 @@ const AdminTechnicianProfilePage: React.FC = () => {
                 </div>
             </div>
 
-            {/* === MAIN CONTENT SCROLL AREA === */}
+            {/* MAIN CONTENT */}
             <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200">
-                {/* ADDED: max-w-7xl mx-auto px-4 sm:px-6 lg:px-8
-                   Matched exactly with Header wrapper to ensure straight vertical lines on both sides.
-                */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6">
                     
-                    {/* === IDENTITY CARD === */}
+                    {/* IDENTITY CARD */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 relative overflow-hidden">
                         <div className="flex flex-col md:flex-row items-center md:items-start gap-4 sm:gap-6 relative z-10">
                             
@@ -187,10 +181,9 @@ const AdminTechnicianProfilePage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* === TABS & CONTENT === */}
+                    {/* TABS & CONTENT */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 min-h-[400px] sm:min-h-[500px] flex flex-col">
                         
-                        {/* Scrollable Tabs Header */}
                         <div className="border-b border-gray-200 sticky top-0 bg-white z-10 rounded-t-2xl">
                             <div className="flex px-4 sm:px-6 space-x-6 sm:space-x-8 overflow-x-auto scrollbar-hide">
                                  {TABS.map(tab => (
@@ -211,12 +204,10 @@ const AdminTechnicianProfilePage: React.FC = () => {
                         </div>
 
                         <div className="p-4 sm:p-6 lg:p-8 flex-1">
-                            {/* OVERVIEW TAB */}
                             {activeTab === 'overview' && (
                                 <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
                                     <TechnicianProfileSummary profile={tech} />
                                     
-                                    {/* Documents Section */}
                                     <div>
                                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-4">Verification Documents</h3>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -226,7 +217,6 @@ const AdminTechnicianProfilePage: React.FC = () => {
                                                 
                                                 return (
                                                     <div key={idx} className="flex items-center bg-white border border-gray-200 rounded-xl p-3 gap-3 sm:gap-4 hover:shadow-md transition-shadow cursor-pointer group" onClick={() => setPreviewDoc({ url: doc.fileUrl, type: doc.type })}>
-                                                        {/* Thumbnail */}
                                                         <div className="w-16 h-16 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center shrink-0 relative overflow-hidden">
                                                             {doc.fileUrl.toLowerCase().includes('pdf') ? (
                                                                 <FileText className="text-gray-400" size={24} />
@@ -235,7 +225,6 @@ const AdminTechnicianProfilePage: React.FC = () => {
                                                             )}
                                                         </div>
 
-                                                        {/* Info */}
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex justify-between items-center mb-1">
                                                                 <h4 className="font-bold text-gray-900 text-xs uppercase truncate pr-2">{doc.type.replace(/_/g, ' ')}</h4>
@@ -271,7 +260,6 @@ const AdminTechnicianProfilePage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Suspend Confirmation */}
             <ConfirmModal
                 isOpen={suspendModalOpen}
                 onClose={() => setSuspendModalOpen(false)}
@@ -283,7 +271,6 @@ const AdminTechnicianProfilePage: React.FC = () => {
                 isLoading={isSuspending}
             />
 
-            {/* Edit Modal */}
             <TechnicianEditModal 
                 isOpen={editModalOpen}
                 onClose={() => setEditModalOpen(false)}
@@ -291,26 +278,14 @@ const AdminTechnicianProfilePage: React.FC = () => {
                 onSave={handleEditSave}
             />
 
-            {/* Lightbox Preview */}
+            {/* ✅ REUSED SHARED COMPONENT */}
             {previewDoc && (
-                <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center p-4 animate-in fade-in duration-200">
-                    <button onClick={() => setPreviewDoc(null)} className="absolute top-4 right-4 text-white/70 hover:text-white bg-white/10 p-2 rounded-full transition-colors z-50">
-                        <XCircle size={32} />
-                    </button>
-                    <div className="w-full max-w-5xl h-full flex flex-col">
-                        <div className="flex justify-between items-center text-white mb-4 px-2">
-                             <h3 className="font-bold text-lg">{previewDoc.type}</h3>
-                             <a href={previewDoc.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-blue-300 hover:text-blue-200 font-medium px-3 py-1.5 bg-white/10 rounded-lg"><ExternalLink size={14} /> Open Original</a>
-                        </div>
-                        <div className="flex-1 bg-black rounded-lg overflow-hidden flex items-center justify-center relative shadow-2xl border border-gray-800 p-2">
-                            {previewDoc.url.toLowerCase().includes(".pdf") ? (
-                                <iframe src={previewDoc.url} className="w-full h-full rounded-md" title="PDF Preview" />
-                            ) : (
-                                <img src={previewDoc.url} alt="Preview" className="max-w-full max-h-full object-contain" />
-                            )}
-                        </div>
-                    </div>
-                </div>
+                <FileLightbox
+                    url={previewDoc.url}
+                    type={previewDoc.type}
+                    title={previewDoc.type.replace(/_/g, " ")}
+                    onClose={() => setPreviewDoc(null)}
+                />
             )}
         </div>
     );

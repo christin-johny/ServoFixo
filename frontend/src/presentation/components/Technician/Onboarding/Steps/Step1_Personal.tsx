@@ -46,8 +46,7 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext, onSaveAndExit }) => {
   const isRejected = profile?.verificationStatus === "REJECTED";
   const email = profile?.personalDetails?.email || "";
   const phone = profile?.personalDetails?.phone || "";
-
-  // --- EFFECTS ---
+ 
   useEffect(() => {
     if (profile?.personalDetails) {
       setFormData((prev) => ({
@@ -56,8 +55,7 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext, onSaveAndExit }) => {
       }));
     }
   }, [profile]);
-
-  // --- HANDLERS ---
+ 
   const handleChange = (field: keyof Step1FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -142,11 +140,9 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext, onSaveAndExit }) => {
     try {
       setIsSaving(true);
       const validData = result.data;
-      
-      // Update Backend
+       
       await technicianOnboardingRepository.updateStep1(validData);
-      
-      // Update Redux
+       
       dispatch(updatePersonalDetails(validData));
       
       if (!isRejected) {

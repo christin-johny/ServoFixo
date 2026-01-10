@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { 
-  ArrowRight, ArrowLeft, Loader2, Landmark, CheckCircle2, AlertCircle, Search 
+  ArrowRight, ArrowLeft, Loader2, Landmark, CheckCircle2, AlertCircle, Search, ShieldCheck 
 } from "lucide-react";
 import type { RootState, AppDispatch } from "../../../../../store/store";  
 import { 
@@ -15,6 +15,9 @@ import {
 } from "../../../../../store/technicianSlice";
 import { useNotification } from "../../../../hooks/useNotification";
 
+// Local Config
+import { step6Schema, type BankDetailsFormData } from "./step6.config";
+
 interface Step6Props {
   onNext: () => void;
   onBack: () => void;
@@ -25,7 +28,7 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
   const { profile } = useSelector((state: RootState) => state.technician);  
   const { showSuccess, showError } = useNotification();
  
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<BankDetailsFormData>({
     accountHolderName: profile?.bankDetails?.accountHolderName || "",
     accountNumber: profile?.bankDetails?.accountNumber || "",
     confirmAccountNumber: profile?.bankDetails?.accountNumber || "",  
@@ -36,21 +39,24 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
 
   const [loadingIfsc, setLoadingIfsc] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-   
   const [ifscVerified, setIfscVerified] = useState(!!profile?.bankDetails?.bankName);
- 
+  
+  // --- IFSC AUTO-DETECTION ---
   useEffect(() => {
     const fetchIfsc = async () => {
       const code = formData.ifscCode.toUpperCase();
+      // Strict Regex for IFSC: 4 Letters, 0, 6 Alphanumeric
       const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
  
       if (code.length === 11) {
         if (!ifscRegex.test(code)) {
-          showError("Invalid IFSC format.");
+          showError("Invalid IFSC format. Must be 4 letters, 0, then 6 chars.");
           setIfscVerified(false);
+          setFormData(prev => ({ ...prev, bankName: "", branchName: "" }));
           return;
         }
  
+        // Optimization: Don't re-fetch if unchanged
         if (profile?.bankDetails?.ifscCode === code && formData.bankName) {
             setIfscVerified(true);
             return;
@@ -60,17 +66,19 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
           setLoadingIfsc(true);
           const data = await technicianOnboardingRepository.fetchBankDetailsByIfsc(code);
           
+          if (!data || !data.BANK) throw new Error("Bank not found");
+
           setFormData(prev => ({
             ...prev,
             bankName: data.BANK,
-            branchName: data.BRANCH
+            branchName: data.BRANCH || "Main Branch"
           }));
           setIfscVerified(true);
-          showSuccess("Bank details verified!");
+          showSuccess(`Verified: ${data.BANK}`);
         } catch {
           setIfscVerified(false);
           setFormData(prev => ({ ...prev, bankName: "", branchName: "" }));
-          showError("Invalid IFSC Code. Bank not found.");
+          showError("IFSC Code not found in banking database.");
         } finally {
           setLoadingIfsc(false);
         }
@@ -84,43 +92,52 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
 
     const timeoutId = setTimeout(() => {
       if (formData.ifscCode) fetchIfsc();
-    }, 500);
+    }, 600); // Slight delay to debounce typing
 
     return () => clearTimeout(timeoutId);
   }, [formData.ifscCode]);   
 
+  // --- HANDLERS ---
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     
-    if ((name === "accountNumber" || name === "confirmAccountNumber") && !/^\d*$/.test(value)) {
-      return;
+    // Strict Input Constraints (prevent typing/pasting invalid chars)
+    if ((name === "accountNumber" || name === "confirmAccountNumber")) {
+        if (!/^\d*$/.test(value)) return;
     }
 
-    if (name === "ifscCode" && !/^[A-Za-z0-9]*$/.test(value)) {
-      return;
+    if (name === "ifscCode") {
+        if (!/^[A-Za-z0-9]*$/.test(value)) return;
+    }
+
+    if (name === "accountHolderName") {
+        if (!/^[a-zA-Z\s.]*$/.test(value)) return;
     }
 
     setFormData(prev => ({ ...prev, [name]: name === "ifscCode" ? value.toUpperCase() : value }));
   };
 
+  // ✅ NEW: Auto Trim on Blur
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value.trim() }));
+  };
+
+  // 🚫 ANTI-PASTE PROTECTION
+  const handlePastePrevent = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    showError("For security, please type the account number manually.");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.accountHolderName.trim()) {
-      showError("Account Holder Name is required.");
-      return;
-    }
-    if (!formData.accountNumber) {
-      showError("Account Number is required.");
-      return;
-    }
-    if (formData.accountNumber !== formData.confirmAccountNumber) {
-      showError("Account Numbers do not match.");
-      return;
-    }
-    if (!ifscVerified || !formData.bankName) {
-      showError("Please enter a valid IFSC code.");
-      return;
+    // 1. Zod Validation
+    const validation = step6Schema.safeParse(formData);
+    if (!validation.success) {
+        showError(validation.error.errors[0].message);
+        return;
     }
 
     try {
@@ -140,12 +157,13 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
       dispatch(updateBankDetails(payload.bankDetails));
       dispatch(setOnboardingStep(7)); 
       
-      dispatch(updateVerificationStatus("VERIFICATION_PENDING"));
+      // ✅ FIX: Correct payload structure for Verification Status
+      dispatch(updateVerificationStatus({ status: "VERIFICATION_PENDING" }));
 
-      showSuccess("Application Saved!");
+      showSuccess("Application Submitted Successfully!");
       onNext(); 
     } catch {
-      showError("Failed to save details.");
+      showError("Failed to save details. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -160,7 +178,7 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
           <Landmark className="w-5 h-5 text-blue-600" /> Bank Account Details
         </h3>
         <p className="text-sm text-gray-500">
-          Please provide your bank details for payouts. Ensure the name matches your ID proof.
+          Ensure these details are 100% accurate. This is where your payouts will be sent.
         </p>
       </div>
 
@@ -174,10 +192,12 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
             name="accountHolderName"
             value={formData.accountHolderName}
             onChange={handleChange}
-            placeholder="e.g. Rahul Kumar"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-            required
+            onBlur={handleBlur} // ✅ Auto Trim
+            placeholder="As per Bank Passbook"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all uppercase"
+            autoComplete="off"
           />
+          <p className="text-[10px] text-gray-400">Must match the name on your Aadhaar/PAN</p>
         </div>
 
         {/* IFSC Code */}
@@ -189,13 +209,13 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
               name="ifscCode"
               value={formData.ifscCode}
               onChange={handleChange}
+              onBlur={handleBlur} // ✅ Auto Trim
               maxLength={11}
               placeholder="e.g. SBIN0001234"
-              className={`w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all uppercase ${
+              className={`w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all uppercase font-mono tracking-wide ${
                  ifscVerified ? "border-green-300 focus:border-green-500 focus:ring-green-100" :
                  "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
               }`}
-              required
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
               {loadingIfsc ? <Loader2 className="w-5 h-5 animate-spin text-blue-600" /> : 
@@ -205,11 +225,14 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
           </div>
           
           {/* Detected Bank Display */}
-          {formData.bankName && (
-            <div className="flex items-center gap-2 text-xs font-medium text-green-700 bg-green-50 px-3 py-2 rounded-lg mt-2">
-              <Landmark className="w-3.5 h-3.5" />
-              <span>{formData.bankName} {formData.branchName ? `- ${formData.branchName}` : ""}</span>
+          {formData.bankName ? (
+            <div className="flex items-center gap-2 text-xs font-bold text-green-700 bg-green-50 px-3 py-2 rounded-lg mt-2 border border-green-100 animate-fade-in">
+              <Landmark className="w-4 h-4" />
+              <span>{formData.bankName}</span>
+              {formData.branchName && <span className="font-normal text-green-600">({formData.branchName})</span>}
             </div>
+          ) : (
+             <div className="h-9"></div> // Placeholder to prevent jump
           )}
         </div>
 
@@ -217,38 +240,64 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Account Number</label>
-            <input
-              type="text"  
-              name="accountNumber"
-              value={formData.accountNumber}
-              onChange={handleChange}
-              placeholder="Enter Account Number"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-              required
-            />
+            <div className="relative">
+                <input
+                type="password" // Initially hide for security
+                name="accountNumber"
+                value={formData.accountNumber}
+                onChange={handleChange}
+                onBlur={handleBlur} // ✅ Auto Trim
+                placeholder="Enter Account Number"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all tracking-widest"
+                autoComplete="off"
+                inputMode="numeric"
+                />
+            </div>
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-gray-700">Confirm Account Number</label>
-            <input
-              type="text"  
-              name="confirmAccountNumber"
-              value={formData.confirmAccountNumber}
-              onChange={handleChange}
-              placeholder="Re-enter Account Number"
-              className={`w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all ${
-                 formData.confirmAccountNumber && formData.accountNumber !== formData.confirmAccountNumber
-                   ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                   : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
-              }`}
-              required
-            />
+            <div className="relative group">
+                <input
+                type="text"  
+                name="confirmAccountNumber"
+                value={formData.confirmAccountNumber}
+                onChange={handleChange}
+                onBlur={handleBlur} // ✅ Auto Trim
+                onPaste={handlePastePrevent} // 🚫 BLOCK PASTE
+                placeholder="Re-enter to Confirm"
+                className={`w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all tracking-widest ${
+                    formData.confirmAccountNumber && formData.accountNumber !== formData.confirmAccountNumber
+                    ? "border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50/10"
+                    : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
+                }`}
+                autoComplete="off"
+                inputMode="numeric"
+                />
+                
+                {/* Match Indicator */}
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    {formData.confirmAccountNumber && (
+                        formData.accountNumber === formData.confirmAccountNumber ? (
+                            <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        ) : (
+                            <AlertCircle className="w-5 h-5 text-red-500" />
+                        )
+                    )}
+                </div>
+            </div>
             {formData.confirmAccountNumber && formData.accountNumber !== formData.confirmAccountNumber && (
-              <p className="text-xs text-red-500 flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" /> Numbers do not match
+              <p className="text-xs text-red-500 flex items-center gap-1 font-medium animate-pulse">
+                Numbers do not match
               </p>
             )}
           </div>
+        </div>
+
+        {/* Security Badge */}
+        <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-3 flex items-center gap-3 text-xs text-blue-800">
+            <ShieldCheck className="w-5 h-5 shrink-0" />
+            <p>Your bank details are encrypted and will only be used for payouts. We will never ask for your OTP or PIN.</p>
         </div>
 
         {/* Navigation */}
@@ -264,16 +313,16 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
 
           <button
             type="submit"
-            disabled={isSubmitting || !ifscVerified || !formData.accountNumber}
-            className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isSubmitting || !ifscVerified || !formData.accountNumber || (formData.accountNumber !== formData.confirmAccountNumber)}
+            className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" /> Saving...
+                <Loader2 className="w-5 h-5 animate-spin" /> Submitting...
               </>
             ) : (
               <>
-                Save & Continue <ArrowRight className="w-5 h-5" />
+                Complete & Submit <ArrowRight className="w-5 h-5" />
               </>
             )}
           </button>

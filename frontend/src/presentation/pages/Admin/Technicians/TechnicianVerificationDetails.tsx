@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-    ArrowLeft, CheckCircle, XCircle, User, AlertTriangle, ExternalLink,
+    ArrowLeft, CheckCircle, XCircle, User, AlertTriangle,
     Calendar, Check, Shield, Briefcase, FileText, Eye
 } from "lucide-react";
 import { format } from "date-fns";
@@ -11,6 +11,8 @@ import * as techRepo from "../../../../infrastructure/repositories/admin/technic
 import type { TechnicianProfileFull } from "../../../../domain/types/Technician";
 import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
 import TechnicianProfileSummary from "../../../components/Admin/technician/TechnicianProfileSummary";
+ 
+import { FileLightbox } from "../../../components/Shared/FileLightbox/FileLightbox";
 
 type DocDecision = {
     status: "APPROVED" | "REJECTED";
@@ -39,6 +41,8 @@ const TechnicianVerificationDetails: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showConfirm, setShowConfirm] = useState<"APPROVE" | "REJECT" | null>(null);
     const [globalReason, setGlobalReason] = useState("");
+    
+    // Lightbox State
     const [previewDoc, setPreviewDoc] = useState<{ url: string, type: string } | null>(null);
 
     useEffect(() => {
@@ -77,6 +81,7 @@ const TechnicianVerificationDetails: React.FC = () => {
                 ...prev,
                 [type]: {
                     status,
+                    // Preserve reason if switching back to Reject
                     reason: status === "REJECTED" ? existingReason : undefined
                 }
             };
@@ -87,7 +92,8 @@ const TechnicianVerificationDetails: React.FC = () => {
         if (!profile) return;
         const newDecisions = { ...decisions };
         profile.documents.forEach(doc => {
-            if (doc.status === "PENDING" && !newDecisions[doc.type]) {
+            // Only update if currently pending or undecided
+            if (!newDecisions[doc.type] || (doc.status === "PENDING" && !newDecisions[doc.type])) {
                 newDecisions[doc.type] = { status: "APPROVED" };
             }
         });
@@ -102,14 +108,40 @@ const TechnicianVerificationDetails: React.FC = () => {
         }));
     };
 
-    const executeDecision = async () => {
-        if (!id || !showConfirm) return;
+    // ✅ VALIDATION: Ensure ALL documents have a decision (No 'PENDING' allowed)
+    const allDocsReviewed = profile?.documents.every(
+        (doc) => decisions[doc.type]?.status === "APPROVED" || decisions[doc.type]?.status === "REJECTED"
+    ) ?? false;
 
+    const executeDecision = async () => {
+        if (!id || !showConfirm || !profile) return;
+
+        // 1. Strict Check: Are all docs reviewed?
+        if (!allDocsReviewed) {
+            showError("Please review ALL documents (Approve or Reject) before proceeding.");
+            setShowConfirm(null);
+            return;
+        }
+
+        // 2. Strict Check: Do rejected docs have reasons?
+        for (const doc of profile.documents) {
+            const decision = decisions[doc.type];
+            if (decision?.status === "REJECTED" && !decision.reason?.trim()) {
+                showError(`Reason required for rejected document: ${doc.type.replace(/_/g, " ")}`);
+                setShowConfirm(null); // Close modal so they can fix it
+                return;
+            }
+        }
+
+        // 3. Strict Check: Global Reason Logic
         if (showConfirm === "REJECT") {
             const hasDocRejections = Object.values(decisions).some((d) => d.status === "REJECTED");
+            
+            // If NO documents are rejected, but we are rejecting the application,
+            // the Global Reason is MANDATORY (e.g. "Bad Profile Photo", "Fake Bio").
             if (!hasDocRejections && !globalReason.trim()) {
-                showError("Please provide a rejection reason.");
-                return;
+                showError("Since all documents are approved, you MUST provide a Global Rejection Reason.");
+                return; // Keep modal open
             }
         }
 
@@ -124,7 +156,9 @@ const TechnicianVerificationDetails: React.FC = () => {
                 })),
                 globalRejectionReason: globalReason
             };
+            
             await techRepo.verifyTechnician(id, payload);
+            
             showSuccess(showConfirm === "APPROVE" ? "Verified Successfully" : "Application Rejected");
             navigate("/admin/technicians/verification");
         } catch (err: unknown) {
@@ -173,11 +207,8 @@ const TechnicianVerificationDetails: React.FC = () => {
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-0 pb-4 space-y-8">
-
-                {/* 1. REUSED PROFILE SUMMARY */}
                 <TechnicianProfileSummary profile={profile} />
 
-                {/* 2. DOCUMENTS SECTION */}
                 <div className="space-y-4">
                     <div className="flex justify-between items-end px-2">
                         <div className="flex items-center gap-2">
@@ -189,6 +220,7 @@ const TechnicianVerificationDetails: React.FC = () => {
                         </button>
                     </div>
 
+                    {/* --- Document List --- */}
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4">
                         {profile.documents.map((doc, index) => {
                             const decision = decisions[doc.type] || { status: "PENDING" };
@@ -197,7 +229,7 @@ const TechnicianVerificationDetails: React.FC = () => {
 
                             return (
                                 <div key={index} className={`flex items-start bg-white rounded-xl border shadow-sm overflow-hidden transition-all hover:shadow-md p-3 gap-4 ${isRejected ? 'border-red-200 ring-1 ring-red-100' : isApproved ? 'border-green-200 ring-1 ring-green-100' : 'border-gray-200'}`}>
-
+                                    {/* Thumbnail */}
                                     <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 shrink-0 relative group cursor-pointer" onClick={() => setPreviewDoc({ url: doc.fileUrl, type: doc.type })}>
                                         {doc.fileUrl?.toLowerCase().includes(".pdf") ? (
                                             <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-400">
@@ -212,6 +244,7 @@ const TechnicianVerificationDetails: React.FC = () => {
                                         </div>
                                     </div>
 
+                                    {/* Controls */}
                                     <div className="flex-1 min-w-0 flex flex-col justify-between h-full">
                                         <div className="flex justify-between items-start gap-2">
                                             <div>
@@ -219,7 +252,7 @@ const TechnicianVerificationDetails: React.FC = () => {
                                                 <p className="text-xs text-gray-500 mt-0.5 truncate">{doc.fileName}</p>
                                             </div>
                                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded border whitespace-nowrap ${isRejected ? 'bg-red-50 text-red-600 border-red-100' : isApproved ? 'bg-green-50 text-green-600 border-green-100' : 'bg-gray-50 text-gray-500 border-gray-100'}`}>
-                                                {isApproved ? 'APPROVED' : isRejected ? 'REJECTED' : doc.status}
+                                                {isApproved ? 'APPROVED' : isRejected ? 'REJECTED' : 'PENDING'}
                                             </span>
                                         </div>
 
@@ -232,14 +265,15 @@ const TechnicianVerificationDetails: React.FC = () => {
                                             </button>
                                         </div>
 
+                                        {/* Mandatory Reason Input */}
                                         {isRejected && (
                                             <div className="mt-2 animate-in fade-in zoom-in-95 duration-200">
                                                 <input
                                                     type="text"
-                                                    placeholder="Reason (e.g. Blurry)"
+                                                    placeholder="Reason required (e.g. Blurry)"
                                                     value={decision.reason || ""}
                                                     onChange={(e) => handleReasonChange(doc.type, e.target.value)}
-                                                    className="w-full px-2 py-1.5 text-xs border border-red-300 rounded focus:ring-1 focus:ring-red-200 outline-none bg-red-50/20"
+                                                    className="w-full px-2 py-1.5 text-xs border border-red-300 rounded focus:ring-1 focus:ring-red-200 outline-none bg-red-50/20 placeholder:text-red-300"
                                                 />
                                             </div>
                                         )}
@@ -255,55 +289,62 @@ const TechnicianVerificationDetails: React.FC = () => {
             <div className="shrink-0 pt-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-3 px-4 sm:px-0 pb-4 bg-white sm:bg-transparent">
                 <button
                     onClick={() => setShowConfirm("REJECT")}
-                    className="w-full sm:w-auto px-6 py-3 bg-white border border-red-200 text-red-700 rounded-xl font-bold hover:bg-red-50 active:bg-red-100 flex items-center justify-center gap-2 transition-colors touch-manipulation"
+                    disabled={!allDocsReviewed} // Disable if any doc is PENDING
+                    className="w-full sm:w-auto px-6 py-3 bg-white border border-red-200 text-red-700 rounded-xl font-bold hover:bg-red-50 active:bg-red-100 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
                 >
-                    <Shield size={18} /> Reject
+                    <Shield size={18} /> Reject Application
                 </button>
 
                 <button
                     onClick={() => setShowConfirm("APPROVE")}
-                    // CHANGE HERE: Check if EVERY document in the profile has an "APPROVED" status in decisions
-                    disabled={!profile.documents.every((doc) => decisions[doc.type]?.status === "APPROVED")}
+                    // Approved Only if ALL docs are approved
+                    disabled={!allDocsReviewed || Object.values(decisions).some(d => d.status === 'REJECTED')}
                     className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 active:bg-blue-800 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation shadow-lg shadow-blue-200"
                 >
                     <Briefcase size={18} /> Approve & Onboard
                 </button>
             </div>
 
-            {/* Modals (Confirm & Preview) */}
+            {/* Modals */}
             <ConfirmModal
                 isOpen={!!showConfirm}
                 onClose={() => setShowConfirm(null)}
                 onConfirm={executeDecision}
                 isLoading={isSubmitting}
                 title={showConfirm === "APPROVE" ? "Approve Technician?" : "Reject Application?"}
-                message={showConfirm === "APPROVE" ? "Technician will be verified." : "Technician will be notified to fix issues."}
+                message={showConfirm === "APPROVE" 
+                    ? "Are you sure you want to verify this technician? They will be able to accept jobs immediately." 
+                    : "The technician will be notified to fix the issues. If no documents were rejected, ensure you provide a Global Note."}
                 confirmText={showConfirm === "APPROVE" ? "Yes, Approve" : "Yes, Reject"}
                 variant={showConfirm === "APPROVE" ? "success" : "danger"}
                 customContent={showConfirm === "REJECT" ? (
-                    <div className="mt-4"><textarea value={globalReason} onChange={(e) => setGlobalReason(e.target.value)} placeholder="Global Note (Optional)..." className="w-full border p-3 rounded-lg text-sm h-24 focus:outline-none focus:ring-2 focus:ring-red-200 resize-none" /></div>
+                    <div className="mt-4 space-y-2">
+                        <label className="text-xs font-bold text-gray-700 uppercase">Global Rejection Note</label>
+                        <textarea 
+                            value={globalReason} 
+                            onChange={(e) => setGlobalReason(e.target.value)} 
+                            placeholder={Object.values(decisions).some(d => d.status === 'REJECTED') ? "Optional note..." : "REQUIRED: Why are you rejecting this?"}
+                            className={`w-full border p-3 rounded-lg text-sm h-24 focus:outline-none focus:ring-2 resize-none ${
+                                !Object.values(decisions).some(d => d.status === 'REJECTED') && !globalReason 
+                                ? "border-red-300 ring-1 ring-red-100 placeholder:text-red-400" 
+                                : "border-gray-300 focus:ring-blue-100"
+                            }`} 
+                        />
+                        {!Object.values(decisions).some(d => d.status === 'REJECTED') && (
+                            <p className="text-xs text-red-600 font-medium">* Mandatory because no documents are rejected.</p>
+                        )}
+                    </div>
                 ) : undefined}
             />
 
+            {/* Lightbox */}
             {previewDoc && (
-                <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4 animate-in fade-in duration-200">
-                    <button onClick={() => setPreviewDoc(null)} className="absolute top-4 right-4 text-white/70 hover:text-white bg-white/10 p-2 rounded-full transition-colors">
-                        <XCircle size={32} />
-                    </button>
-                    <div className="w-full max-w-4xl h-full max-h-[90vh] flex flex-col">
-                        <div className="flex justify-between items-center text-white mb-2 px-2">
-                            <h3 className="font-bold text-lg">{previewDoc.type}</h3>
-                            <a href={previewDoc.url} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-sm text-blue-300 hover:text-blue-200"><ExternalLink size={14} /> Open Original</a>
-                        </div>
-                        <div className="flex-1 bg-gray-900 rounded-lg overflow-hidden border border-gray-700 flex items-center justify-center relative">
-                            {previewDoc.url.toLowerCase().includes(".pdf") ? (
-                                <iframe src={previewDoc.url} className="w-full h-full" title="PDF Preview" />
-                            ) : (
-                                <img src={previewDoc.url} alt="Preview" className="max-w-full max-h-full object-contain" />
-                            )}
-                        </div>
-                    </div>
-                </div>
+                <FileLightbox
+                    url={previewDoc.url}
+                    type={previewDoc.type}
+                    title={previewDoc.type.replace(/_/g, " ")}
+                    onClose={() => setPreviewDoc(null)}
+                />
             )}
         </div>
     );

@@ -1,6 +1,5 @@
 import { z } from "zod";
-
-// --- Constants ---
+ 
 export const EXPERIENCE_OPTIONS = [
   "Fresher (0-1 Years)",
   "1-3 Years",
@@ -8,8 +7,7 @@ export const EXPERIENCE_OPTIONS = [
   "5-10 Years",
   "10+ Years Expert",
 ] as const;
-
-// --- Schema ---
+ 
 export const step1Schema = z.object({
   name: z
     .string()
@@ -29,12 +27,9 @@ export const step1Schema = z.object({
   
   avatarUrl: z.string().min(1, "Profile picture is mandatory"),
 });
-
-// --- Types ---
+ 
 export type Step1FormData = z.infer<typeof step1Schema>;
-
-// --- Initial State Helper (Optional) ---
-// Useful to keep default empty state consistent
+ 
 export const INITIAL_STEP1_STATE: Partial<Step1FormData> = {
   name: "",
   bio: "",

@@ -22,7 +22,7 @@ export interface Step4Data {
 }
 
 export interface DocumentMeta {
-  type: "AADHAAR" | "PAN" | "CERTIFICATE" | "OTHER";
+  type: "AADHAAR" | "PAN" | "PASSBOOK" | "CERTIFICATE" | "OTHER";
   fileUrl: string;
   fileName: string;
 }
