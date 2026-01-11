@@ -6,6 +6,24 @@ export type VerificationStatus =
   | "VERIFIED"
   | "REJECTED";
 
+// --- Helper Interfaces ---
+export interface CategoryData {
+  id: string;
+  name: string;
+  iconUrl?: string;
+}
+
+export interface ServiceData {
+  id: string;
+  name: string;
+  categoryId: string;
+}
+
+export interface ZoneData {
+  id: string;
+  name: string;
+}
+
 export interface TechnicianDocument {
   type: string;
   fileUrl: string;
@@ -21,48 +39,94 @@ export interface BankDetails {
   bankName: string;
 }
 
-export interface TechnicianProfile {
+// --- Incoming API Response Shape (DTO) ---
+// This matches what the backend Controller sends
+interface TechnicianApiResponse {
   id: string;
-
-  personalDetails: {
-    name: string;
-    email: string;
-    phone: string;
-    avatarUrl?: string;
-    bio?: string;
-    experienceSummary?: string;
-  };
-
+  name: string;
+  email: string;
+  phone: string;
+  avatarUrl?: string;
+  bio?: string;
+  experienceSummary?: string;
+  
   onboardingStep: number;
   verificationStatus: VerificationStatus;
-  globalRejectionReason?: string | null; // ✅ Added this field
+  verificationReason?: string; // Backend sends this
+  globalRejectionReason?: string; // Or this (fallback)
+
+  categories?: CategoryData[];
+  subServices?: ServiceData[];
+  serviceZones?: ZoneData[];
 
   categoryIds: string[];
   subServiceIds: string[];
-
-  // Step 3: Zones
   zoneIds: string[];
 
-  // Step 4: Rates
   isRateCardAgreed?: boolean;
-
-  // Step 5: Documents
   documents: TechnicianDocument[];
-
-  // Step 6: Bank
   bankDetails?: BankDetails;
 
-  // Dashboard Specifics
   availability: {
     isOnline: boolean;
   };
+  
+  rating?: {
+    average: number;
+    count: number;
+  };
+
   walletBalance?: {
     currentBalance: number;
     currency: string;
   };
+
+  createdAt: string; 
+}
+
+// --- Redux State Shape ---
+export interface TechnicianProfile {
+  id: string;
+  createdAt: string;
+
+  // ✅ Flattened Fields (No personalDetails object)
+  name: string;
+  email: string;
+  phone: string;
+  avatarUrl?: string;
+  bio?: string;
+  experienceSummary?: string;
+
+  onboardingStep: number;
+  verificationStatus: VerificationStatus;
+  globalRejectionReason?: string | null; // Frontend standardizes on this
+
+  // Hydrated Data
+  categories?: CategoryData[];
+  subServices?: ServiceData[];
+  serviceZones?: ZoneData[];
+
+  // Raw IDs
+  categoryIds: string[];
+  subServiceIds: string[];
+  zoneIds: string[];
+
+  isRateCardAgreed?: boolean;
+  documents: TechnicianDocument[];
+  bankDetails?: BankDetails;
+
+  availability: {
+    isOnline: boolean;
+  };
+  
   rating?: {
     average: number;
     count: number;
+  };
+
+  walletBalance?: {
+    currentBalance: number;
+    currency: string;
   };
 }
 
@@ -71,7 +135,6 @@ interface TechnicianState {
   loading: boolean;
   saveLoading: boolean;
   error: string | null;
-
   stats: {
     todayEarnings: number;
     completedJobs: number;
@@ -93,21 +156,28 @@ const technicianSlice = createSlice({
   name: "technician",
   initialState,
   reducers: {
-    // --- Fetching Profile ---
     fetchTechnicianStart(state) {
       state.loading = true;
       state.error = null;
     },
-    fetchTechnicianSuccess(state, action: PayloadAction<TechnicianProfile>) {
+
+    // ✅ Typed Payload: Accepts the API response structure
+    fetchTechnicianSuccess(state, action: PayloadAction<TechnicianApiResponse>) {
       state.loading = false;
-      state.profile = action.payload;
+      const apiData = action.payload;
+
+      // Map API response to State Profile
+      state.profile = {
+        ...apiData,
+        // Ensure consistent naming for rejection reason
+        globalRejectionReason: apiData.verificationReason || apiData.globalRejectionReason || null,
+      };
     },
+
     fetchTechnicianFailure(state, action: PayloadAction<string>) {
       state.loading = false;
       state.error = action.payload;
     },
-
-    // --- Onboarding Specific Updates ---
 
     setOnboardingStep(state, action: PayloadAction<number>) {
       if (state.profile) {
@@ -115,7 +185,7 @@ const technicianSlice = createSlice({
       }
     },
 
-    // ✅ FIXED: Update nested personalDetails object
+    // ✅ Updated: Updates root fields directly
     updatePersonalDetails(
       state,
       action: PayloadAction<{
@@ -124,13 +194,10 @@ const technicianSlice = createSlice({
         avatarUrl?: string;
       }>
     ) {
-      if (state.profile && state.profile.personalDetails) {
-        state.profile.personalDetails.bio = action.payload.bio;
-        state.profile.personalDetails.experienceSummary =
-          action.payload.experienceSummary;
-        if (action.payload.avatarUrl) {
-          state.profile.personalDetails.avatarUrl = action.payload.avatarUrl;
-        }
+      if (state.profile) {
+        if (action.payload.bio !== undefined) state.profile.bio = action.payload.bio;
+        if (action.payload.experienceSummary !== undefined) state.profile.experienceSummary = action.payload.experienceSummary;
+        if (action.payload.avatarUrl !== undefined) state.profile.avatarUrl = action.payload.avatarUrl;
       }
     },
 
@@ -176,10 +243,9 @@ const technicianSlice = createSlice({
       }>
     ) {
       if (state.profile) {
-        state.profile.verificationStatus = action.payload.status; 
+        state.profile.verificationStatus = action.payload.status;
         if (action.payload.globalRejectionReason !== undefined) {
-          state.profile.globalRejectionReason =
-            action.payload.globalRejectionReason;
+          state.profile.globalRejectionReason = action.payload.globalRejectionReason;
         }
       }
     },

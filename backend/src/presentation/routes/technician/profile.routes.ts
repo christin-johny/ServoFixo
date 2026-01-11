@@ -10,7 +10,6 @@ router.get(
   technicianProfileController.getOnboardingStatus.bind(technicianProfileController)
 );
 
-//  WRITE (Step-by-Step)  
 router.patch("/onboarding/step-1", technicianProfileController.updatePersonalDetails.bind(technicianProfileController));
 
 router.patch(

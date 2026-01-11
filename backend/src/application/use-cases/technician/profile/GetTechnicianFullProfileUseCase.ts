@@ -32,7 +32,6 @@ export class GetTechnicianFullProfileUseCase
 
     const baseProfile = TechnicianMapper.toAdminProfile(tech);
 
-    // ✅ FIX: Explicitly type the Tuple so 'z', 'c', 's' are not 'any'
     const [zones, categories, subServices]: [
         (Zone | null)[], 
         (ServiceCategory | null)[], 

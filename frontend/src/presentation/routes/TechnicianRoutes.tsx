@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoaderFallback from "../components/LoaderFallback";
 import GuestOnlyGuard from "./GuestOnlyGuard";
 import RoleProtectedRoute from "./RoleProtectedRoute";
+import PersonalDetails from "../pages/Technician/Profile/PersonalDetails";
+import ServiceSkills from "../pages/Technician/Profile/ServiceSkills";
  
 const TechLogin = React.lazy(() => import("../pages/Technician/Auth/TechnicianLogin"));
 const TechRegister = React.lazy(() => import("../pages/Technician/Auth/TechnicianRegister"));
@@ -12,6 +14,7 @@ const TechForgotPassword = React.lazy(() => import("../pages/Technician/Auth/Tec
 const TechDashboard = React.lazy(() => import("../pages/Technician/Dashboard/TechnicianDashboard"));
 const TechnicianLayout = React.lazy(() => import("../components/Technician/Layout/TechnicianLayout"));
 const OnboardingWizard =React.lazy(() => import("../components/Technician/Onboarding/OnboardingWizard"));
+const TechnicianProfile=React.lazy(() => import("../pages/Technician/Profile/TechnicianProfile"));
 
 const TechnicianRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
@@ -42,7 +45,9 @@ const TechnicianRoutes: React.FC = () => (
         {/* Placeholders for Future Modules */}
         <Route path="jobs" element={<div className="p-8">Jobs Module (Coming Soon)</div>} />
         <Route path="wallet" element={<div className="p-8">Wallet Module (Coming Soon)</div>} />
-        <Route path="profile" element={<div className="p-8">Profile Module (Coming Soon)</div>} />
+        <Route path="profile" element={<TechnicianProfile/>} />
+        <Route path="profile/personal" element={<PersonalDetails/>} />
+        <Route path="/profile/services" element={<ServiceSkills/>} />
       </Route>
 
       {/* Fallback */}

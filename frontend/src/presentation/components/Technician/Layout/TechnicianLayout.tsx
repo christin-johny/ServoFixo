@@ -7,7 +7,6 @@ import {
   User,
   Bell,
   LogOut,
-
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../../../store/store";
@@ -17,47 +16,17 @@ import {
   fetchTechnicianStart,
   fetchTechnicianSuccess,
   fetchTechnicianFailure,
-  type TechnicianProfile
 } from "../../../../store/technicianSlice";
 import { useNotification } from "../../../hooks/useNotification";
 import ConfirmModal from "../../Admin/Modals/ConfirmModal";
 import LoaderFallback from "../../../components/LoaderFallback";
 
-import {
-  getTechnicianProfileStatus,
-} from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
-import {technicianLogout} from "../../../../infrastructure/repositories/technician/technicianAuthRepository"
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mapApiDataToProfile = (data: any): TechnicianProfile => {
-  return {
-    id: data.id,
+import { getTechnicianProfileStatus } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
+import { technicianLogout } from "../../../../infrastructure/repositories/technician/technicianAuthRepository";
 
-    // ✅ FIXED: Nest these fields inside 'personalDetails' to match the interface
-    personalDetails: {
-      name: data.personalDetails?.name || "",
-      email: data.personalDetails?.email || "",
-      phone: data.personalDetails?.phone || "",
-      avatarUrl: data.personalDetails?.avatarUrl,
-      bio: data.personalDetails?.bio,
-      experienceSummary: data.personalDetails?.experienceSummary,
-    },
+// ✅ REMOVED: mapApiDataToProfile function. 
+// The Redux slice now handles the raw API response structure directly.
 
-    onboardingStep: data.onboardingStep,
-    verificationStatus: data.verificationStatus,
-    globalRejectionReason: data.globalRejectionReason || null,
-
-    categoryIds: data.categoryIds || [],
-    subServiceIds: data.subServiceIds || [],
-    zoneIds: data.zoneIds || [],
-    documents: data.documents || [],
-    bankDetails: data.bankDetails || undefined,
-
-    availability: data.availability || { isOnline: false },
-    walletBalance: { currentBalance: 0, currency: "INR" },
-    rating: { average: 0, count: 0 }
-  };
-};
- 
 interface NavItem {
   label: string;
   path: string;
@@ -74,11 +43,13 @@ const NAV_ITEMS: NavItem[] = [
 interface SidebarContentProps {
   onLogoutClick: () => void;
 }
- 
+
 const SidebarContent: React.FC<SidebarContentProps> = ({ onLogoutClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const authUser = useSelector((state: RootState) => state.auth.user);
+  
+  // ✅ The profile is now flat, so we access properties directly
   const techProfile = useSelector((state: RootState) => state.technician.profile);
 
   const isActive = (path: string) => {
@@ -100,15 +71,15 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ onLogoutClick }) => {
       <div className="px-5 py-6">
         <div className="flex items-center gap-3 p-2 rounded-xl transition-colors hover:bg-gray-50/80 cursor-default">
           <div className="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center text-blue-600 font-bold text-sm overflow-hidden shrink-0 ring-2 ring-gray-50">
-            {techProfile?.personalDetails?.avatarUrl ? (
-              <img src={techProfile?.personalDetails?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+            {techProfile?.avatarUrl ? (
+              <img src={techProfile.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               (authUser?.email?.slice(0, 2).toUpperCase() || "TC")
             )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-gray-900 truncate">
-              {techProfile?.personalDetails?.name || "Partner"}
+              {techProfile?.name || "Partner"}
             </p>
             <p className="text-xs text-gray-500 truncate font-medium">
               {authUser?.email}
@@ -160,7 +131,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ onLogoutClick }) => {
     </div>
   );
 };
- 
+
 const TechnicianLayout: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -170,17 +141,15 @@ const TechnicianLayout: React.FC = () => {
 
   const { profile, loading } = useSelector((state: RootState) => state.technician);
   const { accessToken } = useSelector((state: RootState) => state.auth);
- 
+
   useEffect(() => {
     if (accessToken && !profile) {
       const loadProfile = async () => {
         dispatch(fetchTechnicianStart());
-        try { 
+        try {
           const data = await getTechnicianProfileStatus();
- 
-          const mappedProfile = mapApiDataToProfile(data);
- 
-          dispatch(fetchTechnicianSuccess(mappedProfile));
+          // ✅ UPDATED: Dispatch raw data directly. The reducer handles mapping.
+          dispatch(fetchTechnicianSuccess(data));
         } catch (error) {
           console.error("Fetch profile failed", error);
           dispatch(fetchTechnicianFailure("Failed to load profile"));
@@ -197,21 +166,20 @@ const TechnicianLayout: React.FC = () => {
 
   const activeItem = NAV_ITEMS.find(i => isActive(i.path)) || NAV_ITEMS[0];
 
-const handleLogoutConfirm = async () => {
-  try {
-    await technicianLogout();
-  } catch {
-    showError("logout failed please try again")
-  } finally {
-    dispatch(logout());
-    dispatch(clearTechnicianData());
-    showSuccess("Logged out successfully");
+  const handleLogoutConfirm = async () => {
+    try {
+      await technicianLogout();
+    } catch {
+      showError("logout failed please try again")
+    } finally {
+      dispatch(logout());
+      dispatch(clearTechnicianData());
+      showSuccess("Logged out successfully");
 
-    setIsLogoutModalOpen(false);
-    navigate("/technician/login");
-  }
-};
-
+      setIsLogoutModalOpen(false);
+      navigate("/technician/login");
+    }
+  };
 
   if (loading && !profile) return <LoaderFallback />;
 

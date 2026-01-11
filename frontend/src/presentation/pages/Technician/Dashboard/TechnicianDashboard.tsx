@@ -103,7 +103,7 @@ const TechnicianDashboard: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-500 text-sm">
-            {profile?.personalDetails?.name ? `Welcome back, ${profile.personalDetails.name}.` : "Welcome back, Partner."}
+            {profile?.name ? `Welcome back, ${profile.name}.` : "Welcome back, Partner."}
           </p>
         </div>
         

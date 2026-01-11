@@ -1,5 +1,10 @@
 import { VerificationStatus } from "../../../../../shared/types/value-objects/TechnicianTypes";
 
+// ✅ Helper Interfaces for Hydrated Data
+export interface CategoryData { id: string; name: string; iconUrl?: string; }
+export interface ServiceData { id: string; name: string; categoryId: string; }
+export interface ZoneData { id: string; name: string; }
+
 export interface TechnicianResponseDto {
   id: string;
   name: string;
@@ -7,13 +12,18 @@ export interface TechnicianResponseDto {
   phone: string;
   avatarUrl?: string;
   bio?: string;
- 
+
   onboardingStep: number;
   experienceSummary?: string;
 
   categoryIds: string[];
   subServiceIds: string[];
   zoneIds: string[];
+
+  // ✅ NEW: Hydrated Data (Added for Dashboard Efficiency)
+  categories?: CategoryData[];
+  subServices?: ServiceData[];
+  serviceZones?: ZoneData[];
 
   documents: Array<{
     type: string;
@@ -48,9 +58,9 @@ export interface TechnicianResponseDto {
     averageRating: number;
     totalReviews: number;
   };
- 
+
   verificationStatus: VerificationStatus;
-  verificationReason?: string;
+  verificationReason?: string; // Maps to globalRejectionReason
   isSuspended: boolean;
   suspendReason?: string;
   isDeleted?: boolean;

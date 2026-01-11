@@ -1,14 +1,12 @@
 export interface OnboardingStatusResponse {
   onboardingStep: number;
   verificationStatus: string;
-  personalDetails: {
     name: string;
     email: string;
     phone: string;
     avatarUrl?: string;
     bio?: string;
     experienceSummary?: string;
-  };
 }
 
 export interface Step1Data {

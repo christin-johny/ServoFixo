@@ -41,9 +41,8 @@ export const LogEvents = {
   // TECHNICIAN ONBOARDING
   TECHNICIAN_CREATE_SUCCESS: "Technician Entity Created Successfully",
   TECH_PROFILE_ERROR: "Technician Profile Error",
-
-  TECH_GET_ONBOARDING_STATUS_INIT:
-    "Technician: Fetch Onboarding Status Initiated",
+TECH_NOT_FOUND:'Technician Not Found',
+  TECH_GET_ONBOARDING_STATUS_INIT:"Technician: Fetch Onboarding Status Initiated",
   TECH_UPDATE_DETAILS_INIT: "Technician: Update Onboarding Step Initiated",
 
   TECH_ONBOARDING_STEP_1_SUCCESS: "Technician Step 1 (Personal) Completed",
