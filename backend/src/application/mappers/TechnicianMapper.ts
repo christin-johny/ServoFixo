@@ -143,8 +143,7 @@ export class TechnicianMapper {
       categoryIds: entity.getCategoryIds(),
       subServiceIds: entity.getSubServiceIds(),
       zoneIds: entity.getZoneIds(),
-
-      // ✅ Map Requests to Response
+ 
       serviceRequests: entity.getServiceRequests(),
       zoneRequests: entity.getZoneRequests(),
       bankUpdateRequests: entity.getBankUpdateRequests(), // ✅

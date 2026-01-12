@@ -67,7 +67,6 @@ interface TechnicianApiResponse {
   subServiceIds: string[];
   zoneIds: string[];
 
-  // ✅ NEW: Request Lists from Backend
   serviceRequests: ServiceRequest[];
   zoneRequests: ZoneRequest[];
   bankUpdateRequests: BankUpdateRequest[];
@@ -87,8 +86,9 @@ interface TechnicianApiResponse {
     count: number;
   };
 
-  walletBalance?: {
+walletBalance?: {
     currentBalance: number;
+    frozenAmount: number; // <--- This was missing
     currency: string;
   };
 
@@ -139,8 +139,9 @@ export interface TechnicianProfile {
     count: number;
   };
 
-  walletBalance?: {
+walletBalance?: {
     currentBalance: number;
+    frozenAmount: number; 
     currency: string;
   };
 }

@@ -9,9 +9,8 @@ import {
   EmergencyContact,
   ServiceRequest,
   ZoneRequest,
-  RequestStatus,
   BankUpdateRequest,
-  PayoutStatus,
+  PayoutStatus
 } from "../../../../shared/types/value-objects/TechnicianTypes";
 
 export interface TechnicianProps {
@@ -30,12 +29,12 @@ export interface TechnicianProps {
   subServiceIds: string[];
   zoneIds: string[];
 
-  // ✅ NEW: Request Arrays
+  // Requests
   serviceRequests?: ServiceRequest[];
   zoneRequests?: ZoneRequest[];
   bankUpdateRequests?: BankUpdateRequest[];
   payoutStatus?: PayoutStatus;
-
+   
   documents: TechnicianDocument[];
   bankDetails?: TechnicianBankDetails;
 
@@ -45,15 +44,15 @@ export interface TechnicianProps {
 
   verificationStatus?: VerificationStatus;
   verificationReason?: string;
-
+  
   isSuspended?: boolean;
   suspendReason?: string;
   portfolioUrls?: string[];
   deviceToken?: string;
-
+  
   currentLocation?: TechnicianLocation;
   emergencyContact?: EmergencyContact;
-
+  
   isOnline?: boolean;
   isDeleted?: boolean;
 
@@ -67,7 +66,7 @@ export class Technician {
   private _email: string;
   private _phone: string;
   private _password?: string;
-
+ 
   private _onboardingStep: number;
   private _experienceSummary: string;
 
@@ -76,11 +75,12 @@ export class Technician {
   private _categoryIds: string[];
   private _subServiceIds: string[];
   private _zoneIds: string[];
+
   private _serviceRequests: ServiceRequest[];
   private _zoneRequests: ZoneRequest[];
   private _bankUpdateRequests: BankUpdateRequest[];
   private _payoutStatus: PayoutStatus;
-
+   
   private _documents: TechnicianDocument[];
   private _bankDetails?: TechnicianBankDetails;
 
@@ -90,21 +90,20 @@ export class Technician {
 
   private _verificationStatus: VerificationStatus;
   private _verificationReason?: string;
-
+  
   private _isSuspended: boolean;
   private _suspendReason?: string;
   private _portfolioUrls: string[];
   private _deviceToken?: string;
-
+  
   private _currentLocation?: TechnicianLocation;
   private _emergencyContact?: EmergencyContact;
-
+  
   private _isOnline: boolean;
   private _isDeleted: boolean;
 
   private _createdAt: Date;
   private _updatedAt: Date;
-  requestBankUpdate: any;
 
   constructor(props: TechnicianProps) {
     this._id = props.id || "";
@@ -112,7 +111,7 @@ export class Technician {
     this._email = props.email;
     this._phone = props.phone;
     this._password = props.password;
-
+ 
     this._onboardingStep = props.onboardingStep || 1;
     this._experienceSummary = props.experienceSummary || "";
 
@@ -121,7 +120,7 @@ export class Technician {
     this._categoryIds = props.categoryIds || [];
     this._subServiceIds = props.subServiceIds || [];
     this._zoneIds = props.zoneIds || [];
-
+    
     this._serviceRequests = props.serviceRequests || [];
     this._zoneRequests = props.zoneRequests || [];
     this._bankUpdateRequests = props.bankUpdateRequests || [];
@@ -135,10 +134,7 @@ export class Technician {
       frozenAmount: 0,
       currency: "INR",
     };
-    this._availability = props.availability || {
-      isOnline: false,
-      isOnJob: false,
-    };
+    this._availability = props.availability || { isOnline: false, isOnJob: false };
     this._ratings = props.ratings || { averageRating: 0, totalReviews: 0 };
 
     this._verificationStatus = props.verificationStatus || "PENDING";
@@ -155,184 +151,114 @@ export class Technician {
     this._createdAt = props.createdAt || new Date();
     this._updatedAt = props.updatedAt || new Date();
   }
+ 
+  // --- Getters ---
+  public getId(): string { return this._id; }
+  public getName(): string { return this._name; }
+  public getEmail(): string { return this._email; }
+  public getPhone(): string { return this._phone; }
+  public getAvatarUrl(): string | undefined { return this._avatarUrl; }
+  public getBio(): string | undefined { return this._bio; }
+  public getOnboardingStep(): number { return this._onboardingStep; }
+  public getExperienceSummary(): string { return this._experienceSummary; }
+  
+  public getCategoryIds(): string[] { return this._categoryIds; }
+  public getSubServiceIds(): string[] { return this._subServiceIds; }
+  public getZoneIds(): string[] { return this._zoneIds; }
 
-  // ... (Existing Getters)
-  public getId(): string {
-    return this._id;
-  }
-  public getName(): string {
-    return this._name;
-  }
-  public getEmail(): string {
-    return this._email;
-  }
-  public getPhone(): string {
-    return this._phone;
-  }
-  public getPassword(): string | undefined {
-    return this._password;
-  }
-  public getOnboardingStep(): number {
-    return this._onboardingStep;
-  }
-  public getExperienceSummary(): string {
-    return this._experienceSummary;
-  }
-  public getAvatarUrl(): string | undefined {
-    return this._avatarUrl;
-  }
-  public getBio(): string | undefined {
-    return this._bio;
-  }
-  public getCategoryIds(): string[] {
-    return this._categoryIds;
-  }
-  public getSubServiceIds(): string[] {
-    return this._subServiceIds;
-  }
-  public getZoneIds(): string[] {
-    return this._zoneIds;
-  }
-  public getDocuments(): TechnicianDocument[] {
-    return this._documents;
-  }
-  public getBankDetails(): TechnicianBankDetails | undefined {
-    return this._bankDetails;
-  }
-  public getVerificationStatus(): VerificationStatus {
-    return this._verificationStatus;
-  }
-  public getWalletBalance(): TechnicianWallet {
-    return this._walletBalance;
-  }
-  public getAvailability(): TechnicianAvailability {
-    return this._availability;
-  }
-  public getRatings(): TechnicianRatings {
-    return this._ratings;
-  }
-  public getVerificationReason(): string | undefined {
-    return this._verificationReason;
-  }
-  public getIsSuspended(): boolean {
-    return this._isSuspended;
-  }
-  public getSuspendReason(): string | undefined {
-    return this._suspendReason;
-  }
-  public getPortfolioUrls(): string[] {
-    return this._portfolioUrls;
-  }
-  public getDeviceToken(): string | undefined {
-    return this._deviceToken;
-  }
-  public getCurrentLocation(): TechnicianLocation | undefined {
-    return this._currentLocation;
-  }
-  public getEmergencyContact(): EmergencyContact | undefined {
-    return this._emergencyContact;
-  }
-  public getIsOnline(): boolean {
-    return this._isOnline;
-  }
-  public getIsDeleted(): boolean {
-    return this._isDeleted;
-  }
-  public getCreatedAt(): Date {
-    return this._createdAt;
-  }
-  public getUpdatedAt(): Date {
-    return this._updatedAt;
-  }
+  public getDocuments(): TechnicianDocument[] { return this._documents; }
+  public getBankDetails(): TechnicianBankDetails | undefined { return this._bankDetails; }
+  
+  public getServiceRequests(): ServiceRequest[] { return this._serviceRequests; }
+  public getZoneRequests(): ZoneRequest[] { return this._zoneRequests; }
+  public getBankUpdateRequests(): BankUpdateRequest[] { return this._bankUpdateRequests; }
+  public getPayoutStatus(): PayoutStatus { return this._payoutStatus; }
 
-  // ✅ NEW: Request Getters
-  public getServiceRequests(): ServiceRequest[] {
-    return this._serviceRequests;
-  }
-  public getZoneRequests(): ZoneRequest[] {
-    return this._zoneRequests;
-  }
-  public getBankUpdateRequests(): BankUpdateRequest[] {
-    return this._bankUpdateRequests;
-  }
-  public getPayoutStatus(): PayoutStatus {
-    return this._payoutStatus;
-  }
-  public getIsOnJob(): boolean {
-    return this._availability.isOnJob;
-  }
+  public getWalletBalance(): TechnicianWallet { return this._walletBalance; }
+  public getAvailability(): TechnicianAvailability { return this._availability; }
+  public getRatings(): TechnicianRatings { return this._ratings; }
+  public getVerificationStatus(): VerificationStatus { return this._verificationStatus; }
+  public getVerificationReason(): string | undefined { return this._verificationReason; }
+  public getIsSuspended(): boolean { return this._isSuspended; }
+  public getSuspendReason(): string | undefined { return this._suspendReason; }
+  public getPortfolioUrls(): string[] { return this._portfolioUrls; }
+  public getDeviceToken(): string | undefined { return this._deviceToken; }
+  public getCurrentLocation(): TechnicianLocation | undefined { return this._currentLocation; }
+  public getEmergencyContact(): EmergencyContact | undefined { return this._emergencyContact; }
+  public getIsDeleted(): boolean { return this._isDeleted; }
+  public getCreatedAt(): Date { return this._createdAt; }
+  public getUpdatedAt(): Date { return this._updatedAt; }
+  public getIsOnJob(): boolean { return this._availability.isOnJob ?? false; }
 
-  // ... (Existing Setters)
-  public setOnboardingStep(step: number): void {
-    this._onboardingStep = step;
-  }
-  public setVerificationStatus(status: VerificationStatus): void {
-    this._verificationStatus = status;
-  }
-  public updateVerificationStatus(
-    status: VerificationStatus,
-    reason?: string
-  ): void {
-    this._verificationStatus = status;
-    if (reason) this._verificationReason = reason;
-    this._updatedAt = new Date();
-  }
-  public updateProfile(data: {
-    bio: string;
-    experienceSummary: string;
-    avatarUrl?: string;
-  }) {
+  // --- Methods ---
+
+  public updateProfile(data: { bio: string; experienceSummary: string; avatarUrl?: string }) {
     if (data.bio) this._bio = data.bio;
-    if (data.experienceSummary)
-      this._experienceSummary = data.experienceSummary;
+    if (data.experienceSummary) this._experienceSummary = data.experienceSummary;
     if (data.avatarUrl) this._avatarUrl = data.avatarUrl;
     this._updatedAt = new Date();
   }
+
   public updateWorkPreferences(categoryIds: string[], subServiceIds: string[]) {
     this._categoryIds = categoryIds;
     this._subServiceIds = subServiceIds;
     this._updatedAt = new Date();
   }
+
   public updateZones(zoneIds: string[]) {
     this._zoneIds = zoneIds;
     this._updatedAt = new Date();
   }
+
   public updateDocuments(documents: TechnicianDocument[]) {
     this._documents = documents;
     this._updatedAt = new Date();
   }
+
   public updateBankDetails(details: TechnicianBankDetails) {
     this._bankDetails = details;
     this._updatedAt = new Date();
   }
+
   public setIsOnline(status: boolean): void {
     this._isOnline = status;
     this._updatedAt = new Date();
   }
-  public setSuspension(status: boolean, reason?: string): void {
-    this._isSuspended = status;
-    this._suspendReason = reason;
-    this._updatedAt = new Date();
+
+  public setOnboardingStep(step: number): void {
+    this._onboardingStep = step;
   }
 
-  // ✅ NEW: Logic to Add a Service Request
+  public setVerificationStatus(status: VerificationStatus): void {
+    this._verificationStatus = status;
+  }
+
+  // ✅ Request: Service Add
   public addServiceRequest(request: ServiceRequest): void {
-    // 1. Validation: Cannot request what you already have active
     if (this._subServiceIds.includes(request.serviceId)) {
       throw new Error("This service is already active in your profile.");
     }
-
-    // 2. Validation: Cannot have a duplicate PENDING request
     const existingPending = this._serviceRequests.find(
       (r) => r.serviceId === request.serviceId && r.status === "PENDING"
     );
     if (existingPending) {
-      throw new Error(
-        "A request for this service is already pending approval."
-      );
+      throw new Error("A request for this service is already pending approval.");
     }
-
     this._serviceRequests.push(request);
+    this._updatedAt = new Date();
+  }
+
+  // ✅ Request: Bank Update (Logic Restored)
+  public requestBankUpdate(request: BankUpdateRequest): void {
+    // 1. Validation: No pending requests
+    const pending = this._bankUpdateRequests.find(r => r.status === "PENDING");
+    if (pending) throw new Error("A bank update request is already pending approval.");
+
+    // 2. Add Request
+    this._bankUpdateRequests.push(request);
+    
+    // 3. SECURE: Pause Payouts
+    this._payoutStatus = "ON_HOLD";
     this._updatedAt = new Date();
   }
 
@@ -350,9 +276,11 @@ export class Technician {
       categoryIds: this._categoryIds,
       subServiceIds: this._subServiceIds,
       zoneIds: this._zoneIds,
-
+       
       serviceRequests: this._serviceRequests,
       zoneRequests: this._zoneRequests,
+      bankUpdateRequests: this._bankUpdateRequests,
+      payoutStatus: this._payoutStatus,
 
       documents: this._documents,
       bankDetails: this._bankDetails,

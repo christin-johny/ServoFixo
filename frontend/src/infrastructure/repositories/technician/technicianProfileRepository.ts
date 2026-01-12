@@ -63,8 +63,9 @@ export interface TechnicianProfileStatusDto {
     upiId?: string;
   };
 
-  walletBalance?: {
+walletBalance?: {
     currentBalance: number;
+    frozenAmount: number; // <--- This was missing
     currency: string;
   };
 

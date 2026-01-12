@@ -10,7 +10,6 @@ import { technicianOnboardingRepository, type ZoneOption } from "../../../../inf
 import { type ZoneRequest } from "../../../../domain/types/TechnicianRequestTypes";
 import { useNotification } from "../../../hooks/useNotification";
 
-// ✅ Import Map Component (Adjust path if needed based on your folder structure)
 import TechnicianZoneSelectMap from "../Onboarding/Maps/TechnicianZoneSelectMap";
 
 interface ZoneRequestModalProps {
