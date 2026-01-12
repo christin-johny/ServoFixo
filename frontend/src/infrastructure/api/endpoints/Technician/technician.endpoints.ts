@@ -29,4 +29,8 @@ export const TECHNICIAN_PROFILE_ENDPOINTS = {
   // File Uploads (Two separate endpoints as agreed)
   UPLOAD_AVATAR: "/technician/profile/onboarding/upload/avatar",
   UPLOAD_DOCUMENT: "/technician/profile/onboarding/upload/document",
+
+  REQUEST_SERVICE: "/technician/profile/service-request",
+  REQUEST_ZONE: "/technician/profile/zone-request",
+  REQUEST_BANK: "/technician/profile/bank-request",
 };

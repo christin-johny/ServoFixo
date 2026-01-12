@@ -1,12 +1,17 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import type  { 
+  ServiceRequest, 
+  ZoneRequest, 
+  BankUpdateRequest, 
+  PayoutStatus 
+} from "../domain/types/TechnicianRequestTypes";
 
 export type VerificationStatus =
   | "PENDING"
   | "VERIFICATION_PENDING"
   | "VERIFIED"
   | "REJECTED";
-
-// --- Helper Interfaces ---
+ 
 export interface CategoryData {
   id: string;
   name: string;
@@ -37,10 +42,10 @@ export interface BankDetails {
   accountNumber: string;
   ifscCode: string;
   bankName: string;
+  upiId?: string; // Added upiId
 }
 
 // --- Incoming API Response Shape (DTO) ---
-// This matches what the backend Controller sends
 interface TechnicianApiResponse {
   id: string;
   name: string;
@@ -52,9 +57,8 @@ interface TechnicianApiResponse {
   
   onboardingStep: number;
   verificationStatus: VerificationStatus;
-  verificationReason?: string; // Backend sends this
-  globalRejectionReason?: string; // Or this (fallback)
-
+  verificationReason?: string;
+  
   categories?: CategoryData[];
   subServices?: ServiceData[];
   serviceZones?: ZoneData[];
@@ -63,12 +67,19 @@ interface TechnicianApiResponse {
   subServiceIds: string[];
   zoneIds: string[];
 
+  // ✅ NEW: Request Lists from Backend
+  serviceRequests: ServiceRequest[];
+  zoneRequests: ZoneRequest[];
+  bankUpdateRequests: BankUpdateRequest[];
+  payoutStatus: PayoutStatus;
+
   isRateCardAgreed?: boolean;
   documents: TechnicianDocument[];
   bankDetails?: BankDetails;
 
   availability: {
     isOnline: boolean;
+    isOnJob: boolean; // ✅ NEW
   };
   
   rating?: {
@@ -89,7 +100,6 @@ export interface TechnicianProfile {
   id: string;
   createdAt: string;
 
-  // ✅ Flattened Fields (No personalDetails object)
   name: string;
   email: string;
   phone: string;
@@ -99,17 +109,21 @@ export interface TechnicianProfile {
 
   onboardingStep: number;
   verificationStatus: VerificationStatus;
-  globalRejectionReason?: string | null; // Frontend standardizes on this
+  globalRejectionReason?: string | null;
 
-  // Hydrated Data
   categories?: CategoryData[];
   subServices?: ServiceData[];
   serviceZones?: ZoneData[];
 
-  // Raw IDs
   categoryIds: string[];
   subServiceIds: string[];
   zoneIds: string[];
+
+  // ✅ NEW: Requests in State
+  serviceRequests: ServiceRequest[];
+  zoneRequests: ZoneRequest[];
+  bankUpdateRequests: BankUpdateRequest[];
+  payoutStatus: PayoutStatus;
 
   isRateCardAgreed?: boolean;
   documents: TechnicianDocument[];
@@ -117,6 +131,7 @@ export interface TechnicianProfile {
 
   availability: {
     isOnline: boolean;
+    isOnJob: boolean;
   };
   
   rating?: {
@@ -161,16 +176,23 @@ const technicianSlice = createSlice({
       state.error = null;
     },
 
-    // ✅ Typed Payload: Accepts the API response structure
     fetchTechnicianSuccess(state, action: PayloadAction<TechnicianApiResponse>) {
       state.loading = false;
       const apiData = action.payload;
 
-      // Map API response to State Profile
       state.profile = {
         ...apiData,
-        // Ensure consistent naming for rejection reason
-        globalRejectionReason: apiData.verificationReason || apiData.globalRejectionReason || null,
+        // Ensure arrays are initialized even if API sends undefined
+        serviceRequests: apiData.serviceRequests || [],
+        zoneRequests: apiData.zoneRequests || [],
+        bankUpdateRequests: apiData.bankUpdateRequests || [],
+        payoutStatus: apiData.payoutStatus || "ACTIVE",
+        globalRejectionReason: apiData.verificationReason || null,
+        // Ensure isOnJob defaults to false if missing
+        availability: {
+            isOnline: apiData.availability?.isOnline || false,
+            isOnJob: apiData.availability?.isOnJob || false
+        }
       };
     },
 
@@ -185,15 +207,7 @@ const technicianSlice = createSlice({
       }
     },
 
-    // ✅ Updated: Updates root fields directly
-    updatePersonalDetails(
-      state,
-      action: PayloadAction<{
-        bio: string;
-        experienceSummary: string;
-        avatarUrl?: string;
-      }>
-    ) {
+    updatePersonalDetails(state, action: PayloadAction<{ bio: string; experienceSummary: string; avatarUrl?: string; }>) {
       if (state.profile) {
         if (action.payload.bio !== undefined) state.profile.bio = action.payload.bio;
         if (action.payload.experienceSummary !== undefined) state.profile.experienceSummary = action.payload.experienceSummary;
@@ -201,10 +215,7 @@ const technicianSlice = createSlice({
       }
     },
 
-    updateWorkPreferences(
-      state,
-      action: PayloadAction<{ categoryIds: string[]; subServiceIds: string[] }>
-    ) {
+    updateWorkPreferences(state, action: PayloadAction<{ categoryIds: string[]; subServiceIds: string[] }>) {
       if (state.profile) {
         state.profile.categoryIds = action.payload.categoryIds;
         state.profile.subServiceIds = action.payload.subServiceIds;
@@ -235,13 +246,7 @@ const technicianSlice = createSlice({
       }
     },
 
-    updateVerificationStatus(
-      state,
-      action: PayloadAction<{
-        status: VerificationStatus;
-        globalRejectionReason?: string;
-      }>
-    ) {
+    updateVerificationStatus(state, action: PayloadAction<{ status: VerificationStatus; globalRejectionReason?: string; }>) {
       if (state.profile) {
         state.profile.verificationStatus = action.payload.status;
         if (action.payload.globalRejectionReason !== undefined) {
@@ -254,6 +259,26 @@ const technicianSlice = createSlice({
       if (state.profile) {
         state.profile.availability.isOnline = action.payload;
       }
+    },
+    
+    // ✅ NEW: Optimistic Updates for Requests
+    addServiceRequest(state, action: PayloadAction<ServiceRequest>) {
+        if (state.profile) {
+            state.profile.serviceRequests.push(action.payload);
+        }
+    },
+
+    addZoneRequest(state, action: PayloadAction<ZoneRequest>) {
+        if (state.profile) {
+            state.profile.zoneRequests.push(action.payload);
+        }
+    },
+
+    addBankRequest(state, action: PayloadAction<BankUpdateRequest>) {
+        if (state.profile) {
+            state.profile.bankUpdateRequests.push(action.payload);
+            state.profile.payoutStatus = "ON_HOLD"; // Immediate UI feedback
+        }
     },
 
     clearTechnicianData() {
@@ -275,6 +300,9 @@ export const {
   updateBankDetails,
   updateVerificationStatus,
   setAvailability,
+  addServiceRequest, 
+  addZoneRequest,    
+  addBankRequest,    
   clearTechnicianData,
 } = technicianSlice.actions;
 

@@ -41,8 +41,13 @@ export const LogEvents = {
   // TECHNICIAN ONBOARDING
   TECHNICIAN_CREATE_SUCCESS: "Technician Entity Created Successfully",
   TECH_PROFILE_ERROR: "Technician Profile Error",
-TECH_NOT_FOUND:'Technician Not Found',
-  TECH_GET_ONBOARDING_STATUS_INIT:"Technician: Fetch Onboarding Status Initiated",
+  TECH_NOT_FOUND: "Technician Not Found",
+  TECH_SERVICE_REQUEST_INIT: "TECH_SERVICE_REQUEST_INIT",
+  TECH_SERVICE_REQUEST_SUCCESS: "TECH_SERVICE_REQUEST_SUCCESS",
+  TECH_ZONE_REQUEST_INIT: "TECH_ZONE_REQUEST_INIT",
+  TECH_ZONE_REQUEST_SUCCESS: "TECH_ZONE_REQUEST_SUCCESS",
+  TECH_GET_ONBOARDING_STATUS_INIT:
+    "Technician: Fetch Onboarding Status Initiated",
   TECH_UPDATE_DETAILS_INIT: "Technician: Update Onboarding Step Initiated",
 
   TECH_ONBOARDING_STEP_1_SUCCESS: "Technician Step 1 (Personal) Completed",
@@ -57,6 +62,7 @@ TECH_NOT_FOUND:'Technician Not Found',
   TECH_DOC_UPLOAD_FAILED: "Technician Document Upload Failed",
 
   TECH_PROFILE_SUBMITTED: "Technician Profile Submitted for Verification",
+  TECH_RESUBMISSION_INIT: "TECH_RESUBMISSION_INIT",
 
   // TECHNICIAN AVAILABILITY
   TECH_STATUS_TOGGLE_INIT: "Technician Status Toggle Initiated",

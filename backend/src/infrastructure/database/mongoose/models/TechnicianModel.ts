@@ -16,6 +16,41 @@ export interface TechnicianDocument extends Document {
   subServiceIds: string[];
   zoneIds: string[];
 
+  // ✅ NEW: Request Arrays in Document Interface
+  serviceRequests: Array<{
+    serviceId: string;
+    categoryId: string;
+    action: "ADD" | "REMOVE";
+    proofUrl?: string;
+    status: "PENDING" | "APPROVED" | "REJECTED";
+    adminComments?: string;
+    requestedAt: Date;
+    resolvedAt?: Date;
+  }>;
+
+  zoneRequests: Array<{
+    currentZoneId: string;
+    requestedZoneId: string;
+    status: "PENDING" | "APPROVED" | "REJECTED";
+    adminComments?: string;
+    requestedAt: Date;
+    resolvedAt?: Date;
+  }>;
+  bankUpdateRequests: Array<{
+    accountHolderName: string;
+    accountNumber: string;
+    bankName: string;
+    ifscCode: string;
+    upiId?: string;
+    proofUrl: string;
+    status: "PENDING" | "APPROVED" | "REJECTED";
+    adminComments?: string;
+    requestedAt: Date;
+    resolvedAt?: Date;
+  }>;
+ 
+  payoutStatus: "ACTIVE" | "ON_HOLD";
+
   documents: Array<{
     type: string; 
     fileName: string;
@@ -42,6 +77,7 @@ export interface TechnicianDocument extends Document {
 
   availability: {
     isOnline: boolean;
+    isOnJob: boolean;
     lastSeen?: Date;
     schedule?: Array<{ day: string; startTime: string; endTime: string }>;
   };
@@ -50,9 +86,8 @@ export interface TechnicianDocument extends Document {
     averageRating: number;
     totalReviews: number;
   };
-  
 
-  verificationStatus: "PENDING"   | "VERIFICATION_PENDING" |"VERIFIED" | "REJECTED";
+  verificationStatus: "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED";
   verificationReason?: string;
   isSuspended: boolean;
   suspendReason?: string;
@@ -99,6 +134,48 @@ const TechnicianSchema: Schema<TechnicianDocument> = new Schema(
     subServiceIds: [{ type: String, index: true }],
     zoneIds: [{ type: String, index: true }],
 
+    // ✅ NEW: Request Schemas
+    serviceRequests: [
+      {
+        serviceId: { type: String, required: true },
+        categoryId: { type: String, required: true },
+        action: { type: String, enum: ["ADD", "REMOVE"], required: true },
+        proofUrl: String,
+        status: { type: String, enum: ["PENDING", "APPROVED", "REJECTED"], default: "PENDING" },
+        adminComments: String,
+        requestedAt: { type: Date, default: Date.now },
+        resolvedAt: Date
+      }
+    ],
+
+    zoneRequests: [
+      {
+        currentZoneId: { type: String, required: true },
+        requestedZoneId: { type: String, required: true },
+        status: { type: String, enum: ["PENDING", "APPROVED", "REJECTED"], default: "PENDING" },
+        adminComments: String,
+        requestedAt: { type: Date, default: Date.now },
+        resolvedAt: Date
+      }
+    ],
+    bankUpdateRequests: [
+      {
+        accountHolderName: String,
+        accountNumber: String,
+        bankName: String,
+        ifscCode: String,
+        upiId: String,
+        proofUrl: String,
+        status: { type: String, enum: ["PENDING", "APPROVED", "REJECTED"], default: "PENDING" },
+        adminComments: String,
+        requestedAt: { type: Date, default: Date.now },
+        resolvedAt: Date
+      }
+    ],
+
+    // ✅ NEW: Payout Status
+    payoutStatus: { type: String, enum: ["ACTIVE", "ON_HOLD"], default: "ACTIVE" },
+
     documents: [
       {
         type: { type: String, required: true }, 
@@ -131,6 +208,7 @@ const TechnicianSchema: Schema<TechnicianDocument> = new Schema(
 
     availability: {
       isOnline: { type: Boolean, default: false, index: true },
+      isOnJob: { type: Boolean, default: false },
       lastSeen: Date,
       schedule: [
         {

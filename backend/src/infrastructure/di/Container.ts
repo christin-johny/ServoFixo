@@ -77,6 +77,9 @@ import { AdminTechnicianController } from "../../presentation/controllers/Admin/
 import { GetTechnicianFullProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianFullProfileUseCase";
 import { VerifyTechnicianUseCase } from "../../application/use-cases/technician/management/VerifyTechnicianUseCase";
 import { GetAllTechniciansUseCase } from "../../application/use-cases/technician/management/GetAllTechniciansUseCase";
+import { RequestServiceAddUseCase } from "../../application/use-cases/technician/profile/RequestServiceAddUseCase";
+import { RequestZoneTransferUseCase } from "../../application/use-cases/technician/profile/RequestZoneTransferUseCase";
+import { RequestBankUpdateUseCase } from "../../application/use-cases/technician/profile/RequestBankUpdateUseCase";
 
 // --- Admin Auth---
 import { AdminLoginUseCase } from "../../application/use-cases/auth/AdminLoginUseCase";
@@ -461,6 +464,15 @@ const resubmitProfileUseCase = new ResubmitProfileUseCase(
   technicianRepo,
   logger
 );
+const requestServiceAddUseCase = new RequestServiceAddUseCase(
+  technicianRepo,
+  logger
+);
+const requestZoneTransferUseCase = new RequestZoneTransferUseCase(
+  technicianRepo,
+  logger
+);
+const requestBankUpdateUseCase = new RequestBankUpdateUseCase(technicianRepo, logger);
 
 // 2. Instantiate & Export Profile Controller
 export const technicianProfileController = new TechnicianProfileController(
@@ -469,6 +481,12 @@ export const technicianProfileController = new TechnicianProfileController(
   uploadTechnicianFileUseCase,
   toggleOnlineStatusUseCase,
   resubmitProfileUseCase,
+  requestServiceAddUseCase,   // <--- Injected
+  requestZoneTransferUseCase,
+  requestBankUpdateUseCase, // <--- Injected
+  categoryRepo,               // <--- Added for Hydration (Phase 1)
+  serviceItemRepo,            // <--- Added for Hydration (Phase 1)
+  zoneRepo,                   // <--- Added for Hydration (Phase 1)
   logger
 );
 

@@ -3,6 +3,9 @@ import { TechnicianResponseDto } from "../../application/dto/technician/Technici
 import {
   VerificationStatus,
   TechnicianDocument,
+  ServiceRequest,
+  ZoneRequest,
+  BankUpdateRequest
 } from "../../../../shared/types/value-objects/TechnicianTypes";
 import { TechnicianQueueItemDto } from "../dto/technician/TechnicianQueueDto";
 import { AdminTechnicianProfileDto } from "../dto/technician/TechnicianVerificationDtos";
@@ -21,6 +24,36 @@ export class TechnicianMapper {
           uploadedAt: d.uploadedAt ? new Date(d.uploadedAt) : new Date(),
         }))
       : [];
+    
+    // ✅ NEW: Map Requests from DB
+    const serviceRequests: ServiceRequest[] = Array.isArray(raw.serviceRequests)
+      ? raw.serviceRequests.map((r: any) => ({
+          serviceId: r.serviceId.toString(),
+          categoryId: r.categoryId.toString(),
+          action: r.action,
+          proofUrl: r.proofUrl,
+          status: r.status,
+          adminComments: r.adminComments,
+          requestedAt: r.requestedAt ? new Date(r.requestedAt) : new Date(),
+          resolvedAt: r.resolvedAt ? new Date(r.resolvedAt) : undefined
+      })) : [];
+
+    const zoneRequests: ZoneRequest[] = Array.isArray(raw.zoneRequests)
+      ? raw.zoneRequests.map((r: any) => ({
+          currentZoneId: r.currentZoneId.toString(),
+          requestedZoneId: r.requestedZoneId.toString(),
+          status: r.status,
+          adminComments: r.adminComments,
+          requestedAt: r.requestedAt ? new Date(r.requestedAt) : new Date(),
+          resolvedAt: r.resolvedAt ? new Date(r.resolvedAt) : undefined
+      })) : [];
+      
+      const bankUpdateRequests: BankUpdateRequest[] = Array.isArray(raw.bankUpdateRequests)
+      ? raw.bankUpdateRequests.map((r: any) => ({
+          ...r,
+          status: r.status,
+          requestedAt: new Date(r.requestedAt)
+      })) : [];
 
     return new Technician({
       id: raw._id ? raw._id.toString() : raw.id,
@@ -43,6 +76,12 @@ export class TechnicianMapper {
         : [],
       zoneIds: raw.zoneIds ? raw.zoneIds.map((id: any) => id.toString()) : [],
 
+      // ✅ Pass Requests to Entity
+      serviceRequests: serviceRequests,
+      zoneRequests: zoneRequests,
+      bankUpdateRequests: bankUpdateRequests, // ✅
+      payoutStatus: raw.payoutStatus || "ACTIVE", // ✅
+
       documents: documents,
       bankDetails: raw.bankDetails,
 
@@ -51,7 +90,7 @@ export class TechnicianMapper {
         frozenAmount: 0,
         currency: "INR",
       },
-      availability: raw.availability || { isOnline: false },
+      availability: raw.availability || { isOnline: false, isOnJob: false },
       ratings: raw.ratings || { averageRating: 0, totalReviews: 0 },
 
       verificationStatus: raw.verificationStatus || "PENDING",
@@ -105,6 +144,12 @@ export class TechnicianMapper {
       subServiceIds: entity.getSubServiceIds(),
       zoneIds: entity.getZoneIds(),
 
+      // ✅ Map Requests to Response
+      serviceRequests: entity.getServiceRequests(),
+      zoneRequests: entity.getZoneRequests(),
+      bankUpdateRequests: entity.getBankUpdateRequests(), // ✅
+      payoutStatus: entity.getPayoutStatus(),
+
       documents: mappedDocuments,
 
       bankDetails: entity.getBankDetails(),
@@ -141,7 +186,7 @@ export class TechnicianMapper {
     };
   }
 
-static toAdminProfile(entity: Technician): AdminTechnicianProfileDto {
+  static toAdminProfile(entity: Technician): AdminTechnicianProfileDto {
     const documents = entity.getDocuments();
     const bank = entity.getBankDetails();
 

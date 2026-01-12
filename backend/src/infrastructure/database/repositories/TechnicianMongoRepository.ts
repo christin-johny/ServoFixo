@@ -4,14 +4,23 @@ import {
   TechnicianFilterParams,
   PaginatedTechnicianResult,
   VerificationQueueFilters,
-  TechnicianUpdatePayload 
 } from "../../../domain/repositories/ITechnicianRepository";
+import { 
+  TechnicianUpdatePayload, 
+  ServiceRequest, 
+  ZoneRequest,
+  BankUpdateRequest,
+  PayoutStatus,
+  TechnicianDocument as TechnicianVO 
+} from "../../../../../shared/types/value-objects/TechnicianTypes";
+
 import { Technician } from "../../../domain/entities/Technician";
 import {
   TechnicianModel,
   TechnicianDocument,
 } from "../mongoose/models/TechnicianModel";
 import { ZoneModel } from "../mongoose/models/ZoneModel";
+import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
 export class TechnicianMongoRepository implements ITechnicianRepository {
   
@@ -23,10 +32,11 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
 
   async update(technician: Technician): Promise<Technician> {
     const persistenceData = this.toPersistence(technician);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { _id, ...updateData } = persistenceData as any;
+     
+    const { _id, ...updateData } = persistenceData as unknown as { _id?: unknown } & Record<string, unknown>;
+    
     const doc = await TechnicianModel.findByIdAndUpdate(technician.getId(), updateData, { new: true }).exec();
-    if (!doc) throw new Error("Technician not found for update");
+    if (!doc) throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
     return this.toDomain(doc);
   }
 
@@ -72,10 +82,10 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     return { data: docs.map((doc) => this.toDomain(doc)), total, page, limit };
   }
 
-async findPendingVerification(filters: VerificationQueueFilters): Promise<{ technicians: Technician[], total: number }> {
+  async findPendingVerification(filters: VerificationQueueFilters): Promise<{ technicians: Technician[], total: number }> {
     const skip = (filters.page - 1) * filters.limit;
-    const query: any = { verificationStatus: "VERIFICATION_PENDING" };
-
+    
+    const query: FilterQuery<TechnicianDocument> = { verificationStatus: "VERIFICATION_PENDING" };
  
     if (filters.search) {
       query.$or = [
@@ -101,14 +111,14 @@ async findPendingVerification(filters: VerificationQueueFilters): Promise<{ tech
       technicians: docs.map(d => this.toDomain(d)),
       total
     };
-}
+  }
 
   async findAvailableInZone(
     zoneId: string,
     subServiceId: string,
     limit: number = 10
   ): Promise<Technician[]> {
-    const query = {
+    const query: FilterQuery<TechnicianDocument> = {
       isDeleted: { $ne: true },
       verificationStatus: "VERIFIED",
       isSuspended: false,
@@ -149,7 +159,7 @@ async findPendingVerification(filters: VerificationQueueFilters): Promise<{ tech
 
   // Availability: Update Status
   async updateOnlineStatus(id: string, isOnline: boolean, location?: { lat: number; lng: number }): Promise<void> {
-    const update: any = {
+    const update: Record<string, unknown> = {
       "availability.isOnline": isOnline,
       "availability.lastSeen": new Date()
     };
@@ -163,6 +173,33 @@ async findPendingVerification(filters: VerificationQueueFilters): Promise<{ tech
     }
 
     await TechnicianModel.findByIdAndUpdate(id, { $set: update }).exec();
+  }
+
+  // ✅ REQUEST METHODS
+
+  async addServiceRequest(id: string, request: ServiceRequest): Promise<void> {
+    await TechnicianModel.findByIdAndUpdate(id, {
+      $push: { serviceRequests: request }
+    }).exec();
+  }
+
+  async addZoneRequest(id: string, request: ZoneRequest): Promise<void> {
+    await TechnicianModel.findByIdAndUpdate(id, {
+      $push: { zoneRequests: request }
+    }).exec();
+  }
+
+  // ✅ NEW: Bank Request
+  async addBankUpdateRequest(id: string, request: BankUpdateRequest): Promise<void> {
+    await TechnicianModel.findByIdAndUpdate(id, { 
+      $push: { bankUpdateRequests: request },
+      $set: { payoutStatus: "ON_HOLD" } // ✅ Auto-Hold Logic mirrored in Persistence
+    }).exec();
+  }
+
+  // ✅ NEW: Payout Status
+  async updatePayoutStatus(id: string, status: PayoutStatus): Promise<void> {
+    await TechnicianModel.findByIdAndUpdate(id, { $set: { payoutStatus: status } }).exec();
   }
 
   // --- Internal Mappers ---
@@ -184,6 +221,28 @@ async findPendingVerification(filters: VerificationQueueFilters): Promise<{ tech
         }))
       : [];
 
+    // Map Service Requests
+    const serviceRequests = Array.isArray(doc.serviceRequests)
+      ? doc.serviceRequests.map(r => ({
+          ...r,
+          action: r.action as "ADD" | "REMOVE",
+          status: r.status as "PENDING" | "APPROVED" | "REJECTED"
+        })) : [];
+
+    // Map Zone Requests
+    const zoneRequests = Array.isArray(doc.zoneRequests)
+      ? doc.zoneRequests.map(r => ({
+          ...r,
+          status: r.status as "PENDING" | "APPROVED" | "REJECTED"
+        })) : [];
+
+    // ✅ Map Bank Requests
+    const bankUpdateRequests = Array.isArray(doc.bankUpdateRequests)
+      ? doc.bankUpdateRequests.map(r => ({
+          ...r,
+          status: r.status as "PENDING" | "APPROVED" | "REJECTED"
+        })) : [];
+
     return new Technician({
       id: doc._id.toString(),
       name: doc.name,
@@ -197,6 +256,12 @@ async findPendingVerification(filters: VerificationQueueFilters): Promise<{ tech
       categoryIds: doc.categoryIds,
       subServiceIds: doc.subServiceIds,
       zoneIds: doc.zoneIds,
+      
+      serviceRequests: serviceRequests,
+      zoneRequests: zoneRequests,
+      bankUpdateRequests: bankUpdateRequests, // ✅
+      payoutStatus: (doc.payoutStatus as PayoutStatus) || "ACTIVE", // ✅
+
       documents: mappedDocuments,
       bankDetails: doc.bankDetails,
       walletBalance: doc.walletBalance,
@@ -229,14 +294,30 @@ async findPendingVerification(filters: VerificationQueueFilters): Promise<{ tech
   private toPersistence(entity: Technician): Partial<TechnicianDocument> {
     const props = entity.toProps();
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const persistenceDocuments = props.documents.map((d: any) => ({
+    const persistenceDocuments = props.documents.map((d: TechnicianVO) => ({
       type: d.type,
       fileUrl: d.fileUrl,
       fileName: d.fileName,
       status: d.status as "PENDING" | "VERIFICATION_PENDING" |  "APPROVED" | "REJECTED",
       rejectionReason: d.rejectionReason,
       uploadedAt: d.uploadedAt || new Date()
+    }));
+
+    const persistenceServiceRequests = (props.serviceRequests || []).map((r: ServiceRequest) => ({
+      ...r,
+      action: r.action,
+      status: r.status
+    }));
+
+    const persistenceZoneRequests = (props.zoneRequests || []).map((r: ZoneRequest) => ({
+      ...r,
+      status: r.status
+    }));
+
+    // ✅ NEW: Bank Request Persistence
+    const persistenceBankRequests = (props.bankUpdateRequests || []).map((r: BankUpdateRequest) => ({
+      ...r,
+      status: r.status
     }));
 
     return {
@@ -251,6 +332,12 @@ async findPendingVerification(filters: VerificationQueueFilters): Promise<{ tech
       categoryIds: props.categoryIds,
       subServiceIds: props.subServiceIds,
       zoneIds: props.zoneIds,
+      
+      serviceRequests: persistenceServiceRequests,
+      zoneRequests: persistenceZoneRequests,
+      bankUpdateRequests: persistenceBankRequests, // ✅
+      payoutStatus: props.payoutStatus, // ✅
+
       documents: persistenceDocuments,
       bankDetails: props.bankDetails,
       walletBalance: props.walletBalance,

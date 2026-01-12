@@ -55,5 +55,17 @@ router.post(
   "/onboarding/resubmit", 
   technicianProfileController.resubmitProfile.bind(technicianProfileController)
 );
+router.post(
+  "/service-request",
+  technicianProfileController.requestServiceAddition.bind(technicianProfileController)
+);
+router.post(
+  "/zone-request",
+  technicianProfileController.requestZoneTransfer.bind(technicianProfileController)
+);
+router.post(
+  "/bank-request",
+  technicianProfileController.requestBankUpdate.bind(technicianProfileController)
+)
 
 export default router;

@@ -1,5 +1,12 @@
 import { Technician } from "../entities/Technician";
 import { IBaseRepository } from "./IBaseRepository";
+import { 
+  ServiceRequest, 
+  ZoneRequest,
+  TechnicianUpdatePayload,
+  BankUpdateRequest,
+  PayoutStatus
+} from "../../../../shared/types/value-objects/TechnicianTypes";
 
 export interface TechnicianFilterParams {
   search?: string;
@@ -23,13 +30,6 @@ export interface VerificationQueueFilters {
   search?: string;
   sort?: "asc" | "desc";
   sortBy?: string;
-}
-
-export interface TechnicianUpdatePayload {
-  name?: string;
-  email?: string;
-  phone?: string;
-  experienceSummary?: string;
 }
 
 export interface ITechnicianRepository extends IBaseRepository<Technician> {
@@ -72,4 +72,11 @@ export interface ITechnicianRepository extends IBaseRepository<Technician> {
     lat: number, 
     lng: number
   ): Promise<boolean>;
+
+  // ✅ NEW: Request Management (Action Layer)
+  // These push new items to the embedded request arrays
+  addServiceRequest(id: string, request: ServiceRequest): Promise<void>;
+  addZoneRequest(id: string, request: ZoneRequest): Promise<void>;
+  addBankUpdateRequest(id: string, request: BankUpdateRequest): Promise<void>;
+  updatePayoutStatus(id: string, status: PayoutStatus): Promise<void>;
 }

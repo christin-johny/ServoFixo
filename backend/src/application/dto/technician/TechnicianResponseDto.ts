@@ -1,6 +1,11 @@
-import { VerificationStatus } from "../../../../../shared/types/value-objects/TechnicianTypes";
+import { 
+  VerificationStatus,
+  ServiceRequest,
+  ZoneRequest,
+  BankUpdateRequest,
+  PayoutStatus
+} from "../../../../../shared/types/value-objects/TechnicianTypes";
 
-// ✅ Helper Interfaces for Hydrated Data
 export interface CategoryData { id: string; name: string; iconUrl?: string; }
 export interface ServiceData { id: string; name: string; categoryId: string; }
 export interface ZoneData { id: string; name: string; }
@@ -20,7 +25,12 @@ export interface TechnicianResponseDto {
   subServiceIds: string[];
   zoneIds: string[];
 
-  // ✅ NEW: Hydrated Data (Added for Dashboard Efficiency)
+  serviceRequests: ServiceRequest[];
+  zoneRequests: ZoneRequest[];
+  // ✅ NEW
+  bankUpdateRequests: BankUpdateRequest[];
+  payoutStatus: PayoutStatus;
+
   categories?: CategoryData[];
   subServices?: ServiceData[];
   serviceZones?: ZoneData[];
@@ -50,35 +60,21 @@ export interface TechnicianResponseDto {
 
   availability: {
     isOnline: boolean;
+    isOnJob: boolean; // ✅ NEW
     lastSeen?: Date;
     schedule?: Array<{ day: string; startTime: string; endTime: string }>;
   };
 
-  ratings: {
-    averageRating: number;
-    totalReviews: number;
-  };
-
+  ratings: { averageRating: number; totalReviews: number; };
   verificationStatus: VerificationStatus;
-  verificationReason?: string; // Maps to globalRejectionReason
+  verificationReason?: string;
   isSuspended: boolean;
   suspendReason?: string;
   isDeleted?: boolean;
   portfolioUrls: string[];
   deviceToken?: string;
-
-  currentLocation?: {
-    type: "Point";
-    coordinates: number[];
-    lastUpdated: Date;
-  };
-
-  emergencyContact?: {
-    name: string;
-    phone: string;
-    relation: string;
-  };
-
+  currentLocation?: { type: "Point"; coordinates: number[]; lastUpdated: Date; };
+  emergencyContact?: { name: string; phone: string; relation: string; };
   createdAt: Date;
   updatedAt: Date;
 }
