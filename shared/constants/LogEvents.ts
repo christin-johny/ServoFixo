@@ -239,4 +239,8 @@ export const LogEvents = {
   ADMIN_DELETE_TECH_INIT: "Admin: Delete Technician Initiated",
   ADMIN_DELETE_TECH_SUCCESS: "Admin: Delete Technician Successful",
   ADMIN_DELETE_TECH_FAILED: "Admin: Delete Technician Failed",
+  // ADMIN PARTNER REQUESTS
+  ADMIN_RESOLVE_PARTNER_REQUEST_INIT: "Admin: Resolve Partner Request Initiated",
+  ADMIN_RESOLVE_PARTNER_REQUEST_SUCCESS: "Admin: Resolve Partner Request Successful",
+  ADMIN_RESOLVE_PARTNER_REQUEST_FAILED: "Admin: Resolve Partner Request Failed",
 };

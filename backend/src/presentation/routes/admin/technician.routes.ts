@@ -42,5 +42,9 @@ router.patch(
   adminAuth, 
   adminTechnicianController.toggleBlockTechnician.bind(adminTechnicianController)
 );
-
+router.patch(
+  "/:id/requests/resolve", 
+  adminAuth, 
+  adminTechnicianController.resolvePartnerRequest.bind(adminTechnicianController)
+);
 export default router;

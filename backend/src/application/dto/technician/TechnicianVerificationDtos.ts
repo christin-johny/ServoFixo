@@ -1,3 +1,10 @@
+import { 
+  ServiceRequest, 
+  ZoneRequest, 
+  BankUpdateRequest, 
+  PayoutStatus 
+} from "../../../../../shared/types/value-objects/TechnicianTypes";
+
 export interface AdminTechnicianProfileDto {
   id: string;
   name: string;
@@ -5,18 +12,24 @@ export interface AdminTechnicianProfileDto {
   phone: string;
   avatarUrl?: string;
   
-  bio?: string; // ✅ Added Bio
+  bio?: string;
   experienceSummary: string;
   
   zoneIds: string[]; 
   categoryIds: string[];
   subServiceIds: string[];
 
-  // ✅ ADDED: Resolved Names for UI
+  // Resolved Names for UI
   zoneNames: string[];
   categoryNames: string[];
   subServiceNames: string[];
   
+  // ✅ ADDED: Full Request Data for Admin Review
+  serviceRequests: ServiceRequest[];
+  zoneRequests: ZoneRequest[];
+  bankUpdateRequests: BankUpdateRequest[];
+  payoutStatus: PayoutStatus;
+
   documents: {
     type: string;
     fileUrl: string;

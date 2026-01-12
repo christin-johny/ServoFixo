@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type  { 
+import type { 
   ServiceRequest, 
   ZoneRequest, 
   BankUpdateRequest, 
@@ -42,7 +42,7 @@ export interface BankDetails {
   accountNumber: string;
   ifscCode: string;
   bankName: string;
-  upiId?: string; // Added upiId
+  upiId?: string; 
 }
 
 // --- Incoming API Response Shape (DTO) ---
@@ -67,29 +67,32 @@ interface TechnicianApiResponse {
   subServiceIds: string[];
   zoneIds: string[];
 
+  // Requests
   serviceRequests: ServiceRequest[];
   zoneRequests: ZoneRequest[];
   bankUpdateRequests: BankUpdateRequest[];
   payoutStatus: PayoutStatus;
 
+  // ✅ restored
   isRateCardAgreed?: boolean;
+
   documents: TechnicianDocument[];
   bankDetails?: BankDetails;
 
+  walletBalance?: {
+    currentBalance: number;
+    frozenAmount: number;
+    currency: string;
+  };
+
   availability: {
     isOnline: boolean;
-    isOnJob: boolean; // ✅ NEW
+    isOnJob: boolean; 
   };
   
   rating?: {
     average: number;
     count: number;
-  };
-
-walletBalance?: {
-    currentBalance: number;
-    frozenAmount: number; // <--- This was missing
-    currency: string;
   };
 
   createdAt: string; 
@@ -125,9 +128,17 @@ export interface TechnicianProfile {
   bankUpdateRequests: BankUpdateRequest[];
   payoutStatus: PayoutStatus;
 
+  // ✅ restored
   isRateCardAgreed?: boolean;
+
   documents: TechnicianDocument[];
   bankDetails?: BankDetails;
+
+  walletBalance: {
+    currentBalance: number;
+    frozenAmount: number;
+    currency: string;
+  };
 
   availability: {
     isOnline: boolean;
@@ -138,12 +149,6 @@ export interface TechnicianProfile {
     average: number;
     count: number;
   };
-
-walletBalance?: {
-    currentBalance: number;
-    frozenAmount: number; 
-    currency: string;
-  };
 }
 
 interface TechnicianState {
@@ -151,10 +156,6 @@ interface TechnicianState {
   loading: boolean;
   saveLoading: boolean;
   error: string | null;
-  stats: {
-    todayEarnings: number;
-    completedJobs: number;
-  };
 }
 
 const initialState: TechnicianState = {
@@ -162,10 +163,6 @@ const initialState: TechnicianState = {
   loading: false,
   saveLoading: false,
   error: null,
-  stats: {
-    todayEarnings: 0,
-    completedJobs: 0,
-  },
 };
 
 const technicianSlice = createSlice({
@@ -183,17 +180,26 @@ const technicianSlice = createSlice({
 
       state.profile = {
         ...apiData,
-        // Ensure arrays are initialized even if API sends undefined
         serviceRequests: apiData.serviceRequests || [],
         zoneRequests: apiData.zoneRequests || [],
         bankUpdateRequests: apiData.bankUpdateRequests || [],
         payoutStatus: apiData.payoutStatus || "ACTIVE",
+        
         globalRejectionReason: apiData.verificationReason || null,
-        // Ensure isOnJob defaults to false if missing
+        
+        walletBalance: apiData.walletBalance || {
+            currentBalance: 0,
+            frozenAmount: 0,
+            currency: "INR"
+        },
+        
         availability: {
             isOnline: apiData.availability?.isOnline || false,
             isOnJob: apiData.availability?.isOnJob || false
-        }
+        },
+
+        documents: apiData.documents || [],
+        rating: apiData.rating || { average: 0, count: 0 }
       };
     },
 
@@ -229,6 +235,7 @@ const technicianSlice = createSlice({
       }
     },
 
+    // ✅ Restored missing export for Step4_Rates.tsx
     updateRateAgreement(state, action: PayloadAction<{ isAgreed: boolean }>) {
       if (state.profile) {
         state.profile.isRateCardAgreed = action.payload.isAgreed;
@@ -262,7 +269,7 @@ const technicianSlice = createSlice({
       }
     },
     
-    // ✅ NEW: Optimistic Updates for Requests
+    // ✅ Optimistic Updates
     addServiceRequest(state, action: PayloadAction<ServiceRequest>) {
         if (state.profile) {
             state.profile.serviceRequests.push(action.payload);
@@ -278,7 +285,7 @@ const technicianSlice = createSlice({
     addBankRequest(state, action: PayloadAction<BankUpdateRequest>) {
         if (state.profile) {
             state.profile.bankUpdateRequests.push(action.payload);
-            state.profile.payoutStatus = "ON_HOLD"; // Immediate UI feedback
+            state.profile.payoutStatus = "ON_HOLD"; 
         }
     },
 
@@ -296,7 +303,7 @@ export const {
   updatePersonalDetails,
   updateWorkPreferences,
   updateZones,
-  updateRateAgreement,
+  updateRateAgreement ,
   updateDocuments,
   updateBankDetails,
   updateVerificationStatus,

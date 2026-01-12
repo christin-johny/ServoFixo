@@ -80,7 +80,7 @@ import { GetAllTechniciansUseCase } from "../../application/use-cases/technician
 import { RequestServiceAddUseCase } from "../../application/use-cases/technician/profile/RequestServiceAddUseCase";
 import { RequestZoneTransferUseCase } from "../../application/use-cases/technician/profile/RequestZoneTransferUseCase";
 import { RequestBankUpdateUseCase } from "../../application/use-cases/technician/profile/RequestBankUpdateUseCase";
-
+import { ManageTechnicianRequestsUseCase } from "../../application/use-cases/technician/management/ManageTechnicianRequestsUseCase";
 // --- Admin Auth---
 import { AdminLoginUseCase } from "../../application/use-cases/auth/AdminLoginUseCase";
 import { AdminAuthController } from "../../presentation/controllers/Admin/AdminAuthController";
@@ -545,6 +545,11 @@ const blockTechnicianUseCase = new BlockTechnicianUseCase(
   technicianRepo,
   logger
 );
+const manageTechnicianRequestsUseCase = new ManageTechnicianRequestsUseCase(
+  technicianRepo,
+  logger
+);
+
 export const adminTechnicianController = new AdminTechnicianController(
   getVerificationQueueUseCase,
   getTechnicianFullProfileUseCase,
@@ -553,5 +558,6 @@ export const adminTechnicianController = new AdminTechnicianController(
   updateTechnicianUseCase,
   deleteTechnicianUseCase,
   blockTechnicianUseCase,
+  manageTechnicianRequestsUseCase,
   logger
 );

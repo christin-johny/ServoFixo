@@ -8,7 +8,7 @@ import type { AppDispatch, RootState } from "../../../../../store/store";
 import { technicianOnboardingRepository } from "../../../../../infrastructure/repositories/technician/technicianOnboardingRepository";
 import { updateZones, setOnboardingStep } from "../../../../../store/technicianSlice"; 
 import { useNotification } from "../../../../hooks/useNotification";
-import TechnicianZoneSelectMap from "../maps/TechnicianZoneSelectMap";
+import TechnicianZoneSelectMap from "../Maps/TechnicianZoneSelectMap";
  
 import { 
   step3Schema, 

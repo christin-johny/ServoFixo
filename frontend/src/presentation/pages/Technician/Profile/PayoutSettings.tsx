@@ -8,7 +8,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import type { RootState } from "../../../../store/store";
 
-// ✅ Import the Bank Modal
+// ✅ Import the Bank Update Modal
 import BankUpdateModal from "../../../components/Technician/Modals/BankUpdateModal";
 
 const PayoutSettings: React.FC = () => {
@@ -17,13 +17,14 @@ const PayoutSettings: React.FC = () => {
 
     // ✅ Modal State
     const [isBankModalOpen, setIsBankModalOpen] = useState(false);
-    const frozenAmount = profile?.walletBalance?.frozenAmount || 0;
 
     if (!profile) return null;
 
-    // Check for Pending Requests
+    // ✅ Logic for Status and Wallet
     const pendingBankRequest = profile.bankUpdateRequests?.find(r => r.status === "PENDING");
     const isPayoutOnHold = profile.payoutStatus === "ON_HOLD";
+    const frozenAmount = profile.walletBalance?.frozenAmount || 0;
+    const currentBalance = profile.walletBalance?.currentBalance || 0;
 
     return (
         <div className="w-full space-y-6 animate-fade-in pb-12">
@@ -51,16 +52,16 @@ const PayoutSettings: React.FC = () => {
                 </p>
             </div>
 
-            {/* --- 3. STATUS BANNER --- */}
+            {/* --- 3. STATUS BANNERS --- */}
             {pendingBankRequest ? (
                 <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
                     <div className="p-2 bg-orange-100 rounded-full text-orange-600">
                         <Clock className="w-4 h-4" />
                     </div>
                     <div>
-                        <h4 className="text-sm font-bold text-gray-900">Update Under Review</h4>
+                        <h4 className="text-sm font-bold text-gray-900">Bank Update Under Review</h4>
                         <p className="text-xs text-gray-600 mt-0.5">
-                            Your request to change bank details is being verified by admin. Payouts are currently paused.
+                            Our team is verifying your new account details. Payouts are temporarily on hold.
                         </p>
                     </div>
                 </div>
@@ -72,7 +73,7 @@ const PayoutSettings: React.FC = () => {
                     <div>
                         <h4 className="text-sm font-bold text-gray-900">Payouts Paused</h4>
                         <p className="text-xs text-gray-600 mt-0.5">
-                            Your payouts are currently on hold. Please contact support if this persists.
+                            Your payouts are currently on hold. Please check your email or contact support for details.
                         </p>
                     </div>
                 </div>
@@ -94,21 +95,23 @@ const PayoutSettings: React.FC = () => {
                             <span className="text-sm text-gray-500 font-medium mb-1">Available for Payout</span>
                             <div className="text-3xl font-bold text-gray-900 flex items-center">
                                 <IndianRupee className="w-6 h-6 text-gray-400" />
-                                {/* Use optional chaining here too just in case */}
-                                {profile?.walletBalance?.currentBalance?.toLocaleString('en-IN') || "0"}
+                                {currentBalance.toLocaleString('en-IN')}
                             </div>
 
-                            {/* 2. Use the safe variable here */}
+                            {/* ✅ Logic: Show "Processing" money if frozenAmount > 0 */}
                             {frozenAmount > 0 && (
-                                <span className="text-xs text-orange-500 font-medium mt-2 bg-orange-50 px-2 py-1 rounded-full">
-                                    ₹{frozenAmount} Processing
-                                </span>
+                                <div className="mt-4 flex flex-col items-center">
+                                    <span className="text-[10px] font-bold text-orange-500 uppercase tracking-widest mb-1">Processing</span>
+                                    <span className="text-sm font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-100 animate-pulse">
+                                        ₹{frozenAmount.toLocaleString('en-IN')}
+                                    </span>
+                                </div>
                             )}
                         </div>
 
                         <button className="w-full mt-auto py-2.5 text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors flex items-center justify-center gap-2">
                             <History className="w-4 h-4" />
-                            View Transaction History
+                            Transaction History
                         </button>
                     </div>
                 </div>
@@ -118,10 +121,10 @@ const PayoutSettings: React.FC = () => {
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8 min-h-[300px]">
                         <div className="flex items-center justify-between mb-6 pb-3 border-b border-gray-100">
                             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                                <Landmark className="w-3.5 h-3.5 text-gray-400" /> Linked Bank Account
+                                <Landmark className="w-3.5 h-3.5 text-gray-400" /> Payout Method
                             </h3>
 
-                            {/* ✅ LOCKED BUTTON: Edit Bank */}
+                            {/* ✅ ACTION LOCK: Disable button if a request is already pending */}
                             <button
                                 onClick={() => setIsBankModalOpen(true)}
                                 disabled={!!pendingBankRequest}
@@ -131,19 +134,19 @@ const PayoutSettings: React.FC = () => {
                                     rounded-lg transition-all
                                     ${pendingBankRequest
                                         ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-                                        : "text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-100 hover:border-blue-200 active:scale-95"
+                                        : "text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-100 hover:border-blue-200 active:scale-95 shadow-sm"
                                     }
                                 `}
                             >
                                 {pendingBankRequest ? (
                                     <>
                                         <Clock className="w-3.5 h-3.5" />
-                                        Pending Review
+                                        Pending Approval
                                     </>
                                 ) : (
                                     <>
                                         <PenTool className="w-3.5 h-3.5" />
-                                        Update Details
+                                        Edit Details
                                     </>
                                 )}
                             </button>
@@ -151,25 +154,24 @@ const PayoutSettings: React.FC = () => {
 
                         {profile.bankDetails ? (
                             <div className="grid gap-6">
-                                {/* Account Holder */}
+                                {/* Beneficiary */}
                                 <div className="flex items-start gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
-                                    <div className="p-2.5 bg-white rounded-lg shadow-sm text-gray-400">
+                                    <div className="p-2.5 bg-white rounded-lg shadow-sm text-blue-600">
                                         <User className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Beneficiary Name</p>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Account Holder</p>
                                         <p className="text-base font-bold text-gray-900 mt-0.5">{profile.bankDetails.accountHolderName}</p>
                                     </div>
                                 </div>
 
-                                {/* Bank Info Grid */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="flex items-center gap-3 p-4 rounded-xl border border-gray-100">
                                         <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                                             <Landmark className="w-4 h-4" />
                                         </div>
                                         <div>
-                                            <p className="text-xs text-gray-500 font-medium">Bank Name</p>
+                                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Bank</p>
                                             <p className="text-sm font-bold text-gray-900">{profile.bankDetails.bankName}</p>
                                         </div>
                                     </div>
@@ -179,18 +181,18 @@ const PayoutSettings: React.FC = () => {
                                             <Hash className="w-4 h-4" />
                                         </div>
                                         <div>
-                                            <p className="text-xs text-gray-500 font-medium">IFSC Code</p>
-                                            <p className="text-sm font-bold text-gray-900 font-mono">{profile.bankDetails.ifscCode}</p>
+                                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">IFSC</p>
+                                            <p className="text-sm font-bold text-gray-900 font-mono uppercase">{profile.bankDetails.ifscCode}</p>
                                         </div>
                                     </div>
 
-                                    <div className="sm:col-span-2 flex items-center gap-3 p-4 rounded-xl border border-gray-100">
+                                    <div className="sm:col-span-2 flex items-center gap-3 p-4 rounded-xl border border-gray-100 bg-gray-50/50">
                                         <div className="p-2 bg-green-50 rounded-lg text-green-600">
                                             <CreditCard className="w-4 h-4" />
                                         </div>
                                         <div>
-                                            <p className="text-xs text-gray-500 font-medium">Account Number</p>
-                                            <p className="text-sm font-bold text-gray-900 font-mono tracking-wider">
+                                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Account Number</p>
+                                            <p className="text-sm font-bold text-gray-900 font-mono tracking-[0.2em]">
                                                 •••• •••• {profile.bankDetails.accountNumber.slice(-4)}
                                             </p>
                                         </div>
@@ -200,15 +202,15 @@ const PayoutSettings: React.FC = () => {
                         ) : (
                             <div className="flex flex-col items-center justify-center h-48 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
                                 <Landmark className="w-10 h-10 text-gray-300 mb-3" />
-                                <h3 className="text-base font-bold text-gray-900">No Bank Account Linked</h3>
+                                <h3 className="text-base font-bold text-gray-900">Setup Payouts</h3>
                                 <p className="text-xs text-gray-500 max-w-xs mt-1 mb-4">
-                                    Link a bank account to start receiving payouts.
+                                    Link your bank account to receive payments for completed jobs.
                                 </p>
                                 <button
                                     onClick={() => setIsBankModalOpen(true)}
-                                    className="px-4 py-2 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                                    className="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md active:scale-95"
                                 >
-                                    Add Bank Account
+                                    Link Bank Account
                                 </button>
                             </div>
                         )}
@@ -216,7 +218,7 @@ const PayoutSettings: React.FC = () => {
                 </div>
             </div>
 
-            {/* ✅ RENDER MODAL */}
+            {/* ✅ MODAL FOR UPDATES */}
             <BankUpdateModal
                 isOpen={isBankModalOpen}
                 onClose={() => setIsBankModalOpen(false)}

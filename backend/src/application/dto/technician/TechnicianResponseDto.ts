@@ -25,9 +25,9 @@ export interface TechnicianResponseDto {
   subServiceIds: string[];
   zoneIds: string[];
 
+  // ✅ Arrays for Redux
   serviceRequests: ServiceRequest[];
   zoneRequests: ZoneRequest[];
-  // ✅ NEW
   bankUpdateRequests: BankUpdateRequest[];
   payoutStatus: PayoutStatus;
 
@@ -60,7 +60,7 @@ export interface TechnicianResponseDto {
 
   availability: {
     isOnline: boolean;
-    isOnJob: boolean; // ✅ NEW
+    isOnJob: boolean;
     lastSeen?: Date;
     schedule?: Array<{ day: string; startTime: string; endTime: string }>;
   };

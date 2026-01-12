@@ -21,6 +21,7 @@ const ServiceSkills: React.FC = () => {
 
     if (!profile) return null;
 
+    // --- Helper: Group services by category for display ---
     const getServicesByCategory = () => {
         if (!profile.categories || !profile.subServices) return [];
         return profile.categories.map(cat => ({
@@ -31,12 +32,15 @@ const ServiceSkills: React.FC = () => {
 
     const groupedServices = getServicesByCategory();
     
-    // ✅ Check for Pending Requests
+    // ✅ Extract Granular Pending Data
     const pendingServices = profile.serviceRequests.filter(r => r.status === "PENDING");
     const pendingZones = profile.zoneRequests.filter(r => r.status === "PENDING");
 
     const hasPendingServiceRequest = pendingServices.length > 0;
     const hasPendingZoneRequest = pendingZones.length > 0;
+
+    // ✅ Map of specific service IDs that are currently pending
+    const pendingServiceIds = new Set(pendingServices.map(r => r.serviceId));
 
     return (
         <div className="w-full space-y-6 animate-fade-in pb-12">
@@ -64,17 +68,17 @@ const ServiceSkills: React.FC = () => {
                 </p>
             </div>
 
-            {/* --- 3. PENDING REQUESTS BANNER --- */}
+            {/* --- 3. PENDING REQUESTS SUMMARY BANNER --- */}
             {(hasPendingServiceRequest || hasPendingZoneRequest) && (
                 <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
                     <div className="p-2 bg-orange-100 rounded-full text-orange-600">
                         <Clock className="w-4 h-4" />
                     </div>
                     <div>
-                        <h4 className="text-sm font-bold text-gray-900">Pending Approvals</h4>
-                        <div className="text-xs text-gray-600 flex gap-3 mt-0.5">
-                            {hasPendingServiceRequest && <span>• Service Request Under Review</span>}
-                            {hasPendingZoneRequest && <span>• Zone Transfer Under Review</span>}
+                        <h4 className="text-sm font-bold text-gray-900">Verification in Progress</h4>
+                        <div className="text-xs text-gray-600 flex flex-wrap gap-x-3 gap-y-1 mt-0.5">
+                            {hasPendingServiceRequest && <span>• {pendingServices.length} service request(s) under review</span>}
+                            {hasPendingZoneRequest && <span>• Zone transfer request under review</span>}
                         </div>
                     </div>
                 </div>
@@ -91,7 +95,7 @@ const ServiceSkills: React.FC = () => {
                                 <MapPin className="w-3.5 h-3.5 text-gray-400" /> Active Zones
                             </h3>
                             
-                            {/* ✅ LOCKED BUTTON: Transfer */}
+                            {/* ✅ Button state reflects pending zone request status */}
                             <button 
                                 onClick={() => setIsZoneModalOpen(true)}
                                 disabled={hasPendingZoneRequest}
@@ -144,7 +148,7 @@ const ServiceSkills: React.FC = () => {
                         <div className="mt-6 flex gap-3 items-start opacity-75">
                             <AlertCircle className="w-3.5 h-3.5 text-gray-400 mt-0.5 shrink-0" />
                             <p className="text-[11px] text-gray-500 leading-relaxed font-medium">
-                                Zone transfers require admin approval. You cannot transfer if a request is pending.
+                                Zone transfers require admin approval. You cannot request a new transfer while one is pending.
                             </p>
                         </div>
                     </div>
@@ -158,7 +162,6 @@ const ServiceSkills: React.FC = () => {
                                 <ShieldCheck className="w-3.5 h-3.5 text-gray-400" /> Active Competencies
                             </h3>
 
-                            {/* ✅ LOCKED BUTTON: Add Service */}
                             <button
                                 onClick={() => setIsServiceModalOpen(true)}
                                 disabled={hasPendingServiceRequest}
@@ -206,13 +209,38 @@ const ServiceSkills: React.FC = () => {
                                         </div>
 
                                         <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white">
-                                            {group.services.map((service) => (
-                                                <div key={service.id} className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50/30 hover:border-blue-100 hover:bg-blue-50/30 transition-all">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0"></div>
-                                                    <span className="text-sm font-medium text-gray-700">{service.name}</span>
-                                                    <ShieldCheck className="w-3.5 h-3.5 text-gray-300 ml-auto" />
-                                                </div>
-                                            ))}
+                                            {group.services.map((service) => {
+                                                // ✅ Check if this specific service is pending approval
+                                                const isPending = pendingServiceIds.has(service.id);
+                                                
+                                                return (
+                                                    <div 
+                                                        key={service.id} 
+                                                        className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                                                            isPending 
+                                                            ? "border-orange-100 bg-orange-50/30 opacity-80" 
+                                                            : "border-gray-100 bg-gray-50/30 hover:border-blue-100 hover:bg-blue-50/30"
+                                                        }`}
+                                                    >
+                                                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                                            isPending ? "bg-orange-400 animate-pulse" : "bg-green-500"
+                                                        }`}></div>
+                                                        
+                                                        <span className={`text-sm font-medium ${isPending ? "text-gray-500 italic" : "text-gray-700"}`}>
+                                                            {service.name}
+                                                        </span>
+
+                                                        {isPending ? (
+                                                            <div className="ml-auto flex items-center gap-1 text-[10px] font-bold text-orange-600 uppercase tracking-tight">
+                                                                <Clock className="w-3 h-3" />
+                                                                Pending
+                                                            </div>
+                                                        ) : (
+                                                            <ShieldCheck className="w-3.5 h-3.5 text-blue-500 ml-auto" />
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                     )

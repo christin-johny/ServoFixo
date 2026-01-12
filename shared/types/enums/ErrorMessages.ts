@@ -54,7 +54,9 @@ export enum ErrorMessages {
   PENDING_ZONE_REQUEST = "You already have a pending zone transfer request.",
   PENDING_SERVICE_REQUEST = "A request for this service is already pending approval.",
   DUPLICATE_SERVICE = "This service is already active in your profile.",
-  MISSING_FIELDS="all fields are required"
+  MISSING_FIELDS="all fields are required",
+  REQUEST_NOT_FOUND = "The specific change request was not found or already resolved",
+  INVALID_RESOLUTION_ACTION = "Invalid resolution action. Must be APPROVE or REJECT",
 }
 
 export enum SuccessMessages {

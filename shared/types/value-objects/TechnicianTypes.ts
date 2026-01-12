@@ -13,6 +13,7 @@ export type ServiceRequestAction = "ADD" | "REMOVE";
 export type PayoutStatus = "ACTIVE" | "ON_HOLD"; // ✅ NEW
 
 export interface ServiceRequest {
+  id: string;
   serviceId: string;
   categoryId: string; 
   action: ServiceRequestAction;
@@ -24,6 +25,7 @@ export interface ServiceRequest {
 }
 
 export interface ZoneRequest {
+  id: string;
   currentZoneId: string;
   requestedZoneId: string;
   status: RequestStatus;
@@ -34,6 +36,7 @@ export interface ZoneRequest {
 
 // ✅ NEW: Bank Request Structure
 export interface BankUpdateRequest {
+  id: string;
   accountHolderName: string;
   accountNumber: string;
   bankName: string;

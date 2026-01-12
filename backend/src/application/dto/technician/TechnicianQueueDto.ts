@@ -9,6 +9,11 @@ export interface TechnicianQueueItemDto {
   status: string;
   submittedAt: Date; 
   isSuspended: boolean;
+
+  // ✅ ADDED: Admin Dashboard Indicators
+  hasPendingServiceRequests: boolean;
+  hasPendingZoneRequests: boolean;
+  hasPendingBankRequests: boolean;
 }
 
 export interface PaginatedTechnicianQueueResponse {

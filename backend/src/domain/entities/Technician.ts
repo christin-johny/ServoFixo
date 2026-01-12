@@ -11,7 +11,7 @@ import {
   ZoneRequest,
   BankUpdateRequest,
   PayoutStatus
-} from "../../../../shared/types/value-objects/TechnicianTypes";
+} from "../../../../shared/types/value-objects/TechnicianTypes"; //
 
 export interface TechnicianProps {
   id?: string;
@@ -157,6 +157,8 @@ export class Technician {
   public getName(): string { return this._name; }
   public getEmail(): string { return this._email; }
   public getPhone(): string { return this._phone; }
+  public getPassword(): string | undefined { return this._password; }
+  
   public getAvatarUrl(): string | undefined { return this._avatarUrl; }
   public getBio(): string | undefined { return this._bio; }
   public getOnboardingStep(): number { return this._onboardingStep; }
@@ -189,6 +191,9 @@ export class Technician {
   public getCreatedAt(): Date { return this._createdAt; }
   public getUpdatedAt(): Date { return this._updatedAt; }
   public getIsOnJob(): boolean { return this._availability.isOnJob ?? false; }
+  
+  // ✅ ADDED: Missing getter for isOnline
+  public getIsOnline(): boolean { return this._isOnline; }
 
   // --- Methods ---
 
@@ -207,6 +212,28 @@ export class Technician {
 
   public updateZones(zoneIds: string[]) {
     this._zoneIds = zoneIds;
+    this._updatedAt = new Date();
+  }
+  public updateServiceRequests(requests: ServiceRequest[]): void {
+    this._serviceRequests = requests;
+    this._updatedAt = new Date();
+  }
+
+  // ✅ ADDED: Strict Method to update Zone Requests array
+  public updateZoneRequests(requests: ZoneRequest[]): void {
+    this._zoneRequests = requests;
+    this._updatedAt = new Date();
+  }
+
+  // ✅ ADDED: Strict Method to update Bank Update Requests array
+  public updateBankUpdateRequests(requests: BankUpdateRequest[]): void {
+    this._bankUpdateRequests = requests;
+    this._updatedAt = new Date();
+  }
+
+  // ✅ ADDED: Strict Method to update Payout Status (Active/On_Hold)
+  public updatePayoutStatus(status: PayoutStatus): void {
+    this._payoutStatus = status;
     this._updatedAt = new Date();
   }
 
@@ -233,7 +260,25 @@ export class Technician {
     this._verificationStatus = status;
   }
 
-  // ✅ Request: Service Add
+  // ✅ ADDED: Missing method to update status with reason
+  public updateVerificationStatus(status: VerificationStatus, reason?: string): void {
+    this._verificationStatus = status;
+    if (reason) {
+      this._verificationReason = reason;
+    }
+    this._updatedAt = new Date();
+  }
+
+  // ✅ ADDED: Missing method to handle suspension
+  public setSuspension(status: boolean, reason?: string): void {
+    this._isSuspended = status;
+    if (reason) {
+      this._suspendReason = reason;
+    }
+    this._updatedAt = new Date();
+  }
+
+  // Requests
   public addServiceRequest(request: ServiceRequest): void {
     if (this._subServiceIds.includes(request.serviceId)) {
       throw new Error("This service is already active in your profile.");
@@ -248,16 +293,11 @@ export class Technician {
     this._updatedAt = new Date();
   }
 
-  // ✅ Request: Bank Update (Logic Restored)
   public requestBankUpdate(request: BankUpdateRequest): void {
-    // 1. Validation: No pending requests
     const pending = this._bankUpdateRequests.find(r => r.status === "PENDING");
     if (pending) throw new Error("A bank update request is already pending approval.");
 
-    // 2. Add Request
     this._bankUpdateRequests.push(request);
-    
-    // 3. SECURE: Pause Payouts
     this._payoutStatus = "ON_HOLD";
     this._updatedAt = new Date();
   }

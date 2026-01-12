@@ -34,7 +34,7 @@ const TechnicianDashboard: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const dispatch = useDispatch<AppDispatch>();
   
-  const { profile, stats } = useSelector((state: RootState) => state.technician);
+  const { profile} = useSelector((state: RootState) => state.technician);
   const [isLocating, setIsLocating] = useState(false);
   const { showSuccess, showError } = useNotification();
 
@@ -177,10 +177,10 @@ const TechnicianDashboard: React.FC = () => {
 
       {/* --- STATS GRID --- */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon={DollarSign} label="Today's Earnings" value={isVerified ? `₹ ${stats.todayEarnings}` : "--"} color="text-green-600" bg="bg-green-50" />
+        <StatCard icon={DollarSign} label="Today's Earnings" value={"--"} color="text-green-600" bg="bg-green-50" />
         <StatCard icon={MapPin} label="Active Zone" value={isVerified ? "Active" : "--"} color="text-blue-600" bg="bg-blue-50" />
         <StatCard icon={Star} label="Rating" value={isVerified ? (profile?.rating?.average || "New") : "--"} color="text-yellow-500" bg="bg-yellow-50" />
-        <StatCard icon={Briefcase} label="Jobs Done" value={isVerified ? stats.completedJobs : "--"} color="text-purple-600" bg="bg-purple-50" />
+        <StatCard icon={Briefcase} label="Jobs Done" value={"--"} color="text-purple-600" bg="bg-purple-50" />
       </div>
 
     </div>

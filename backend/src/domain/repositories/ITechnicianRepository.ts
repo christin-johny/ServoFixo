@@ -80,3 +80,5 @@ export interface ITechnicianRepository extends IBaseRepository<Technician> {
   addBankUpdateRequest(id: string, request: BankUpdateRequest): Promise<void>;
   updatePayoutStatus(id: string, status: PayoutStatus): Promise<void>;
 }
+
+export { TechnicianUpdatePayload };

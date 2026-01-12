@@ -49,7 +49,12 @@ export class GetTechnicianProfileUseCase
       subServiceIds: tech.getSubServiceIds(),
       zoneIds: tech.getZoneIds(),
 
-      // ✅ FIXED: Call methods directly (No '?' checks)
+      // ✅ ADDED: Missing Data Mappings
+      serviceRequests: tech.getServiceRequests(),
+      zoneRequests: tech.getZoneRequests(),
+      bankUpdateRequests: tech.getBankUpdateRequests(),
+      payoutStatus: tech.getPayoutStatus(),
+
       categories: categories
         .filter((c) => c !== null)
         .map((c) => ({
@@ -79,7 +84,7 @@ export class GetTechnicianProfileUseCase
         fileName: doc.fileName,
         status: doc.status || "PENDING",
         rejectionReason: doc.rejectionReason,
-        uploadedAt: new Date() // Fallback if not tracked in entity
+        uploadedAt: doc.uploadedAt || new Date()
       })),
 
       bankDetails: tech.getBankDetails() ? {
@@ -87,12 +92,14 @@ export class GetTechnicianProfileUseCase
         accountNumber: tech.getBankDetails()!.accountNumber,
         bankName: tech.getBankDetails()!.bankName,
         ifscCode: tech.getBankDetails()!.ifscCode,
+        upiId: tech.getBankDetails()!.upiId, 
       } : undefined,
 
       walletBalance: tech.getWalletBalance(),
       
       availability: {
         isOnline: tech.getAvailability().isOnline,
+        isOnJob: tech.getIsOnJob(), // Use getter for consistency
         lastSeen: (tech.getAvailability() as any).lastSeen,
         schedule: (tech.getAvailability() as any).schedule
       },

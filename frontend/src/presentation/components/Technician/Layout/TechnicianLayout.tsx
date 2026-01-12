@@ -3,7 +3,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Briefcase,
-  Wallet,
+  // Wallet,
   User,
   Bell,
   LogOut,
@@ -36,7 +36,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", path: "/technician", icon: LayoutDashboard },
   { label: "My Jobs", path: "/technician/jobs", icon: Briefcase },
-  { label: "Wallet", path: "/technician/wallet", icon: Wallet },
+  // { label: "Wallet", path: "/technician/wallet", icon: Wallet },
   { label: "My Profile", path: "/technician/profile", icon: User },
 ];
 
