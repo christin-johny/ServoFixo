@@ -3,9 +3,9 @@ import type {
   ServiceRequest, 
   ZoneRequest, 
   BankUpdateRequest, 
-  PayoutStatus 
 } from "../domain/types/TechnicianRequestTypes";
 
+import type {PayoutStatus}  from '../../../shared/types/value-objects/TechnicianTypes'
 export type VerificationStatus =
   | "PENDING"
   | "VERIFICATION_PENDING"
@@ -268,6 +268,22 @@ const technicianSlice = createSlice({
         state.profile.availability.isOnline = action.payload;
       }
     },
+    dismissRequestAlert(state, action: PayloadAction<string>) {
+      if (state.profile) {
+        const requestId = action.payload;
+
+        // Scan and update isDismissed in all potential arrays
+        state.profile.serviceRequests = state.profile.serviceRequests.map((r) =>
+          r.id === requestId ? { ...r, isDismissed: true } : r
+        );
+        state.profile.zoneRequests = state.profile.zoneRequests.map((r) =>
+          r.id === requestId ? { ...r, isDismissed: true } : r
+        );
+        state.profile.bankUpdateRequests = state.profile.bankUpdateRequests.map((r) =>
+          r.id === requestId ? { ...r, isDismissed: true } : r
+        );
+      }
+    },
     
     // ✅ Optimistic Updates
     addServiceRequest(state, action: PayloadAction<ServiceRequest>) {
@@ -309,7 +325,8 @@ export const {
   updateVerificationStatus,
   setAvailability,
   addServiceRequest, 
-  addZoneRequest,    
+  addZoneRequest,
+  dismissRequestAlert,    
   addBankRequest,    
   clearTechnicianData,
 } = technicianSlice.actions;

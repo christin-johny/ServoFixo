@@ -1,8 +1,7 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { ILogger } from "../../../interfaces/ILogger";
 import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
-
-// ✅ UPDATED: Added all new fields to the DTO
+ 
 export interface UpdateTechnicianDto {
   name?: string;
   email?: string;
@@ -47,8 +46,7 @@ export class UpdateTechnicianUseCase {
         experienceSummary: updates.experienceSummary || props.experienceSummary || "",
         avatarUrl: props.avatarUrl
     });
-
-    // 3. ✅ Operational Updates (Zones, Categories, Services)
+ 
     if (updates.zoneIds) {
         t._zoneIds = updates.zoneIds;
     }

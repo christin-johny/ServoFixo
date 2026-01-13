@@ -290,6 +290,21 @@ export class Technician {
     this._zoneIds = zoneIds;
     this._updatedAt = new Date();
   }
+  
+  public dismissRequest(requestId: string): void {
+    const allRequests = [
+      ...this._serviceRequests,
+      ...this._zoneRequests,
+      ...this._bankUpdateRequests
+    ];
+    
+    const target = allRequests.find(r => r.id === requestId);
+    if (target) {
+      target.isDismissed = true;
+      this._updatedAt = new Date();
+    }
+  }
+
   public updateServiceRequests(requests: ServiceRequest[]): void {
     this._serviceRequests = requests;
     this._updatedAt = new Date();
@@ -350,8 +365,7 @@ export class Technician {
     }
     this._updatedAt = new Date();
   }
-
-  // ✅ ADDED: Missing method to handle suspension
+ 
   public setSuspension(status: boolean, reason?: string): void {
     this._isSuspended = status;
     if (reason) {
@@ -359,8 +373,7 @@ export class Technician {
     }
     this._updatedAt = new Date();
   }
-
-  // Requests
+ 
   public addServiceRequest(request: ServiceRequest): void {
     if (this._subServiceIds.includes(request.serviceId)) {
       throw new Error("This service is already active in your profile.");

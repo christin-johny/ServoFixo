@@ -100,4 +100,5 @@ export enum SuccessMessages {
 
   TECH_ONLINE = "You are now Online",
   TECH_OFFLINE = "You are now Offline",
+  TECH_REQUEST_DISMISSED = "Notification cleared successfully",
 }

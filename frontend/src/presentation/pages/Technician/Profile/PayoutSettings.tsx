@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import {
     Landmark, CreditCard, User, Hash,
     ArrowLeft, AlertTriangle, Clock, PenTool,
@@ -8,17 +8,38 @@ import {
 import { useNavigate } from "react-router-dom";
 import type { RootState } from "../../../../store/store";
 
+import { dismissRequestAlert } from "../../../../store/technicianSlice";
+import { dismissRequestNotification } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
+import { AlertCard } from "../../../components/Shared/AlertCard/AlertCard";
+
 // ✅ Import the Bank Update Modal
 import BankUpdateModal from "../../../components/Technician/Modals/BankUpdateModal";
 
 const PayoutSettings: React.FC = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const { profile } = useSelector((state: RootState) => state.technician);
 
     // ✅ Modal State
     const [isBankModalOpen, setIsBankModalOpen] = useState(false);
 
     if (!profile) return null;
+
+
+    const rejectedBankRequests = profile.bankUpdateRequests?.filter(
+        r => r.status === "REJECTED" && !r.isDismissed
+    ) || [];
+
+    const handleDismiss = async (requestId: string) => {
+        try {
+            // Optimistic UI update via Redux
+            dispatch(dismissRequestAlert(requestId));
+            // Backend update via Repository
+            await dismissRequestNotification(requestId);
+        } catch (error) {
+            console.error("Failed to dismiss alert:", error);
+        }
+    };
 
     // ✅ Logic for Status and Wallet
     const pendingBankRequest = profile.bankUpdateRequests?.find(r => r.status === "PENDING");
@@ -52,33 +73,36 @@ const PayoutSettings: React.FC = () => {
                 </p>
             </div>
 
-            {/* --- 3. STATUS BANNERS --- */}
-            {pendingBankRequest ? (
-                <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
-                    <div className="p-2 bg-orange-100 rounded-full text-orange-600">
-                        <Clock className="w-4 h-4" />
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-bold text-gray-900">Bank Update Under Review</h4>
-                        <p className="text-xs text-gray-600 mt-0.5">
-                            Our team is verifying your new account details. Payouts are temporarily on hold.
-                        </p>
-                    </div>
-                </div>
-            ) : isPayoutOnHold ? (
-                <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
-                    <div className="p-2 bg-red-100 rounded-full text-red-600">
-                        <AlertTriangle className="w-4 h-4" />
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-bold text-gray-900">Payouts Paused</h4>
-                        <p className="text-xs text-gray-600 mt-0.5">
-                            Your payouts are currently on hold. Please check your email or contact support for details.
-                        </p>
-                    </div>
-                </div>
-            ) : null}
+            {/* --- 3. UNIFIED STATUS & NOTIFICATION CENTER --- */}
+            <div className="space-y-3">
+                {/* ✅ BANK REJECTIONS */}
+                {rejectedBankRequests.map(req => (
+                    <AlertCard
+                        key={req.id}
+                        title="Bank Account Rejected"
+                        detail={`${req.bankName} (${req.accountNumber.slice(-4)})`}
+                        reason={req.adminComments || "Verification failed."}
+                        onDismiss={() => handleDismiss(req.id)}
+                        onFix={() => {
+                            handleDismiss(req.id);
+                            setIsBankModalOpen(true);
+                        }}
+                    />
+                ))}
 
+                {/* ✅ PENDING OR GLOBAL HOLD (Only if no active rejection is shown) */}
+                {pendingBankRequest ? (
+                    <div className="bg-orange-50 border border-orange-100 rounded-xl p-3 flex items-center gap-3">
+                        <Clock className="w-4 h-4 text-orange-600" />
+                        <p className="text-xs text-gray-600 font-medium">Bank update under review. Payouts paused.</p>
+                    </div>
+                ) : (isPayoutOnHold && rejectedBankRequests.length === 0) && (
+                    <div className="bg-red-50 border border-red-100 rounded-xl p-3 flex items-center gap-3">
+                        <AlertTriangle className="w-4 h-4 text-red-600" />
+                        <p className="text-xs text-gray-600 font-medium">Payouts are currently paused. Contact support.</p>
+                    </div>
+                )}
+            </div>
             {/* --- 4. CONTENT GRID --- */}
             <div className="grid md:grid-cols-12 gap-6">
 
@@ -118,6 +142,7 @@ const PayoutSettings: React.FC = () => {
 
                 {/* RIGHT: BANK DETAILS (Col-8) */}
                 <div className="md:col-span-8 space-y-6 order-1 md:order-2">
+                    
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8 min-h-[300px]">
                         <div className="flex items-center justify-between mb-6 pb-3 border-b border-gray-100">
                             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">

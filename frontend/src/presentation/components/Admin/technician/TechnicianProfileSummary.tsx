@@ -1,6 +1,11 @@
 import React from 'react';
 import { User, Layers, CreditCard, Mail, Phone, Briefcase, FileText, Wrench, MapPin, HardHat } from 'lucide-react';
-import type { TechnicianProfileFull } from '../../../../domain/types/Technician';
+import type { AdminTechnicianProfileDto as TechnicianProfileFull } from '../../../../domain/types/TechnicianVerificationDtos';
+
+/** * ✅ NARROWED TYPE: Defines the specific object structure from your response 
+ * to ensure we never render a raw object as a React child.
+ */
+type EnrichedName = { id: string; name: string };
 
 interface TechnicianProfileSummaryProps {
     profile: TechnicianProfileFull;
@@ -8,9 +13,27 @@ interface TechnicianProfileSummaryProps {
 
 const TechnicianProfileSummary: React.FC<TechnicianProfileSummaryProps> = ({ profile }) => {
 
-    const getNames = (names?: string[], ids?: string[]) => {
-        if (names && names.length > 0) return names;
-        return ids || [];
+    /** * ✅ TYPE-SAFE RENDERER: Eliminates 'any' by explicitly checking if the item 
+     * is a string or an EnrichedName object.
+     */
+    const renderBadges = (
+        data: (string | EnrichedName)[] | undefined, 
+        fallbackIds: string[] = [], 
+        badgeColor: "gray" | "blue" = "gray"
+    ): React.ReactNode => {
+        const list = (data && data.length > 0) ? data : fallbackIds;
+        
+        if (list.length === 0) {
+            return <span className="text-gray-400 text-sm italic">None</span>;
+        }
+
+        return list.map((item, idx) => {
+            // Strict type narrowing to extract only the string name
+            const displayName = typeof item === 'object' ? item.name : item;
+            const key = typeof item === 'object' ? item.id : `${displayName}-${idx}`;
+            
+            return <Badge key={key} text={displayName} color={badgeColor} />;
+        });
     };
 
     return (
@@ -32,7 +55,6 @@ const TechnicianProfileSummary: React.FC<TechnicianProfileSummaryProps> = ({ pro
                 <CardHeader icon={Layers} title="Work Preferences" />
 
                 <div className="p-5 space-y-5">
-
                     {/* Service Zones */}
                     <div>
                         <label className="flex items-center gap-1.5 text-xs font-bold text-gray-500 uppercase tracking-wide">
@@ -40,12 +62,7 @@ const TechnicianProfileSummary: React.FC<TechnicianProfileSummaryProps> = ({ pro
                             Service Zones
                         </label>
                         <div className="flex flex-wrap gap-2 mt-2">
-                            {getNames(profile.zoneNames, profile.zoneIds).map((z) => (
-                                <Badge key={z} text={z} />
-                            ))}
-                            {(!profile.zoneIds || profile.zoneIds.length === 0) && (
-                                <span className="text-gray-400 text-sm italic">None</span>
-                            )}
+                            {renderBadges(profile.zoneNames as (string | EnrichedName)[], profile.zoneIds)}
                         </div>
                     </div>
 
@@ -56,9 +73,7 @@ const TechnicianProfileSummary: React.FC<TechnicianProfileSummaryProps> = ({ pro
                             Categories
                         </label>
                         <div className="flex flex-wrap gap-2 mt-2">
-                            {getNames(profile.categoryNames, profile.categoryIds).map((c) => (
-                                <Badge key={c} text={c} />
-                            ))}
+                            {renderBadges(profile.categoryNames as (string | EnrichedName)[], profile.categoryIds)}
                         </div>
                     </div>
 
@@ -69,12 +84,9 @@ const TechnicianProfileSummary: React.FC<TechnicianProfileSummaryProps> = ({ pro
                             Sub Services
                         </label>
                         <div className="flex flex-wrap gap-2 mt-2">
-                            {getNames(profile.subServiceNames, profile.subServiceIds).map((s) => (
-                                <Badge key={s} text={s} color="blue" />
-                            ))}
+                            {renderBadges(profile.subServiceNames as (string | EnrichedName)[], profile.subServiceIds, "blue")}
                         </div>
                     </div>
-
                 </div>
             </div>
 
@@ -92,17 +104,21 @@ const TechnicianProfileSummary: React.FC<TechnicianProfileSummaryProps> = ({ pro
     );
 };
 
-// --- Local Helper Components ---
+// --- Local Helper Components (Strictly Typed) ---
 
-const CardHeader = ({ icon: Icon, title }: { icon: React.ElementType, title: string }) => (
+const CardHeader = ({ icon: Icon, title }: { icon: React.ElementType; title: string }) => (
     <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
         <Icon size={18} className="text-gray-500" />
         <h3 className="font-bold text-gray-800">{title}</h3>
     </div>
 );
 
-const Badge = ({ text, color = "gray" }: { text: string, color?: "gray" | "blue" }) => (
-    <span className={`px-2.5 py-1 text-xs rounded-md font-medium border whitespace-nowrap ${color === "blue" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-gray-100 text-gray-600 border-gray-200"}`}>{text}</span>
+const Badge = ({ text, color = "gray" }: { text: string; color?: "gray" | "blue" }) => (
+    <span className={`px-2.5 py-1 text-xs rounded-md font-medium border whitespace-nowrap ${
+        color === "blue" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-gray-100 text-gray-600 border-gray-200"
+    }`}>
+        {text}
+    </span>
 );
 
 interface InfoRowProps {
@@ -118,7 +134,9 @@ const InfoRow: React.FC<InfoRowProps> = ({ label, value, isMono, icon: Icon }) =
             {Icon && <Icon size={12} />}
             {label}
         </label>
-        <p className={`text-gray-900 font-medium ${isMono ? "font-mono text-sm" : "text-sm"}`}>{value || "--"}</p>
+        <p className={`text-gray-900 font-medium ${isMono ? "font-mono text-sm" : "text-sm"}`}>
+            {value || "--"}
+        </p>
     </div>
 );
 

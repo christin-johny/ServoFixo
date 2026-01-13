@@ -69,6 +69,9 @@ export const LogEvents = {
   TECH_STATUS_TOGGLE_SUCCESS: "Technician Status Updated Successfully",
   TECH_STATUS_TOGGLE_FAILED: "Technician Status Toggle Failed",
   TECH_LOCATION_UPDATE_FAILED: "Technician Location Update Failed",
+  TECH_DISMISS_REQUEST_INIT: "Technician: Dismiss Request Alert Initiated",
+  TECH_DISMISS_REQUEST_SUCCESS: "Technician: Request Alert Dismissed Successfully",
+  TECH_DISMISS_REQUEST_FAILED: "Technician: Dismiss Request Failed",
 
   // TECHNICIAN DATA FETCH
   TECH_CATEGORY_FETCH_FAILED: "Technician Category Fetch Failed",
@@ -240,7 +243,9 @@ export const LogEvents = {
   ADMIN_DELETE_TECH_SUCCESS: "Admin: Delete Technician Successful",
   ADMIN_DELETE_TECH_FAILED: "Admin: Delete Technician Failed",
   // ADMIN PARTNER REQUESTS
-  ADMIN_RESOLVE_PARTNER_REQUEST_INIT: "Admin: Resolve Partner Request Initiated",
-  ADMIN_RESOLVE_PARTNER_REQUEST_SUCCESS: "Admin: Resolve Partner Request Successful",
+  ADMIN_RESOLVE_PARTNER_REQUEST_INIT:
+    "Admin: Resolve Partner Request Initiated",
+  ADMIN_RESOLVE_PARTNER_REQUEST_SUCCESS:
+    "Admin: Resolve Partner Request Successful",
   ADMIN_RESOLVE_PARTNER_REQUEST_FAILED: "Admin: Resolve Partner Request Failed",
 };

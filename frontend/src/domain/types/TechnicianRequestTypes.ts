@@ -6,8 +6,10 @@ export interface ServiceRequest {
     proofUrl?: string;
     status: "PENDING" | "APPROVED" | "REJECTED";
     adminComments?: string;
-    requestedAt: Date | string; // ✅ Rectified
-    resolvedAt?: Date | string; // ✅ Rectified
+    requestedAt: Date | string;  
+    resolvedAt?: Date | string;  
+    isDismissed: boolean;
+    isArchived: boolean;
 }
 
 export interface ZoneRequest {
@@ -16,8 +18,10 @@ export interface ZoneRequest {
     requestedZoneId: string;
     status: "PENDING" | "APPROVED" | "REJECTED";
     adminComments?: string;
-    requestedAt: Date | string; // ✅ Rectified
-    resolvedAt?: Date | string; // ✅ Rectified
+    requestedAt: Date | string;  
+    resolvedAt?: Date | string;
+    isDismissed: boolean;
+    isArchived: boolean;
 }
 
 export interface BankUpdateRequest {
@@ -30,6 +34,8 @@ export interface BankUpdateRequest {
     proofUrl: string;
     status: "PENDING" | "APPROVED" | "REJECTED";
     adminComments?: string;
-    requestedAt: Date | string; // ✅ Rectified
-    resolvedAt?: Date | string; // ✅ Rectified
+    requestedAt: Date | string;  
+    resolvedAt?: Date | string; 
+    isDismissed: boolean;
+    isArchived: boolean;
 }

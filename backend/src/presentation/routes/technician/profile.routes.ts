@@ -68,4 +68,9 @@ router.post(
   technicianProfileController.requestBankUpdate.bind(technicianProfileController)
 )
 
+router.patch(
+  "/request/:requestId/dismiss",
+  technicianProfileController.dismissNotification.bind(technicianProfileController)
+);
+
 export default router;

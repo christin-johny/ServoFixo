@@ -6,10 +6,9 @@ import { type VerificationStatus } from "../../../store/technicianSlice";
 import type { 
   ServiceRequest, 
   ZoneRequest, 
-  BankUpdateRequest, 
-  PayoutStatus 
+  BankUpdateRequest
 } from "../../../domain/types/TechnicianRequestTypes";
-
+import type {PayoutStatus}  from '../../../../../shared/types/value-objects/TechnicianTypes'
 // --- DTOs ---
 
 export interface TechnicianProfileStatusDto {
@@ -143,4 +142,7 @@ export const requestZoneTransfer = async (payload: RequestZonePayload) => {
 export const requestBankUpdate = async (payload: RequestBankPayload) => {
   const { data } = await api.post(TECHNICIAN_PROFILE_ENDPOINTS.REQUEST_BANK, payload);
   return data;
+};
+export const dismissRequestNotification = async (requestId: string): Promise<void> => { 
+  await api.patch(TECHNICIAN_PROFILE_ENDPOINTS.DISMISS_REQUEST(requestId));
 };

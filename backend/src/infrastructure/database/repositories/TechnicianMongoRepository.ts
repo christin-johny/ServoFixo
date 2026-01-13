@@ -268,6 +268,25 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       $set: { payoutStatus: status },
     }).exec();
   }
+async dismissRequest(technicianId: string, requestId: string): Promise<void> { 
+  const result = await TechnicianModel.updateOne(
+    { _id: technicianId },
+    {
+      $set: {
+        "serviceRequests.$[elem].isDismissed": true,
+        "zoneRequests.$[elem].isDismissed": true,
+        "bankUpdateRequests.$[elem].isDismissed": true
+      }
+    },
+    {
+      arrayFilters: [{ "elem._id": requestId }] 
+    }
+  ).exec();
+
+  if (result.matchedCount === 0) {
+    throw new Error(ErrorMessages.REQUEST_NOT_FOUND);
+  }
+}
 
   // --- Internal Mappers ---
   private toDomain(doc: TechnicianDocument): Technician {
@@ -306,6 +325,8 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
         adminComments: r.adminComments,
         requestedAt: r.requestedAt,
         resolvedAt: r.resolvedAt,
+        isDismissed: !!r.isDismissed,
+        isArchived: !!r.isArchived,
       })
     );
 
@@ -318,6 +339,8 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
         adminComments: r.adminComments,
         requestedAt: r.requestedAt,
         resolvedAt: r.resolvedAt,
+        isDismissed: !!r.isDismissed,
+        isArchived: !!r.isArchived,
       })
     );
 
@@ -335,6 +358,8 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       adminComments: r.adminComments,
       requestedAt: r.requestedAt,
       resolvedAt: r.resolvedAt,
+      isDismissed: !!r.isDismissed,
+      isArchived: !!r.isArchived,
     }));
 
     return new Technician({
@@ -414,6 +439,8 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
         adminComments: r.adminComments,
         requestedAt: r.requestedAt,
         resolvedAt: r.resolvedAt,
+        isDismissed: !!r.isDismissed,
+        isArchived: !!r.isArchived,
       })
     );
 
@@ -425,6 +452,8 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
         adminComments: r.adminComments,
         requestedAt: r.requestedAt,
         resolvedAt: r.resolvedAt,
+        isDismissed: !!r.isDismissed,
+        isArchived: !!r.isArchived,
       })
     );
 
@@ -440,6 +469,8 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
         adminComments: r.adminComments,
         requestedAt: r.requestedAt,
         resolvedAt: r.resolvedAt,
+        isDismissed: !!r.isDismissed,
+        isArchived: !!r.isArchived,
       })
     );
 

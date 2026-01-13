@@ -22,6 +22,8 @@ export interface ServiceRequest {
   adminComments?: string;
   requestedAt: Date;
   resolvedAt?: Date;
+  isDismissed: boolean; 
+  isArchived: boolean;
 }
 
 export interface ZoneRequest {
@@ -32,6 +34,8 @@ export interface ZoneRequest {
   adminComments?: string;
   requestedAt: Date;
   resolvedAt?: Date;
+  isDismissed: boolean; 
+  isArchived: boolean;
 }
 
 // ✅ NEW: Bank Request Structure
@@ -47,6 +51,8 @@ export interface BankUpdateRequest {
   adminComments?: string;
   requestedAt: Date;
   resolvedAt?: Date;
+  isDismissed: boolean; 
+  isArchived: boolean;
 }
 
 export interface TechnicianDocument {

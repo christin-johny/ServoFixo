@@ -33,4 +33,5 @@ export const TECHNICIAN_PROFILE_ENDPOINTS = {
   REQUEST_SERVICE: "/technician/profile/service-request",
   REQUEST_ZONE: "/technician/profile/zone-request",
   REQUEST_BANK: "/technician/profile/bank-request",
+  DISMISS_REQUEST: (requestId: string) => `/technician/profile/request/${requestId}/dismiss`,
 };

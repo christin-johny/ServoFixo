@@ -25,6 +25,8 @@ export interface TechnicianDocument extends Document {
     adminComments?: string;
     requestedAt: Date;
     resolvedAt?: Date;
+    isDismissed: boolean; 
+    isArchived: boolean;
   }>;
 
   zoneRequests: Array<{
@@ -34,6 +36,8 @@ export interface TechnicianDocument extends Document {
     adminComments?: string;
     requestedAt: Date;
     resolvedAt?: Date;
+    isDismissed: boolean; 
+    isArchived: boolean;
   }>;
   bankUpdateRequests: Array<{
     accountHolderName: string;
@@ -46,6 +50,8 @@ export interface TechnicianDocument extends Document {
     adminComments?: string;
     requestedAt: Date;
     resolvedAt?: Date;
+    isDismissed: boolean; 
+    isArchived: boolean;
   }>;
  
   payoutStatus: "ACTIVE" | "ON_HOLD";
@@ -132,8 +138,7 @@ const TechnicianSchema: Schema<TechnicianDocument> = new Schema(
     categoryIds: [{ type: String, index: true }],
     subServiceIds: [{ type: String, index: true }],
     zoneIds: [{ type: String, index: true }],
-
-    // ✅ NEW: Request Schemas
+ 
     serviceRequests: [
       {
         serviceId: { type: String, required: true },
@@ -143,7 +148,9 @@ const TechnicianSchema: Schema<TechnicianDocument> = new Schema(
         status: { type: String, enum: ["PENDING", "APPROVED", "REJECTED"], default: "PENDING" },
         adminComments: String,
         requestedAt: { type: Date, default: Date.now },
-        resolvedAt: Date
+        resolvedAt: Date,
+        isDismissed: { type: Boolean, default: false },
+        isArchived: { type: Boolean, default: false }
       }
     ],
 
@@ -154,7 +161,9 @@ const TechnicianSchema: Schema<TechnicianDocument> = new Schema(
         status: { type: String, enum: ["PENDING", "APPROVED", "REJECTED"], default: "PENDING" },
         adminComments: String,
         requestedAt: { type: Date, default: Date.now },
-        resolvedAt: Date
+        resolvedAt: Date,
+        isDismissed: { type: Boolean, default: false },
+        isArchived: { type: Boolean, default: false }
       }
     ],
     bankUpdateRequests: [
@@ -168,11 +177,12 @@ const TechnicianSchema: Schema<TechnicianDocument> = new Schema(
         status: { type: String, enum: ["PENDING", "APPROVED", "REJECTED"], default: "PENDING" },
         adminComments: String,
         requestedAt: { type: Date, default: Date.now },
-        resolvedAt: Date
+        resolvedAt: Date,
+        isDismissed: { type: Boolean, default: false },
+        isArchived: { type: Boolean, default: false }
       }
     ],
-
-    // ✅ NEW: Payout Status
+  
     payoutStatus: { type: String, enum: ["ACTIVE", "ON_HOLD"], default: "ACTIVE" },
 
     documents: [

@@ -20,7 +20,7 @@ export class GetTechnicianProfileUseCase
 
   async execute(technicianId: string): Promise<TechnicianResponseDto | null> {
     const tech = await this._technicianRepository.findById(technicianId);
-    
+
     if (!tech) {
       this._logger.warn(LogEvents.TECH_NOT_FOUND, { technicianId });
       return null;
@@ -28,9 +28,17 @@ export class GetTechnicianProfileUseCase
 
     // Hydrate Relations (Parallel Fetching)
     const [categories, subServices, zones] = await Promise.all([
-      Promise.all(tech.getCategoryIds().map(id => this._categoryRepository.findById(id))),
-      Promise.all(tech.getSubServiceIds().map(id => this._serviceRepository.findById(id))),
-      Promise.all(tech.getZoneIds().map(id => this._zoneRepository.findById(id)))
+      Promise.all(
+        tech.getCategoryIds().map((id) => this._categoryRepository.findById(id))
+      ),
+      Promise.all(
+        tech
+          .getSubServiceIds()
+          .map((id) => this._serviceRepository.findById(id))
+      ),
+      Promise.all(
+        tech.getZoneIds().map((id) => this._zoneRepository.findById(id))
+      ),
     ]);
 
     // Map to DTO
@@ -41,7 +49,7 @@ export class GetTechnicianProfileUseCase
       phone: tech.getPhone(),
       avatarUrl: tech.getAvatarUrl(),
       bio: tech.getBio(),
-      
+
       onboardingStep: tech.getOnboardingStep(),
       experienceSummary: tech.getExperienceSummary(),
 
@@ -49,10 +57,24 @@ export class GetTechnicianProfileUseCase
       subServiceIds: tech.getSubServiceIds(),
       zoneIds: tech.getZoneIds(),
 
-      // ✅ ADDED: Missing Data Mappings
-      serviceRequests: tech.getServiceRequests(),
-      zoneRequests: tech.getZoneRequests(),
-      bankUpdateRequests: tech.getBankUpdateRequests(),
+      serviceRequests: tech.getServiceRequests().map((r) => ({
+        ...r,
+        isDismissed: !!r.isDismissed,
+        isArchived: !!r.isArchived,
+      })),
+
+      zoneRequests: tech.getZoneRequests().map((r) => ({
+        ...r,
+        isDismissed: !!r.isDismissed,
+        isArchived: !!r.isArchived,
+      })),
+
+      bankUpdateRequests: tech.getBankUpdateRequests().map((r) => ({
+        ...r,
+        isDismissed: !!r.isDismissed,
+        isArchived: !!r.isArchived,
+      })),
+
       payoutStatus: tech.getPayoutStatus(),
 
       categories: categories
@@ -60,7 +82,7 @@ export class GetTechnicianProfileUseCase
         .map((c) => ({
           id: c!.getId(),
           name: c!.getName(),
-          iconUrl: c!.getIconUrl()
+          iconUrl: c!.getIconUrl(),
         })),
 
       subServices: subServices
@@ -68,14 +90,14 @@ export class GetTechnicianProfileUseCase
         .map((s) => ({
           id: s!.getId(),
           name: s!.getName(),
-          categoryId: s!.getCategoryId()
+          categoryId: s!.getCategoryId(),
         })),
 
       serviceZones: zones
         .filter((z) => z !== null)
         .map((z) => ({
           id: z!.getId(),
-          name: z!.getName()
+          name: z!.getName(),
         })),
 
       documents: tech.getDocuments().map((doc) => ({
@@ -84,29 +106,31 @@ export class GetTechnicianProfileUseCase
         fileName: doc.fileName,
         status: doc.status || "PENDING",
         rejectionReason: doc.rejectionReason,
-        uploadedAt: doc.uploadedAt || new Date()
+        uploadedAt: doc.uploadedAt || new Date(),
       })),
 
-      bankDetails: tech.getBankDetails() ? {
-        accountHolderName: tech.getBankDetails()!.accountHolderName,
-        accountNumber: tech.getBankDetails()!.accountNumber,
-        bankName: tech.getBankDetails()!.bankName,
-        ifscCode: tech.getBankDetails()!.ifscCode,
-        upiId: tech.getBankDetails()!.upiId, 
-      } : undefined,
+      bankDetails: tech.getBankDetails()
+        ? {
+            accountHolderName: tech.getBankDetails()!.accountHolderName,
+            accountNumber: tech.getBankDetails()!.accountNumber,
+            bankName: tech.getBankDetails()!.bankName,
+            ifscCode: tech.getBankDetails()!.ifscCode,
+            upiId: tech.getBankDetails()!.upiId,
+          }
+        : undefined,
 
       walletBalance: tech.getWalletBalance(),
-      
+
       availability: {
         isOnline: tech.getAvailability().isOnline,
         isOnJob: tech.getIsOnJob(), // Use getter for consistency
         lastSeen: (tech.getAvailability() as any).lastSeen,
-        schedule: (tech.getAvailability() as any).schedule
+        schedule: (tech.getAvailability() as any).schedule,
       },
 
       ratings: {
         averageRating: tech.getRatings().averageRating,
-        totalReviews: tech.getRatings().totalReviews
+        totalReviews: tech.getRatings().totalReviews,
       },
 
       verificationStatus: tech.getVerificationStatus(),
@@ -116,17 +140,19 @@ export class GetTechnicianProfileUseCase
       isDeleted: tech.getIsDeleted(),
       portfolioUrls: tech.getPortfolioUrls(),
       deviceToken: tech.getDeviceToken(),
-      
-      currentLocation: tech.getCurrentLocation() ? {
-          type: "Point",
-          coordinates: tech.getCurrentLocation()!.coordinates,
-          lastUpdated: tech.getCurrentLocation()!.lastUpdated
-      } : undefined,
+
+      currentLocation: tech.getCurrentLocation()
+        ? {
+            type: "Point",
+            coordinates: tech.getCurrentLocation()!.coordinates,
+            lastUpdated: tech.getCurrentLocation()!.lastUpdated,
+          }
+        : undefined,
 
       emergencyContact: tech.getEmergencyContact(),
 
       createdAt: tech.getCreatedAt(),
-      updatedAt: tech.getUpdatedAt()
+      updatedAt: tech.getUpdatedAt(),
     };
   }
 }

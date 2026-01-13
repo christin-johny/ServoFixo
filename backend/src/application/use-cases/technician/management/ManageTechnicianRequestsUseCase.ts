@@ -61,11 +61,9 @@ export class ManageTechnicianRequestsUseCase implements IUseCase<void, [string, 
       const activeServices = tech.getSubServiceIds();
       if (!activeServices.includes(approvedRequest.serviceId)) {
         activeServices.push(approvedRequest.serviceId);
-
-        // ✅ FIXED: Add the category associated with this service to the technician profile
+ 
         tech.addCategory(approvedRequest.categoryId);
-
-        // ✅ FIXED: Update work preferences to sync both arrays
+ 
         tech.updateWorkPreferences(tech.getCategoryIds(), activeServices);
       }
     } else {
@@ -91,28 +89,33 @@ export class ManageTechnicianRequestsUseCase implements IUseCase<void, [string, 
     tech.updateZoneRequests(requests);
   }
 
-  private handleBankRequest(tech: Technician, dto: ResolvePartnerRequestDto): void {
-    const requests = tech.getBankUpdateRequests();
-    const reqIndex = requests.findIndex(r => r.id === dto.requestId && r.status === "PENDING");
+private handleBankRequest(tech: Technician, dto: ResolvePartnerRequestDto): void {
+  const requests = tech.getBankUpdateRequests();
+  const reqIndex = requests.findIndex(r => r.id === dto.requestId && r.status === "PENDING");
 
-    if (reqIndex === -1) throw new Error(ErrorMessages.REQUEST_NOT_FOUND);
+  if (reqIndex === -1) throw new Error(ErrorMessages.REQUEST_NOT_FOUND);
 
-    if (dto.action === RequestAction.APPROVE) {
-      requests[reqIndex].status = "APPROVED";
-      
-      tech.updateBankDetails({
-        accountHolderName: requests[reqIndex].accountHolderName,
-        accountNumber: requests[reqIndex].accountNumber,
-        bankName: requests[reqIndex].bankName,
-        ifscCode: requests[reqIndex].ifscCode,
-        upiId: requests[reqIndex].upiId
-      });
+  if (dto.action === RequestAction.APPROVE) {
+    requests[reqIndex].status = "APPROVED";
+    
+    tech.updateBankDetails({
+      accountHolderName: requests[reqIndex].accountHolderName,
+      accountNumber: requests[reqIndex].accountNumber,
+      bankName: requests[reqIndex].bankName,
+      ifscCode: requests[reqIndex].ifscCode,
+      upiId: requests[reqIndex].upiId
+    });
 
+    tech.updatePayoutStatus("ACTIVE");
+  } else { 
+    requests[reqIndex].status = "REJECTED";
+    requests[reqIndex].adminComments = dto.rejectionReason;
+ 
+    if (tech.getBankDetails()) {
       tech.updatePayoutStatus("ACTIVE");
-    } else {
-      requests[reqIndex].status = "REJECTED";
-      requests[reqIndex].adminComments = dto.rejectionReason;
     }
-    tech.updateBankUpdateRequests(requests);
   }
+  
+  tech.updateBankUpdateRequests(requests);
+}
 }

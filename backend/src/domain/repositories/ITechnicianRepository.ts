@@ -72,6 +72,7 @@ export interface ITechnicianRepository extends IBaseRepository<Technician> {
   addZoneRequest(id: string, request: ZoneRequest): Promise<void>;
   addBankUpdateRequest(id: string, request: BankUpdateRequest): Promise<void>;
   updatePayoutStatus(id: string, status: PayoutStatus): Promise<void>;
+  dismissRequest(technicianId: string, requestId: string): Promise<void>;
 }
 
 export { TechnicianUpdatePayload };

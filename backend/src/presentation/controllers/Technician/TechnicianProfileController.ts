@@ -43,15 +43,10 @@ export class TechnicianProfileController {
     private readonly _toggleStatusUseCase: IUseCase<boolean, [ToggleStatusInput]>,
     private readonly _resubmitProfileUseCase: IUseCase<void, [string]>,
     
-    // ✅ INJECTIONS USING DTO INTERFACES
     private readonly _requestServiceAddUseCase: IUseCase<void, [string, RequestServiceAddInput]>,
     private readonly _requestZoneTransferUseCase: IUseCase<void, [string, RequestZoneTransferInput]>,
-    private readonly _requestBankUpdateUseCase: IUseCase<void, [string, RequestBankUpdateInput]>,
-    
-    // Repositories needed for GET logic (Hydration)
-    private readonly _categoryRepo: IServiceCategoryRepository,
-    private readonly _serviceRepo: IServiceItemRepository,
-    private readonly _zoneRepo: IZoneRepository,
+    private readonly _requestBankUpdateUseCase: IUseCase<void, [string, RequestBankUpdateInput]>, 
+    private readonly _dismissRequestUseCase: IUseCase<void, [string, string]>,
 
     private readonly _logger: ILogger
   ) {}
@@ -248,6 +243,28 @@ export class TechnicianProfileController {
       return res
         .status(StatusCodes.OK)
         .json({ message: SuccessMessages.TECH_DOC_UPLOADED, url: url });
+    } catch (err) {
+      return this.handleError(err, res);
+    }
+  };
+  dismissNotification = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const technicianId = (req as AuthenticatedRequest).userId;
+      const { requestId } = req.params;
+
+      if (!technicianId) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({ error: ErrorMessages.UNAUTHORIZED });
+      }
+
+      this._logger.info(LogEvents.TECH_DISMISS_REQUEST_INIT, {technicianId,requestId});
+
+      await this._dismissRequestUseCase.execute(technicianId, requestId);
+
+      return res.status(StatusCodes.OK).json({ 
+        success: true, 
+        message: SuccessMessages.TECH_REQUEST_DISMISSED 
+      });
+
     } catch (err) {
       return this.handleError(err, res);
     }
