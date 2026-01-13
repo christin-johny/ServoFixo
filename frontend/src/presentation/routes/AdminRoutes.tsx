@@ -15,6 +15,7 @@ import TechnicianVerificationQueue from "../pages/Admin/Technicians/TechnicianVe
 import TechnicianVerificationDetails from "../pages/Admin/Technicians/TechnicianVerificationDetails";
 import TechnicianList from "../pages/Admin/Technicians/TechnicianList";
 import AdminTechnicianProfilePage from "../pages/Admin/Technicians/AdminTechnicianProfilePage";
+import PartnerRequestQueue from "../pages/Admin/Technicians/TechnicainRequestQueue";
 
 const AdminRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
@@ -56,6 +57,7 @@ const AdminRoutes: React.FC = () => (
           
           {/* 2. Management Flow (Master Database) */}
           <Route path="list" element={<TechnicianList />} />
+          <Route path="requests" element={<PartnerRequestQueue/>} />
           
           {/* 3. The New Profile Page (For viewing verified/suspended users) */}
           <Route path=":id" element={<AdminTechnicianProfilePage />} />

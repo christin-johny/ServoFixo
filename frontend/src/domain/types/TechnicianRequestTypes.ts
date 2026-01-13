@@ -1,32 +1,35 @@
-export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED";
-export type PayoutStatus = "ACTIVE" | "ON_HOLD";
-
 export interface ServiceRequest {
-  serviceId: string;
-  categoryId: string;
-  action: "ADD" | "REMOVE";
-  proofUrl?: string;
-  status: RequestStatus;
-  adminComments?: string;
-  requestedAt: string; // Serialized Date from API
+    id: string;
+    serviceId: string;
+    categoryId: string;
+    action: "ADD" | "REMOVE";
+    proofUrl?: string;
+    status: "PENDING" | "APPROVED" | "REJECTED";
+    adminComments?: string;
+    requestedAt: Date | string; // ✅ Rectified
+    resolvedAt?: Date | string; // ✅ Rectified
 }
 
 export interface ZoneRequest {
-  currentZoneId: string;
-  requestedZoneId: string;
-  status: RequestStatus;
-  adminComments?: string;
-  requestedAt: string;
+    id: string;
+    currentZoneId: string;
+    requestedZoneId: string;
+    status: "PENDING" | "APPROVED" | "REJECTED";
+    adminComments?: string;
+    requestedAt: Date | string; // ✅ Rectified
+    resolvedAt?: Date | string; // ✅ Rectified
 }
 
 export interface BankUpdateRequest {
-  accountHolderName: string;
-  accountNumber: string;
-  bankName: string;
-  ifscCode: string;
-  upiId?: string;
-  proofUrl: string;
-  status: RequestStatus;
-  adminComments?: string;
-  requestedAt: string;
+    id: string;
+    accountHolderName: string;
+    accountNumber: string;
+    bankName: string;
+    ifscCode: string;
+    upiId?: string;
+    proofUrl: string;
+    status: "PENDING" | "APPROVED" | "REJECTED";
+    adminComments?: string;
+    requestedAt: Date | string; // ✅ Rectified
+    resolvedAt?: Date | string; // ✅ Rectified
 }

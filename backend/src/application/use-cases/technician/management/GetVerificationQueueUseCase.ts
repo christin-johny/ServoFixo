@@ -13,6 +13,7 @@ export class GetVerificationQueueUseCase implements IUseCase<PaginatedTechnician
 
   async execute(params: VerificationQueueFilters): Promise<PaginatedTechnicianQueueResponse> {
     this._logger.info(LogEvents.ADMIN_GET_TECH_QUEUE_INIT, { params });
+    console.log(params)
 
     const result = await this._technicianRepo.findPendingVerification(params);
  

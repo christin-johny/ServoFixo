@@ -15,8 +15,7 @@ export interface TechnicianDocument extends Document {
   categoryIds: string[];
   subServiceIds: string[];
   zoneIds: string[];
-
-  // ✅ NEW: Request Arrays in Document Interface
+ 
   serviceRequests: Array<{
     serviceId: string;
     categoryId: string;
