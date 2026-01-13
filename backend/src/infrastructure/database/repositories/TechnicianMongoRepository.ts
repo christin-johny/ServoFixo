@@ -124,18 +124,33 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     filters: VerificationQueueFilters
   ): Promise<{ technicians: Technician[]; total: number }> {
     const skip = (filters.page - 1) * filters.limit;
-    const query: FilterQuery<TechnicianDocument> = {
-      verificationStatus: "VERIFICATION_PENDING",
-    };
 
-    if (filters.search) {
-      query.$or = [
-        { name: { $regex: filters.search, $options: "i" } },
-        { email: { $regex: filters.search, $options: "i" } },
-        { phone: { $regex: filters.search, $options: "i" } },
-      ];
+    let query: FilterQuery<TechnicianDocument> = {};
+
+    if (filters.type === "MAINTENANCE") {
+      query = {
+        $or: [
+          { "serviceRequests.status": "PENDING" },
+          { "zoneRequests.status": "PENDING" },
+          { "bankUpdateRequests.status": "PENDING" },
+        ],
+      };
+    } else {
+      query.verificationStatus = "VERIFICATION_PENDING";
     }
 
+    if (filters.search) {
+      query.$and = [
+        { ...query },
+        {
+          $or: [
+            { name: { $regex: filters.search, $options: "i" } },
+            { email: { $regex: filters.search, $options: "i" } },
+            { phone: { $regex: filters.search, $options: "i" } },
+          ],
+        },
+      ];
+    }
     const sortDir = filters.sort === "desc" ? -1 : 1;
     const sortField = filters.sortBy || "updatedAt";
 
@@ -147,7 +162,6 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
         .exec(),
       TechnicianModel.countDocuments(query),
     ]);
-
     return {
       technicians: docs.map((d) => this.toDomain(d)),
       total,
@@ -391,6 +405,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
 
     const persistenceServiceRequests = (props.serviceRequests || []).map(
       (r: ServiceRequest) => ({
+        _id: r.id,
         serviceId: r.serviceId,
         categoryId: r.categoryId,
         action: r.action,

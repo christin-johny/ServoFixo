@@ -10,6 +10,7 @@ import {
   TechnicianUpdatePayload,
   TechnicianFilterParams,
   VerificationQueueFilters,
+  QueueType,
 } from "../../../domain/repositories/ITechnicianRepository";
 
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
@@ -60,9 +61,7 @@ export class AdminTechnicianController {
     res: Response
   ): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.ADMIN_GET_TECH_QUEUE_INIT, {
-        query: req.query,
-      });
+      const queueType = req.query.type as QueueType | undefined;
 
       const params: VerificationQueueFilters = {
         page: parseInt(req.query.page as string) || 1,
@@ -70,6 +69,7 @@ export class AdminTechnicianController {
         search: req.query.search as string | undefined,
         sort: (req.query.sort as "asc" | "desc") || "asc",
         sortBy: (req.query.sortBy as string) || "submittedAt",
+        type: queueType,
       };
 
       const result = await this._getQueueUseCase.execute(params);
@@ -152,7 +152,9 @@ export class AdminTechnicianController {
     res: Response
   ): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.ADMIN_GET_ALL_TECHS_INIT, { query: req.query });
+      this._logger.info(LogEvents.ADMIN_GET_ALL_TECHS_INIT, {
+        query: req.query,
+      });
 
       const filters = {
         page: parseInt(req.query.page as string) || 1,
@@ -236,6 +238,7 @@ export class AdminTechnicianController {
         .json({ error: errorMessage });
     }
   };
+
   resolvePartnerRequest = async (
     req: Request,
     res: Response

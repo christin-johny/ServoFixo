@@ -23,6 +23,7 @@ export class ManageTechnicianRequestsUseCase implements IUseCase<void, [string, 
     this._logger.info(LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_INIT, { techId, type: dto.requestType });
 
     try {
+      // ✅ Using switch to route to specific handlers
       switch (dto.requestType) {
         case PartnerRequestType.SERVICE:
           this.handleServiceRequest(tech, dto);
@@ -37,6 +38,7 @@ export class ManageTechnicianRequestsUseCase implements IUseCase<void, [string, 
           throw new Error(ErrorMessages.INVALID_DATA);
       }
 
+      // ✅ Persistence: This triggers the update call to MongoDB
       await this._technicianRepo.update(tech);
       this._logger.info(LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_SUCCESS, { techId, requestId: dto.requestId });
     } catch (error) {
@@ -53,10 +55,17 @@ export class ManageTechnicianRequestsUseCase implements IUseCase<void, [string, 
     if (reqIndex === -1) throw new Error(ErrorMessages.REQUEST_NOT_FOUND);
 
     if (dto.action === RequestAction.APPROVE) {
-      requests[reqIndex].status = "APPROVED";
+      const approvedRequest = requests[reqIndex];
+      approvedRequest.status = "APPROVED";
+
       const activeServices = tech.getSubServiceIds();
-      if (!activeServices.includes(requests[reqIndex].serviceId)) {
-        activeServices.push(requests[reqIndex].serviceId);
+      if (!activeServices.includes(approvedRequest.serviceId)) {
+        activeServices.push(approvedRequest.serviceId);
+
+        // ✅ FIXED: Add the category associated with this service to the technician profile
+        tech.addCategory(approvedRequest.categoryId);
+
+        // ✅ FIXED: Update work preferences to sync both arrays
         tech.updateWorkPreferences(tech.getCategoryIds(), activeServices);
       }
     } else {

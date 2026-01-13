@@ -1,42 +1,41 @@
 import { Technician } from "../../domain/entities/Technician";
 import { TechnicianResponseDto } from "../../application/dto/technician/TechnicianResponseDto";
 import {
-  VerificationStatus,
-  TechnicianDocument,
-  ServiceRequest,
-  ZoneRequest,
-  BankUpdateRequest
+  VerificationStatus
 } from "../../../../shared/types/value-objects/TechnicianTypes";
 import { TechnicianQueueItemDto } from "../dto/technician/TechnicianQueueDto";
 import { AdminTechnicianProfileDto } from "../dto/technician/TechnicianVerificationDtos";
 
 export class TechnicianMapper {
+  /**
+   * Maps raw database/DTO data to the Domain Entity.
+   * Includes all fields from your original file to ensure no data loss.
+   */
   static toDomain(raw: any): Technician {
-    // This is handled by Repository now, but keeping for reference if needed elsewhere
     if (!raw) throw new Error("Technician data is null/undefined");
-    // (Logic duplicates Repository, safe to keep as utility)
+    
     return new Technician({
-        // ... (Keep existing implementation or delegate to repo)
-        // For safety, assume Repo logic is primary.
-        // If this method is used by tests/other services, ensure it mirrors Repo logic.
         id: raw.id || raw._id?.toString(),
         name: raw.name,
         email: raw.email,
         phone: raw.phone,
         password: raw.password,
-        // ... other fields
-        // Ensure to include:
+        onboardingStep: raw.onboardingStep || 1,
+        experienceSummary: raw.experienceSummary || "",
+        avatarUrl: raw.avatarUrl,
+        bio: raw.bio,
+        categoryIds: raw.categoryIds || [],
+        subServiceIds: raw.subServiceIds || [],
+        zoneIds: raw.zoneIds || [],
+        
+        // ✅ Requests Arrays
         serviceRequests: raw.serviceRequests || [],
         zoneRequests: raw.zoneRequests || [],
         bankUpdateRequests: raw.bankUpdateRequests || [],
         payoutStatus: raw.payoutStatus || "ACTIVE",
-        // ...
-        onboardingStep: raw.onboardingStep || 1,
-        experienceSummary: raw.experienceSummary || "",
-        categoryIds: raw.categoryIds || [],
-        subServiceIds: raw.subServiceIds || [],
-        zoneIds: raw.zoneIds || [],
+        
         documents: raw.documents || [],
+        bankDetails: raw.bankDetails,
         walletBalance: raw.walletBalance,
         availability: raw.availability,
         ratings: raw.ratings,
@@ -52,6 +51,9 @@ export class TechnicianMapper {
     });
   }
 
+  /**
+   * Maps Domain Entity to the standard Response DO.
+   */
   static toResponse(entity: Technician): TechnicianResponseDto {
     const mappedDocuments = entity.getDocuments().map((doc) => ({
       type: doc.type,
@@ -69,29 +71,21 @@ export class TechnicianMapper {
       phone: entity.getPhone(),
       avatarUrl: entity.getAvatarUrl(),
       bio: entity.getBio(),
-
       onboardingStep: entity.getOnboardingStep(),
       experienceSummary: entity.getExperienceSummary(),
-
       categoryIds: entity.getCategoryIds(),
       subServiceIds: entity.getSubServiceIds(),
       zoneIds: entity.getZoneIds(),
- 
-      // ✅ Technician Side Data
       serviceRequests: entity.getServiceRequests(),
       zoneRequests: entity.getZoneRequests(),
       bankUpdateRequests: entity.getBankUpdateRequests(),
       payoutStatus: entity.getPayoutStatus(),
-
       documents: mappedDocuments,
-
       bankDetails: entity.getBankDetails(),
       walletBalance: entity.getWalletBalance(),
       availability: entity.getAvailability(),
       ratings: entity.getRatings(),
-
       verificationStatus: entity.getVerificationStatus() as VerificationStatus,
-
       verificationReason: entity.getVerificationReason(),
       isSuspended: entity.getIsSuspended(),
       suspendReason: entity.getSuspendReason(),
@@ -100,12 +94,14 @@ export class TechnicianMapper {
       deviceToken: entity.getDeviceToken(),
       currentLocation: entity.getCurrentLocation(),
       emergencyContact: entity.getEmergencyContact(),
-
       createdAt: entity.getCreatedAt(),
       updatedAt: entity.getUpdatedAt(),
     };
   }
 
+  /**
+   * Maps Entity to Queue Item with calculated Admin Dashboard flags.
+   */
   static toQueueItem(entity: Technician): TechnicianQueueItemDto {
     return {
       id: entity.getId(),
@@ -117,13 +113,16 @@ export class TechnicianMapper {
       submittedAt: entity.getUpdatedAt(),
       isSuspended: entity.getIsSuspended(),
 
-      // ✅ ADDED: Admin Dashboard Flags (Calculated)
+      // ✅ Flags for the Maintenance Hub
       hasPendingServiceRequests: entity.getServiceRequests().some(r => r.status === "PENDING"),
       hasPendingZoneRequests: entity.getZoneRequests().some(r => r.status === "PENDING"),
       hasPendingBankRequests: entity.getBankUpdateRequests().some(r => r.status === "PENDING"),
     };
   }
 
+  /**
+   * Maps Entity to the Detailed Admin Profile DTO.
+   */
   static toAdminProfile(entity: Technician): AdminTechnicianProfileDto {
     const documents = entity.getDocuments();
     const bank = entity.getBankDetails();
@@ -134,19 +133,16 @@ export class TechnicianMapper {
       email: entity.getEmail(),
       phone: entity.getPhone(),
       avatarUrl: entity.getAvatarUrl(),
-      bio: entity.getBio(), // ✅
-
+      bio: entity.getBio(),
       experienceSummary: entity.getExperienceSummary(),
-       
       zoneIds: entity.getZoneIds(),
       categoryIds: entity.getCategoryIds(),
       subServiceIds: entity.getSubServiceIds(),
- 
       zoneNames: [],
       categoryNames: [],
       subServiceNames: [], 
 
-      // ✅ Admin Requests Arrays
+      // ✅ Maps updated request arrays including categoryId
       serviceRequests: entity.getServiceRequests(),
       zoneRequests: entity.getZoneRequests(),
       bankUpdateRequests: entity.getBankUpdateRequests(),

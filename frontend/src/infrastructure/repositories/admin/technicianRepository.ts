@@ -39,6 +39,7 @@ export interface VerificationQueueParams {
   search?: string;
   sort?: "asc" | "desc";
   sortBy?: string;
+  type?:"ONBOARDING"| "MAINTENANCE";
 }
 
 export interface VerifyActionPayload {

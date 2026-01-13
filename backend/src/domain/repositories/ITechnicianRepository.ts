@@ -15,14 +15,14 @@ export interface TechnicianFilterParams {
   categoryId?: string;
   isOnline?: boolean;
 }
-
-// Consistent with PaginatedResult<T> pattern
+ 
 export interface PaginatedTechnicianResult {
   data: Technician[];
   total: number;
   page: number;
   limit: number;
 }
+export type QueueType = "ONBOARDING" | "MAINTENANCE";
 
 export interface VerificationQueueFilters {
   page: number;
@@ -30,37 +30,32 @@ export interface VerificationQueueFilters {
   search?: string;
   sort?: "asc" | "desc";
   sortBy?: string;
+  type?: QueueType;
 }
 
 export interface ITechnicianRepository extends IBaseRepository<Technician> {
-  // Core Lookups
   findByEmail(email: string): Promise<Technician | null>;
   findByPhone(phone: string): Promise<Technician | null>;
 
-  // Listings
   findAllPaginated(
     page: number,
     limit: number,
     filters: TechnicianFilterParams
   ): Promise<PaginatedTechnicianResult>;
 
-  // Specific Geospatial Query (For Job Dispatch)
   findAvailableInZone(
     zoneId: string,
     subServiceId: string,
     limit?: number
   ): Promise<Technician[]>;
 
-  // Admin Verification
   findPendingVerification(
     filters: VerificationQueueFilters
   ): Promise<{ technicians: Technician[]; total: number }>;
 
-  // Admin Management
   updateTechnician(id: string, payload: TechnicianUpdatePayload): Promise<void>;
   toggleBlockTechnician(id: string, isSuspended: boolean, reason?: string): Promise<void>;
 
-  // Technician Availability
   updateOnlineStatus(
     id: string, 
     isOnline: boolean, 
@@ -73,8 +68,6 @@ export interface ITechnicianRepository extends IBaseRepository<Technician> {
     lng: number
   ): Promise<boolean>;
 
-  // ✅ NEW: Request Management (Action Layer)
-  // These push new items to the embedded request arrays
   addServiceRequest(id: string, request: ServiceRequest): Promise<void>;
   addZoneRequest(id: string, request: ZoneRequest): Promise<void>;
   addBankUpdateRequest(id: string, request: BankUpdateRequest): Promise<void>;

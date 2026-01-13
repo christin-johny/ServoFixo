@@ -44,7 +44,8 @@ const TechnicianVerificationQueue: React.FC = () => {
         limit: 10,
         search: debouncedSearch,
         sort: sortOrder,
-        sortBy: "createdAt" 
+        sortBy: "createdAt",
+        type: "ONBOARDING"
       });
 
       setItems(result.data || []);
@@ -97,15 +98,12 @@ const TechnicianVerificationQueue: React.FC = () => {
                 <RefreshCw size={18} className={loading ? "animate-spin text-blue-600" : ""} />
              </button>
 
-            {/* Count Badge */}
             <div className="ml-2 bg-orange-50 text-orange-700 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold border border-orange-100 flex items-center gap-2">
                 <Clock size={16} />
                 <span>{total} Pending</span>
             </div>
         </div>
       </div>
-
-      {/* 2. Filter Bar (Clean Search) */}
       <div className="px-4 sm:px-0">
           <SearchFilterBar
             search={search}

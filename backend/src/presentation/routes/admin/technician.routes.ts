@@ -24,8 +24,7 @@ router.get(
   adminAuth, 
   adminTechnicianController.getTechnicianProfile.bind(adminTechnicianController)
 );
-
-// ✅ ADDED: The missing PUT route for updates
+ 
 router.put(
   "/:id", 
   adminAuth, 
