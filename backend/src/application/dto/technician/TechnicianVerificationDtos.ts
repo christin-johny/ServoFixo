@@ -20,11 +20,10 @@ export interface AdminTechnicianProfileDto {
   subServiceIds: string[];
 
   // Resolved Names for UI
-  zoneNames: string[];
-  categoryNames: string[];
-  subServiceNames: string[];
-  
-  // ✅ ADDED: Full Request Data for Admin Review
+zoneNames: { id: string; name: string }[];
+  categoryNames: { id: string; name: string }[];
+  subServiceNames: { id: string; name: string }[];
+   
   serviceRequests: ServiceRequest[];
   zoneRequests: ZoneRequest[];
   bankUpdateRequests: BankUpdateRequest[];

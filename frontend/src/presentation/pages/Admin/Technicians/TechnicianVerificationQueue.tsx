@@ -7,22 +7,20 @@ import {
   User,
   Calendar,
   ArrowUpDown,
-  RefreshCw 
+  RefreshCw
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-
+import type { TechnicianQueueItemDto } from "../../../../domain/types/TechnicianQueueDto";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { useNotification } from "../../../hooks/useNotification";
-
 import * as techRepo from "../../../../infrastructure/repositories/admin/technicianRepository";
-import type { TechnicianQueueItem } from "../../../../domain/types/Technician";
 import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
 
 const TechnicianVerificationQueue: React.FC = () => {
   const navigate = useNavigate();
   const { showError } = useNotification();
- 
-  const [items, setItems] = useState<TechnicianQueueItem[]>([]);
+
+  const [items, setItems] = useState<TechnicianQueueItemDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -31,7 +29,7 @@ const TechnicianVerificationQueue: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const debouncedSearch = useDebounce(search, 500);
- 
+
   useEffect(() => {
     loadQueue();
   }, [debouncedSearch, page, sortOrder]);
@@ -79,41 +77,41 @@ const TechnicianVerificationQueue: React.FC = () => {
 
         {/* Right Side: Actions & Stats */}
         <div className="flex items-center gap-2 self-start sm:self-auto">
-             {/* Sort Button */}
-             <button 
-                onClick={() => setSortOrder(prev => prev === "asc" ? "desc" : "asc")}
-                className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs sm:text-sm font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
-             >
-                <ArrowUpDown size={14} className={`text-gray-500 ${sortOrder === "asc" ? "rotate-180" : ""} transition-transform`} />
-                <span>{sortOrder === "asc" ? "Oldest First" : "Newest First"}</span>
-             </button>
+          {/* Sort Button */}
+          <button
+            onClick={() => setSortOrder(prev => prev === "asc" ? "desc" : "asc")}
+            className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs sm:text-sm font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+          >
+            <ArrowUpDown size={14} className={`text-gray-500 ${sortOrder === "asc" ? "rotate-180" : ""} transition-transform`} />
+            <span>{sortOrder === "asc" ? "Oldest First" : "Newest First"}</span>
+          </button>
 
-             {/* Refresh Button */}
-             <button 
-                onClick={loadQueue}
-                disabled={loading}
-                className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 transition-all shadow-sm disabled:opacity-50"
-                title="Refresh List"
-             >
-                <RefreshCw size={18} className={loading ? "animate-spin text-blue-600" : ""} />
-             </button>
+          {/* Refresh Button */}
+          <button
+            onClick={loadQueue}
+            disabled={loading}
+            className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 transition-all shadow-sm disabled:opacity-50"
+            title="Refresh List"
+          >
+            <RefreshCw size={18} className={loading ? "animate-spin text-blue-600" : ""} />
+          </button>
 
-            <div className="ml-2 bg-orange-50 text-orange-700 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold border border-orange-100 flex items-center gap-2">
-                <Clock size={16} />
-                <span>{total} Pending</span>
-            </div>
+          <div className="ml-2 bg-orange-50 text-orange-700 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold border border-orange-100 flex items-center gap-2">
+            <Clock size={16} />
+            <span>{total} Pending</span>
+          </div>
         </div>
       </div>
       <div className="px-4 sm:px-0">
-          <SearchFilterBar
-            search={search}
-            onSearchChange={(val) => { setSearch(val); setPage(1); }}
-            searchPlaceholder="Search applicants by name, email..." 
-            onClear={() => setSearch("")}
-            totalItems={total}
-            currentCount={items.length}
-            itemName="Applicants"
-          />
+        <SearchFilterBar
+          search={search}
+          onSearchChange={(val) => { setSearch(val); setPage(1); }}
+          searchPlaceholder="Search applicants by name, email..."
+          onClear={() => setSearch("")}
+          totalItems={total}
+          currentCount={items.length}
+          itemName="Applicants"
+        />
       </div>
 
       {/* 3. Responsive List Content */}
@@ -131,64 +129,64 @@ const TechnicianVerificationQueue: React.FC = () => {
           </div>
         ) : (
           <div className="flex-1 overflow-auto">
-            
+
             {/* --- DESKTOP TABLE HEADER --- */}
             <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50 border-b border-gray-100 font-bold text-xs text-gray-500 uppercase tracking-wider sticky top-0 z-10">
-                <div className="col-span-5">Technician Details</div>
-                <div className="col-span-4">Submitted</div>
-                <div className="col-span-3 text-right">Action</div>
+              <div className="col-span-5">Technician Details</div>
+              <div className="col-span-4">Submitted</div>
+              <div className="col-span-3 text-right">Action</div>
             </div>
 
             {/* --- LIST ITEMS --- */}
             <div className="divide-y divide-gray-100">
-                {items.map((item) => (
-                  <div key={item.id} className="group hover:bg-blue-50/30 transition-colors p-4 md:px-6 md:py-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                    
-                    {/* Column 1: Profile */}
-                    <div className="col-span-1 md:col-span-5 flex items-center gap-3">
-                        <div className="w-12 h-12 md:w-10 md:h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shrink-0 relative">
-                          {item.avatarUrl ? (
-                            <img src={item.avatarUrl} alt={item.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <User size={20} className="text-gray-400" />
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-bold text-gray-900 text-sm md:text-base truncate">{item.name}</p>
-                          <div className="flex flex-col md:flex-row md:items-center gap-0.5 md:gap-2 text-xs text-gray-500">
-                             <span className="truncate">{item.email}</span>
-                             <span className="hidden md:inline">•</span>
-                             <span>{item.phone}</span>
-                          </div>
-                        </div>
-                    </div>
+              {items.map((item) => (
+                <div key={item.id} className="group hover:bg-blue-50/30 transition-colors p-4 md:px-6 md:py-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
 
-                    {/* Column 2: Date */}
-                    <div className="col-span-1 md:col-span-4 flex items-center gap-2 text-sm text-gray-500">
-                        <Calendar size={14} className="md:hidden text-gray-400" />
-                        <div className="flex flex-row md:flex-col gap-2 md:gap-0.5 items-center md:items-start">
-                             <span className="font-medium text-gray-700">
-                                {item.submittedAt ? formatDistanceToNow(new Date(item.submittedAt), { addSuffix: true }) : "--"}
-                             </span>
-                             <span className="text-xs text-gray-400 hidden md:inline-block">
-                                {item.submittedAt ? new Date(item.submittedAt).toLocaleDateString() : ""}
-                             </span>
-                        </div>
+                  {/* Column 1: Profile */}
+                  <div className="col-span-1 md:col-span-5 flex items-center gap-3">
+                    <div className="w-12 h-12 md:w-10 md:h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 shrink-0 relative">
+                      {item.avatarUrl ? (
+                        <img src={item.avatarUrl} alt={item.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <User size={20} className="text-gray-400" />
+                      )}
                     </div>
-
-                    {/* Column 3: Action */}
-                    <div className="col-span-1 md:col-span-3 flex justify-end">
-                      <button
-                        onClick={() => handleReview(item.id)}
-                        className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 touch-manipulation"
-                      >
-                        <ClipboardList size={14} />
-                            Review Application
-                      </button>
+                    <div className="min-w-0">
+                      <p className="font-bold text-gray-900 text-sm md:text-base truncate">{item.name}</p>
+                      <div className="flex flex-col md:flex-row md:items-center gap-0.5 md:gap-2 text-xs text-gray-500">
+                        <span className="truncate">{item.email}</span>
+                        <span className="hidden md:inline">•</span>
+                        <span>{item.phone}</span>
+                      </div>
                     </div>
-
                   </div>
-                ))}
+
+                  {/* Column 2: Date */}
+                  <div className="col-span-1 md:col-span-4 flex items-center gap-2 text-sm text-gray-500">
+                    <Calendar size={14} className="md:hidden text-gray-400" />
+                    <div className="flex flex-row md:flex-col gap-2 md:gap-0.5 items-center md:items-start">
+                      <span className="font-medium text-gray-700">
+                        {item.submittedAt ? formatDistanceToNow(new Date(item.submittedAt), { addSuffix: true }) : "--"}
+                      </span>
+                      <span className="text-xs text-gray-400 hidden md:inline-block">
+                        {item.submittedAt ? new Date(item.submittedAt).toLocaleDateString() : ""}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Column 3: Action */}
+                  <div className="col-span-1 md:col-span-3 flex justify-end">
+                    <button
+                      onClick={() => handleReview(item.id)}
+                      className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 touch-manipulation"
+                    >
+                      <ClipboardList size={14} />
+                      Review Application
+                    </button>
+                  </div>
+
+                </div>
+              ))}
             </div>
           </div>
         )}

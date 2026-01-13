@@ -1,9 +1,14 @@
-import type { 
-  ServiceRequest, 
-  ZoneRequest, 
-  BankUpdateRequest 
-} from "./TechnicianRequestTypes"; 
+import type {
+  ServiceRequest,
+  ZoneRequest,
+  BankUpdateRequest,
+} from "./TechnicianRequestTypes";
 import type { PayoutStatus } from "../../../../shared/types/value-objects/TechnicianTypes";
+
+export interface IdNamePair {
+  id: string;
+  name: string;
+}
 
 export interface AdminTechnicianProfileDto {
   id: string;
@@ -11,19 +16,18 @@ export interface AdminTechnicianProfileDto {
   email: string;
   phone: string;
   avatarUrl?: string;
-  
+
   bio?: string;
   experienceSummary: string;
-  
-  zoneIds: string[]; 
+
+  zoneIds: string[];
   categoryIds: string[];
   subServiceIds: string[];
 
-  zoneNames: string[];
-  categoryNames: string[];
-  subServiceNames: string[];
-  
-  // ✅ ADDED: Full Request Data for Admin Review
+  zoneNames: IdNamePair[];
+  categoryNames: IdNamePair[];
+  subServiceNames: IdNamePair[];
+
   serviceRequests: ServiceRequest[];
   zoneRequests: ZoneRequest[];
   bankUpdateRequests: BankUpdateRequest[];
@@ -36,7 +40,7 @@ export interface AdminTechnicianProfileDto {
     status: "PENDING" | "APPROVED" | "REJECTED";
     rejectionReason?: string;
   }[];
-  
+
   bankDetails: {
     accountHolderName: string;
     accountNumber: string;

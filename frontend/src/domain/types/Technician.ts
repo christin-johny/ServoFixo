@@ -11,7 +11,7 @@ export interface TechnicianQueueItem {
   phone: string;
   avatarUrl?: string;
   status: VerificationStatus;
-  submittedAt: string; 
+  submittedAt: string;
 }
 
 export interface PaginatedTechnicianQueue {
@@ -21,6 +21,10 @@ export interface PaginatedTechnicianQueue {
   limit: number;
   totalPages: number;
 }
+export interface IdNamePair {
+  id: string;
+  name: string;
+}
 
 export interface TechnicianProfileFull {
   id: string;
@@ -28,18 +32,18 @@ export interface TechnicianProfileFull {
   email: string;
   phone: string;
   avatarUrl?: string;
-status: VerificationStatus;
-  bio?: string; 
+  status: VerificationStatus;
+  bio?: string;
   experienceSummary: string;
-  
+
   zoneIds: string[];
-  zoneNames?: string[]; // Optional in case older data doesn't have it
 
   categoryIds: string[];
-  categoryNames?: string[];
 
   subServiceIds: string[];
-  subServiceNames?: string[];
+  zoneNames: IdNamePair[];
+  categoryNames: IdNamePair[];
+  subServiceNames: IdNamePair[];
 
   documents: {
     type: string;

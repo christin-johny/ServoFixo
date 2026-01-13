@@ -22,44 +22,37 @@ export class GetTechnicianFullProfileUseCase
     private readonly _serviceRepo: IServiceItemRepository,   
     private readonly _logger: ILogger
   ) {}
+ 
+ 
+async execute(technicianId: string): Promise<AdminTechnicianProfileDto> {
+  const tech = await this._technicianRepo.findById(technicianId);
+  if (!tech) throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
 
-  async execute(technicianId: string): Promise<AdminTechnicianProfileDto> {
-    const tech = await this._technicianRepo.findById(technicianId);
+  const baseProfile = TechnicianMapper.toAdminProfile(tech);
 
-    if (!tech) {
-      throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
-    }
+  // ✅ 1. Collect unique IDs from both current state and pending requests
+  const allZoneIds = Array.from(new Set([...tech.getZoneIds(), ...tech.getZoneRequests().map(r => r.requestedZoneId)]));
+  const allServiceIds = Array.from(new Set([...tech.getSubServiceIds(), ...tech.getServiceRequests().map(r => r.serviceId)]));
+  const allCategoryIds = Array.from(new Set([...tech.getCategoryIds(), ...tech.getServiceRequests().map(r => r.categoryId)]));
 
-    const baseProfile = TechnicianMapper.toAdminProfile(tech);
+  // ✅ 2. Fetch all metadata in parallel
+  const [zones, categories, subServices] = await Promise.all([
+    Promise.all(allZoneIds.map(id => this._zoneRepo.findById(id))),
+    Promise.all(allCategoryIds.map(id => this._categoryRepo.findById(id))),
+    Promise.all(allServiceIds.map(id => this._serviceRepo.findById(id)))
+  ]);
 
-    const [zones, categories, subServices]: [
-        (Zone | null)[], 
-        (ServiceCategory | null)[], 
-        (ServiceItem | null)[]
-    ] = await Promise.all([
-      Promise.all(tech.getZoneIds().map((id) => this._zoneRepo.findById(id))),
-      Promise.all(tech.getCategoryIds().map((id) => this._categoryRepo.findById(id))),
-      Promise.all(tech.getSubServiceIds().map((id) => this._serviceRepo.findById(id)))
-    ]);
+  // ✅ 3. Map to { id, name } objects for the UI
+  const zoneNames = zones.filter((z): z is Zone => z !== null).map(z => ({ id: z.getId(), name: z.getName() }));
+  const categoryNames = categories.filter((c): c is ServiceCategory => c !== null).map(c => ({ id: c.getId(), name: c.getName() }));
+  const subServiceNames = subServices.filter((s): s is ServiceItem => s !== null).map(s => ({ id: s.getId(), name: s.getName() }));
 
-    const zoneNames = zones
-        .filter((z): z is Zone => z !== null)
-        .map((z) => z.getName());
-
-    const categoryNames = categories
-        .filter((c): c is ServiceCategory => c !== null)
-        .map((c) => c.getName());
-
-    const subServiceNames = subServices
-        .filter((s): s is ServiceItem => s !== null)
-        .map((s) => s.getName());
-
-    return {
-      ...baseProfile,
-      bio: tech.getBio(),
-      zoneNames,
-      categoryNames,
-      subServiceNames,
-    };
-  }
+  return {
+    ...baseProfile,
+    bio: tech.getBio(),
+    zoneNames,
+    categoryNames,
+    subServiceNames,
+  };
+}
 }
