@@ -8,7 +8,10 @@ import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessage
 export interface RequestServiceAddInput {
   serviceId: string;
   categoryId: string;
-  proofUrl?: string; // Certificate URL
+  proofUrl?: string; 
+  action: "ADD" | "REMOVE"; 
+  isDismissed?: boolean; 
+  isArchived?: boolean;  
 }
 
 export class RequestServiceAddUseCase implements IUseCase<void, [string, RequestServiceAddInput]> {
@@ -18,7 +21,12 @@ export class RequestServiceAddUseCase implements IUseCase<void, [string, Request
   ) {}
 
   async execute(technicianId: string, input: RequestServiceAddInput): Promise<void> {
-    const logData = { technicianId, serviceId: input.serviceId };
+    const logData = { 
+      technicianId, 
+      serviceId: input.serviceId, 
+      action: input.action  
+    };
+    
     this._logger.info(LogEvents.TECH_SERVICE_REQUEST_INIT, logData);
 
     const technician = await this._technicianRepo.findById(technicianId);
@@ -26,22 +34,20 @@ export class RequestServiceAddUseCase implements IUseCase<void, [string, Request
       this._logger.error(`${LogEvents.TECH_NOT_FOUND}: Technician ${technicianId}`);
       throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
     }
-
-    // 2. Construct Request Object (Value Object)
-    const request: ServiceRequest = {
+ 
+    const request: ServiceRequest = { 
+      id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
       serviceId: input.serviceId,
       categoryId: input.categoryId,
-      action: "ADD",
+      action: input.action, 
       proofUrl: input.proofUrl,
       status: "PENDING",
-      requestedAt: new Date()
+      requestedAt: new Date(),
+      isDismissed: input.isDismissed ?? false, 
+      isArchived: input.isArchived ?? false
     };
-
-    // 3. Domain Logic: Validate (No duplicates) & Add to Entity
-    // This throws if the service is already active or pending
-    technician.addServiceRequest(request);
-
-    // 4. Persistence: Save only the new request
+ 
+    technician.addServiceRequest(request); 
     await this._technicianRepo.addServiceRequest(technicianId, request);
 
     this._logger.info(LogEvents.TECH_SERVICE_REQUEST_SUCCESS, logData);

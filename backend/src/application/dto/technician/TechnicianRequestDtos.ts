@@ -2,6 +2,7 @@ export interface RequestServiceAddInput {
   serviceId: string;
   categoryId: string;
   proofUrl?: string;
+  action: "ADD" | "REMOVE";
 }
 
 export interface RequestZoneTransferInput {

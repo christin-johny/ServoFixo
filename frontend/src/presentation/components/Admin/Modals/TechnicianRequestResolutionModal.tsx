@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Landmark, MapPin, Briefcase, FileText, Eye, ArrowRight, Info, CheckCircle, XCircle } from "lucide-react";
+import { Landmark, MapPin, Briefcase, Eye, ArrowRight, Info, CheckCircle, XCircle } from "lucide-react";
 import Modal from "../../../components/Shared/Modal/Modal";
 import * as techRepo from "../../../../infrastructure/repositories/admin/technicianRepository";
 import { useNotification } from "../../../hooks/useNotification";
@@ -22,7 +22,7 @@ const PartnerRequestResolutionModal: React.FC<ResolutionModalProps> = ({ isOpen,
     const [isSubmitting, setIsSubmitting] = useState<string | null>(null);
     const [rejectionReasons, setRejectionReasons] = useState<Record<string, string>>({});
     const [previewDoc, setPreviewDoc] = useState<{ url: string, type: string } | null>(null);
-    
+
     // Track which request IDs are in a "Rejection Flow" to show/hide the note input
     const [showRejectionInput, setShowRejectionInput] = useState<Record<string, boolean>>({});
 
@@ -73,7 +73,7 @@ const PartnerRequestResolutionModal: React.FC<ResolutionModalProps> = ({ isOpen,
 
     const handleAction = async (requestType: "BANK" | "SERVICE" | "ZONE", requestId: string, action: "APPROVE" | "REJECT") => {
         const reason = rejectionReasons[requestId] || "";
-        
+
         // Logical check for mandatory reason during rejection
         if (action === "REJECT" && !reason.trim()) {
             showError("Please provide a reason for the rejection.");
@@ -116,7 +116,7 @@ const PartnerRequestResolutionModal: React.FC<ResolutionModalProps> = ({ isOpen,
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={`Audit Hub: ${profile.name}`} maxWidth="max-w-2xl">
             <div className="space-y-8 md:space-y-10 py-2">
-                
+
                 {/* FINANCIAL SYNC */}
                 {profile.bankUpdateRequests?.filter(r => r.status === "PENDING").map((req: BankUpdateRequest) => (
                     <AuditCard key={req.id} title="Financial " Icon={Landmark} theme="orange">
@@ -155,42 +155,48 @@ const PartnerRequestResolutionModal: React.FC<ResolutionModalProps> = ({ isOpen,
                 ))}
 
                 {/* SKILLSET SYNC */}
-                {profile.serviceRequests?.filter(r => r.status === "PENDING").map((req: ServiceRequest) => (
-                    <AuditCard key={req.id} title="Skillset Expansion" Icon={Briefcase} theme="blue">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 p-4 md:p-6 bg-slate-50 border border-slate-200 rounded-2xl">
-                            <div className="space-y-4">
-                                <div>
-                                    <Label text="Category" />
-                                    <h4 className="text-sm md:text-md font-bold text-slate-800 mt-1">
-                                        {getResolvedName('CATEGORY', req.categoryId)}
-                                    </h4>
-                                </div>
-                                <div>
-                                    <Label text="Requested Service" active />
-                                    <h3 className="text-lg md:text-xl font-bold text-slate-800 mt-1">
-                                        {getResolvedName('SERVICE', req.serviceId)}
-                                    </h3>
+                {profile.serviceRequests?.filter(r => r.status === "PENDING").map((req: ServiceRequest) => {
+                    const isRemoval = req.action === "REMOVE";
+
+                    return (
+                        <AuditCard
+                            key={req.id}
+                            title={isRemoval ? "Skillset Deletion" : "Skillset Expansion"}
+                            Icon={Briefcase}
+                            theme={isRemoval ? "orange" : "blue"}
+                        >
+                            <div className={`p-4 rounded-2xl border ${isRemoval ? "bg-red-50 border-red-100" : "bg-slate-50 border-slate-200"}`}>
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <Label text="Category" />
+                                        <h4 className="font-bold">{getResolvedName('CATEGORY', req.categoryId)}</h4>
+                                        <div className="mt-2">
+                                            <Label text={isRemoval ? "Service to REMOVE" : "Service to ADD"} active />
+                                            <h3 className={`text-lg md:text-xl font-bold mt-1 ${req.action === "REMOVE" ? "text-red-600" : "text-slate-800"}`}>
+                                                {getResolvedName('SERVICE', req.serviceId)}
+                                                {req.action === "REMOVE" && " (REMOVAL)"}
+                                            </h3>
+                                        </div>
+                                    </div>
+                                    {isRemoval && (
+                                        <div className="px-3 py-1 bg-red-600 text-white text-[10px] font-bold rounded-full uppercase">
+                                            Removal Request
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                            {req.proofUrl && (
-                                <div className="flex-shrink-0">
-                                    <button onClick={() => setPreviewDoc({ url: req.proofUrl ?? "", type: "CERTIFICATE" })} className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all">
-                                        <FileText size={16} /> Inspect Certificate
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                        <AuditFooter 
-                            onApprove={() => handleAction("SERVICE", req.id, "APPROVE")} 
-                            onReject={() => handleAction("SERVICE", req.id, "REJECT")} 
-                            isLoading={isSubmitting === req.id} 
-                            reason={rejectionReasons[req.id] || ""} 
-                            onReasonChange={(val) => setRejectionReasons(prev => ({ ...prev, [req.id]: val }))}
-                            showNote={showRejectionInput[req.id] || false}
-                            onToggleNote={(val) => setShowRejectionInput(prev => ({ ...prev, [req.id]: val }))}
-                        />
-                    </AuditCard>
-                ))}
+                            <AuditFooter
+                                onApprove={() => handleAction("SERVICE", req.id, "APPROVE")}
+                                onReject={() => handleAction("SERVICE", req.id, "REJECT")}
+                                isLoading={isSubmitting === req.id}
+                                reason={rejectionReasons[req.id] || ""}
+                                onReasonChange={(val) => setRejectionReasons(prev => ({ ...prev, [req.id]: val }))}
+                                showNote={showRejectionInput[req.id] || false}
+                                onToggleNote={(val) => setShowRejectionInput(prev => ({ ...prev, [req.id]: val }))}
+                            />
+                        </AuditCard>
+                    );
+                })}
 
                 {/* LOGISTICS SYNC */}
                 {profile.zoneRequests?.filter(r => r.status === "PENDING").map((req: ZoneRequest) => (
@@ -212,11 +218,11 @@ const PartnerRequestResolutionModal: React.FC<ResolutionModalProps> = ({ isOpen,
                                 </p>
                             </div>
                         </div>
-                        <AuditFooter 
-                            onApprove={() => handleAction("ZONE", req.id, "APPROVE")} 
-                            onReject={() => handleAction("ZONE", req.id, "REJECT")} 
-                            isLoading={isSubmitting === req.id} 
-                            reason={rejectionReasons[req.id] || ""} 
+                        <AuditFooter
+                            onApprove={() => handleAction("ZONE", req.id, "APPROVE")}
+                            onReject={() => handleAction("ZONE", req.id, "REJECT")}
+                            isLoading={isSubmitting === req.id}
+                            reason={rejectionReasons[req.id] || ""}
                             onReasonChange={(val) => setRejectionReasons(prev => ({ ...prev, [req.id]: val }))}
                             showNote={showRejectionInput[req.id] || false}
                             onToggleNote={(val) => setShowRejectionInput(prev => ({ ...prev, [req.id]: val }))}
@@ -225,7 +231,7 @@ const PartnerRequestResolutionModal: React.FC<ResolutionModalProps> = ({ isOpen,
                 ))}
             </div>
             {previewDoc && <FileLightbox url={previewDoc.url} type={previewDoc.type} title={previewDoc.type} onClose={() => setPreviewDoc(null)} />}
-        </Modal>
+        </Modal >
     );
 };
 
@@ -277,27 +283,27 @@ interface AuditActionsProps {
 const AuditActions: React.FC<AuditActionsProps> = ({ onApprove, onReject, isLoading, reason, onReasonChange, showNote, onToggleNote }) => (
     <div className="pt-4 md:pt-8 border-t border-slate-200/50 space-y-4">
         {showNote && (
-            <textarea 
-                placeholder="Please state the reason for rejection (required)..." 
-                value={reason} 
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onReasonChange(e.target.value)} 
-                className="w-full text-sm font-medium border-2 border-red-100 bg-red-50/30 rounded-xl md:rounded-2xl p-3 md:p-4 h-20 md:h-24 outline-none focus:border-red-200 transition-all placeholder:text-red-300 resize-none animate-in fade-in slide-in-from-top-1" 
+            <textarea
+                placeholder="Please state the reason for rejection (required)..."
+                value={reason}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onReasonChange(e.target.value)}
+                className="w-full text-sm font-medium border-2 border-red-100 bg-red-50/30 rounded-xl md:rounded-2xl p-3 md:p-4 h-20 md:h-24 outline-none focus:border-red-200 transition-all placeholder:text-red-300 resize-none animate-in fade-in slide-in-from-top-1"
             />
         )}
         <div className="flex flex-col sm:flex-row gap-2 md:gap-4">
-            <button 
+            <button
                 onClick={() => {
                     if (!showNote) onToggleNote(true);
                     else onReject();
-                }} 
-                disabled={isLoading} 
+                }}
+                disabled={isLoading}
                 className="order-2 sm:order-1 flex-1 py-3 md:py-3.5 bg-white text-red-600 rounded-xl text-[12px] font-bold uppercase tracking-widest hover:bg-red-50 border-2 border-red-50 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
                 <XCircle size={14} /> {isLoading ? "..." : "Reject request"}
             </button>
-            <button 
-                onClick={onApprove} 
-                disabled={isLoading} 
+            <button
+                onClick={onApprove}
+                disabled={isLoading}
                 className="order-1 sm:order-2 flex-[2] py-3 md:py-3.5 bg-green-600 text-white rounded-xl text-[12px] font-bold uppercase tracking-widest hover:bg-green-700 shadow-lg shadow-green-100 transition-all disabled:opacity-50 flex items-center justify-center gap-2 active:scale-[0.98]"
             >
                 <CheckCircle size={14} /> {isLoading ? "..." : "Approve "}

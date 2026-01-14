@@ -26,9 +26,6 @@ import {
   RequestBankUpdateInput 
 } from "../../../application/dto/technician/TechnicianRequestDtos";
 
-import { IServiceCategoryRepository } from "../../../domain/repositories/IServiceCategoryRepository";
-import { IServiceItemRepository } from "../../../domain/repositories/IServiceItemRepository";
-import { IZoneRepository } from "../../../domain/repositories/IZoneRepository";
  
 interface AuthenticatedRequest extends Request {
   userId?: string;
@@ -354,34 +351,31 @@ export class TechnicianProfileController {
       return this.handleError(err, res);
     }
   };
-
-  // ✅ ACTION: Service Request
-  requestServiceAddition = async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const technicianId = (req as any).userId;
-      const { serviceId, categoryId, proofUrl } = req.body;
-
-      if (!serviceId || !categoryId) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ error: ErrorMessages.MISSING_FIELDS });
-      }
-
-      await this._requestServiceAddUseCase.execute(technicianId, {
-        serviceId,
-        categoryId,
-        proofUrl
-      });
-
-      return res.status(StatusCodes.OK).json({ 
-        success: true, 
-        message: SuccessMessages.TECH_REQUEST_SUBMITTED 
-      });
-
-    } catch (err) {
-      return this.handleError(err, res);
+ 
+requestServiceAddition = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const technicianId = (req as any).userId; 
+    const { serviceId, categoryId, proofUrl, action } = req.body;
+    if (!serviceId || !categoryId || !action) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: ErrorMessages.MISSING_FIELDS });
     }
-  };
+    await this._requestServiceAddUseCase.execute(technicianId, {
+      serviceId,
+      categoryId,
+      proofUrl,
+      action  
+    });
 
-  // ✅ ACTION: Zone Request
+    return res.status(StatusCodes.OK).json({ 
+      success: true, 
+      message: SuccessMessages.TECH_REQUEST_SUBMITTED 
+    });
+
+  } catch (err) {
+    return this.handleError(err, res);
+  }
+};
+ 
   requestZoneTransfer = async (req: Request, res: Response): Promise<Response> => {
     try {
       const technicianId = (req as any).userId;

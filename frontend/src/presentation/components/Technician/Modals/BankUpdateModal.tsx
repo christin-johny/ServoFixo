@@ -201,13 +201,15 @@ const BankUpdateModal: React.FC<BankUpdateModalProps> = ({ isOpen, onClose }) =>
             };
 
             await requestBankUpdate(payload);
-
-            // 4. Optimistic Update
+ 
             const optimisticRequest: BankUpdateRequest = {
                 ...payload,
+                id: `bnk-${Date.now()}`,  
                 status: "PENDING",
                 adminComments: "",
-                requestedAt: new Date().toISOString()
+                requestedAt: new Date().toISOString(),
+                isDismissed: false,  
+                isArchived: false    
             };
 
             dispatch(addBankRequest(optimisticRequest));

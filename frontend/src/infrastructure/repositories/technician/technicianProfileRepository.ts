@@ -86,6 +86,7 @@ export interface RequestServicePayload {
   serviceId: string;
   categoryId: string;
   proofUrl: string;
+  action: "ADD" | "REMOVE";
 }
 
 export interface RequestZonePayload {
@@ -128,8 +129,9 @@ export const uploadDocument = async (file: File, folder: "avatars" | "documents"
   
   return data.url; 
 };
-
-export const requestServiceAddition = async (payload: RequestServicePayload) => {
+ 
+export const requestServiceAddition = async (payload: RequestServicePayload): Promise<{ success: boolean }> => {
+  // Ensure the API call sends the full payload including the action
   const { data } = await api.post(TECHNICIAN_PROFILE_ENDPOINTS.REQUEST_SERVICE, payload);
   return data;
 };

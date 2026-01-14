@@ -29,7 +29,6 @@ export interface TechnicianProps {
   subServiceIds: string[];
   zoneIds: string[];
 
-  // Requests
   serviceRequests?: ServiceRequest[];
   zoneRequests?: ZoneRequest[];
   bankUpdateRequests?: BankUpdateRequest[];
@@ -155,7 +154,6 @@ export class Technician {
     this._updatedAt = props.updatedAt || new Date();
   }
 
-  // --- Getters ---
   public getId(): string {
     return this._id;
   }
@@ -261,12 +259,9 @@ export class Technician {
     return this._availability.isOnJob ?? false;
   }
 
-  // ✅ ADDED: Missing getter for isOnline
   public getIsOnline(): boolean {
     return this._isOnline;
   }
-
-  // --- Methods ---
 
   public updateProfile(data: {
     bio: string;
@@ -375,32 +370,15 @@ export class Technician {
   }
  
   public addServiceRequest(request: ServiceRequest): void {
-    if (this._subServiceIds.includes(request.serviceId)) {
-      throw new Error("This service is already active in your profile.");
-    }
-    const existingPending = this._serviceRequests.find(
-      (r) => r.serviceId === request.serviceId && r.status === "PENDING"
-    );
-    if (existingPending) {
-      throw new Error(
-        "A request for this service is already pending approval."
-      );
-    }
     this._serviceRequests.push(request);
     this._updatedAt = new Date();
-  }
+}
 
-  public requestBankUpdate(request: BankUpdateRequest): void {
-    const pending = this._bankUpdateRequests.find(
-      (r) => r.status === "PENDING"
-    );
-    if (pending)
-      throw new Error("A bank update request is already pending approval.");
-
+public requestBankUpdate(request: BankUpdateRequest): void {
     this._bankUpdateRequests.push(request);
     this._payoutStatus = "ON_HOLD";
     this._updatedAt = new Date();
-  }
+}
 
   public toProps(): TechnicianProps {
     return {
@@ -416,12 +394,10 @@ export class Technician {
       categoryIds: this._categoryIds,
       subServiceIds: this._subServiceIds,
       zoneIds: this._zoneIds,
-
       serviceRequests: this._serviceRequests,
       zoneRequests: this._zoneRequests,
       bankUpdateRequests: this._bankUpdateRequests,
       payoutStatus: this._payoutStatus,
-
       documents: this._documents,
       bankDetails: this._bankDetails,
       walletBalance: this._walletBalance,

@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import {
     MapPin, Briefcase, Wrench, ShieldCheck,
     ArrowLeft, AlertCircle, CheckCircle2,
-    Clock, RefreshCw, Plus
+    Clock, RefreshCw, Plus,X
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { RootState } from "../../../../store/store";
@@ -45,6 +45,9 @@ const ServiceSkills: React.FC = () => {
     const pendingServiceIds = new Set(pendingServices.map(r => r.serviceId));
     const rejectedServices = profile.serviceRequests.filter(r => r.status === "REJECTED" && !r.isDismissed);
     const rejectedZones = profile.zoneRequests.filter(r => r.status === "REJECTED" && !r.isDismissed);
+    const pendingRemovalIds = new Set(
+        pendingServices.filter(r => r.action === "REMOVE").map(r => r.serviceId)
+    );
 
     const handleDismiss = async (requestId: string) => {
         try {
@@ -263,26 +266,35 @@ const ServiceSkills: React.FC = () => {
                                             </div>
 
                                             <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white">
+
                                                 {group.services.map((service) => {
-                                                    // ✅ Check if this specific service is pending approval
                                                     const isPending = pendingServiceIds.has(service.id);
+                                                    const isRemoving = pendingRemovalIds.has(service.id); // ✅ NEW
 
                                                     return (
                                                         <div
                                                             key={service.id}
-                                                            className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${isPending
-                                                                ? "border-orange-100 bg-orange-50/30 opacity-80"
-                                                                : "border-gray-100 bg-gray-50/30 hover:border-blue-100 hover:bg-blue-50/30"
+                                                            className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${isRemoving
+                                                                    ? "border-red-100 bg-red-50/30 opacity-80" // ✅ Red styling for removal
+                                                                    : isPending
+                                                                        ? "border-orange-100 bg-orange-50/30 opacity-80"
+                                                                        : "border-gray-100 bg-gray-50/30 hover:border-blue-100 hover:bg-blue-50/30"
                                                                 }`}
                                                         >
-                                                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isPending ? "bg-orange-400 animate-pulse" : "bg-green-500"
+                                                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isRemoving ? "bg-red-500 animate-pulse" : // ✅ Red pulse
+                                                                    isPending ? "bg-orange-400 animate-pulse" : "bg-green-500"
                                                                 }`}></div>
 
                                                             <span className={`text-sm font-medium ${isPending ? "text-gray-500 italic" : "text-gray-700"}`}>
                                                                 {service.name}
                                                             </span>
 
-                                                            {isPending ? (
+                                                            {isRemoving ? (
+                                                                <div className="ml-auto flex items-center gap-1 text-[10px] font-bold text-red-600 uppercase tracking-tight">
+                                                                    <X className="w-3 h-3" />
+                                                                    Pending Removal
+                                                                </div>
+                                                            ) : isPending ? (
                                                                 <div className="ml-auto flex items-center gap-1 text-[10px] font-bold text-orange-600 uppercase tracking-tight">
                                                                     <Clock className="w-3 h-3" />
                                                                     Pending
