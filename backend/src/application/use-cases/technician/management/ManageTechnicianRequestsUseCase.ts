@@ -60,59 +60,61 @@ export class ManageTechnicianRequestsUseCase
     }
   }
 
-  private handleServiceRequest(
-    tech: Technician,
-    dto: ResolvePartnerRequestDto
-  ): void {
-    const requests = tech.getServiceRequests();
-    const reqIndex = requests.findIndex(
-      (r) => r.id === dto.requestId && r.status === "PENDING"
-    );
+private handleServiceRequest(
+  tech: Technician,
+  dto: ResolvePartnerRequestDto
+): void {
+  const requests = tech.getServiceRequests();
+  const reqIndex = requests.findIndex(
+    (r) => r.id === dto.requestId && r.status === "PENDING"
+  );
 
-    if (reqIndex === -1) throw new Error(ErrorMessages.REQUEST_NOT_FOUND);
+  if (reqIndex === -1) throw new Error(ErrorMessages.REQUEST_NOT_FOUND);
 
-    const approvedRequest = requests[reqIndex];
+  const approvedRequest = requests[reqIndex];
 
-    if (dto.action === "APPROVE") {
-      approvedRequest.status = "APPROVED";
+  if (dto.action === "APPROVE") {
+    approvedRequest.status = "APPROVED";
 
-      const currentServiceIds = tech.getSubServiceIds();
-      const currentCategoryIds = tech.getCategoryIds();
+    const currentServiceIds = tech.getSubServiceIds();
+    const currentCategoryIds = tech.getCategoryIds();
 
-      if (approvedRequest.action === "ADD") { 
-        if (!currentServiceIds.includes(approvedRequest.serviceId)) {
-          currentServiceIds.push(approvedRequest.serviceId);
-          tech.addCategory(approvedRequest.categoryId);
-          tech.updateWorkPreferences(tech.getCategoryIds(), currentServiceIds);
-        }
-      } else if (approvedRequest.action === "REMOVE") {
- 
-        const updatedServiceIds = currentServiceIds.filter(
-          (id) => id !== approvedRequest.serviceId
-        ); 
-        const hasOtherServicesInCat = requests.some(
-          (r) =>
-            r.status === "APPROVED" &&
-            r.serviceId !== approvedRequest.serviceId &&  
-            updatedServiceIds.includes(r.serviceId) && 
-            r.categoryId === approvedRequest.categoryId  
-        );
- 
-        const updatedCategoryIds = hasOtherServicesInCat
-          ? currentCategoryIds
-          : currentCategoryIds.filter(
-              (cId) => cId !== approvedRequest.categoryId
-            );
-
-        tech.updateWorkPreferences(updatedCategoryIds, updatedServiceIds);
+    if (approvedRequest.action === "ADD") {
+      if (!currentServiceIds.includes(approvedRequest.serviceId)) {
+        currentServiceIds.push(approvedRequest.serviceId);
+        tech.addCategory(approvedRequest.categoryId);
+        tech.updateWorkPreferences(tech.getCategoryIds(), currentServiceIds);
       }
-    } else {
-      approvedRequest.status = "REJECTED";
-      approvedRequest.adminComments = dto.rejectionReason;
-    }
+    } else if (approvedRequest.action === "REMOVE") {
+      // 1. Remove the service ID first
+      const updatedServiceIds = currentServiceIds.filter(
+        (id) => id !== approvedRequest.serviceId
+      );
 
-    tech.updateServiceRequests(requests);
+      // 2. CHECK ALL ACTIVE SERVICES (Onboarding + Requests)
+      // We look at the 'requests' array as a lookup table to find categories 
+      // for the services still inside 'updatedServiceIds'.
+      const hasOtherServicesInCat = requests.some((r) => 
+        r.status === "APPROVED" &&                // Only look at verified skills
+        r.id !== approvedRequest.id &&            // Don't count the one being removed
+        r.categoryId === approvedRequest.categoryId && // Match the category
+        updatedServiceIds.includes(r.serviceId)    // IMPORTANT: The service must still be active
+      );
+
+      // 3. Only delete category if this was the ABSOLUTE LAST service
+      const updatedCategoryIds = hasOtherServicesInCat
+        ? currentCategoryIds
+        : currentCategoryIds.filter((cId) => cId !== approvedRequest.categoryId);
+
+      tech.updateWorkPreferences(updatedCategoryIds, updatedServiceIds);
+    }
+  } else {
+    approvedRequest.status = "REJECTED";
+    approvedRequest.adminComments = dto.rejectionReason;
   }
+
+  tech.updateServiceRequests(requests);
+}
 
   private handleZoneRequest(
     tech: Technician,

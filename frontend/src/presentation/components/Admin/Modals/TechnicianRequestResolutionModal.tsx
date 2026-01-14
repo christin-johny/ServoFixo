@@ -178,11 +178,22 @@ const PartnerRequestResolutionModal: React.FC<ResolutionModalProps> = ({ isOpen,
                                             </h3>
                                         </div>
                                     </div>
-                                    {isRemoval && (
-                                        <div className="px-3 py-1 bg-red-600 text-white text-[10px] font-bold rounded-full uppercase">
-                                            Removal Request
-                                        </div>
-                                    )}
+                                    <div className="w-full md:w-auto self-end md:self-center">
+                                        {isRemoval ? (
+                                            <div className="px-3 py-1 bg-red-600 text-white text-[10px] font-bold rounded-full uppercase text-center">
+                                                Removal Request
+                                            </div>
+                                        ) : (
+                                            req.proofUrl && (
+                                                <button
+                                                    onClick={() => setPreviewDoc({ url: req.proofUrl || "", type: "CERTIFICATE" })}
+                                                    className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all w-full md:w-auto"
+                                                >
+                                                    <Eye size={14} /> View Evidence
+                                                </button>
+                                            )
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                             <AuditFooter
