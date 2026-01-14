@@ -257,7 +257,10 @@ export class AdminTechnicianController {
 
       return res.status(StatusCodes.OK).json({
         success: true,
-        message: SuccessMessages.TECH_UPDATED,
+        message:
+          dto.action === RequestAction.APPROVE
+            ? "Request approved and technician notified."
+            : "Request rejected and technician notified.",
       });
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);

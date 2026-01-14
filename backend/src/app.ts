@@ -3,11 +3,15 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
+import { createServer } from "http";  
 import { connectDatabase } from "./infrastructure/config/Database";
 import cookieParser from "cookie-parser";
 import passport from "./infrastructure/security/PassportConfig";
+import { SocketServer } from "./infrastructure/socket/SocketServer"; 
+import { logger } from "./infrastructure/di/Container";  
 
 const app = express();
+const httpServer = createServer(app); // ✅ Wrap Express with HTTP Server
 
 app.use(express.json());
 app.use(cookieParser());
@@ -25,7 +29,7 @@ app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(passport.initialize());
 
-
+// Routes
 import adminRoutes from "./presentation/routes/admin";
 import customerRoutes from "./presentation/routes/customer/index";
 import technicianRoutes from './presentation/routes/technician/index.ts'
@@ -38,10 +42,14 @@ app.use("/api/technician", technicianRoutes);
 
 export const startServer = async () => {
   await connectDatabase();
+ 
+  SocketServer.init(httpServer, logger);
 
   const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
+   
+  httpServer.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Real-time Socket.io engine initialized`);
   });
 };
 

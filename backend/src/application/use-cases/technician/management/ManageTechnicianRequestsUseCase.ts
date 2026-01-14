@@ -9,13 +9,15 @@ import {
   PartnerRequestType,
 } from "../../../../../../shared/types/enums/RequestResolutionEnums";
 import { Technician } from "../../../../domain/entities/Technician";
+import { INotificationService } from "../../../services/INotificationService";
 
 export class ManageTechnicianRequestsUseCase
   implements IUseCase<void, [string, ResolvePartnerRequestDto]>
 {
   constructor(
     private readonly _technicianRepo: ITechnicianRepository,
-    private readonly _logger: ILogger
+    private readonly _notificationService: INotificationService,
+    private readonly _logger: ILogger,
   ) {}
 
   async execute(techId: string, dto: ResolvePartnerRequestDto): Promise<void> {
@@ -31,10 +33,15 @@ export class ManageTechnicianRequestsUseCase
     });
 
     try {
-      // ✅ Using switch to route to specific handlers
+      let categoryRemoved = false;
+      let serviceAction: "ADD" | "REMOVE" = "ADD";
+
+      // ✅ Internal logic handlers
       switch (dto.requestType) {
         case PartnerRequestType.SERVICE:
-          this.handleServiceRequest(tech, dto);
+          const serviceResult = this.handleServiceRequest(tech, dto);
+          categoryRemoved = serviceResult.categoryRemoved;
+          serviceAction = serviceResult.serviceAction;
           break;
         case PartnerRequestType.ZONE:
           this.handleZoneRequest(tech, dto);
@@ -46,8 +53,22 @@ export class ManageTechnicianRequestsUseCase
           throw new Error(ErrorMessages.INVALID_DATA);
       }
 
-      // ✅ Persistence: This triggers the update call to MongoDB
+      // ✅ Persistence
       await this._technicianRepo.update(tech);
+
+      // 🚀 Trigger Real-time Notification after DB Success
+      await this._notificationService.notifyRequestResolved(techId, {
+        type: dto.requestType as "SERVICE" | "ZONE" | "BANK",
+        action: dto.action as "APPROVE" | "REJECT",
+        rejectionReason: dto.rejectionReason,
+        metadata: {
+          requestId: dto.requestId,
+          type: dto.requestType,
+          serviceAction: serviceAction,
+          categoryRemoved: String(categoryRemoved)
+        },
+      });
+
       this._logger.info(LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_SUCCESS, {
         techId,
         requestId: dto.requestId,
@@ -60,61 +81,66 @@ export class ManageTechnicianRequestsUseCase
     }
   }
 
-private handleServiceRequest(
-  tech: Technician,
-  dto: ResolvePartnerRequestDto
-): void {
-  const requests = tech.getServiceRequests();
-  const reqIndex = requests.findIndex(
-    (r) => r.id === dto.requestId && r.status === "PENDING"
-  );
+  private handleServiceRequest(
+    tech: Technician,
+    dto: ResolvePartnerRequestDto
+  ): { categoryRemoved: boolean; serviceAction: "ADD" | "REMOVE" } {
+    const requests = tech.getServiceRequests();
+    const reqIndex = requests.findIndex(
+      (r) => r.id === dto.requestId && r.status === "PENDING"
+    );
 
-  if (reqIndex === -1) throw new Error(ErrorMessages.REQUEST_NOT_FOUND);
+    if (reqIndex === -1) throw new Error(ErrorMessages.REQUEST_NOT_FOUND);
 
-  const approvedRequest = requests[reqIndex];
+    const approvedRequest = requests[reqIndex];
+    let categoryRemoved = false;
+    const serviceAction = approvedRequest.action;
 
-  if (dto.action === "APPROVE") {
-    approvedRequest.status = "APPROVED";
+    if (dto.action === "APPROVE") {
+      approvedRequest.status = "APPROVED";
 
-    const currentServiceIds = tech.getSubServiceIds();
-    const currentCategoryIds = tech.getCategoryIds();
+      const currentServiceIds = tech.getSubServiceIds();
+      const currentCategoryIds = tech.getCategoryIds();
 
-    if (approvedRequest.action === "ADD") {
-      if (!currentServiceIds.includes(approvedRequest.serviceId)) {
-        currentServiceIds.push(approvedRequest.serviceId);
-        tech.addCategory(approvedRequest.categoryId);
-        tech.updateWorkPreferences(tech.getCategoryIds(), currentServiceIds);
+      if (approvedRequest.action === "ADD") {
+        if (!currentServiceIds.includes(approvedRequest.serviceId)) {
+          currentServiceIds.push(approvedRequest.serviceId);
+          tech.addCategory(approvedRequest.categoryId);
+          tech.updateWorkPreferences(tech.getCategoryIds(), currentServiceIds);
+        }
+      } else if (approvedRequest.action === "REMOVE") {
+        const updatedServiceIds = currentServiceIds.filter(
+          (id) => id !== approvedRequest.serviceId
+        );
+
+        const hasOtherServicesInCat = requests.some(
+          (r) =>
+            r.status === "APPROVED" && 
+            r.id !== approvedRequest.id && 
+            r.categoryId === approvedRequest.categoryId && 
+            updatedServiceIds.includes(r.serviceId)
+        );
+
+        if (!hasOtherServicesInCat) {
+          categoryRemoved = true;
+        }
+
+        const updatedCategoryIds = hasOtherServicesInCat
+          ? currentCategoryIds
+          : currentCategoryIds.filter(
+              (cId) => cId !== approvedRequest.categoryId
+            );
+
+        tech.updateWorkPreferences(updatedCategoryIds, updatedServiceIds);
       }
-    } else if (approvedRequest.action === "REMOVE") {
-      // 1. Remove the service ID first
-      const updatedServiceIds = currentServiceIds.filter(
-        (id) => id !== approvedRequest.serviceId
-      );
-
-      // 2. CHECK ALL ACTIVE SERVICES (Onboarding + Requests)
-      // We look at the 'requests' array as a lookup table to find categories 
-      // for the services still inside 'updatedServiceIds'.
-      const hasOtherServicesInCat = requests.some((r) => 
-        r.status === "APPROVED" &&                // Only look at verified skills
-        r.id !== approvedRequest.id &&            // Don't count the one being removed
-        r.categoryId === approvedRequest.categoryId && // Match the category
-        updatedServiceIds.includes(r.serviceId)    // IMPORTANT: The service must still be active
-      );
-
-      // 3. Only delete category if this was the ABSOLUTE LAST service
-      const updatedCategoryIds = hasOtherServicesInCat
-        ? currentCategoryIds
-        : currentCategoryIds.filter((cId) => cId !== approvedRequest.categoryId);
-
-      tech.updateWorkPreferences(updatedCategoryIds, updatedServiceIds);
+    } else {
+      approvedRequest.status = "REJECTED";
+      approvedRequest.adminComments = dto.rejectionReason;
     }
-  } else {
-    approvedRequest.status = "REJECTED";
-    approvedRequest.adminComments = dto.rejectionReason;
-  }
 
-  tech.updateServiceRequests(requests);
-}
+    tech.updateServiceRequests(requests);
+    return { categoryRemoved, serviceAction };
+  }
 
   private handleZoneRequest(
     tech: Technician,

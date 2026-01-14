@@ -3,7 +3,7 @@ import { IUseCase } from "../../../application/interfaces/IUseCase";
 import {
   CustomerFilterSchema,
   CustomerUpdateSchema,
-} from "../../../application/dto/Customer/AdminCustomerDtos";
+} from "../../../application/dto/customer/AdminCustomerDtos";
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { mapToResponseDto } from "../../../application/use-cases/customer/GetAllCustomersUseCase";

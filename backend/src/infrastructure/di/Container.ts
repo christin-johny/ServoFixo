@@ -116,6 +116,11 @@ import { VerifyTechnicianForgotPasswordOtpUseCase } from "../../application/use-
 //logger
 import { WinstonLogger } from "../logging/WinstonLogger";
 
+// --- Notification Module ---
+import { NotificationMongoRepository } from "../database/repositories/NotificationMongoRepository";
+import { NotificationService } from "../services/NotificationService";
+import {SocketServer} from "../socket/SocketServer"
+
 // INFRASTRUCTURE SERVICE INSTANTIATION
 
 const imageService = new S3ImageService();
@@ -123,7 +128,7 @@ const otpSessionRepo = new OtpSessionMongoRepository();
 const emailService = new NodemailerEmailService();
 const passwordHasher = new BcryptPasswordHasher();
 const jwtService = new JwtService();
-const logger = new WinstonLogger();
+export const  logger = new WinstonLogger();
 const cacheService = new RedisCacheService(redis);
 const googleAuthService = new GoogleAuthService(
   process.env.GOOGLE_CLIENT_ID || ""
@@ -546,8 +551,16 @@ const blockTechnicianUseCase = new BlockTechnicianUseCase(
   technicianRepo,
   logger
 );
+const notificationRepo = new NotificationMongoRepository();
+
+export const notificationService = new NotificationService(
+  notificationRepo,
+  SocketServer, 
+  logger
+);
 const manageTechnicianRequestsUseCase = new ManageTechnicianRequestsUseCase(
   technicianRepo,
+  notificationService,
   logger
 );
 
