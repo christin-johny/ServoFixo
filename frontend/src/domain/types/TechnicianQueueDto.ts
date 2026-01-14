@@ -1,19 +1,18 @@
-export interface TechnicianQueueItemDto {
+export interface TechnicianQueueItemDto { 
   id: string;
   name: string;
   email: string;
   phone: string;
   avatarUrl?: string;
-  zoneName?: string; 
-  categoryName?: string; 
-  status: string;
-  submittedAt: Date; 
+  status: string; // or VerificationStatus
   isSuspended: boolean;
-
-  // ✅ ADDED: Admin Dashboard Indicators
+  submittedAt: Date | string; 
+ 
   hasPendingServiceRequests: boolean;
   hasPendingZoneRequests: boolean;
-  hasPendingBankRequests: boolean;
+  hasPendingBankRequests: boolean; 
+  experienceSummary?: string;
+  zoneName?: string;
 }
 
 export interface PaginatedTechnicianQueueResponse {

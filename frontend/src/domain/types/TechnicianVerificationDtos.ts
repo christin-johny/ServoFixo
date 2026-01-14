@@ -1,9 +1,14 @@
-import { 
-  ServiceRequest, 
-  ZoneRequest, 
-  BankUpdateRequest, 
-  PayoutStatus 
-} from "../../../../../shared/types/value-objects/TechnicianTypes";
+import type {
+  ServiceRequest,
+  ZoneRequest,
+  BankUpdateRequest,
+} from "./TechnicianRequestTypes";
+import type { PayoutStatus } from "../../../../shared/types/value-objects/TechnicianTypes";
+
+export interface IdNamePair {
+  id: string;
+  name: string;
+}
 
 export interface AdminTechnicianProfileDto {
   id: string;
@@ -11,19 +16,18 @@ export interface AdminTechnicianProfileDto {
   email: string;
   phone: string;
   avatarUrl?: string;
-  
+
   bio?: string;
   experienceSummary: string;
-  
-  zoneIds: string[]; 
+
+  zoneIds: string[];
   categoryIds: string[];
   subServiceIds: string[];
 
-  // Resolved Names for UI
-zoneNames: { id: string; name: string }[];
-  categoryNames: { id: string; name: string }[];
-  subServiceNames: { id: string; name: string }[];
-   
+  zoneNames: IdNamePair[];
+  categoryNames: IdNamePair[];
+  subServiceNames: IdNamePair[];
+
   serviceRequests: ServiceRequest[];
   zoneRequests: ZoneRequest[];
   bankUpdateRequests: BankUpdateRequest[];
@@ -36,26 +40,22 @@ zoneNames: { id: string; name: string }[];
     status: "PENDING" | "APPROVED" | "REJECTED";
     rejectionReason?: string;
   }[];
-  
+
   bankDetails: {
     accountHolderName: string;
     accountNumber: string;
     ifscCode: string;
     bankName: string;
+    upiId?: string;
   };
 
   verificationStatus: string;
-  submittedAt: Date;
+  submittedAt: Date | string; // ✅ Fixed: Accepts string
 }
 
-export interface DocumentDecision {
-  type: string; 
-  status: "APPROVED" | "REJECTED";
-  rejectionReason?: string; 
-}
-
-export interface VerifyTechnicianDto {
+export interface ResolvePartnerRequestDto {
+  requestType: "SERVICE" | "ZONE" | "BANK";
+  requestId: string;
   action: "APPROVE" | "REJECT";
-  documentDecisions?: DocumentDecision[]; 
-  globalRejectionReason?: string; 
+  rejectionReason?: string;
 }

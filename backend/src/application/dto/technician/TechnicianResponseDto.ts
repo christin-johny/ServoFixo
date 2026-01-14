@@ -1,4 +1,14 @@
-import { VerificationStatus } from "../../../../../shared/types/value-objects/TechnicianTypes";
+import { 
+  VerificationStatus,
+  ServiceRequest,
+  ZoneRequest,
+  BankUpdateRequest,
+  PayoutStatus
+} from "../../../../../shared/types/value-objects/TechnicianTypes";
+
+export interface CategoryData { id: string; name: string; iconUrl?: string; }
+export interface ServiceData { id: string; name: string; categoryId: string; }
+export interface ZoneData { id: string; name: string; }
 
 export interface TechnicianResponseDto {
   id: string;
@@ -7,13 +17,23 @@ export interface TechnicianResponseDto {
   phone: string;
   avatarUrl?: string;
   bio?: string;
- 
+
   onboardingStep: number;
   experienceSummary?: string;
 
   categoryIds: string[];
   subServiceIds: string[];
   zoneIds: string[];
+
+  // ✅ Arrays for Redux
+  serviceRequests: ServiceRequest[];
+  zoneRequests: ZoneRequest[];
+  bankUpdateRequests: BankUpdateRequest[];
+  payoutStatus: PayoutStatus;
+
+  categories?: CategoryData[];
+  subServices?: ServiceData[];
+  serviceZones?: ZoneData[];
 
   documents: Array<{
     type: string;
@@ -40,15 +60,12 @@ export interface TechnicianResponseDto {
 
   availability: {
     isOnline: boolean;
+    isOnJob: boolean;
     lastSeen?: Date;
     schedule?: Array<{ day: string; startTime: string; endTime: string }>;
   };
 
-  ratings: {
-    averageRating: number;
-    totalReviews: number;
-  };
- 
+  ratings: { averageRating: number; totalReviews: number; };
   verificationStatus: VerificationStatus;
   verificationReason?: string;
   isSuspended: boolean;
@@ -56,19 +73,8 @@ export interface TechnicianResponseDto {
   isDeleted?: boolean;
   portfolioUrls: string[];
   deviceToken?: string;
-
-  currentLocation?: {
-    type: "Point";
-    coordinates: number[];
-    lastUpdated: Date;
-  };
-
-  emergencyContact?: {
-    name: string;
-    phone: string;
-    relation: string;
-  };
-
+  currentLocation?: { type: "Point"; coordinates: number[]; lastUpdated: Date; };
+  emergencyContact?: { name: string; phone: string; relation: string; };
   createdAt: Date;
   updatedAt: Date;
 }

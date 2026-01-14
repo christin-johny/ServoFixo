@@ -51,6 +51,12 @@ export enum ErrorMessages {
   TECH_NOT_VERIFIED = "You must be verified to go online.",
   TECH_LOCATION_REQUIRED = "Location access is required to go online.",
   TECH_OUTSIDE_ZONE = "You are currently outside your selected service zones.",
+  PENDING_ZONE_REQUEST = "You already have a pending zone transfer request.",
+  PENDING_SERVICE_REQUEST = "A request for this service is already pending approval.",
+  DUPLICATE_SERVICE = "This service is already active in your profile.",
+  MISSING_FIELDS="all fields are required",
+  REQUEST_NOT_FOUND = "The specific change request was not found or already resolved",
+  INVALID_RESOLUTION_ACTION = "Invalid resolution action. Must be APPROVE or REJECT",
 }
 
 export enum SuccessMessages {
@@ -83,6 +89,7 @@ export enum SuccessMessages {
   TECH_STEP_SAVED = "Progress saved successfully",
   TECH_PROFILE_SUBMITTED = "Profile submitted for verification",
   TECH_DOC_UPLOADED = "Document uploaded successfully",
+  TECH_REQUEST_SUBMITTED = "Request submitted successfully. Pending Admin approval.",
 
   TECH_UPDATED = "Technician updated successfully",
   TECH_DELETED = "Technician deleted successfully",
@@ -93,4 +100,5 @@ export enum SuccessMessages {
 
   TECH_ONLINE = "You are now Online",
   TECH_OFFLINE = "You are now Offline",
+  TECH_REQUEST_DISMISSED = "Notification cleared successfully",
 }

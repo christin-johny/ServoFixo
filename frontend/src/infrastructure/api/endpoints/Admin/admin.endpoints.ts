@@ -35,5 +35,7 @@ export const ADMIN_TECHNICIAN_ENDPOINTS = {
   PROFILE: (id: string) => `/admin/technicians/${id}`,
   VERIFY: (id: string) => `/admin/technicians/${id}/verify`,
   
-  LIST: "/admin/technicians" 
+  LIST: "/admin/technicians" ,
+  BLOCK: (id: string) => `/admin/technicians/${id}/block`,
+  RESOLVE_REQUEST: (id: string) => `/admin/technicians/${id}/requests/resolve`,
 };

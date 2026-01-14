@@ -25,11 +25,19 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext, onSaveAndExit }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { profile } = useSelector((state: RootState) => state.technician);
   const { showSuccess, showError } = useNotification();
-   
+    
   // --- STATE ---
   const [formData, setFormData] = useState<Partial<Step1FormData>>(() => ({
     ...INITIAL_STEP1_STATE,
-    ...(profile?.personalDetails || {})
+    // ✅ CHANGED: Read directly from flattened profile
+    ...(profile ? {
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone,
+        avatarUrl: profile.avatarUrl,
+        bio: profile.bio,
+        experienceSummary: profile.experienceSummary
+    } : {})
   }));
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -44,14 +52,19 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext, onSaveAndExit }) => {
   
   // Computed Values
   const isRejected = profile?.verificationStatus === "REJECTED";
-  const email = profile?.personalDetails?.email || "";
-  const phone = profile?.personalDetails?.phone || "";
+  // ✅ CHANGED: Direct access
+  const email = profile?.email || "";
+  const phone = profile?.phone || "";
  
+  // ✅ CHANGED: Sync Effect reads from flattened profile
   useEffect(() => {
-    if (profile?.personalDetails) {
+    if (profile) {
       setFormData((prev) => ({
         ...prev,
-        ...profile.personalDetails
+        name: profile.name || prev.name,
+        avatarUrl: profile.avatarUrl || prev.avatarUrl,
+        bio: profile.bio || prev.bio,
+        experienceSummary: profile.experienceSummary || prev.experienceSummary
       }));
     }
   }, [profile]);
@@ -140,9 +153,9 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext, onSaveAndExit }) => {
     try {
       setIsSaving(true);
       const validData = result.data;
-       
+        
       await technicianOnboardingRepository.updateStep1(validData);
-       
+        
       dispatch(updatePersonalDetails(validData));
       
       if (!isRejected) {

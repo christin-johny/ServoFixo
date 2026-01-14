@@ -24,8 +24,7 @@ router.get(
   adminAuth, 
   adminTechnicianController.getTechnicianProfile.bind(adminTechnicianController)
 );
-
-// ✅ ADDED: The missing PUT route for updates
+ 
 router.put(
   "/:id", 
   adminAuth, 
@@ -42,5 +41,9 @@ router.patch(
   adminAuth, 
   adminTechnicianController.toggleBlockTechnician.bind(adminTechnicianController)
 );
-
+router.patch(
+  "/:id/requests/resolve", 
+  adminAuth, 
+  adminTechnicianController.resolvePartnerRequest.bind(adminTechnicianController)
+);
 export default router;

@@ -62,9 +62,9 @@ import { TechnicianDataController } from "../../presentation/controllers/Technic
 import { FixedCommissionStrategy } from "../services/FixedCommissionStrategy";
 import { GetTechnicianRateCardUseCase } from "../../application/use-cases/technician/profile/GetTechnicianRateCardUseCase";
 
-import { UpdateTechnicianUseCase } from "../../application/use-cases/technician/profile/UpdateTechnicianUseCase";
-import { BlockTechnicianUseCase } from "../../application/use-cases/technician/profile/BlockTechnicianUseCase";
-import { DeleteTechnicianUseCase } from "../../application/use-cases/technician/profile/DeleteTechnicianUseCase";
+import { UpdateTechnicianUseCase } from "../../application/use-cases/technician/management/UpdateTechnicianUseCase";
+import { BlockTechnicianUseCase } from "../../application/use-cases/technician/management/BlockTechnicianUseCase";
+import { DeleteTechnicianUseCase } from "../../application/use-cases/technician/management/DeleteTechnicianUseCase";
 import { ToggleOnlineStatusUseCase } from "../../application/use-cases/technician/profile/ToggleOnlineStatusUseCase";
 import { ResubmitProfileUseCase } from "../../application/use-cases/technician/profile/ResubmitProfileUseCase";
 
@@ -72,11 +72,16 @@ import { TechnicianOnboardingUseCase } from "../../application/use-cases/technic
 import { GetTechnicianProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianProfileUseCase";
 import { TechnicianProfileController } from "../../presentation/controllers/Technician/TechnicianProfileController";
 import { UploadTechnicianFileUseCase } from "../../application/use-cases/technician/profile/UploadTechnicianFileUseCase";
-import { GetVerificationQueueUseCase } from "../../application/use-cases/technician/profile/GetVerificationQueueUseCase";
+import { GetVerificationQueueUseCase } from "../../application/use-cases/technician/management/GetVerificationQueueUseCase";
 import { AdminTechnicianController } from "../../presentation/controllers/Admin/AdminTechnicianController";
 import { GetTechnicianFullProfileUseCase } from "../../application/use-cases/technician/profile/GetTechnicianFullProfileUseCase";
-import { VerifyTechnicianUseCase } from "../../application/use-cases/technician/profile/VerifyTechnicianUseCase";
-import { GetAllTechniciansUseCase } from "../../application/use-cases/technician/profile/GetAllTechniciansUseCase";
+import { VerifyTechnicianUseCase } from "../../application/use-cases/technician/management/VerifyTechnicianUseCase";
+import { GetAllTechniciansUseCase } from "../../application/use-cases/technician/management/GetAllTechniciansUseCase";
+import { RequestServiceAddUseCase } from "../../application/use-cases/technician/profile/RequestServiceAddUseCase";
+import { RequestZoneTransferUseCase } from "../../application/use-cases/technician/profile/RequestZoneTransferUseCase";
+import { RequestBankUpdateUseCase } from "../../application/use-cases/technician/profile/RequestBankUpdateUseCase";
+import { ManageTechnicianRequestsUseCase } from "../../application/use-cases/technician/management/ManageTechnicianRequestsUseCase";
+import { DismissTechnicianRequestUseCase} from "../../application/use-cases/technician/management/DismissTechnicianRequestUseCase";
 
 // --- Admin Auth---
 import { AdminLoginUseCase } from "../../application/use-cases/auth/AdminLoginUseCase";
@@ -444,6 +449,9 @@ const technicianOnboardingUseCase = new TechnicianOnboardingUseCase(
 
 const getTechnicianProfileUseCase = new GetTechnicianProfileUseCase(
   technicianRepo,
+  categoryRepo,
+  serviceItemRepo,
+  zoneRepo,
   logger
 );
 const uploadTechnicianFileUseCase = new UploadTechnicianFileUseCase(
@@ -458,7 +466,17 @@ const resubmitProfileUseCase = new ResubmitProfileUseCase(
   technicianRepo,
   logger
 );
+const requestServiceAddUseCase = new RequestServiceAddUseCase(
+  technicianRepo,
+  logger
+);
+const requestZoneTransferUseCase = new RequestZoneTransferUseCase(
+  technicianRepo,
+  logger
+);
+const requestBankUpdateUseCase = new RequestBankUpdateUseCase(technicianRepo, logger);
 
+const dismissTechnicianRequestUseCase = new DismissTechnicianRequestUseCase(technicianRepo, logger)
 // 2. Instantiate & Export Profile Controller
 export const technicianProfileController = new TechnicianProfileController(
   technicianOnboardingUseCase,
@@ -466,6 +484,10 @@ export const technicianProfileController = new TechnicianProfileController(
   uploadTechnicianFileUseCase,
   toggleOnlineStatusUseCase,
   resubmitProfileUseCase,
+  requestServiceAddUseCase,   // <--- Injected
+  requestZoneTransferUseCase,
+  requestBankUpdateUseCase, // <--- Injected
+  dismissTechnicianRequestUseCase,
   logger
 );
 
@@ -524,6 +546,11 @@ const blockTechnicianUseCase = new BlockTechnicianUseCase(
   technicianRepo,
   logger
 );
+const manageTechnicianRequestsUseCase = new ManageTechnicianRequestsUseCase(
+  technicianRepo,
+  logger
+);
+
 export const adminTechnicianController = new AdminTechnicianController(
   getVerificationQueueUseCase,
   getTechnicianFullProfileUseCase,
@@ -532,5 +559,6 @@ export const adminTechnicianController = new AdminTechnicianController(
   updateTechnicianUseCase,
   deleteTechnicianUseCase,
   blockTechnicianUseCase,
+  manageTechnicianRequestsUseCase,
   logger
 );

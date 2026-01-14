@@ -1,6 +1,10 @@
 import api from "../../api/axiosClient";
 import { ADMIN_TECHNICIAN_ENDPOINTS } from "../../api/endpoints/Admin/admin.endpoints";
 import type { TechnicianProfileFull } from "../../../domain/types/Technician";
+import type { 
+  ResolvePartnerRequestDto 
+} from "../../../domain/types/TechnicianVerificationDtos";
+import type { PaginatedTechnicianQueueResponse } from "src/domain/types/TechnicianQueueDto";
 
 export interface TechnicianListItem {
   id: string;
@@ -35,6 +39,7 @@ export interface VerificationQueueParams {
   search?: string;
   sort?: "asc" | "desc";
   sortBy?: string;
+  type?:"ONBOARDING"| "MAINTENANCE";
 }
 
 export interface VerifyActionPayload {
@@ -64,9 +69,10 @@ export interface UpdateTechnicianPayload {
   bio: string;
 }
 
+
 export const getVerificationQueue = async (
   params: VerificationQueueParams
-): Promise<PaginatedTechnicianList> => {
+): Promise<PaginatedTechnicianQueueResponse> => {  
   const response = await api.get(ADMIN_TECHNICIAN_ENDPOINTS.QUEUE, { params });
   return response.data.data;
 };
@@ -104,5 +110,12 @@ export const toggleBlockTechnician = async (
   isSuspended: boolean,
   reason?: string
 ): Promise<void> => {
-  await api.patch(`/admin/technicians/${id}/block`, { isSuspended, reason });
+  await api.patch(ADMIN_TECHNICIAN_ENDPOINTS.BLOCK(id), { isSuspended, reason });
+};
+
+export const resolvePartnerRequest = async (
+  id: string,
+  payload: ResolvePartnerRequestDto
+): Promise<void> => {
+  await api.patch(ADMIN_TECHNICIAN_ENDPOINTS.RESOLVE_REQUEST(id), payload);
 };

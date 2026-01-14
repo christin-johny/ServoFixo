@@ -1,5 +1,12 @@
 import { Technician } from "../entities/Technician";
 import { IBaseRepository } from "./IBaseRepository";
+import { 
+  ServiceRequest, 
+  ZoneRequest,
+  TechnicianUpdatePayload,
+  BankUpdateRequest,
+  PayoutStatus
+} from "../../../../shared/types/value-objects/TechnicianTypes";
 
 export interface TechnicianFilterParams {
   search?: string;
@@ -8,14 +15,14 @@ export interface TechnicianFilterParams {
   categoryId?: string;
   isOnline?: boolean;
 }
-
-// Consistent with PaginatedResult<T> pattern
+ 
 export interface PaginatedTechnicianResult {
   data: Technician[];
   total: number;
   page: number;
   limit: number;
 }
+export type QueueType = "ONBOARDING" | "MAINTENANCE";
 
 export interface VerificationQueueFilters {
   page: number;
@@ -23,44 +30,32 @@ export interface VerificationQueueFilters {
   search?: string;
   sort?: "asc" | "desc";
   sortBy?: string;
-}
-
-export interface TechnicianUpdatePayload {
-  name?: string;
-  email?: string;
-  phone?: string;
-  experienceSummary?: string;
+  type?: QueueType;
 }
 
 export interface ITechnicianRepository extends IBaseRepository<Technician> {
-  // Core Lookups
   findByEmail(email: string): Promise<Technician | null>;
   findByPhone(phone: string): Promise<Technician | null>;
 
-  // Listings
   findAllPaginated(
     page: number,
     limit: number,
     filters: TechnicianFilterParams
   ): Promise<PaginatedTechnicianResult>;
 
-  // Specific Geospatial Query (For Job Dispatch)
   findAvailableInZone(
     zoneId: string,
     subServiceId: string,
     limit?: number
   ): Promise<Technician[]>;
 
-  // Admin Verification
   findPendingVerification(
     filters: VerificationQueueFilters
   ): Promise<{ technicians: Technician[]; total: number }>;
 
-  // Admin Management
   updateTechnician(id: string, payload: TechnicianUpdatePayload): Promise<void>;
   toggleBlockTechnician(id: string, isSuspended: boolean, reason?: string): Promise<void>;
 
-  // Technician Availability
   updateOnlineStatus(
     id: string, 
     isOnline: boolean, 
@@ -72,4 +67,12 @@ export interface ITechnicianRepository extends IBaseRepository<Technician> {
     lat: number, 
     lng: number
   ): Promise<boolean>;
+
+  addServiceRequest(id: string, request: ServiceRequest): Promise<void>;
+  addZoneRequest(id: string, request: ZoneRequest): Promise<void>;
+  addBankUpdateRequest(id: string, request: BankUpdateRequest): Promise<void>;
+  updatePayoutStatus(id: string, status: PayoutStatus): Promise<void>;
+  dismissRequest(technicianId: string, requestId: string): Promise<void>;
 }
+
+export { TechnicianUpdatePayload };

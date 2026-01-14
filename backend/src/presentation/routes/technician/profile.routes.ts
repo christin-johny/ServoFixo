@@ -10,7 +10,6 @@ router.get(
   technicianProfileController.getOnboardingStatus.bind(technicianProfileController)
 );
 
-//  WRITE (Step-by-Step)  
 router.patch("/onboarding/step-1", technicianProfileController.updatePersonalDetails.bind(technicianProfileController));
 
 router.patch(
@@ -55,6 +54,23 @@ router.patch(
 router.post(
   "/onboarding/resubmit", 
   technicianProfileController.resubmitProfile.bind(technicianProfileController)
+);
+router.post(
+  "/service-request",
+  technicianProfileController.requestServiceAddition.bind(technicianProfileController)
+);
+router.post(
+  "/zone-request",
+  technicianProfileController.requestZoneTransfer.bind(technicianProfileController)
+);
+router.post(
+  "/bank-request",
+  technicianProfileController.requestBankUpdate.bind(technicianProfileController)
+)
+
+router.patch(
+  "/request/:requestId/dismiss",
+  technicianProfileController.dismissNotification.bind(technicianProfileController)
 );
 
 export default router;

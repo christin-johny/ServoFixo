@@ -8,9 +8,9 @@ import { format } from "date-fns";
 
 import { useNotification } from "../../../hooks/useNotification";
 import * as techRepo from "../../../../infrastructure/repositories/admin/technicianRepository";
-import type { TechnicianProfileFull } from "../../../../domain/types/Technician";
 import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
 import TechnicianProfileSummary from "../../../components/Admin/technician/TechnicianProfileSummary";
+import type { AdminTechnicianProfileDto } from "../../../../domain/types/TechnicianVerificationDtos";
  
 import { FileLightbox } from "../../../components/Shared/FileLightbox/FileLightbox";
 
@@ -34,7 +34,7 @@ const TechnicianVerificationDetails: React.FC = () => {
     const navigate = useNavigate();
     const { showSuccess, showError } = useNotification();
 
-    const [profile, setProfile] = useState<TechnicianProfileFull | null>(null);
+    const [profile, setProfile] = useState<AdminTechnicianProfileDto | null>(null);
     const [loading, setLoading] = useState(true);
 
     const [decisions, setDecisions] = useState<Record<string, DocDecision>>({});
@@ -49,30 +49,31 @@ const TechnicianVerificationDetails: React.FC = () => {
         if (id) loadProfile(id);
     }, [id]);
 
-    const loadProfile = async (techId: string) => {
-        try {
-            setLoading(true);
-            const data = await techRepo.getTechnicianProfile(techId);
-            setProfile(data);
+const loadProfile = async (techId: string) => {
+    try {
+        setLoading(true);
+        // ✅ CAST: Ensure the data is treated as the full Admin DTO
+        const data = await techRepo.getTechnicianProfile(techId) as unknown as AdminTechnicianProfileDto;
+        
+        setProfile(data);
 
-            const initialDecisions: Record<string, DocDecision> = {};
-            data.documents.forEach((doc) => {
-                if (doc.status === "APPROVED" || doc.status === "REJECTED") {
-                    initialDecisions[doc.type] = {
-                        status: doc.status,
-                        reason: doc.rejectionReason
-                    };
-                }
-            });
-            setDecisions(initialDecisions);
-        } catch (err) {
-            console.error(err);
+        const initialDecisions: Record<string, DocDecision> = {};
+        data.documents.forEach((doc) => {
+            if (doc.status === "APPROVED" || doc.status === "REJECTED") {
+                initialDecisions[doc.type] = {
+                    status: doc.status as "APPROVED" | "REJECTED",  
+                    reason: doc.rejectionReason
+                };
+            }
+        });
+        setDecisions(initialDecisions);
+    } catch  {
             showError("Failed to load technician profile");
             navigate("/admin/technicians/verification");
-        } finally {
-            setLoading(false);
-        }
-    };
+    } finally {
+        setLoading(false);
+    }
+};
 
     const handleDocDecision = (type: string, status: "APPROVED" | "REJECTED") => {
         setDecisions((prev) => {

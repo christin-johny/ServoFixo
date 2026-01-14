@@ -14,7 +14,8 @@ import {
   ChevronDown,
   ChevronRight,
   X,
-  Layers
+  Layers,
+  AlertCircle
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -45,6 +46,7 @@ const MENU_CONFIG: MenuSection[] = [
       {
         label: 'Technicians', icon: Users, children: [
           { label: 'Verification Queue', path: '/admin/technicians/verification', icon: CheckCircle },
+          { label: 'Update Requests', path: '/admin/technicians/requests', icon: AlertCircle },
           { label: 'Technician List', path: '/admin/technicians/list', icon: Users },
         ]
       },

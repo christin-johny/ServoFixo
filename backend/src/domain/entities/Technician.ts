@@ -6,8 +6,12 @@ import {
   TechnicianRatings,
   VerificationStatus,
   TechnicianLocation,
-  EmergencyContact
-} from "../../../../shared/types/value-objects/TechnicianTypes";
+  EmergencyContact,
+  ServiceRequest,
+  ZoneRequest,
+  BankUpdateRequest,
+  PayoutStatus,
+} from "../../../../shared/types/value-objects/TechnicianTypes"; //
 
 export interface TechnicianProps {
   id?: string;
@@ -24,7 +28,12 @@ export interface TechnicianProps {
   categoryIds: string[];
   subServiceIds: string[];
   zoneIds: string[];
-   
+
+  serviceRequests?: ServiceRequest[];
+  zoneRequests?: ZoneRequest[];
+  bankUpdateRequests?: BankUpdateRequest[];
+  payoutStatus?: PayoutStatus;
+
   documents: TechnicianDocument[];
   bankDetails?: TechnicianBankDetails;
 
@@ -34,15 +43,15 @@ export interface TechnicianProps {
 
   verificationStatus?: VerificationStatus;
   verificationReason?: string;
-  
+
   isSuspended?: boolean;
   suspendReason?: string;
   portfolioUrls?: string[];
   deviceToken?: string;
-  
+
   currentLocation?: TechnicianLocation;
   emergencyContact?: EmergencyContact;
-  
+
   isOnline?: boolean;
   isDeleted?: boolean;
 
@@ -56,7 +65,7 @@ export class Technician {
   private _email: string;
   private _phone: string;
   private _password?: string;
- 
+
   private _onboardingStep: number;
   private _experienceSummary: string;
 
@@ -65,7 +74,12 @@ export class Technician {
   private _categoryIds: string[];
   private _subServiceIds: string[];
   private _zoneIds: string[];
-   
+
+  private _serviceRequests: ServiceRequest[];
+  private _zoneRequests: ZoneRequest[];
+  private _bankUpdateRequests: BankUpdateRequest[];
+  private _payoutStatus: PayoutStatus;
+
   private _documents: TechnicianDocument[];
   private _bankDetails?: TechnicianBankDetails;
 
@@ -75,15 +89,15 @@ export class Technician {
 
   private _verificationStatus: VerificationStatus;
   private _verificationReason?: string;
-  
+
   private _isSuspended: boolean;
   private _suspendReason?: string;
   private _portfolioUrls: string[];
   private _deviceToken?: string;
-  
+
   private _currentLocation?: TechnicianLocation;
   private _emergencyContact?: EmergencyContact;
-  
+
   private _isOnline: boolean;
   private _isDeleted: boolean;
 
@@ -96,7 +110,7 @@ export class Technician {
     this._email = props.email;
     this._phone = props.phone;
     this._password = props.password;
- 
+
     this._onboardingStep = props.onboardingStep || 1;
     this._experienceSummary = props.experienceSummary || "";
 
@@ -105,7 +119,12 @@ export class Technician {
     this._categoryIds = props.categoryIds || [];
     this._subServiceIds = props.subServiceIds || [];
     this._zoneIds = props.zoneIds || [];
-    
+
+    this._serviceRequests = props.serviceRequests || [];
+    this._zoneRequests = props.zoneRequests || [];
+    this._bankUpdateRequests = props.bankUpdateRequests || [];
+    this._payoutStatus = props.payoutStatus || "ACTIVE";
+
     this._documents = props.documents || [];
     this._bankDetails = props.bankDetails;
 
@@ -114,7 +133,10 @@ export class Technician {
       frozenAmount: 0,
       currency: "INR",
     };
-    this._availability = props.availability || { isOnline: false };
+    this._availability = props.availability || {
+      isOnline: false,
+      isOnJob: false,
+    };
     this._ratings = props.ratings || { averageRating: 0, totalReviews: 0 };
 
     this._verificationStatus = props.verificationStatus || "PENDING";
@@ -131,7 +153,7 @@ export class Technician {
     this._createdAt = props.createdAt || new Date();
     this._updatedAt = props.updatedAt || new Date();
   }
- 
+
   public getId(): string {
     return this._id;
   }
@@ -148,6 +170,12 @@ export class Technician {
     return this._password;
   }
 
+  public getAvatarUrl(): string | undefined {
+    return this._avatarUrl;
+  }
+  public getBio(): string | undefined {
+    return this._bio;
+  }
   public getOnboardingStep(): number {
     return this._onboardingStep;
   }
@@ -155,12 +183,6 @@ export class Technician {
     return this._experienceSummary;
   }
 
-  public getAvatarUrl(): string | undefined {
-    return this._avatarUrl;
-  }
-  public getBio(): string | undefined {
-    return this._bio;
-  }
   public getCategoryIds(): string[] {
     return this._categoryIds;
   }
@@ -170,20 +192,25 @@ export class Technician {
   public getZoneIds(): string[] {
     return this._zoneIds;
   }
-  
-  // ✅ Typed Getter
+
   public getDocuments(): TechnicianDocument[] {
     return this._documents;
   }
-  
-  // ✅ Typed Getter
   public getBankDetails(): TechnicianBankDetails | undefined {
     return this._bankDetails;
   }
-  
-  // ✅ Typed Getter
-  public getVerificationStatus(): VerificationStatus {
-    return this._verificationStatus;
+
+  public getServiceRequests(): ServiceRequest[] {
+    return this._serviceRequests;
+  }
+  public getZoneRequests(): ZoneRequest[] {
+    return this._zoneRequests;
+  }
+  public getBankUpdateRequests(): BankUpdateRequest[] {
+    return this._bankUpdateRequests;
+  }
+  public getPayoutStatus(): PayoutStatus {
+    return this._payoutStatus;
   }
 
   public getWalletBalance(): TechnicianWallet {
@@ -194,6 +221,9 @@ export class Technician {
   }
   public getRatings(): TechnicianRatings {
     return this._ratings;
+  }
+  public getVerificationStatus(): VerificationStatus {
+    return this._verificationStatus;
   }
   public getVerificationReason(): string | undefined {
     return this._verificationReason;
@@ -216,9 +246,6 @@ export class Technician {
   public getEmergencyContact(): EmergencyContact | undefined {
     return this._emergencyContact;
   }
-  public getIsOnline(): boolean {
-    return this._isOnline;
-  }
   public getIsDeleted(): boolean {
     return this._isDeleted;
   }
@@ -228,21 +255,12 @@ export class Technician {
   public getUpdatedAt(): Date {
     return this._updatedAt;
   }
- 
-  public setOnboardingStep(step: number): void {
-    this._onboardingStep = step;
+  public getIsOnJob(): boolean {
+    return this._availability.isOnJob ?? false;
   }
 
-  public setVerificationStatus(status: VerificationStatus): void {
-    this._verificationStatus = status;
-  }
-
-  public updateVerificationStatus(status: VerificationStatus, reason?: string): void {
-    this._verificationStatus = status;
-    if (reason) {
-      this._verificationReason = reason;
-    }
-    this._updatedAt = new Date();
+  public getIsOnline(): boolean {
+    return this._isOnline;
   }
 
   public updateProfile(data: {
@@ -267,14 +285,46 @@ export class Technician {
     this._zoneIds = zoneIds;
     this._updatedAt = new Date();
   }
+  
+  public dismissRequest(requestId: string): void {
+    const allRequests = [
+      ...this._serviceRequests,
+      ...this._zoneRequests,
+      ...this._bankUpdateRequests
+    ];
+    
+    const target = allRequests.find(r => r.id === requestId);
+    if (target) {
+      target.isDismissed = true;
+      this._updatedAt = new Date();
+    }
+  }
 
-  // ✅ Typed Setter
+  public updateServiceRequests(requests: ServiceRequest[]): void {
+    this._serviceRequests = requests;
+    this._updatedAt = new Date();
+  }
+
+  public updateZoneRequests(requests: ZoneRequest[]): void {
+    this._zoneRequests = requests;
+    this._updatedAt = new Date();
+  }
+
+  public updateBankUpdateRequests(requests: BankUpdateRequest[]): void {
+    this._bankUpdateRequests = requests;
+    this._updatedAt = new Date();
+  }
+
+  public updatePayoutStatus(status: PayoutStatus): void {
+    this._payoutStatus = status;
+    this._updatedAt = new Date();
+  }
+
   public updateDocuments(documents: TechnicianDocument[]) {
     this._documents = documents;
     this._updatedAt = new Date();
   }
 
-  // ✅ Typed Setter
   public updateBankDetails(details: TechnicianBankDetails) {
     this._bankDetails = details;
     this._updatedAt = new Date();
@@ -284,12 +334,51 @@ export class Technician {
     this._isOnline = status;
     this._updatedAt = new Date();
   }
+
+  public setOnboardingStep(step: number): void {
+    this._onboardingStep = step;
+  }
+
+  public setVerificationStatus(status: VerificationStatus): void {
+    this._verificationStatus = status;
+  }
+
+  public addCategory(categoryId: string): void {
+    if (!this._categoryIds.includes(categoryId)) {
+      this._categoryIds.push(categoryId);
+      this._updatedAt = new Date();
+    }
+  }
   
-  public setSuspension(status: boolean, reason?: string): void {
-    this._isSuspended = status;
-    this._suspendReason = reason;
+  public updateVerificationStatus(
+    status: VerificationStatus,
+    reason?: string
+  ): void {
+    this._verificationStatus = status;
+    if (reason) {
+      this._verificationReason = reason;
+    }
     this._updatedAt = new Date();
   }
+ 
+  public setSuspension(status: boolean, reason?: string): void {
+    this._isSuspended = status;
+    if (reason) {
+      this._suspendReason = reason;
+    }
+    this._updatedAt = new Date();
+  }
+ 
+  public addServiceRequest(request: ServiceRequest): void {
+    this._serviceRequests.push(request);
+    this._updatedAt = new Date();
+}
+
+public requestBankUpdate(request: BankUpdateRequest): void {
+    this._bankUpdateRequests.push(request);
+    this._payoutStatus = "ON_HOLD";
+    this._updatedAt = new Date();
+}
 
   public toProps(): TechnicianProps {
     return {
@@ -298,15 +387,17 @@ export class Technician {
       email: this._email,
       phone: this._phone,
       password: this._password,
-
       onboardingStep: this._onboardingStep,
       experienceSummary: this._experienceSummary,
-
       avatarUrl: this._avatarUrl,
       bio: this._bio,
       categoryIds: this._categoryIds,
       subServiceIds: this._subServiceIds,
       zoneIds: this._zoneIds,
+      serviceRequests: this._serviceRequests,
+      zoneRequests: this._zoneRequests,
+      bankUpdateRequests: this._bankUpdateRequests,
+      payoutStatus: this._payoutStatus,
       documents: this._documents,
       bankDetails: this._bankDetails,
       walletBalance: this._walletBalance,

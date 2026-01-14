@@ -1,148 +1,206 @@
 import { Request, Response } from "express";
-import { IUseCase } from "../../../application/interfaces/IUseCase"; 
+import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { PaginatedTechnicianQueueResponse } from "../../../application/dto/technician/TechnicianQueueDto";
-import { AdminTechnicianProfileDto, VerifyTechnicianDto } from "../../../application/dto/technician/TechnicianVerificationDtos";
- 
-import { 
-  TechnicianUpdatePayload, 
-  TechnicianFilterParams, 
-  VerificationQueueFilters 
+import {
+  AdminTechnicianProfileDto,
+  VerifyTechnicianDto,
+} from "../../../application/dto/technician/TechnicianVerificationDtos";
+import { ResolvePartnerRequestDto } from "../../../application/dto/admin/ManageRequestDto";
+import {
+  TechnicianUpdatePayload,
+  TechnicianFilterParams,
+  VerificationQueueFilters,
+  QueueType,
 } from "../../../domain/repositories/ITechnicianRepository";
- 
+
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
+import {
+  ErrorMessages,
+  SuccessMessages,
+} from "../../../../../shared/types/enums/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { RequestAction } from "../../../../../shared/types/enums/RequestResolutionEnums";
 
 export class AdminTechnicianController {
   constructor(
-    private readonly _getQueueUseCase: IUseCase<PaginatedTechnicianQueueResponse, [VerificationQueueFilters]>,
-    private readonly _getFullProfileUseCase: IUseCase<AdminTechnicianProfileDto, [string]>, 
-    private readonly _verifyTechnicianUseCase: IUseCase<void, [string, VerifyTechnicianDto]>, 
-    private readonly _getAllTechniciansUseCase: IUseCase<PaginatedTechnicianQueueResponse, [TechnicianFilterParams & { page: number, limit: number }]>,
-    private readonly _updateTechnicianUseCase: IUseCase<void, [string, TechnicianUpdatePayload]>,
+    private readonly _getQueueUseCase: IUseCase<
+      PaginatedTechnicianQueueResponse,
+      [VerificationQueueFilters]
+    >,
+    private readonly _getFullProfileUseCase: IUseCase<
+      AdminTechnicianProfileDto,
+      [string]
+    >,
+    private readonly _verifyTechnicianUseCase: IUseCase<
+      void,
+      [string, VerifyTechnicianDto]
+    >,
+    private readonly _getAllTechniciansUseCase: IUseCase<
+      PaginatedTechnicianQueueResponse,
+      [TechnicianFilterParams & { page: number; limit: number }]
+    >,
+    private readonly _updateTechnicianUseCase: IUseCase<
+      void,
+      [string, TechnicianUpdatePayload]
+    >,
     private readonly _deleteTechnicianUseCase: IUseCase<void, [string]>,
-    private readonly _blockTechnicianUseCase: IUseCase<void, [string, boolean, string | undefined]>,
-    
+    private readonly _blockTechnicianUseCase: IUseCase<
+      void,
+      [string, boolean, string | undefined]
+    >,
+    private readonly _resolvePartnerRequestUseCase: IUseCase<
+      void,
+      [string, ResolvePartnerRequestDto]
+    >,
     private readonly _logger: ILogger
   ) {}
- 
-getVerificationQueue = async (req: Request, res: Response): Promise<Response> => {
+
+  getVerificationQueue = async (
+    req: Request,
+    res: Response
+  ): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.ADMIN_GET_TECH_QUEUE_INIT, { query: req.query });
+      const queueType = req.query.type as QueueType | undefined;
 
       const params: VerificationQueueFilters = {
         page: parseInt(req.query.page as string) || 1,
         limit: parseInt(req.query.limit as string) || 10,
         search: req.query.search as string | undefined,
-        sort: (req.query.sort as "asc" | "desc") || "asc", 
-        sortBy: (req.query.sortBy as string) || "submittedAt" 
+        sort: (req.query.sort as "asc" | "desc") || "asc",
+        sortBy: (req.query.sortBy as string) || "submittedAt",
+        type: queueType,
       };
 
       const result = await this._getQueueUseCase.execute(params);
 
       return res.status(StatusCodes.OK).json({
         success: true,
-        data: result
+        data: result,
       });
-
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      this._logger.error(LogEvents.ADMIN_GET_TECH_QUEUE_FAILED, errorMessage, { error: err });
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
+      this._logger.error(LogEvents.ADMIN_GET_TECH_QUEUE_FAILED, errorMessage, {
+        error: err,
+      });
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: ErrorMessages.INTERNAL_ERROR });
     }
   };
 
-  getTechnicianProfile = async (req: Request, res: Response): Promise<Response> => {
+  getTechnicianProfile = async (
+    req: Request,
+    res: Response
+  ): Promise<Response> => {
     try {
       const { id } = req.params;
       const result = await this._getFullProfileUseCase.execute(id);
 
       return res.status(StatusCodes.OK).json({
         success: true,
-        data: result
+        data: result,
       });
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      
+
       if (errorMessage === ErrorMessages.TECHNICIAN_NOT_FOUND) {
         return res.status(StatusCodes.NOT_FOUND).json({ error: errorMessage });
       }
 
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: ErrorMessages.INTERNAL_ERROR });
     }
   };
- 
+
   verifyTechnician = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
       const dto = req.body as VerifyTechnicianDto;
 
       if (!dto.action || !["APPROVE", "REJECT"].includes(dto.action)) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ error: "Invalid action. Must be APPROVE or REJECT." });
+        return res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ error: "Invalid action. Must be APPROVE or REJECT." });
       }
 
       await this._verifyTechnicianUseCase.execute(id, dto);
 
       return res.status(StatusCodes.OK).json({
         success: true,
-        message: dto.action === "APPROVE" ? "Technician Approved Successfully" : "Technician Rejected"
+        message:
+          dto.action === "APPROVE"
+            ? "Technician Approved Successfully"
+            : "Technician Rejected",
       });
-
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      
+
       if (errorMessage === ErrorMessages.TECHNICIAN_NOT_FOUND) {
         return res.status(StatusCodes.NOT_FOUND).json({ error: errorMessage });
       }
 
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: ErrorMessages.INTERNAL_ERROR });
     }
   };
- 
-  getAllTechnicians = async (req: Request, res: Response): Promise<Response> => {
+
+  getAllTechnicians = async (
+    req: Request,
+    res: Response
+  ): Promise<Response> => {
     try {
-      this._logger.info("ADMIN_GET_ALL_TECHS_INIT", { query: req.query });
+      this._logger.info(LogEvents.ADMIN_GET_ALL_TECHS_INIT, {
+        query: req.query,
+      });
 
       const filters = {
         page: parseInt(req.query.page as string) || 1,
         limit: parseInt(req.query.limit as string) || 10,
         search: req.query.search as string | undefined,
         status: req.query.status as any,
-        zoneId: req.query.zoneId as string | undefined
+        zoneId: req.query.zoneId as string | undefined,
       };
 
-      const result = await this._getAllTechniciansUseCase.execute(filters); 
+      const result = await this._getAllTechniciansUseCase.execute(filters);
 
       return res.status(StatusCodes.OK).json({
         success: true,
-        data: result
+        data: result,
       });
-
     } catch (err: unknown) {
-      this._logger.error("ADMIN_GET_ALL_TECHS_FAILED", String(err));
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
+      this._logger.error(LogEvents.ADMIN_GET_ALL_TECHS_FAILED, String(err));
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: ErrorMessages.INTERNAL_ERROR });
     }
-  }; 
+  };
 
   updateTechnician = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      const updates = req.body as TechnicianUpdatePayload; 
+      const updates = req.body as TechnicianUpdatePayload;
 
       await this._updateTechnicianUseCase.execute(id, updates);
 
       return res.status(StatusCodes.OK).json({
         success: true,
-        message: "Technician updated successfully"
+        message: SuccessMessages.TECH_UPDATED,
       });
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: errorMessage });
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: errorMessage });
     }
   };
- 
-  toggleBlockTechnician = async (req: Request, res: Response): Promise<Response> => {
+
+  toggleBlockTechnician = async (
+    req: Request,
+    res: Response
+  ): Promise<Response> => {
     try {
       const { id } = req.params;
       const { isSuspended, reason } = req.body;
@@ -151,27 +209,69 @@ getVerificationQueue = async (req: Request, res: Response): Promise<Response> =>
 
       return res.status(StatusCodes.OK).json({
         success: true,
-        message: isSuspended ? "Technician Suspended" : "Technician Activated"
+        message: isSuspended
+          ? SuccessMessages.TECH_SUSPENDED
+          : SuccessMessages.TECH_ACTIVATED,
       });
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: errorMessage });
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: errorMessage });
     }
   };
- 
+
   deleteTechnician = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      
+
       await this._deleteTechnicianUseCase.execute(id);
 
       return res.status(StatusCodes.OK).json({
         success: true,
-        message: "Technician Deleted Successfully"
+        message: SuccessMessages.TECH_DELETED,
       });
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: errorMessage });
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: errorMessage });
+    }
+  };
+
+  resolvePartnerRequest = async (
+    req: Request,
+    res: Response
+  ): Promise<Response> => {
+    try {
+      const { id } = req.params;
+      const dto = req.body as ResolvePartnerRequestDto;
+
+      if (!dto.action || !Object.values(RequestAction).includes(dto.action)) {
+        return res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ error: ErrorMessages.INVALID_RESOLUTION_ACTION });
+      }
+
+      await this._resolvePartnerRequestUseCase.execute(id, dto);
+
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        message: SuccessMessages.TECH_UPDATED,
+      });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+
+      if (
+        errorMessage === ErrorMessages.TECHNICIAN_NOT_FOUND ||
+        errorMessage === ErrorMessages.REQUEST_NOT_FOUND
+      ) {
+        return res.status(StatusCodes.NOT_FOUND).json({ error: errorMessage });
+      }
+
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: ErrorMessages.INTERNAL_ERROR });
     }
   };
 }
