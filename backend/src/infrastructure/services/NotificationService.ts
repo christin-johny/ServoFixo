@@ -57,10 +57,8 @@ export class NotificationService implements INotificationService {
     const isApproved = data.action === "APPROVE";
     let title = isApproved ? "Request Approved ✅" : "Action Required ⚠️";
     let body = "";
-
-    // 🛠️ Specialized Service Messaging
-    if (data.type === "SERVICE") {
-      // ✅ Scoped Service-specific logic to prevent errors on other types
+ 
+    if (data.type === "SERVICE") { 
       const isRemoval = data.metadata.serviceAction === "REMOVE";
       const catRemoved = data.metadata.categoryRemoved === "true";
 
@@ -71,14 +69,12 @@ export class NotificationService implements INotificationService {
       } else {
         body = `Your request to ${isRemoval ? "remove" : "add"} a service was not approved. Reason: ${data.rejectionReason || 'Please check details.'}`;
       }
-    } 
-    // 🛠️ Specialized Zone Messaging
+    }  
     else if (data.type === "ZONE") {
       body = isApproved
         ? "Your zone transfer request is successful. You will now receive bookings in your new area."
         : `Zone transfer rejected. Reason: ${data.rejectionReason || 'Please check details.'}`;
-    }
-    // 🛠️ Specialized Bank Messaging
+    } 
     else if (data.type === "BANK") {
       body = isApproved
         ? "Your bank details have been updated. Payouts are now active."
@@ -92,7 +88,7 @@ export class NotificationService implements INotificationService {
       title,
       body,
       metadata: data.metadata,
-      clickAction: data.type === "BANK" ? "/technician/profile/bank" : "/technician/profile/services",
+      clickAction: data.type === "BANK" ? "/technician/profile/payouts" : "/technician/profile/services",
       priority: isApproved ? "MEDIUM" : "HIGH"
     });
   }
