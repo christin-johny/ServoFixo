@@ -29,6 +29,29 @@ app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(passport.initialize());
 
+// Temporary Debug Route
+app.post("/api/debug/test-notification/:techId", (req, res) => {
+  const { techId } = req.params;
+  const io = SocketServer.getInstance();
+
+  const testData = {
+    id: new Date().getTime().toString(),
+    type: "SERVICE_REQUEST_APPROVED",
+    title: "Debug Test 🔔",
+    body: "If you see this, Socket.io is working perfectly!",
+    clickAction: "/technician/profile",
+    status: "UNREAD",
+    createdAt: new Date().toISOString(),
+    metadata: { test: "true" }
+  };
+
+  // Target the specific room joined in SocketServer.ts
+  io.to(techId).emit("NOTIFICATION_RECEIVED", testData);
+
+  res.json({ message: `Attempted to send notification to room: ${techId}` });
+});
+
+
 // Routes
 import adminRoutes from "./presentation/routes/admin";
 import customerRoutes from "./presentation/routes/customer/index";

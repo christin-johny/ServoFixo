@@ -81,7 +81,7 @@ import { RequestServiceAddUseCase } from "../../application/use-cases/technician
 import { RequestZoneTransferUseCase } from "../../application/use-cases/technician/profile/RequestZoneTransferUseCase";
 import { RequestBankUpdateUseCase } from "../../application/use-cases/technician/profile/RequestBankUpdateUseCase";
 import { ManageTechnicianRequestsUseCase } from "../../application/use-cases/technician/management/ManageTechnicianRequestsUseCase";
-import { DismissTechnicianRequestUseCase} from "../../application/use-cases/technician/management/DismissTechnicianRequestUseCase";
+import { DismissTechnicianRequestUseCase } from "../../application/use-cases/technician/management/DismissTechnicianRequestUseCase";
 
 // --- Admin Auth---
 import { AdminLoginUseCase } from "../../application/use-cases/auth/AdminLoginUseCase";
@@ -119,7 +119,11 @@ import { WinstonLogger } from "../logging/WinstonLogger";
 // --- Notification Module ---
 import { NotificationMongoRepository } from "../database/repositories/NotificationMongoRepository";
 import { NotificationService } from "../services/NotificationService";
-import {SocketServer} from "../socket/SocketServer"
+import { SocketServer } from "../socket/SocketServer";
+import { GetNotificationHistoryUseCase } from "../../application/use-cases/notification/GetNotificationHistoryUseCase";
+import { TechnicianNotificationController } from "../../presentation/controllers/Technician/TechnicianNotificationController";
+import { MarkNotificationAsReadUseCase } from "../../application/use-cases/notification/MarkNotificationAsReadUseCase";
+import { MarkAllNotificationsAsReadUseCase } from "../../application/use-cases/notification/MarkAllNotificationsAsReadUseCase";
 
 // INFRASTRUCTURE SERVICE INSTANTIATION
 
@@ -128,7 +132,7 @@ const otpSessionRepo = new OtpSessionMongoRepository();
 const emailService = new NodemailerEmailService();
 const passwordHasher = new BcryptPasswordHasher();
 const jwtService = new JwtService();
-export const  logger = new WinstonLogger();
+export const logger = new WinstonLogger();
 const cacheService = new RedisCacheService(redis);
 const googleAuthService = new GoogleAuthService(
   process.env.GOOGLE_CLIENT_ID || ""
@@ -479,9 +483,15 @@ const requestZoneTransferUseCase = new RequestZoneTransferUseCase(
   technicianRepo,
   logger
 );
-const requestBankUpdateUseCase = new RequestBankUpdateUseCase(technicianRepo, logger);
+const requestBankUpdateUseCase = new RequestBankUpdateUseCase(
+  technicianRepo,
+  logger
+);
 
-const dismissTechnicianRequestUseCase = new DismissTechnicianRequestUseCase(technicianRepo, logger)
+const dismissTechnicianRequestUseCase = new DismissTechnicianRequestUseCase(
+  technicianRepo,
+  logger
+);
 // 2. Instantiate & Export Profile Controller
 export const technicianProfileController = new TechnicianProfileController(
   technicianOnboardingUseCase,
@@ -489,7 +499,7 @@ export const technicianProfileController = new TechnicianProfileController(
   uploadTechnicianFileUseCase,
   toggleOnlineStatusUseCase,
   resubmitProfileUseCase,
-  requestServiceAddUseCase,   // <--- Injected
+  requestServiceAddUseCase, // <--- Injected
   requestZoneTransferUseCase,
   requestBankUpdateUseCase, // <--- Injected
   dismissTechnicianRequestUseCase,
@@ -555,7 +565,6 @@ const notificationRepo = new NotificationMongoRepository();
 
 export const notificationService = new NotificationService(
   notificationRepo,
-  SocketServer, 
   logger
 );
 const manageTechnicianRequestsUseCase = new ManageTechnicianRequestsUseCase(
@@ -563,6 +572,23 @@ const manageTechnicianRequestsUseCase = new ManageTechnicianRequestsUseCase(
   notificationService,
   logger
 );
+const getNotificationHistoryUseCase = new GetNotificationHistoryUseCase(
+  notificationRepo
+);
+const markNotificationAsReadUseCase = new MarkNotificationAsReadUseCase(
+  notificationRepo
+);
+const markAllNotificationsAsReadUseCase = new MarkAllNotificationsAsReadUseCase(
+  notificationRepo
+);
+
+export const technicianNotificationController =
+  new TechnicianNotificationController(
+    getNotificationHistoryUseCase,
+    markNotificationAsReadUseCase,
+    markAllNotificationsAsReadUseCase,
+    logger
+  );
 
 export const adminTechnicianController = new AdminTechnicianController(
   getVerificationQueueUseCase,

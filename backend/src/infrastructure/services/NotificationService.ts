@@ -6,11 +6,11 @@ import { CreateNotificationDto } from "../../application/dto/notification/Create
 import { NotificationResponseDto } from "../../application/dto/notification/NotificationResponseDto";
 import { LogEvents } from "../../../../shared/constants/LogEvents";
 import { NotificationType } from "../../../../shared/types/value-objects/NotificationTypes";
+import { SocketServer } from "../socket/SocketServer";
 
 export class NotificationService implements INotificationService {
   constructor(
     private readonly _notificationRepo: INotificationRepository,
-    private readonly _io: any, 
     private readonly _logger: any 
   ) {}
 
@@ -34,7 +34,9 @@ export class NotificationService implements INotificationService {
     const responseDto = NotificationMapper.toResponse(savedNotification);
 
     try {
-      this._io.to(dto.recipientId).emit("NOTIFICATION_RECEIVED", responseDto);
+      const io = SocketServer.getInstance(); //
+      io.to(dto.recipientId).emit("NOTIFICATION_RECEIVED", responseDto);
+      
       this._logger.info(LogEvents.NOTIFICATION_SEND_SUCCESS, { recipientId: dto.recipientId });
     } catch (error) {
       this._logger.error(LogEvents.NOTIFICATION_SEND_FAILED, { error, recipientId: dto.recipientId });
@@ -53,14 +55,15 @@ export class NotificationService implements INotificationService {
     }
   ): Promise<void> {
     const isApproved = data.action === "APPROVE";
-    const isRemoval = data.metadata.serviceAction === "REMOVE";
-    const catRemoved = data.metadata.categoryRemoved === "true";
-    
     let title = isApproved ? "Request Approved ✅" : "Action Required ⚠️";
     let body = "";
 
     // 🛠️ Specialized Service Messaging
     if (data.type === "SERVICE") {
+      // ✅ Scoped Service-specific logic to prevent errors on other types
+      const isRemoval = data.metadata.serviceAction === "REMOVE";
+      const catRemoved = data.metadata.categoryRemoved === "true";
+
       if (isApproved) {
         body = isRemoval 
           ? `The service has been removed from your profile.${catRemoved ? " Note: The parent category was also deactivated as it has no active services." : ""}`
@@ -89,7 +92,7 @@ export class NotificationService implements INotificationService {
       title,
       body,
       metadata: data.metadata,
-      clickAction: data.type === "BANK" ? "/profile/bank" : "/profile/services",
+      clickAction: data.type === "BANK" ? "/technician/profile/bank" : "/technician/profile/services",
       priority: isApproved ? "MEDIUM" : "HIGH"
     });
   }

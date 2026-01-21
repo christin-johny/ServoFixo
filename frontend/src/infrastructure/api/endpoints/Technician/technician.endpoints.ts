@@ -14,11 +14,8 @@ export const TECHNICIAN_PROFILE_ENDPOINTS = {
   GET_CATEGORIES: "/technician/data/categories",
   GET_SERVICES: "/technician/data/services",
   GET_ZONES: "/technician/data/zones",
-  // Read Status
   GET_STATUS: "/technician/profile/onboarding/status",
   GET_RATE_CARD:'/technician/data/rate-card',
-
-  // Write Steps (Strictly mapped to Backend)
   STEP_1_PERSONAL: "/technician/profile/onboarding/step-1",
   STEP_2_PREFERENCES: "/technician/profile/onboarding/step-2",
   STEP_3_ZONES: "/technician/profile/onboarding/step-3",
@@ -34,4 +31,9 @@ export const TECHNICIAN_PROFILE_ENDPOINTS = {
   REQUEST_ZONE: "/technician/profile/zone-request",
   REQUEST_BANK: "/technician/profile/bank-request",
   DISMISS_REQUEST: (requestId: string) => `/technician/profile/request/${requestId}/dismiss`,
+};
+export const NOTIFICATION_ENDPOINTS = {
+  GET_ALL: "/technician/notifications",
+  MARK_READ: (id: string) => `/technician/notifications/${id}/read`,
+  MARK_ALL_READ: "/technician/notifications/read-all",
 };

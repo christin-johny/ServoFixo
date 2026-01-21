@@ -56,13 +56,12 @@ export class ManageTechnicianRequestsUseCase
       // ✅ Persistence
       await this._technicianRepo.update(tech);
 
-      // 🚀 Trigger Real-time Notification after DB Success
-      await this._notificationService.notifyRequestResolved(techId, {
-        type: dto.requestType as "SERVICE" | "ZONE" | "BANK",
-        action: dto.action as "APPROVE" | "REJECT",
-        rejectionReason: dto.rejectionReason,
-        metadata: {
-          requestId: dto.requestId,
+      await this._notificationService.notifyRequestResolved(techId, { 
+  type: dto.requestType as "SERVICE" | "ZONE" | "BANK",
+  action: dto.action as "APPROVE" | "REJECT",
+  rejectionReason: dto.rejectionReason,
+  metadata: {
+    requestId: dto.requestId,
           type: dto.requestType,
           serviceAction: serviceAction,
           categoryRemoved: String(categoryRemoved)
