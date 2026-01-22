@@ -11,7 +11,7 @@ import { SocketServer } from "./infrastructure/socket/SocketServer";
 import { logger } from "./infrastructure/di/Container";  
 
 const app = express();
-const httpServer = createServer(app); // ✅ Wrap Express with HTTP Server
+const httpServer = createServer(app);  
 
 app.use(express.json());
 app.use(cookieParser());
@@ -28,29 +28,6 @@ const corsOptions = {
 app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(passport.initialize());
-
-// Temporary Debug Route
-app.post("/api/debug/test-notification/:techId", (req, res) => {
-  const { techId } = req.params;
-  const io = SocketServer.getInstance();
-
-  const testData = {
-    id: new Date().getTime().toString(),
-    type: "SERVICE_REQUEST_APPROVED",
-    title: "Debug Test 🔔",
-    body: "If you see this, Socket.io is working perfectly!",
-    clickAction: "/technician/profile",
-    status: "UNREAD",
-    createdAt: new Date().toISOString(),
-    metadata: { test: "true" }
-  };
-
-  // Target the specific room joined in SocketServer.ts
-  io.to(techId).emit("NOTIFICATION_RECEIVED", testData);
-
-  res.json({ message: `Attempted to send notification to room: ${techId}` });
-});
-
 
 // Routes
 import adminRoutes from "./presentation/routes/admin";
@@ -72,7 +49,6 @@ export const startServer = async () => {
    
   httpServer.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`Real-time Socket.io engine initialized`);
   });
 };
 

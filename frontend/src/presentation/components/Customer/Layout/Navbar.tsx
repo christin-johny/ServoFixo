@@ -9,11 +9,13 @@ import {
     fetchProfileSuccess,
     fetchProfileFailure,
     setCurrentLocation,
+    setAddresses, // Ensure this is imported
     clearCustomerData
 } from "../../../../store/customerSlice";
-import { getProfile, getZoneByLocation } from "../../../../infrastructure/repositories/customer/customerRepository";
+import { getProfile, getZoneByLocation, getMyAddresses } from "../../../../infrastructure/repositories/customer/customerRepository";
 import { customerLogout } from "../../../../infrastructure/repositories/authRepository";
 import ConfirmModal from "../../Admin/Modals/ConfirmModal";
+import LocationPickerModal from "./LocationPickerModal";
 
 const useCurrentUser = () => {
     const { profile, currentLocationName } = useSelector((state: RootState) => state.customer);
@@ -42,17 +44,22 @@ const Navbar: React.FC = () => {
     const [logoutModalOpen, setLogoutModalOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+    const [locationModalOpen, setLocationModalOpen] = useState(false);
     const profileMenuRef = useRef<HTMLDivElement | null>(null);
     const drawerRef = useRef<HTMLDivElement | null>(null);
 
-    useEffect(() => {
+const triggerGeolocation = () => {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
                     try {
                         const zoneName = await getZoneByLocation(latitude, longitude);
-                        dispatch(setCurrentLocation(zoneName));
+                        dispatch(setCurrentLocation({
+                            name: zoneName,
+                            coords: { lat: latitude, lng: longitude },
+                            isManual: false
+                        }));
                     } catch {
                         dispatch(setCurrentLocation("Location Error"));
                     }
@@ -62,7 +69,52 @@ const Navbar: React.FC = () => {
         } else {
             dispatch(setCurrentLocation("GPS Not Supported"));
         }
-    }, [dispatch]);
+    };
+
+    // ✅ Priority Hydration: Default Address > GPS
+    useEffect(() => {
+        if (isLoggedIn && !profile) {
+            const loadInitialData = async () => {
+                dispatch(fetchProfileStart());
+                try {
+                    // 1. Fetch Profile
+                    const userData = await getProfile();
+                    dispatch(fetchProfileSuccess(userData));
+
+                    // 2. Fetch Addresses immediately to find the default
+                    const addresses = await getMyAddresses();
+                    dispatch(setAddresses(addresses));
+
+                    // 3. Find serviceable default address
+                    const defaultAddr = addresses.find(a => a.isDefault && a.isServiceable);
+
+                    if (defaultAddr) {
+                        // ✅ Priority 1: Use Default Address
+                        const zoneName = await getZoneByLocation(
+                            defaultAddr.location.lat, 
+                            defaultAddr.location.lng
+                        );
+
+                        dispatch(setCurrentLocation({
+                            name: zoneName,
+                            coords: defaultAddr.location,
+                            isManual: true
+                        }));
+                    } else {
+                        // ✅ Priority 2: Fallback to GPS
+                        triggerGeolocation();
+                    }
+                } catch (err: unknown) {
+                    const message = err instanceof Error ? err.message : "Failed to load data";
+                    dispatch(fetchProfileFailure(message));
+                    triggerGeolocation(); // Fallback on API failure
+                }
+            };
+            loadInitialData();
+        } else if (!isLoggedIn) {
+            triggerGeolocation();
+        }
+    }, [isLoggedIn, profile, dispatch]);
 
     useEffect(() => {
         if (isLoggedIn && !profile) {
@@ -159,9 +211,14 @@ const Navbar: React.FC = () => {
                         </button>
 
                         <div className="flex-1 min-w-0">
-                            <button className="flex items-center gap-2 w-full text-left group">
+                            {/* ✅ Added onClick to trigger Modal */}
+                            <button 
+                                onClick={() => setLocationModalOpen(true)}
+                                className="flex items-center gap-2 w-full text-left group"
+                            >
                                 <MapPin size={18} className="text-blue-600 flex-shrink-0" />
                                 <span className="font-bold text-gray-900 text-sm truncate">{user.location}</span>
+                                <ChevronDown size={14} className="text-gray-400 flex-shrink-0" />
                             </button>
                         </div>
 
@@ -192,7 +249,11 @@ const Navbar: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-4 flex-1 justify-end">
-                        <button className="hidden lg:flex items-center gap-2 bg-[#F3F4F6] rounded-full px-4 py-2.5 hover:bg-gray-200">
+                        {/* ✅ Added onClick to trigger Modal */}
+                        <button 
+                            onClick={() => setLocationModalOpen(true)}
+                            className="hidden lg:flex items-center gap-2 bg-[#F3F4F6] rounded-full px-4 py-2.5 hover:bg-gray-200 transition-colors"
+                        >
                             <MapPin size={18} className="text-blue-600" />
                             <span className="text-sm font-bold text-gray-700">{user.location}</span>
                             <ChevronDown size={14} className="text-gray-400" />
@@ -313,6 +374,12 @@ const Navbar: React.FC = () => {
                     </aside>
                 </div>
             )}
+
+            {/* ✅ Added LocationPickerModal Component */}
+            <LocationPickerModal
+                isOpen={locationModalOpen}
+                onClose={() => setLocationModalOpen(false)}
+            />
 
             <ConfirmModal
                 isOpen={logoutModalOpen}

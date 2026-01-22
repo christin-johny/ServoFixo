@@ -64,37 +64,51 @@ const TechnicianDashboard: React.FC = () => {
       }
   };
 
-  const handleToggleOnline = async () => {
-    if (!isVerified) return;
-    setIsLocating(true);
- 
-    try {
-        if (isOnline) {
-             const response = await toggleOnlineStatus({ isOnline: false });
-             dispatch(setAvailability(response.isOnline));
-             showSuccess("You are now Offline");
-        } else {
-            if (!navigator.geolocation) throw new Error("Geolocation not supported");
-            navigator.geolocation.getCurrentPosition(
-              async (position) => {
-                const { latitude, longitude } = position.coords;
-                const response = await toggleOnlineStatus({ isOnline: true, lat: latitude, lng: longitude });
-                dispatch(setAvailability(response.isOnline));
-                showSuccess("You are now Online!");
-                setIsLocating(false);
-              },
-              (err) => { throw err; },
-              { enableHighAccuracy: true, timeout: 10000 }
-            );
-            return; // Exit here to wait for callback
-        }
-    } catch (err: unknown) {  
-         showError(extractErrorMessage(err));
-    } finally {
-         if (isOnline) setIsLocating(false); // Only stop loading here if going offline or error
-    }
-  };
+const handleToggleOnline = async () => {
+  if (!isVerified) return;
+  setIsLocating(true);
 
+  try {
+    if (isOnline) {
+      // Offline logic is simple and synchronous-like
+      const response = await toggleOnlineStatus({ isOnline: false });
+      dispatch(setAvailability(response.isOnline));
+      showSuccess("You are now Offline");
+      setIsLocating(false); // Stop loading here
+    } else {
+      if (!navigator.geolocation) throw new Error("Geolocation not supported");
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          // ✅ TRY/CATCH MUST BE INSIDE THE CALLBACK
+          try {
+            const { latitude, longitude } = position.coords;
+            const response = await toggleOnlineStatus({ 
+              isOnline: true, 
+              lat: latitude, 
+              lng: longitude 
+            });
+            dispatch(setAvailability(response.isOnline));
+            showSuccess("You are now Online!");
+          } catch (err: unknown) {
+            // ✅ This will now catch the "outside service zones" error
+            showError(extractErrorMessage(err));
+          } finally {
+            setIsLocating(false);
+          }
+        },
+        () => {
+          showError("Could not determine location. Please check GPS permissions.");
+          setIsLocating(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+  } catch (err: unknown) {
+    showError(extractErrorMessage(err));
+    setIsLocating(false);
+  }
+};
   return (
     <div className="space-y-6 animate-fade-in">
       

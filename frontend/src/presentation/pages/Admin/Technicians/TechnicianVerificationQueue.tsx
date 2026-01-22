@@ -83,7 +83,7 @@ const TechnicianVerificationQueue: React.FC = () => {
             className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs sm:text-sm font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
           >
             <ArrowUpDown size={14} className={`text-gray-500 ${sortOrder === "asc" ? "rotate-180" : ""} transition-transform`} />
-            <span>{sortOrder === "asc" ? "Oldest First" : "Newest First"}</span>
+            {/* <span>{sortOrder === "asc" ? "Oldest First" : "Newest First"}</span> */}
           </button>
 
           {/* Refresh Button */}
