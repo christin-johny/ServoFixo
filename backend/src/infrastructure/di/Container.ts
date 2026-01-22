@@ -80,9 +80,10 @@ import { GetAllTechniciansUseCase } from "../../application/use-cases/technician
 import { RequestServiceAddUseCase } from "../../application/use-cases/technician/profile/RequestServiceAddUseCase";
 import { RequestZoneTransferUseCase } from "../../application/use-cases/technician/profile/RequestZoneTransferUseCase";
 import { RequestBankUpdateUseCase } from "../../application/use-cases/technician/profile/RequestBankUpdateUseCase";
-import { ManageTechnicianRequestsUseCase } from "../../application/use-cases/technician/management/ManageTechnicianRequestsUseCase";
 import { DismissTechnicianRequestUseCase } from "../../application/use-cases/technician/management/DismissTechnicianRequestUseCase";
-
+import { ResolveServiceRequestUseCase } from "../../application/use-cases/technician/management/ResolveServiceRequestUseCase";
+import { ResolveZoneRequestUseCase } from "../../application/use-cases/technician/management/ResolveZoneRequestUseCase";
+import { ResolveBankRequestUseCase } from "../../application/use-cases/technician/management/ResolveBankRequestUseCase";
 // --- Admin Auth---
 import { AdminLoginUseCase } from "../../application/use-cases/auth/AdminLoginUseCase";
 import { AdminAuthController } from "../../presentation/controllers/Admin/AdminAuthController";
@@ -567,11 +568,7 @@ export const notificationService = new NotificationService(
   notificationRepo,
   logger
 );
-const manageTechnicianRequestsUseCase = new ManageTechnicianRequestsUseCase(
-  technicianRepo,
-  notificationService,
-  logger
-);
+
 const getNotificationHistoryUseCase = new GetNotificationHistoryUseCase(
   notificationRepo
 );
@@ -590,6 +587,24 @@ export const technicianNotificationController =
     logger
   );
 
+  const resolveServiceRequestUseCase = new ResolveServiceRequestUseCase(
+  technicianRepo,
+  notificationService,
+  logger
+);
+
+const resolveZoneRequestUseCase = new ResolveZoneRequestUseCase(
+  technicianRepo,
+  notificationService,
+  logger
+);
+
+const resolveBankRequestUseCase = new ResolveBankRequestUseCase(
+  technicianRepo,
+  notificationService,
+  logger
+);
+
 export const adminTechnicianController = new AdminTechnicianController(
   getVerificationQueueUseCase,
   getTechnicianFullProfileUseCase,
@@ -598,6 +613,8 @@ export const adminTechnicianController = new AdminTechnicianController(
   updateTechnicianUseCase,
   deleteTechnicianUseCase,
   blockTechnicianUseCase,
-  manageTechnicianRequestsUseCase,
+  resolveServiceRequestUseCase,
+  resolveZoneRequestUseCase,
+  resolveBankRequestUseCase,
   logger
 );

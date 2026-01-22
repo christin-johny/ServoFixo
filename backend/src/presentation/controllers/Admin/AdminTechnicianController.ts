@@ -11,8 +11,7 @@ import {
   TechnicianFilterParams,
   VerificationQueueFilters,
   QueueType,
-} from "../../../domain/repositories/ITechnicianRepository";
-
+} from "../../../domain/repositories/ITechnicianRepository"; 
 import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import {
   ErrorMessages,
@@ -20,8 +19,8 @@ import {
 } from "../../../../../shared/types/enums/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { RequestAction } from "../../../../../shared/types/enums/RequestResolutionEnums";
-import { resolve } from "path";
+import { RequestAction ,PartnerRequestType } from "../../../../../shared/types/enums/RequestResolutionEnums";
+ 
 
 export class AdminTechnicianController {
   constructor(
@@ -50,10 +49,9 @@ export class AdminTechnicianController {
       void,
       [string, boolean, string | undefined]
     >,
-    private readonly _resolvePartnerRequestUseCase: IUseCase<
-      void,
-      [string, ResolvePartnerRequestDto]
-    >,
+    private readonly _resolveServiceRequestUseCase: IUseCase<void, [string, ResolvePartnerRequestDto]>,
+    private readonly _resolveZoneRequestUseCase: IUseCase<void, [string, ResolvePartnerRequestDto]>,
+    private readonly _resolveBankRequestUseCase: IUseCase<void, [string, ResolvePartnerRequestDto]>,
     private readonly _logger: ILogger
   ) {}
 
@@ -147,37 +145,39 @@ export class AdminTechnicianController {
         .json({ error: ErrorMessages.INTERNAL_ERROR });
     }
   };
+ 
+getAllTechnicians = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    this._logger.info(LogEvents.ADMIN_GET_ALL_TECHS_INIT, {
+      query: req.query,
+    });
+ 
+    const filters: TechnicianFilterParams & { page: number; limit: number } = {
+      page: parseInt(req.query.page as string) || 1,
+      limit: parseInt(req.query.limit as string) || 10,
+      search: req.query.search as string | undefined,
+       
+      status: req.query.status as TechnicianFilterParams['status'], 
+      
+      zoneId: req.query.zoneId as string | undefined,
+    };
 
-  getAllTechnicians = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
-    try {
-      this._logger.info(LogEvents.ADMIN_GET_ALL_TECHS_INIT, {
-        query: req.query,
-      });
+    const result = await this._getAllTechniciansUseCase.execute(filters);
 
-      const filters = {
-        page: parseInt(req.query.page as string) || 1,
-        limit: parseInt(req.query.limit as string) || 10,
-        search: req.query.search as string | undefined,
-        status: req.query.status as any,
-        zoneId: req.query.zoneId as string | undefined,
-      };
-
-      const result = await this._getAllTechniciansUseCase.execute(filters);
-
-      return res.status(StatusCodes.OK).json({
-        success: true,
-        data: result,
-      });
-    } catch (err: unknown) {
-      this._logger.error(LogEvents.ADMIN_GET_ALL_TECHS_FAILED, String(err));
-      return res
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ error: ErrorMessages.INTERNAL_ERROR });
-    }
-  };
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      data: result,
+    });
+  } catch (err: unknown) {
+    this._logger.error(LogEvents.ADMIN_GET_ALL_TECHS_FAILED, String(err));
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: ErrorMessages.INTERNAL_ERROR });
+  }
+};
 
   updateTechnician = async (req: Request, res: Response): Promise<Response> => {
     try {
@@ -240,7 +240,7 @@ export class AdminTechnicianController {
     }
   };
 
-  resolvePartnerRequest = async (
+resolvePartnerRequest = async (
     req: Request,
     res: Response
   ): Promise<Response> => {
@@ -248,13 +248,31 @@ export class AdminTechnicianController {
       const { id } = req.params;
       const dto = req.body as ResolvePartnerRequestDto;
 
+      // Basic Validation
       if (!dto.action || !Object.values(RequestAction).includes(dto.action)) {
         return res
           .status(StatusCodes.BAD_REQUEST)
           .json({ error: ErrorMessages.INVALID_RESOLUTION_ACTION });
       }
 
-      await this._resolvePartnerRequestUseCase.execute(id, dto);
+      this._logger.info(`${LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_INIT}: Type ${dto.requestType} for Tech ${id}`);
+
+      // ✅ Domain Routing Logic
+      switch (dto.requestType) {
+        case PartnerRequestType.SERVICE:
+          await this._resolveServiceRequestUseCase.execute(id, dto);
+          break;
+        case PartnerRequestType.ZONE:
+          await this._resolveZoneRequestUseCase.execute(id, dto);
+          break;
+        case PartnerRequestType.BANK:
+          await this._resolveBankRequestUseCase.execute(id, dto);
+          break;
+        default:
+          return res
+            .status(StatusCodes.BAD_REQUEST)
+            .json({ error: ErrorMessages.INVALID_DATA });
+      }
 
       return res.status(StatusCodes.OK).json({
         success: true,
@@ -273,6 +291,7 @@ export class AdminTechnicianController {
         return res.status(StatusCodes.NOT_FOUND).json({ error: errorMessage });
       }
 
+      this._logger.error(`${LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_FAILED}: ${errorMessage}`);
       return res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
         .json({ error: ErrorMessages.INTERNAL_ERROR });
