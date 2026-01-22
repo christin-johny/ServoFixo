@@ -118,13 +118,13 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
     setFormData(prev => ({ ...prev, [name]: name === "ifscCode" ? value.toUpperCase() : value }));
   };
 
-  // ✅ NEW: Auto Trim on Blur
+  //   NEW: Auto Trim on Blur
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value.trim() }));
   };
 
-  // 🚫 ANTI-PASTE PROTECTION
+  //   ANTI-PASTE PROTECTION
   const handlePastePrevent = (e: React.ClipboardEvent) => {
     e.preventDefault();
     showError("For security, please type the account number manually.");
@@ -157,7 +157,7 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
       dispatch(updateBankDetails(payload.bankDetails));
       dispatch(setOnboardingStep(7)); 
       
-      // ✅ FIX: Correct payload structure for Verification Status
+      //   FIX: Correct payload structure for Verification Status
       dispatch(updateVerificationStatus({ status: "VERIFICATION_PENDING" }));
 
       showSuccess("Application Submitted Successfully!");
@@ -192,7 +192,7 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
             name="accountHolderName"
             value={formData.accountHolderName}
             onChange={handleChange}
-            onBlur={handleBlur} // ✅ Auto Trim
+            onBlur={handleBlur} //   Auto Trim
             placeholder="As per Bank Passbook"
             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all uppercase"
             autoComplete="off"
@@ -209,7 +209,7 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
               name="ifscCode"
               value={formData.ifscCode}
               onChange={handleChange}
-              onBlur={handleBlur} // ✅ Auto Trim
+              onBlur={handleBlur} //   Auto Trim
               maxLength={11}
               placeholder="e.g. SBIN0001234"
               className={`w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all uppercase font-mono tracking-wide ${
@@ -246,7 +246,7 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
                 name="accountNumber"
                 value={formData.accountNumber}
                 onChange={handleChange}
-                onBlur={handleBlur} // ✅ Auto Trim
+                onBlur={handleBlur} //   Auto Trim
                 placeholder="Enter Account Number"
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all tracking-widest"
                 autoComplete="off"
@@ -263,7 +263,7 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
                 name="confirmAccountNumber"
                 value={formData.confirmAccountNumber}
                 onChange={handleChange}
-                onBlur={handleBlur} // ✅ Auto Trim
+                onBlur={handleBlur} //   Auto Trim
                 onPaste={handlePastePrevent} // 🚫 BLOCK PASTE
                 placeholder="Re-enter to Confirm"
                 className={`w-full px-4 py-3 rounded-xl border focus:ring-2 outline-none transition-all tracking-widest ${

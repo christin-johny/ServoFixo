@@ -49,7 +49,7 @@ const AdminRoutes: React.FC = () => (
           <Route path=":customerId" element={<AdminCustomerProfilePage />} />
         </Route>
 
-        {/* ✅ TECHNICIAN ROUTES */}
+        {/*   TECHNICIAN ROUTES */}
         <Route path="technicians">
           {/* 1. Verification Flow (Pending items) */}
           <Route path="verification" element={<TechnicianVerificationQueue />} />

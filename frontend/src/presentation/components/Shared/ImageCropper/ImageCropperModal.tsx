@@ -12,7 +12,7 @@ interface ImageCropperModalProps {
   onClose: () => void;
   onCropConfirm: (blob: Blob) => Promise<void>;
   isUploading: boolean;
-  // ✅ New Props for Reusability
+  //   New Props for Reusability
   aspect?: number;        // Default: 1 (Square)
   circular?: boolean;     // Default: true (Round)
   title?: string;         // Default: "Adjust Photo"

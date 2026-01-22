@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { Notification, NotificationState } from "../domain/types/Notification";
-// ✅ Fixed: Changed to relative path for better compatibility
+//   Fixed: Changed to relative path for better compatibility
 import type { PaginatedNotifications } from "../infrastructure/repositories/technician/notificationRepository";
 
 const initialState: NotificationState = {

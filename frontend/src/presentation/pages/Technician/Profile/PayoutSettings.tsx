@@ -12,7 +12,7 @@ import { dismissRequestAlert } from "../../../../store/technicianSlice";
 import { dismissRequestNotification } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
 import { AlertCard } from "../../../components/Shared/AlertCard/AlertCard";
 
-// ✅ Import the Bank Update Modal
+//   Import the Bank Update Modal
 import BankUpdateModal from "../../../components/Technician/Modals/BankUpdateModal";
 
 const PayoutSettings: React.FC = () => {
@@ -20,7 +20,7 @@ const PayoutSettings: React.FC = () => {
     const dispatch = useDispatch();
     const { profile } = useSelector((state: RootState) => state.technician);
 
-    // ✅ Modal State
+    //   Modal State
     const [isBankModalOpen, setIsBankModalOpen] = useState(false);
 
     if (!profile) return null;
@@ -41,7 +41,7 @@ const PayoutSettings: React.FC = () => {
         }
     };
 
-    // ✅ Logic for Status and Wallet
+    //   Logic for Status and Wallet
     const pendingBankRequest = profile.bankUpdateRequests?.find(r => r.status === "PENDING");
     const isPayoutOnHold = profile.payoutStatus === "ON_HOLD";
     const frozenAmount = profile.walletBalance?.frozenAmount || 0;
@@ -75,7 +75,7 @@ const PayoutSettings: React.FC = () => {
 
             {/* --- 3. UNIFIED STATUS & NOTIFICATION CENTER --- */}
             <div className="space-y-3">
-                {/* ✅ BANK REJECTIONS */}
+                {/*   BANK REJECTIONS */}
                 {rejectedBankRequests.map(req => (
                     <AlertCard
                         key={req.id}
@@ -90,7 +90,7 @@ const PayoutSettings: React.FC = () => {
                     />
                 ))}
 
-                {/* ✅ PENDING OR GLOBAL HOLD (Only if no active rejection is shown) */}
+                {/*   PENDING OR GLOBAL HOLD (Only if no active rejection is shown) */}
                 {pendingBankRequest ? (
                     <div className="bg-orange-50 border border-orange-100 rounded-xl p-3 flex items-center gap-3">
                         <Clock className="w-4 h-4 text-orange-600" />
@@ -122,7 +122,7 @@ const PayoutSettings: React.FC = () => {
                                 {currentBalance.toLocaleString('en-IN')}
                             </div>
 
-                            {/* ✅ Logic: Show "Processing" money if frozenAmount > 0 */}
+                            {/*   Logic: Show "Processing" money if frozenAmount > 0 */}
                             {frozenAmount > 0 && (
                                 <div className="mt-4 flex flex-col items-center">
                                     <span className="text-[10px] font-bold text-orange-500 uppercase tracking-widest mb-1">Processing</span>
@@ -149,7 +149,7 @@ const PayoutSettings: React.FC = () => {
                                 <Landmark className="w-3.5 h-3.5 text-gray-400" /> Payout Method
                             </h3>
 
-                            {/* ✅ ACTION LOCK: Disable button if a request is already pending */}
+                            {/*   ACTION LOCK: Disable button if a request is already pending */}
                             <button
                                 onClick={() => setIsBankModalOpen(true)}
                                 disabled={!!pendingBankRequest}
@@ -243,7 +243,7 @@ const PayoutSettings: React.FC = () => {
                 </div>
             </div>
 
-            {/* ✅ MODAL FOR UPDATES */}
+            {/*   MODAL FOR UPDATES */}
             <BankUpdateModal
                 isOpen={isBankModalOpen}
                 onClose={() => setIsBankModalOpen(false)}

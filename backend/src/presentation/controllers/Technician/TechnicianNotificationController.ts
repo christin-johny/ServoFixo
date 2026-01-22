@@ -21,7 +21,7 @@ export class TechnicianNotificationController {
     try {
       const techId = (req as AuthenticatedRequest).userId;
 
-      // 🛑 Fix: Explicitly check for techId to satisfy TypeScript strictness
+      //  Fix: Explicitly check for techId to satisfy TypeScript strictness
       if (!techId) {
         return res.status(StatusCodes.UNAUTHORIZED).json({ error: ErrorMessages.UNAUTHORIZED });
       }

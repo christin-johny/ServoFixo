@@ -139,7 +139,7 @@ const TechnicianLogin: React.FC = () => {
                 {touched.password && fieldErrors.password && <p className="mt-1 text-xs text-red-600">{fieldErrors.password}</p>}
               </div>
 
-              {/* ✅ Forgot Password Link Added Here */}
+              {/*   Forgot Password Link Added Here */}
               <div className="flex justify-end">
                 <button
                   type="button"

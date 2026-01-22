@@ -150,8 +150,7 @@ const BankUpdateModal: React.FC<BankUpdateModalProps> = ({ isOpen, onClose }) =>
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value.trim() }));
     };
-
-    // 🚫 ANTI-PASTE PROTECTION
+ 
     const handlePastePrevent = (e: React.ClipboardEvent) => {
         e.preventDefault();
         showError("For security, please type the account number manually.");

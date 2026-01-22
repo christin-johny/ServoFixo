@@ -8,7 +8,7 @@ import {
 import type { RootState, AppDispatch } from "../../../../store/store";
 import { format } from "date-fns";
 
-// ✅ Import Logout Actions & Repositories
+//   Import Logout Actions & Repositories
 import { logout } from "../../../../store/authSlice";
 import { clearTechnicianData } from "../../../../store/technicianSlice";
 import { technicianLogout } from "../../../../infrastructure/repositories/technician/technicianAuthRepository";
@@ -21,7 +21,7 @@ const TechnicianProfile: React.FC = () => {
   const { showSuccess, showError } = useNotification();
   const { profile } = useSelector((state: RootState) => state.technician);
 
-  // ✅ State for Logout Modal
+  //   State for Logout Modal
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   if (!profile) return null;
@@ -29,7 +29,7 @@ const TechnicianProfile: React.FC = () => {
   const memberSince = profile.createdAt ? format(new Date(profile.createdAt), "MMMM yyyy") : "2024";
   const isVerified = profile.verificationStatus === "VERIFIED";
 
-  // ✅ Logout Handler (Identical to Layout logic)
+  //   Logout Handler (Identical to Layout logic)
   const handleLogoutConfirm = async () => {
     try {
       await technicianLogout();
@@ -239,14 +239,14 @@ const TechnicianProfile: React.FC = () => {
       <div className="pt-4 flex justify-center">
         <button
           className="flex items-center gap-2 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 px-6 py-3 rounded-xl transition-colors"
-          onClick={() => setIsLogoutModalOpen(true)} // ✅ Updated to open modal
+          onClick={() => setIsLogoutModalOpen(true)} //   Updated to open modal
         >
           <LogOut className="w-4 h-4" />
           Log Out
         </button>
       </div>
 
-      {/* ✅ LOGOUT CONFIRMATION MODAL */}
+      {/*   LOGOUT CONFIRMATION MODAL */}
       <ConfirmModal
         isOpen={isLogoutModalOpen}
         onClose={() => setIsLogoutModalOpen(false)}

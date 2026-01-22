@@ -11,7 +11,7 @@ import { addServiceRequest } from "../../../../store/technicianSlice";
 import { 
   requestServiceAddition, 
   uploadDocument,
-  type RequestServicePayload // ✅ Imported from repository
+  type RequestServicePayload //   Imported from repository
 } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
 import { technicianOnboardingRepository, type CategoryOption, type ServiceOption } from "../../../../infrastructure/repositories/technician/technicianOnboardingRepository";
 import { type ServiceRequest } from "../../../../domain/types/TechnicianRequestTypes";
@@ -38,9 +38,9 @@ const ServiceRequestModal: React.FC<ServiceRequestModalProps> = ({ isOpen, onClo
   const [file, setFile] = useState<File | null>(null);
   const [loadingData, setLoadingData] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // const [isUploading, setIsUploading] = useState(false); // ✅ Added missing state
+  // const [isUploading, setIsUploading] = useState(false); //   Added missing state
 
-  // ✅ Memoized removal tracking
+  //   Memoized removal tracking
   const pendingRemovalIds = useMemo(() => {
     return new Set(
       profile?.serviceRequests
@@ -135,7 +135,7 @@ const handleRemoveRequest = async (serviceId: string, categoryId: string) => {
     try {
         setIsSubmitting(true);
         
-        // ✅ Strictly typed payload
+        //   Strictly typed payload
         const payload: RequestServicePayload = {
             serviceId,
             categoryId,
@@ -146,7 +146,7 @@ const handleRemoveRequest = async (serviceId: string, categoryId: string) => {
         // Call repository (No more 'as any' needed if repository is updated)
         await requestServiceAddition(payload);
 
-        // ✅ Full optimistic object to satisfy Redux linting
+        //   Full optimistic object to satisfy Redux linting
         const reduxReq: ServiceRequest = {
             id: `rem-${Date.now()}`,
             serviceId: payload.serviceId,
@@ -242,7 +242,7 @@ const handleRemoveRequest = async (serviceId: string, categoryId: string) => {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             
-            {/* ✅ Removal Section */}
+            {/*   Removal Section */}
             {profile?.subServices && profile.subServices.length > 0 && (
               <div className="space-y-3 pb-4 border-b border-gray-100">
                 <label className="text-xs font-bold text-gray-700 flex items-center gap-2 text-red-600 uppercase">

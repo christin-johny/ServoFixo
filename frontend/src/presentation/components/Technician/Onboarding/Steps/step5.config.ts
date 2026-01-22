@@ -18,7 +18,7 @@ export interface UploadedDoc {
 export const MANDATORY_SLOTS: { type: DocType; label: string; isOptional?: boolean }[] = [
   { type: "AADHAAR", label: "Aadhaar Card" },
   { type: "PAN", label: "PAN Card" },
-  // ✅ Mandatory for Payout Verification
+  //   Mandatory for Payout Verification
   { type: "PASSBOOK", label: "Bank Passbook / Cancelled Cheque" }, 
   { type: "CERTIFICATE", label: "Resume / Skill Certificate" }, 
 ];

@@ -21,6 +21,7 @@ import {
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
 import { RequestAction } from "../../../../../shared/types/enums/RequestResolutionEnums";
+import { resolve } from "path";
 
 export class AdminTechnicianController {
   constructor(
@@ -278,3 +279,4 @@ export class AdminTechnicianController {
     }
   };
 }
+

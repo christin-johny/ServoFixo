@@ -129,11 +129,11 @@ const TechnicianLayout: React.FC = () => {
   const { showSuccess, showError } = useNotification();
   const location = useLocation();
 
-  // ✅ Pulling state and hooks
+  //   Pulling state and hooks
   const { profile, loading } = useSelector((state: RootState) => state.technician);
   const { accessToken } = useSelector((state: RootState) => state.auth);
   const { fetchNotifications } = useTechnicianNotifications(); //
-  // ✅ Corrected: Fetch notifications once globally when accessToken is available
+  //   Corrected: Fetch notifications once globally when accessToken is available
 useEffect(() => {
     if (accessToken) {
       fetchNotifications(); // Fetches history and starts Socket.io listener

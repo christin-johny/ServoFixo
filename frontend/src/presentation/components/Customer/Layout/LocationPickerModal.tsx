@@ -15,7 +15,7 @@ const LocationPickerModal: React.FC<Props> = ({ isOpen, onClose }) => {
     const { addresses, addressLoading } = useSelector((state: RootState) => state.customer);
     const [addressZones, setAddressZones] = useState<Record<string, string>>({});
 
-    // ✅ Load addresses and resolve their zone names for display
+    //   Load addresses and resolve their zone names for display
     useEffect(() => {
         if (isOpen) {
             const loadData = async () => {
@@ -40,7 +40,7 @@ const LocationPickerModal: React.FC<Props> = ({ isOpen, onClose }) => {
         }
     }, [isOpen, dispatch]);
 
-    // ✅ Selection handler for specific addresses
+    //   Selection handler for specific addresses
     const handleSelectLocation = async (addr: Address) => {
         if (!addr.isServiceable) return;
 
@@ -62,7 +62,7 @@ const LocationPickerModal: React.FC<Props> = ({ isOpen, onClose }) => {
         }
     };
 
-    // ✅ NEW: Re-added Get Current Location (GPS) logic
+    //   NEW: Re-added Get Current Location (GPS) logic
     const handleGeolocation = () => {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
@@ -103,7 +103,7 @@ const LocationPickerModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
                 <div className="p-5 space-y-4 overflow-y-auto custom-scrollbar">
                     
-                    {/* ✅ Get Current Location Button */}
+                    {/*   Get Current Location Button */}
                     <button 
                         onClick={handleGeolocation}
                         className="w-full flex items-center gap-3 p-4 rounded-xl border border-blue-100 bg-blue-50/50 text-blue-600 hover:bg-blue-50 transition-all font-bold text-sm shadow-sm"

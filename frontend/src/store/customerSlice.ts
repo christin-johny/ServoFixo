@@ -85,13 +85,13 @@ const customerSlice = createSlice({
 
 setCurrentLocation(state, action: PayloadAction<
   | string 
-  | { name: string; coords: Coordinates; isManual?: boolean } // ✅ Changed from lat/lng to coords
+  | { name: string; coords: Coordinates; isManual?: boolean } //   Changed from lat/lng to coords
 >) {
   if (typeof action.payload === 'string') {
     state.currentLocationName = action.payload;
   } else {
     state.currentLocationName = action.payload.name;
-    state.coords = action.payload.coords; // ✅ Correctly mapping the nested object
+    state.coords = action.payload.coords; //   Correctly mapping the nested object
     state.isManualLocation = action.payload.isManual ?? true;
   }
 },

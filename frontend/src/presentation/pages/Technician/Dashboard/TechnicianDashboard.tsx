@@ -80,7 +80,7 @@ const handleToggleOnline = async () => {
 
       navigator.geolocation.getCurrentPosition(
         async (position) => {
-          // ✅ TRY/CATCH MUST BE INSIDE THE CALLBACK
+          //   TRY/CATCH MUST BE INSIDE THE CALLBACK
           try {
             const { latitude, longitude } = position.coords;
             const response = await toggleOnlineStatus({ 
@@ -91,7 +91,7 @@ const handleToggleOnline = async () => {
             dispatch(setAvailability(response.isOnline));
             showSuccess("You are now Online!");
           } catch (err: unknown) {
-            // ✅ This will now catch the "outside service zones" error
+            //   This will now catch the "outside service zones" error
             showError(extractErrorMessage(err));
           } finally {
             setIsLocating(false);

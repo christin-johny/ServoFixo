@@ -73,7 +73,7 @@ interface TechnicianApiResponse {
   bankUpdateRequests: BankUpdateRequest[];
   payoutStatus: PayoutStatus;
 
-  // ✅ restored
+  //   restored
   isRateCardAgreed?: boolean;
 
   documents: TechnicianDocument[];
@@ -122,13 +122,13 @@ export interface TechnicianProfile {
   subServiceIds: string[];
   zoneIds: string[];
 
-  // ✅ NEW: Requests in State
+  //   NEW: Requests in State
   serviceRequests: ServiceRequest[];
   zoneRequests: ZoneRequest[];
   bankUpdateRequests: BankUpdateRequest[];
   payoutStatus: PayoutStatus;
 
-  // ✅ restored
+  //   restored
   isRateCardAgreed?: boolean;
 
   documents: TechnicianDocument[];
@@ -235,7 +235,7 @@ const technicianSlice = createSlice({
       }
     },
 
-    // ✅ Restored missing export for Step4_Rates.tsx
+    //   Restored missing export for Step4_Rates.tsx
     updateRateAgreement(state, action: PayloadAction<{ isAgreed: boolean }>) {
       if (state.profile) {
         state.profile.isRateCardAgreed = action.payload.isAgreed;
@@ -285,7 +285,7 @@ const technicianSlice = createSlice({
       }
     },
     
-    // ✅ Optimistic Updates
+    //   Optimistic Updates
     addServiceRequest(state, action: PayloadAction<ServiceRequest>) {
         if (state.profile) {
             state.profile.serviceRequests.push(action.payload);

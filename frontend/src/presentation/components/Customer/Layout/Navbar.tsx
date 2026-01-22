@@ -71,7 +71,7 @@ const triggerGeolocation = () => {
         }
     };
 
-    // ✅ Priority Hydration: Default Address > GPS
+    //   Priority Hydration: Default Address > GPS
     useEffect(() => {
         if (isLoggedIn && !profile) {
             const loadInitialData = async () => {
@@ -89,7 +89,7 @@ const triggerGeolocation = () => {
                     const defaultAddr = addresses.find(a => a.isDefault && a.isServiceable);
 
                     if (defaultAddr) {
-                        // ✅ Priority 1: Use Default Address
+                        //   Priority 1: Use Default Address
                         const zoneName = await getZoneByLocation(
                             defaultAddr.location.lat, 
                             defaultAddr.location.lng
@@ -101,7 +101,7 @@ const triggerGeolocation = () => {
                             isManual: true
                         }));
                     } else {
-                        // ✅ Priority 2: Fallback to GPS
+                        //   Priority 2: Fallback to GPS
                         triggerGeolocation();
                     }
                 } catch (err: unknown) {
@@ -211,7 +211,7 @@ const triggerGeolocation = () => {
                         </button>
 
                         <div className="flex-1 min-w-0">
-                            {/* ✅ Added onClick to trigger Modal */}
+                            {/*   Added onClick to trigger Modal */}
                             <button 
                                 onClick={() => setLocationModalOpen(true)}
                                 className="flex items-center gap-2 w-full text-left group"
@@ -249,7 +249,7 @@ const triggerGeolocation = () => {
                     </div>
 
                     <div className="flex items-center gap-4 flex-1 justify-end">
-                        {/* ✅ Added onClick to trigger Modal */}
+                        {/*   Added onClick to trigger Modal */}
                         <button 
                             onClick={() => setLocationModalOpen(true)}
                             className="hidden lg:flex items-center gap-2 bg-[#F3F4F6] rounded-full px-4 py-2.5 hover:bg-gray-200 transition-colors"
@@ -375,7 +375,7 @@ const triggerGeolocation = () => {
                 </div>
             )}
 
-            {/* ✅ Added LocationPickerModal Component */}
+            {/*   Added LocationPickerModal Component */}
             <LocationPickerModal
                 isOpen={locationModalOpen}
                 onClose={() => setLocationModalOpen(false)}

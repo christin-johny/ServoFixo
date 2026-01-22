@@ -17,7 +17,7 @@ const NotificationInbox: React.FC<Props> = ({ onClose }) => {
     handleMarkAllRead 
   } = useTechnicianNotifications();
 
-  // ✅ Memoized filtering for industrial performance
+  //   Memoized filtering for industrial performance
   const displayedNotifications = useMemo(() => {
     return activeTab === 'unread' 
       ? notifications.filter(n => n.status === 'UNREAD') 

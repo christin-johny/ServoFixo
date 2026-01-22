@@ -35,8 +35,7 @@ export class ManageTechnicianRequestsUseCase
     try {
       let categoryRemoved = false;
       let serviceAction: "ADD" | "REMOVE" = "ADD";
-
-      // ✅ Internal logic handlers
+ 
       switch (dto.requestType) {
         case PartnerRequestType.SERVICE:
           const serviceResult = this.handleServiceRequest(tech, dto);
@@ -52,8 +51,7 @@ export class ManageTechnicianRequestsUseCase
         default:
           throw new Error(ErrorMessages.INVALID_DATA);
       }
-
-      // ✅ Persistence
+ 
       await this._technicianRepo.update(tech);
 
       await this._notificationService.notifyRequestResolved(techId, { 

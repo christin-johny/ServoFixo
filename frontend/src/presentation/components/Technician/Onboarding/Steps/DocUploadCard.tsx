@@ -34,7 +34,7 @@ export const DocUploadCard: React.FC<DocUploadCardProps> = ({
   const isVerified = docData?.status === "APPROVED"; 
   const hasFile = !!docData?.url;
   
-  // ✅ LOCKING LOGIC: If verified, user cannot change or delete
+  //   LOCKING LOGIC: If verified, user cannot change or delete
   const isLocked = isVerified; 
 
   // Dynamic Styles
@@ -123,7 +123,7 @@ export const DocUploadCard: React.FC<DocUploadCardProps> = ({
             </button>
           </div>
 
-          {/* ✅ LOCKING LOGIC: Hide delete button if locked */}
+          {/*   LOCKING LOGIC: Hide delete button if locked */}
           {!isLocked && (
             <button 
                 onClick={onRemove}

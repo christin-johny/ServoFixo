@@ -29,7 +29,7 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext, onSaveAndExit }) => {
   // --- STATE ---
   const [formData, setFormData] = useState<Partial<Step1FormData>>(() => ({
     ...INITIAL_STEP1_STATE,
-    // ✅ CHANGED: Read directly from flattened profile
+    //   CHANGED: Read directly from flattened profile
     ...(profile ? {
         name: profile.name,
         email: profile.email,
@@ -52,11 +52,11 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext, onSaveAndExit }) => {
   
   // Computed Values
   const isRejected = profile?.verificationStatus === "REJECTED";
-  // ✅ CHANGED: Direct access
+  //   CHANGED: Direct access
   const email = profile?.email || "";
   const phone = profile?.phone || "";
  
-  // ✅ CHANGED: Sync Effect reads from flattened profile
+  //   CHANGED: Sync Effect reads from flattened profile
   useEffect(() => {
     if (profile) {
       setFormData((prev) => ({

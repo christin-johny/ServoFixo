@@ -5,7 +5,7 @@ import { socketService } from "../../infrastructure/api/socketClient";
 import { notificationRepository } from "../../infrastructure/repositories/technician/notificationRepository";
 import { addNotification, setNotifications, markRead, markAllRead, setLoading, setError } from "../../store/notificationSlice";
 import type { Notification } from "../../domain/types/Notification";
-import { useNotification } from "./useNotification"; // ✅ Ensure this path is correct
+import { useNotification } from "./useNotification"; //   Ensure this path is correct
 
 export const useTechnicianNotifications = () => {
   const dispatch = useDispatch();
@@ -21,7 +21,6 @@ export const useTechnicianNotifications = () => {
         
         dispatch(addNotification(notification));
         
-        // ✅ Visual confirmation via Toast
         showSuccess(`New Alert: ${notification.title}`);
       });
     }

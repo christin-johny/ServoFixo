@@ -55,7 +55,7 @@ export class NotificationService implements INotificationService {
     }
   ): Promise<void> {
     const isApproved = data.action === "APPROVE";
-    let title = isApproved ? "Request Approved ✅" : "Action Required ⚠️";
+    let title = isApproved ? "Request Approved  " : "Action Required ⚠️";
     let body = "";
  
     if (data.type === "SERVICE") { 
