@@ -14,7 +14,7 @@ import ConfirmModal from '../../../components/Admin/Modals/ConfirmModal';
 import TechnicianEditModal from '../../../components/Admin/technician/TechnicianEditModal';
 import TechnicianProfileSummary from '../../../components/Admin/technician/TechnicianProfileSummary';
 
-// ✅ IMPORT SHARED COMPONENT
+//   IMPORT SHARED COMPONENT
 import { FileLightbox } from '../../../components/Shared/FileLightbox/FileLightbox';
 
 const TABS = [
@@ -278,7 +278,7 @@ const AdminTechnicianProfilePage: React.FC = () => {
                 onSave={handleEditSave}
             />
 
-            {/* ✅ REUSED SHARED COMPONENT */}
+            {/*   REUSED SHARED COMPONENT */}
             {previewDoc && (
                 <FileLightbox
                     url={previewDoc.url}

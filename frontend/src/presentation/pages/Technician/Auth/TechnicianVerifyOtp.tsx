@@ -157,7 +157,7 @@ const TechnicianVerifyOtp: React.FC = () => {
         <div className="flex justify-center mb-4"><img src="/assets/logo.png" className="h-12" alt="logo" /></div>
 
         <h2 className="text-2xl font-semibold mb-2">
-          {context === "forgot_password" ? "Reset Password" : "Verify Phone"}
+          {context === "forgot_password" ? "Reset Password" : "Verify Email"}
         </h2>
 
         <p className="text-sm text-gray-500 mb-6">Enter OTP sent to {state?.email}</p>

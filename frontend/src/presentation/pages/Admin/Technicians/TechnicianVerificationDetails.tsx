@@ -52,7 +52,7 @@ const TechnicianVerificationDetails: React.FC = () => {
 const loadProfile = async (techId: string) => {
     try {
         setLoading(true);
-        // ✅ CAST: Ensure the data is treated as the full Admin DTO
+        //   CAST: Ensure the data is treated as the full Admin DTO
         const data = await techRepo.getTechnicianProfile(techId) as unknown as AdminTechnicianProfileDto;
         
         setProfile(data);
@@ -109,7 +109,7 @@ const loadProfile = async (techId: string) => {
         }));
     };
 
-    // ✅ VALIDATION: Ensure ALL documents have a decision (No 'PENDING' allowed)
+    //   VALIDATION: Ensure ALL documents have a decision (No 'PENDING' allowed)
     const allDocsReviewed = profile?.documents.every(
         (doc) => decisions[doc.type]?.status === "APPROVED" || decisions[doc.type]?.status === "REJECTED"
     ) ?? false;

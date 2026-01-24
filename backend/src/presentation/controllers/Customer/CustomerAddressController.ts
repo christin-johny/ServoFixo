@@ -1,4 +1,6 @@
+// src/presentation/controllers/Customer/CustomerAddressController.ts
 import { Request, Response } from "express";
+import { BaseController } from "../BaseController";
 import { IUseCase } from "../../../application/interfaces/IUseCase"; 
 import { CreateAddressDto } from "../../../application/dto/address/CreateAddressDto";
 import { UpdateAddressDto } from "../../../application/dto/address/UpdateAddressDto"; 
@@ -6,26 +8,31 @@ import { AddressResponseDto } from "../../../application/dto/address/AddressResp
 import { ILogger } from "../../../application/interfaces/ILogger"; 
 import { LogEvents } from "../../../../../shared/constants/LogEvents"; 
 import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes"; 
 
 export interface AuthenticatedRequest extends Request {
   userId?: string; 
 }
 
-export class CustomerAddressController {
+export class CustomerAddressController extends BaseController {
   constructor( 
     private readonly _addAddressUseCase: IUseCase<AddressResponseDto, [CreateAddressDto, string]>, 
     private readonly _updateAddressUseCase: IUseCase<AddressResponseDto, [string, string, UpdateAddressDto]>, 
     private readonly _getAddressesUseCase: IUseCase<AddressResponseDto[], [string]>,  
     private readonly _deleteAddressUseCase: IUseCase<boolean, [string, string]>,
-    private readonly _logger: ILogger 
-  ) {}
+    _logger: ILogger 
+  ) {
+    super(_logger);
+  }
+
+  private getUserId(req: Request): string {
+    const userId = (req as AuthenticatedRequest).userId;
+    if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
+    return userId;
+  }
 
   addAddress = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const userId = (req as AuthenticatedRequest).userId;
-      if (!userId) throw new Error (ErrorMessages.UNAUTHORIZED);
-
+      const userId = this.getUserId(req);
       const dto = req.body as CreateAddressDto;
       
       this._logger.info(LogEvents.ADDRESS_ADD_INIT, { userId, dto });
@@ -33,106 +40,52 @@ export class CustomerAddressController {
       const resultDto = await this._addAddressUseCase.execute(dto, userId); 
       const isServiceable = (resultDto as any).isServiceable ?? true;
 
-      const message = isServiceable
-        ? SuccessMessages.ADDRESS_ADDED
-        : SuccessMessages.ADDRESS_OUTSIDE_ZONE;
-
-      return res.status(StatusCodes.CREATED).json({ 
-        success: true, 
-        message, 
-        data: resultDto 
-      });
+      const message = isServiceable ? SuccessMessages.ADDRESS_ADDED : SuccessMessages.ADDRESS_OUTSIDE_ZONE;
+      return this.created(res, resultDto, message);
     } catch (error: unknown) {
-      this._logger.error(LogEvents.ADDRESS_ADD_FAILED, undefined, { error });
-      const msg = error instanceof Error ? error.message : 'Unknown Error';
-      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: msg });
+      return this.handleError(res, error, LogEvents.ADDRESS_ADD_FAILED);
     }
   };
 
   getMyAddresses = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const userId = (req as AuthenticatedRequest).userId;
-      if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
-
+      const userId = this.getUserId(req);
       this._logger.info(LogEvents.ADDRESS_FETCH_ALL, { userId });
 
       const addressDtos = await this._getAddressesUseCase.execute(userId);
-
-      return res.status(StatusCodes.OK).json({ 
-        success: true, 
-        data: addressDtos 
-      });
+      return this.ok(res, addressDtos);
     } catch (error: unknown) {
-      this._logger.error(LogEvents.ADDRESS_FETCH_FAILED, undefined, { error });
-      const msg = error instanceof Error ? error.message : 'Unknown Error';
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: msg });
+      return this.handleError(res, error, LogEvents.ADDRESS_FETCH_FAILED);
     }
   };
 
   deleteAddress = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { id } = req.params;
-      const userId = (req as AuthenticatedRequest).userId;
-      if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
-
-      this._logger.info(LogEvents.ADDRESS_DELETE_INIT, { addressId: id, userId });
-
-      await this._deleteAddressUseCase.execute(id, userId);
-
-      return res.status(StatusCodes.OK).json({ 
-        success: true, 
-        message: SuccessMessages.ADDRESS_DELETED 
-      });
+      const userId = this.getUserId(req);
+      await this._deleteAddressUseCase.execute(req.params.id, userId);
+      return this.ok(res, null, SuccessMessages.ADDRESS_DELETED);
     } catch (error: unknown) {
-      this._logger.error(LogEvents.ADDRESS_DELETE_FAILED, undefined, { error, addressId: req.params.id });
-      const msg = error instanceof Error ? error.message : 'Unknown Error';
-      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: msg });
+      return this.handleError(res, error, LogEvents.ADDRESS_DELETE_FAILED);
     }
   };
 
   updateAddress = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { id } = req.params;
-      const userId = (req as AuthenticatedRequest).userId;
-      if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
-
-      const dto = req.body as UpdateAddressDto;
-
-      this._logger.info(LogEvents.ADDRESS_UPDATE_INIT, { addressId: id, userId });
-
-      const resultDto = await this._updateAddressUseCase.execute(id, userId, dto);
-
-      return res.status(StatusCodes.OK).json({
-        success: true,
-        message: SuccessMessages.ADDRESS_UPDATED,
-        data: resultDto,
-      });
+      const userId = this.getUserId(req);
+      const resultDto = await this._updateAddressUseCase.execute(req.params.id, userId, req.body);
+      return this.ok(res, resultDto, SuccessMessages.ADDRESS_UPDATED);
     } catch (error: unknown) {
-      this._logger.error(LogEvents.ADDRESS_UPDATE_FAILED, undefined, { error, addressId: req.params.id });
-      const msg = error instanceof Error ? error.message : 'Unknown Error';
-      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: msg });
+      return this.handleError(res, error, LogEvents.ADDRESS_UPDATE_FAILED);
     }
   };
 
   setDefaultAddress = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { id } = req.params;
-      const userId = (req as AuthenticatedRequest).userId;
-      if (!userId) throw new Error("Unauthorized");
-
-      this._logger.info(LogEvents.ADDRESS_SET_DEFAULT, { addressId: id, userId });
-
-      const dto: UpdateAddressDto = { isDefault: true };
-
-      await this._updateAddressUseCase.execute(id, userId, dto);
-
-      return res.status(StatusCodes.OK).json({ 
-        success: true, 
-        message: SuccessMessages.DEFAULT_ADDRESS_UPDATED 
-      });
+      const userId = this.getUserId(req);
+      await this._updateAddressUseCase.execute(req.params.id, userId, { isDefault: true });
+      return this.ok(res, null, SuccessMessages.DEFAULT_ADDRESS_UPDATED);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : 'Unknown Error';
-      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: msg });
+      return this.handleError(res, error, LogEvents.ADDRESS_UPDATE_FAILED);
     }
   };
 }

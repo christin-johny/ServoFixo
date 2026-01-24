@@ -180,7 +180,7 @@ const TechnicianRegister: React.FC = () => {
                 <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
                     <Lock className="w-5 h-5 text-gray-400 mr-3" />
                     <input type={showPassword ? "text" : "password"} name="password" placeholder="Password" value={formData.password} onChange={handleChange} onBlur={() => handleBlur("password")} className="bg-transparent w-full outline-none" />
-                    {/* ✅ Improved Eye Color */}
+                    {/*   Improved Eye Color */}
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-500 hover:text-gray-700 transition-colors">
                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -193,7 +193,7 @@ const TechnicianRegister: React.FC = () => {
                 <div className={`flex items-center bg-gray-50 border rounded-lg px-4 py-3 ${touched.confirmPassword && fieldErrors.confirmPassword ? 'border-red-500' : 'border-gray-200'}`}>
                     <Lock className="w-5 h-5 text-gray-400 mr-3" />
                     <input type={showConfirmPassword ? "text" : "password"} name="confirmPassword" placeholder="Confirm Password" value={formData.confirmPassword} onChange={handleChange} onBlur={() => handleBlur("confirmPassword")} className="bg-transparent w-full outline-none" />
-                    {/* ✅ Added Eye Button for Confirm Password */}
+                    {/*   Added Eye Button for Confirm Password */}
                     <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="text-gray-500 hover:text-gray-700 transition-colors">
                         {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>

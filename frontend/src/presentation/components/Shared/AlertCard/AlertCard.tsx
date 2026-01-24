@@ -6,7 +6,7 @@ import { AlertCircle, ArrowRight, X } from 'lucide-react';
 interface AlertCardProps {
     title: string;
     reason: string;
-    detail?: string; // ✅ New prop for Service/Zone names
+    detail?: string; //   New prop for Service/Zone names
     onFix: () => void;
     onDismiss: () => void;
 }
@@ -21,7 +21,7 @@ export const AlertCard: React.FC<AlertCardProps> = ({ title, reason, detail, onF
                         <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider">Rejected</span>
                         <h4 className="text-xs font-bold text-gray-900 truncate">{title}</h4>
                     </div>
-                    {/* ✅ Detailed name of the rejected item */}
+                    {/*   Detailed name of the rejected item */}
                     {detail && (
                         <p className="text-[11px] font-bold text-blue-600 mt-0.5 truncate">{detail}</p>
                     )}

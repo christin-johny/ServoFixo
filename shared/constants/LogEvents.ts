@@ -70,7 +70,8 @@ export const LogEvents = {
   TECH_STATUS_TOGGLE_FAILED: "Technician Status Toggle Failed",
   TECH_LOCATION_UPDATE_FAILED: "Technician Location Update Failed",
   TECH_DISMISS_REQUEST_INIT: "Technician: Dismiss Request Alert Initiated",
-  TECH_DISMISS_REQUEST_SUCCESS: "Technician: Request Alert Dismissed Successfully",
+  TECH_DISMISS_REQUEST_SUCCESS:
+    "Technician: Request Alert Dismissed Successfully",
   TECH_DISMISS_REQUEST_FAILED: "Technician: Dismiss Request Failed",
 
   // TECHNICIAN DATA FETCH
@@ -243,9 +244,15 @@ export const LogEvents = {
   ADMIN_DELETE_TECH_SUCCESS: "Admin: Delete Technician Successful",
   ADMIN_DELETE_TECH_FAILED: "Admin: Delete Technician Failed",
   // ADMIN PARTNER REQUESTS
-  ADMIN_RESOLVE_PARTNER_REQUEST_INIT:
-    "Admin: Resolve Partner Request Initiated",
-  ADMIN_RESOLVE_PARTNER_REQUEST_SUCCESS:
-    "Admin: Resolve Partner Request Successful",
+  ADMIN_RESOLVE_PARTNER_REQUEST_INIT:"Admin: Resolve Partner Request Initiated",
+  ADMIN_RESOLVE_PARTNER_REQUEST_SUCCESS:"Admin: Resolve Partner Request Successful",
   ADMIN_RESOLVE_PARTNER_REQUEST_FAILED: "Admin: Resolve Partner Request Failed",
+
+  // NOTIFICATION MODULE
+  NOTIFICATION_CREATE_INIT: "Notification: Creation Initiated",
+  NOTIFICATION_CREATE_SUCCESS: "Notification: Created and Persisted Successfully",
+  NOTIFICATION_SEND_SUCCESS: "Notification: Real-time Delivery Successful",
+  NOTIFICATION_SEND_FAILED: "Notification: Real-time Delivery Failed",
+  NOTIFICATION_MARK_READ_INIT: "Notification: Mark as Read Initiated",
+  NOTIFICATION_MARK_READ_SUCCESS: "Notification: Mark as Read Successful",
 };

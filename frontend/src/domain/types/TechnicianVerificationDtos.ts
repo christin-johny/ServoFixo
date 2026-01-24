@@ -50,7 +50,7 @@ export interface AdminTechnicianProfileDto {
   };
 
   verificationStatus: string;
-  submittedAt: Date | string; // ✅ Fixed: Accepts string
+  submittedAt: Date | string; //   Fixed: Accepts string
 }
 
 export interface ResolvePartnerRequestDto {

@@ -5,6 +5,7 @@ import { makeTechnicianAuthMiddleware } from "../../middlewares/technicianAuth.m
 import authRoutes from "./auth.routes";
 import profileRoutes from'./profile.routes';
 import dataRoutes from'./data.routes';
+import notificationRoutes from "./notification.routes";
 const router = Router();
 
 const jwtService = new JwtService();
@@ -16,5 +17,8 @@ router.use("/auth", authRoutes);
 router.use("/profile", technicianAuth, profileRoutes);
 
 router.use("/data", technicianAuth, dataRoutes);
+
+router.use("/notifications",technicianAuth, notificationRoutes);
+
 
 export default router;

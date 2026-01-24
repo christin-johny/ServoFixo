@@ -1,5 +1,6 @@
 import redis from "../../../infrastructure/redis/redisClient";
 import { Request, Response } from "express";
+import { BaseController } from "../BaseController";
 import { IUseCase } from "../../../application/interfaces/IUseCase";
 import {
   ErrorMessages,
@@ -15,14 +16,14 @@ interface AdminLoginResult {
   refreshToken: string;
 }
 
-export class AdminAuthController {
+
+export class AdminAuthController extends BaseController {
   constructor(
-    private readonly _adminLoginUseCase: IUseCase<
-      AdminLoginResult,
-      [{ email: string; password: string }]
-    >,
-    private readonly _logger: ILogger
-  ) {}
+    private readonly _adminLoginUseCase: IUseCase<AdminLoginResult, [{ email: string; password: string }]>,
+    _logger: ILogger
+  ) {
+    super(_logger);
+  }
 
   login = async (req: Request, res: Response): Promise<Response> => {
     try {
@@ -30,9 +31,7 @@ export class AdminAuthController {
       const { email, password } = req.body;
 
       if (!email || !password) {
-        return res.status(StatusCodes.BAD_REQUEST).json({
-          message: ErrorMessages.MISSING_REQUIRED_FIELDS,
-        });
+        throw new Error(ErrorMessages.MISSING_REQUIRED_FIELDS);
       }
 
       const result = await this._adminLoginUseCase.execute({ email, password });
@@ -41,70 +40,40 @@ export class AdminAuthController {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
 
-      this._logger.info(
-        `${LogEvents.AUTH_LOGIN_SUCCESS} (Admin) - Email: ${email}`
-      );
+      this._logger.info(`${LogEvents.AUTH_LOGIN_SUCCESS} (Admin) - Email: ${email}`);
+      
+      // ✅ FIX: Match the repository expectation. 
+      // Instead of wrapping in 'data', we return accessToken at the level the repo expects.
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.LOGIN_SUCCESS,
         accessToken: result.accessToken,
       });
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-
-      this._logger.error(
-        `${LogEvents.AUTH_LOGIN_FAILED} (Admin)`,
-        errorMessage
-      );
-
-      if (errorMessage === ErrorMessages.INVALID_CREDENTIALS) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({
-          message: ErrorMessages.INVALID_CREDENTIALS,
-        });
-      }
-
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: ErrorMessages.INTERNAL_ERROR,
-      });
+      return this.handleError(res, err, `${LogEvents.AUTH_LOGIN_FAILED} (Admin)`);
     }
   };
 
   logout = async (req: Request, res: Response): Promise<Response> => {
     try {
       const refreshToken = req.cookies?.refreshToken as string | undefined;
-
       res.clearCookie("refreshToken", refreshCookieOptions);
 
       if (refreshToken) {
         try {
-          const redisKey = `refresh:${refreshToken}`;
-          await redis.del(redisKey);
+          await redis.del(`refresh:${refreshToken}`);
         } catch (redisErr: unknown) {
-          const errorMessage =
-            redisErr instanceof Error ? redisErr.message : String(redisErr);
-
-          this._logger.error(
-            "Error deleting refresh token from Redis (admin logout):",
-            errorMessage
-          );
+          this._logger.error("Error deleting refresh token from Redis", String(redisErr));
         }
       }
 
       this._logger.info(`${LogEvents.AUTH_LOGOUT_SUCCESS} (Admin)`);
+      
+      // ✅ Aligned with repository resp.data
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.LOGOUT_SUCCESS,
       });
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-
-      this._logger.error("Admin Logout Error", errorMessage);
-
-      res.clearCookie("refreshToken", {
-        path: refreshCookieOptions.path ?? "/",
-      });
-
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: ErrorMessages.INTERNAL_ERROR,
-      });
+      return this.handleError(res, err, "Admin Logout Error");
     }
   };
 }

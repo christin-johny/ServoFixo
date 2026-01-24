@@ -2,10 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
-  Briefcase,
-  // Wallet,
+  Briefcase, 
   User,
-  Bell,
   LogOut,
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
@@ -23,9 +21,8 @@ import LoaderFallback from "../../../components/LoaderFallback";
 
 import { getTechnicianProfileStatus } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
 import { technicianLogout } from "../../../../infrastructure/repositories/technician/technicianAuthRepository";
-
-// ✅ REMOVED: mapApiDataToProfile function. 
-// The Redux slice now handles the raw API response structure directly.
+import NotificationBell from "./NotificationBell";
+import { useTechnicianNotifications } from "../../../hooks/useTechnicianNotifications";
 
 interface NavItem {
   label: string;
@@ -36,7 +33,6 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", path: "/technician", icon: LayoutDashboard },
   { label: "My Jobs", path: "/technician/jobs", icon: Briefcase },
-  // { label: "Wallet", path: "/technician/wallet", icon: Wallet },
   { label: "My Profile", path: "/technician/profile", icon: User },
 ];
 
@@ -48,8 +44,6 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ onLogoutClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const authUser = useSelector((state: RootState) => state.auth.user);
-  
-  // ✅ The profile is now flat, so we access properties directly
   const techProfile = useSelector((state: RootState) => state.technician.profile);
 
   const isActive = (path: string) => {
@@ -59,7 +53,6 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ onLogoutClick }) => {
 
   return (
     <div className="flex flex-col h-full bg-white border-r border-gray-200 shadow-[2px_0_8px_rgba(0,0,0,0.02)]">
-      {/* Logo */}
       <div className="h-16 flex items-center gap-3 px-6 border-b border-gray-100/50">
         <div className="p-1.5 bg-blue-50 rounded-lg">
           <img src="/assets/logo.png" alt="Logo" className="h-6 w-6 object-contain" />
@@ -67,7 +60,6 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ onLogoutClick }) => {
         <span className="text-lg font-bold text-gray-900 tracking-tight">ServoFixo</span>
       </div>
 
-      {/* User Snippet */}
       <div className="px-5 py-6">
         <div className="flex items-center gap-3 p-2 rounded-xl transition-colors hover:bg-gray-50/80 cursor-default">
           <div className="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center text-blue-600 font-bold text-sm overflow-hidden shrink-0 ring-2 ring-gray-50">
@@ -88,7 +80,6 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ onLogoutClick }) => {
         </div>
       </div>
 
-      {/* Navigation Links */}
       <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar">
         <p className="px-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 mt-2">
           Main Menu
@@ -118,7 +109,6 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ onLogoutClick }) => {
         })}
       </nav>
 
-      {/* Logout Section */}
       <div className="p-4 border-t border-gray-100">
         <button
           onClick={onLogoutClick}
@@ -139,19 +129,25 @@ const TechnicianLayout: React.FC = () => {
   const { showSuccess, showError } = useNotification();
   const location = useLocation();
 
+  //   Pulling state and hooks
   const { profile, loading } = useSelector((state: RootState) => state.technician);
   const { accessToken } = useSelector((state: RootState) => state.auth);
+  const { fetchNotifications } = useTechnicianNotifications(); //
+  //   Corrected: Fetch notifications once globally when accessToken is available
+useEffect(() => {
+    if (accessToken) {
+      fetchNotifications(); // Fetches history and starts Socket.io listener
+    }
+  }, [accessToken, fetchNotifications]);
 
-  useEffect(() => {
+useEffect(() => {
     if (accessToken && !profile) {
       const loadProfile = async () => {
         dispatch(fetchTechnicianStart());
         try {
           const data = await getTechnicianProfileStatus();
-          // ✅ UPDATED: Dispatch raw data directly. The reducer handles mapping.
           dispatch(fetchTechnicianSuccess(data));
-        } catch (error) {
-          console.error("Fetch profile failed", error);
+        } catch  {
           dispatch(fetchTechnicianFailure("Failed to load profile"));
         }
       };
@@ -170,12 +166,11 @@ const TechnicianLayout: React.FC = () => {
     try {
       await technicianLogout();
     } catch {
-      showError("logout failed please try again")
+      showError("Logout failed, please try again");
     } finally {
       dispatch(logout());
       dispatch(clearTechnicianData());
       showSuccess("Logged out successfully");
-
       setIsLogoutModalOpen(false);
       navigate("/technician/login");
     }
@@ -185,23 +180,17 @@ const TechnicianLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50/50 flex flex-col md:flex-row font-sans text-gray-900">
-
-      {/* DESKTOP SIDEBAR */}
       <aside className="hidden md:block w-64 fixed inset-y-0 left-0 z-30">
         <SidebarContent onLogoutClick={() => setIsLogoutModalOpen(true)} />
       </aside>
 
-      {/* MOBILE HEADER */}
       <div className="md:hidden bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 h-16 flex items-center justify-between sticky top-0 z-40 shadow-sm transition-all">
         <div className="flex items-center gap-3">
           <img src="/assets/logo.png" alt="Logo" className="h-8 w-8 object-contain" />
           <span className="text-lg font-bold text-gray-900 tracking-tight">ServoFixo</span>
         </div>
         <div className="flex items-center gap-3">
-          <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-full relative active:scale-95 transition-transform">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white animate-pulse"></span>
-          </button>
+          <NotificationBell />
           <button
             onClick={() => setIsLogoutModalOpen(true)}
             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors active:scale-95"
@@ -211,12 +200,8 @@ const TechnicianLayout: React.FC = () => {
         </div>
       </div>
 
-      {/* MAIN CONTENT */}
       <main className="flex-1 md:ml-64 min-h-screen pb-24 md:pb-0 pt-0">
-
-        {/* DESKTOP HEADER */}
         <header className="hidden md:flex h-16 bg-white/80 backdrop-blur-md border-b border-gray-200 px-8 items-center justify-between sticky top-0 z-20">
-
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white border border-gray-200 rounded-lg shadow-sm text-blue-600">
               <activeItem.icon className="w-5 h-5" strokeWidth={2} />
@@ -227,12 +212,8 @@ const TechnicianLayout: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-4">
-
             <div className="h-6 w-px bg-gray-200 mx-1"></div>
-            <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all duration-200 relative group">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
-            </button>
+            <NotificationBell/>
           </div>
         </header>
 
@@ -241,7 +222,6 @@ const TechnicianLayout: React.FC = () => {
         </div>
       </main>
 
-      {/* MOBILE BOTTOM NAV */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)]">
         <div className="flex justify-around items-center px-2">
           {NAV_ITEMS.map((item) => {
@@ -270,7 +250,6 @@ const TechnicianLayout: React.FC = () => {
         </div>
       </div>
 
-      {/* LOGOUT MODAL */}
       <ConfirmModal
         isOpen={isLogoutModalOpen}
         onClose={() => setIsLogoutModalOpen(false)}
@@ -279,7 +258,6 @@ const TechnicianLayout: React.FC = () => {
         message="Are you sure you want to sign out of your account?"
         confirmText="Sign Out"
       />
-
     </div>
   );
 };

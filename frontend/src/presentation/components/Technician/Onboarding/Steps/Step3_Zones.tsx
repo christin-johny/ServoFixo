@@ -53,7 +53,7 @@ const Step3_Zones: React.FC<Step3Props> = ({ onNext, onBack, onSaveAndExit }) =>
       try {
         const rawData = await technicianOnboardingRepository.getZones() as unknown as ZoneOption[];
         
-        // ✅ CLEANER: Logic moved to config
+        //   CLEANER: Logic moved to config
         const processed = processRawZones(rawData);
         setZones(processed);
 
@@ -85,7 +85,7 @@ const Step3_Zones: React.FC<Step3Props> = ({ onNext, onBack, onSaveAndExit }) =>
         const { latitude: lat, longitude: lng } = position.coords;
         setUserLocation({ lat, lng });
 
-        // ✅ CLEANER: Logic moved to config
+        //   CLEANER: Logic moved to config
         const nearestCity = findNearestCity(zones, lat, lng);
 
         if (nearestCity && nearestCity !== selectedCity) {

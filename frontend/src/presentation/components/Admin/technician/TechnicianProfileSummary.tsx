@@ -2,7 +2,7 @@ import React from 'react';
 import { User, Layers, CreditCard, Mail, Phone, Briefcase, FileText, Wrench, MapPin, HardHat } from 'lucide-react';
 import type { AdminTechnicianProfileDto as TechnicianProfileFull } from '../../../../domain/types/TechnicianVerificationDtos';
 
-/** * ✅ NARROWED TYPE: Defines the specific object structure from your response 
+/** *   NARROWED TYPE: Defines the specific object structure from your response 
  * to ensure we never render a raw object as a React child.
  */
 type EnrichedName = { id: string; name: string };
@@ -13,7 +13,7 @@ interface TechnicianProfileSummaryProps {
 
 const TechnicianProfileSummary: React.FC<TechnicianProfileSummaryProps> = ({ profile }) => {
 
-    /** * ✅ TYPE-SAFE RENDERER: Eliminates 'any' by explicitly checking if the item 
+    /** *   TYPE-SAFE RENDERER: Eliminates 'any' by explicitly checking if the item 
      * is a string or an EnrichedName object.
      */
     const renderBadges = (

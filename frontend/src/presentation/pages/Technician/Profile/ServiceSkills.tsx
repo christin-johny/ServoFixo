@@ -34,14 +34,14 @@ const ServiceSkills: React.FC = () => {
 
     const groupedServices = getServicesByCategory();
 
-    // ✅ Extract Granular Pending Data
+    //   Extract Granular Pending Data
     const pendingServices = profile.serviceRequests.filter(r => r.status === "PENDING");
     const pendingZones = profile.zoneRequests.filter(r => r.status === "PENDING");
 
     const hasPendingServiceRequest = pendingServices.length > 0;
     const hasPendingZoneRequest = pendingZones.length > 0;
 
-    // ✅ Map of specific service IDs that are currently pending
+    //   Map of specific service IDs that are currently pending
     const pendingServiceIds = new Set(pendingServices.map(r => r.serviceId));
     const rejectedServices = profile.serviceRequests.filter(r => r.status === "REJECTED" && !r.isDismissed);
     const rejectedZones = profile.zoneRequests.filter(r => r.status === "REJECTED" && !r.isDismissed);
@@ -86,9 +86,7 @@ const ServiceSkills: React.FC = () => {
                     Manage your operational zones and specialized skills.
                 </p>
             </div>
-
-            {/* --- 3. PENDING REQUESTS SUMMARY BANNER --- */}
-            {/* --- 3. UNIFIED STATUS & NOTIFICATION CENTER --- */}
+ 
             <div className="space-y-3">
                 {[...rejectedServices, ...rejectedZones].map(req => {
                     // Explicitly check type to avoid "unused expression" error
@@ -122,7 +120,7 @@ const ServiceSkills: React.FC = () => {
                     );
                 })}
 
-                {/* ✅ PENDING BANNER (Priority 2 - Only show if not covered by a rejection) */}
+                {/*   PENDING BANNER (Priority 2 - Only show if not covered by a rejection) */}
                 {(hasPendingServiceRequest || hasPendingZoneRequest) && (
                     <div className="bg-orange-50 border border-orange-100 rounded-xl p-3 flex items-center gap-3 animate-fade-in">
                         <div className="p-1.5 bg-orange-100 rounded-full text-orange-600">
@@ -151,7 +149,7 @@ const ServiceSkills: React.FC = () => {
                                 <MapPin className="w-3.5 h-3.5 text-gray-400" /> Active Zones
                             </h3>
 
-                            {/* ✅ Button state reflects pending zone request status */}
+                            {/*   Button state reflects pending zone request status */}
                             <button
                                 onClick={() => setIsZoneModalOpen(true)}
                                 disabled={hasPendingZoneRequest}
@@ -240,7 +238,7 @@ const ServiceSkills: React.FC = () => {
                                 ) : (
                                     <>
                                         <Plus className="w-3.5 h-3.5" />
-                                        Add Service
+                                        Manage Services
                                     </>
                                 )}
                             </button>
@@ -269,19 +267,19 @@ const ServiceSkills: React.FC = () => {
 
                                                 {group.services.map((service) => {
                                                     const isPending = pendingServiceIds.has(service.id);
-                                                    const isRemoving = pendingRemovalIds.has(service.id); // ✅ NEW
+                                                    const isRemoving = pendingRemovalIds.has(service.id); //   NEW
 
                                                     return (
                                                         <div
                                                             key={service.id}
                                                             className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${isRemoving
-                                                                    ? "border-red-100 bg-red-50/30 opacity-80" // ✅ Red styling for removal
+                                                                    ? "border-red-100 bg-red-50/30 opacity-80" //   Red styling for removal
                                                                     : isPending
                                                                         ? "border-orange-100 bg-orange-50/30 opacity-80"
                                                                         : "border-gray-100 bg-gray-50/30 hover:border-blue-100 hover:bg-blue-50/30"
                                                                 }`}
                                                         >
-                                                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isRemoving ? "bg-red-500 animate-pulse" : // ✅ Red pulse
+                                                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isRemoving ? "bg-red-500 animate-pulse" : //   Red pulse
                                                                     isPending ? "bg-orange-400 animate-pulse" : "bg-green-500"
                                                                 }`}></div>
 

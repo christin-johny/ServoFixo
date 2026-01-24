@@ -59,7 +59,7 @@ export const calculateDistance = (
 
 const deg2rad = (deg: number) => deg * (Math.PI / 180);
 
-// ✅ NEW: Centralized Data Processor
+//   NEW: Centralized Data Processor
 export const processRawZones = (rawData: ZoneOption[]): ProcessedZone[] => {
   return rawData.map((z) => ({
     ...z,
@@ -69,7 +69,7 @@ export const processRawZones = (rawData: ZoneOption[]): ProcessedZone[] => {
   }));
 };
 
-// ✅ NEW: Logic to find the nearest city from a list
+//   NEW: Logic to find the nearest city from a list
 export const findNearestCity = (zones: ProcessedZone[], lat: number, lng: number): string | null => {
   if (zones.length === 0) return null;
 

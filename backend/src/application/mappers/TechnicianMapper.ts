@@ -27,8 +27,7 @@ export class TechnicianMapper {
         categoryIds: raw.categoryIds || [],
         subServiceIds: raw.subServiceIds || [],
         zoneIds: raw.zoneIds || [],
-        
-        // ✅ Requests Arrays
+         
         serviceRequests: raw.serviceRequests || [],
         zoneRequests: raw.zoneRequests || [],
         bankUpdateRequests: raw.bankUpdateRequests || [],
@@ -112,8 +111,7 @@ export class TechnicianMapper {
       status: entity.getVerificationStatus(),
       submittedAt: entity.getUpdatedAt(),
       isSuspended: entity.getIsSuspended(),
-
-      // ✅ Flags for the Maintenance Hub
+ 
       hasPendingServiceRequests: entity.getServiceRequests().some(r => r.status === "PENDING"),
       hasPendingZoneRequests: entity.getZoneRequests().some(r => r.status === "PENDING"),
       hasPendingBankRequests: entity.getBankUpdateRequests().some(r => r.status === "PENDING"),
@@ -141,8 +139,7 @@ export class TechnicianMapper {
       zoneNames: [],
       categoryNames: [],
       subServiceNames: [], 
-
-      // ✅ Maps updated request arrays including categoryId
+ 
       serviceRequests: entity.getServiceRequests(),
       zoneRequests: entity.getZoneRequests(),
       bankUpdateRequests: entity.getBankUpdateRequests(),

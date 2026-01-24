@@ -10,7 +10,7 @@ export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export type ServiceRequestAction = "ADD" | "REMOVE";
 
-export type PayoutStatus = "ACTIVE" | "ON_HOLD"; // ✅ NEW
+export type PayoutStatus = "ACTIVE" | "ON_HOLD"; //   NEW
 
 export interface ServiceRequest {
   id: string;
@@ -38,7 +38,7 @@ export interface ZoneRequest {
   isArchived: boolean;
 }
 
-// ✅ NEW: Bank Request Structure
+//   NEW: Bank Request Structure
 export interface BankUpdateRequest {
   id: string;
   accountHolderName: string;
@@ -86,7 +86,7 @@ export interface EmergencyContact {
 
 export interface TechnicianAvailability {
   isOnline: boolean;
-  isOnJob: boolean; // ✅ NEW: Working Status
+  isOnJob: boolean; //   NEW: Working Status
   lastSeen?: Date;
   schedule?: { day: string; startTime: string; endTime: string }[];
 }

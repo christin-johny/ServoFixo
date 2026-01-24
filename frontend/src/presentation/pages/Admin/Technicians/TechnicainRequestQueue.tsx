@@ -150,6 +150,7 @@ const PartnerRequestQueue: React.FC = () => {
                 <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
                     <button onClick={() => setSortOrder(prev => prev === "asc" ? "desc" : "asc")} className="p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 shrink-0">
                         <ArrowUpDown size={18} className={sortOrder === "asc" ? "rotate-180" : ""} />
+                        
                     </button>
                     <button onClick={loadQueue} className="p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm hover:text-blue-600 shrink-0">
                         <RefreshCw size={18} className={loading ? "animate-spin" : ""} />

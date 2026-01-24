@@ -61,7 +61,7 @@ const ProfilePage: React.FC = () => {
   const [isCropping, setIsCropping] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
-  // ✅ NEW: Track image loading errors
+  //   NEW: Track image loading errors
   const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
@@ -77,7 +77,7 @@ const ProfilePage: React.FC = () => {
     loadAddresses();
   }, [dispatch]);
 
-  // ✅ NEW: Reset image error when the URL changes (e.g. after upload)
+  //   NEW: Reset image error when the URL changes (e.g. after upload)
   useEffect(() => {
     setImgError(false);
   }, [profile?.avatarUrl]);
@@ -247,7 +247,7 @@ const ProfilePage: React.FC = () => {
                 <div className="relative">
                   <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border-4 border-black overflow-hidden shadow-inner group">
                     
-                    {/* ✅ FIXED: Intelligent Image Fallback */}
+                    {/*   FIXED: Intelligent Image Fallback */}
                     {profile?.avatarUrl && !imgError ? (
                       <img 
                         src={profile.avatarUrl} 

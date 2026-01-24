@@ -24,8 +24,7 @@ export interface TechnicianResponseDto {
   categoryIds: string[];
   subServiceIds: string[];
   zoneIds: string[];
-
-  // ✅ Arrays for Redux
+ 
   serviceRequests: ServiceRequest[];
   zoneRequests: ZoneRequest[];
   bankUpdateRequests: BankUpdateRequest[];

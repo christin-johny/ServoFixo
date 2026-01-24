@@ -2,7 +2,7 @@ import api from "../../api/axiosClient";
 import { TECHNICIAN_PROFILE_ENDPOINTS } from "../../api/endpoints/Technician/technician.endpoints";
 import { type VerificationStatus } from "../../../store/technicianSlice";
 
-// ✅ Import Shared Request Types
+//   Import Shared Request Types
 import type { 
   ServiceRequest, 
   ZoneRequest, 
@@ -28,14 +28,14 @@ export interface TechnicianProfileStatusDto {
 
   availability: {
     isOnline: boolean;
-    isOnJob: boolean; // ✅ Added this too
+    isOnJob: boolean; //   Added this too
   };
 
   categoryIds: string[];
   subServiceIds: string[];
   zoneIds: string[];
 
-  // ✅ FIXED: Added Missing Request Fields to match TechnicianApiResponse
+  //   FIXED: Added Missing Request Fields to match TechnicianApiResponse
   serviceRequests: ServiceRequest[];
   zoneRequests: ZoneRequest[];
   bankUpdateRequests: BankUpdateRequest[];

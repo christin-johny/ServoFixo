@@ -15,7 +15,7 @@ import { useNotification } from "../../../../hooks/useNotification";
 interface Step4Props {
   onNext: () => void;
   onBack: () => void;
-  onSaveAndExit: () => void; // ✅ Added for consistency
+  onSaveAndExit: () => void; //   Added for consistency
 }
 
 const Step4_Rates: React.FC<Step4Props> = ({ onNext, onBack, onSaveAndExit }) => {

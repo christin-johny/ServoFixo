@@ -24,8 +24,7 @@ export class VerifyTechnicianUseCase implements IUseCase<void, [string, VerifyTe
       tech.updateDocuments(docs); 
 
     } else if (dto.action === "REJECT") { 
-      
-      // ✅ LOGIC FIX: Auto-fill Global Reason if missing but documents are rejected
+       
       let finalGlobalReason = dto.globalRejectionReason;
       const hasDocumentRejections = dto.documentDecisions?.some((d) => d.status === "REJECTED");
 
