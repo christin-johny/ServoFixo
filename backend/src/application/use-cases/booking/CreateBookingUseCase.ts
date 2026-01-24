@@ -15,7 +15,7 @@ export class CreateBookingUseCase {
     private readonly _customerRepo: ICustomerRepository,
     private readonly _serviceRepo: IServiceItemRepository,
     private readonly _technicianRepo: ITechnicianRepository,
-    private readonly _notificationService: INotificationService, // Injected Dependency
+    private readonly _notificationService: INotificationService,
     private readonly _logger: ILogger
   ) {}
 
@@ -37,20 +37,18 @@ export class CreateBookingUseCase {
       this._logger.warn(`Zone mismatch for customer ${input.customerId}. Proceeding.`);
     }
 
-    // 4. Calculate Estimates
-const rawPrice = service.getBasePrice(); 
-    
-    const estimatedPrice = Math.round(rawPrice * 100) / 100; 
-    const deliveryFee = 0;
+    // 4. Calculate Estimates (Safe Access)
+    const rawPrice = service.getBasePrice ? service.getBasePrice() : (service as any).price || 0;
+    const estimatedPrice = Math.round(rawPrice * 100) / 100; // Round to 2 decimals
+    const deliveryFee = 0; 
 
     // 5. Matchmaking: Find Candidates
-    // We pass the SERVICE ID to find techs who specifically perform this service.
     const availableTechs = await this._technicianRepo.findAvailableInZone(
       input.zoneId,
       input.serviceId 
     );
 
-    // 6. Sort Candidates (The "Brain": Distance > Rating)
+    // 6. Sort Candidates
     const sortedCandidates = this.sortCandidates(
       availableTechs,
       input.location.coordinates
@@ -98,45 +96,58 @@ const rawPrice = service.getBasePrice();
         scheduledAt: input.requestedTime
       }
     });
+ 
+    booking.setInitialSnapshots(
+        { 
+            name: customer.getName ? customer.getName() : (customer as any).name, 
+            phone: customer.getPhone ? customer.getPhone() : (customer as any).phone, 
+            avatarUrl: customer.getAvatarUrl()
+        },
+        { 
+            name: service.getName ? service.getName() : (service as any).name, 
+            categoryId: service.getCategoryId()
+        }
+    );
 
-    // 8. Prepare Assignment (Flow A: Instant Attempt)
+    // 9. Prepare Assignment (Flow A)
     if (candidateIds.length > 0) {
       const firstCandidateId = candidateIds[0];
-      // This sets status to ASSIGNED_PENDING and starts the 45s timer in the entity
       booking.addAssignmentAttempt(firstCandidateId);
     } else {
-      // Flow C: Total Failure (No techs online)
       booking.updateStatus("FAILED_ASSIGNMENT", "system", "No available technicians in zone");
     }
 
-    // 9. Persist to Database (We save first to generate the Booking ID)
+    // 10. Persist to Database
     const createdBooking = await this._bookingRepo.create(booking);
 
     this._logger.info(
       `Booking created: ${createdBooking.getId()} | Candidates: ${candidateIds.length}`
     );
 
-    // 10. Trigger Real-Time Notification (Socket)
-    // We do this AFTER creating the booking so the ID is valid for the payload
+    // 11. Trigger Real-Time Notification (Socket)
     if (candidateIds.length > 0) {
         const firstCandidateId = candidateIds[0];
-        const tech = sortedCandidates[0]; // Get the tech entity for location calc if needed
+        const tech = sortedCandidates[0]; 
 
-        // Calculate actual distance for the notification
-        const distKm = this.calculateDistance(
-            input.location.coordinates.lat,
-            input.location.coordinates.lng,
-            tech.getCurrentLocation()?.coordinates[1] || 0, // Lat
-            tech.getCurrentLocation()?.coordinates[0] || 0  // Lng
-        ).toFixed(1);
+        // Safely calculate distance
+        let distKm = "0.0";
+        if (tech.getCurrentLocation()?.coordinates) {
+             const dist = this.calculateDistance(
+                input.location.coordinates.lat,
+                input.location.coordinates.lng,
+                tech.getCurrentLocation()!.coordinates[1], // Lat
+                tech.getCurrentLocation()!.coordinates[0]  // Lng
+            );
+            distKm = dist.toFixed(1);
+        }
 
-        // Fire the Popup Event
+        // Round earnings to 2 decimal places (10% Platform Fee)
+        const earnings = Math.round((estimatedPrice * 0.9) * 100) / 100;
+
         await this._notificationService.sendBookingRequest(firstCandidateId, {
             bookingId: createdBooking.getId(),
-            serviceName: service.getName(),
-             
-            earnings: Math.round((estimatedPrice * 0.9) * 100) / 100, 
-            
+            serviceName: service.getName ? service.getName() : "Service Request",
+            earnings: earnings, 
             distance: `${distKm} km`,
             address: input.location.address,
             expiresAt: createdBooking.getAssignmentExpiresAt() || new Date(Date.now() + 45000)
@@ -145,7 +156,7 @@ const rawPrice = service.getBasePrice();
 
     return createdBooking;
   }
- 
+
   private sortCandidates(
     techs: Technician[], 
     customerCoords: { lat: number; lng: number }
@@ -153,10 +164,10 @@ const rawPrice = service.getBasePrice();
     return techs.sort((a, b) => {
       const locA = a.getCurrentLocation()?.coordinates;
       const locB = b.getCurrentLocation()?.coordinates;
- 
+
       if (!locA) return 1;
       if (!locB) return -1;
- 
+
       const distA = this.calculateDistance(
         customerCoords.lat, customerCoords.lng, 
         locA[1], locA[0]
@@ -166,23 +177,20 @@ const rawPrice = service.getBasePrice();
         customerCoords.lat, customerCoords.lng, 
         locB[1], locB[0]
       );
- 
+
       if (Math.abs(distA - distB) > 0.5) {
         return distA - distB; 
       }
- 
+
       const ratingA = a.getRatings().averageRating || 0;
       const ratingB = b.getRatings().averageRating || 0;
 
-      return ratingB - ratingA;  
+      return ratingB - ratingA; 
     });
   }
 
-  /**
-   * Haversine formula for distance in KM
-   */
   private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371; // Radius of earth in km
+    const R = 6371; 
     const dLat = this.deg2rad(lat2 - lat1);
     const dLon = this.deg2rad(lon2 - lon1);
     const a =

@@ -5,6 +5,7 @@ import { ILogger } from "../../interfaces/ILogger";
 import { RespondToBookingDto } from "../../dto/booking/RespondToBookingDto";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { Booking } from "../../../domain/entities/Booking";
+import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
 
 export class RespondToBookingUseCase {
   constructor(
@@ -19,14 +20,12 @@ export class RespondToBookingUseCase {
     if (!booking) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
 
     // 1. Validate State
-    // We only allow response if status is ASSIGNED_PENDING
     if (booking.getStatus() !== "ASSIGNED_PENDING") {
         this._logger.warn(`Late response attempt for booking ${input.bookingId}`);
-        throw new Error(ErrorMessages.BOOKING_ALREADY_ASSIGNED); // Or expired
+        throw new Error(ErrorMessages.BOOKING_ALREADY_ASSIGNED);
     }
 
     // 2. Validate Actor
-    // Ensure the technician responding is the one currently in the "Hot Seat" (Pending Attempt)
     const currentAttempt = booking.getAttempts().find(a => a.status === "PENDING");
     if (!currentAttempt || currentAttempt.techId !== input.technicianId) {
         throw new Error("You are not the active candidate for this booking.");
@@ -41,36 +40,64 @@ export class RespondToBookingUseCase {
 
   // --- SCENARIO 2A: TECHNICIAN ACCEPTS (Flow A) ---
   private async handleAcceptance(booking: Booking, techId: string) {
-    // 1. ATOMIC LOCK (Critical)
-    // We use the Repo's atomic method to ensure no one else accepted in the last millisecond
-    const success = await this._bookingRepo.assignTechnician(booking.getId(), techId);
+    // 1. Fetch Tech Data for Snapshot
+    const tech = await this._technicianRepo.findById(techId);
+    if (!tech) throw new Error("Technician not found");
+
+    // 2. Prepare Snapshot Data
+    // We safely call the methods to avoid "Function is not assignable to string" errors.
+    const techName = tech.getName ? tech.getName() : (tech as any).name;
+    const techPhone = tech.getPhone ? tech.getPhone() : (tech as any).phone;
     
-    if (!success) {
-        throw new Error(ErrorMessages.BOOKING_ALREADY_ASSIGNED); // Race condition lost
+    // Fix: Explicitly call the function if it's a method, or access property
+    let techAvatar: string | undefined;
+    if (typeof (tech as any).getAvatarUrl === 'function') {
+        techAvatar = (tech as any).getAvatarUrl();
+    } else if (typeof (tech as any).getProfile === 'function') {
+        techAvatar = (tech as any).getProfile()?.avatar;
+    } else {
+        techAvatar = (tech as any).avatarUrl;
     }
 
-    // 2. Mark Technician as BUSY
-    await this._technicianRepo.updateOnlineStatus(techId, true); // true = isOnline? No, we need updateAvailability
-    // NOTE: You might need a specific method setBusy(true) in your repo. 
-    // For MVP, assuming we track busy status or lock them from new requests via logic.
+    const techSnapshot = {
+      name: techName,
+      phone: techPhone,
+      avatarUrl: techAvatar,
+      rating: tech.getRatings().averageRating || 0
+    };
 
-    // 3. Notify Customer (The "Technician Assigned" Screen)
-    const tech = await this._technicianRepo.findById(techId);
+    // 3. ATOMIC LOCK with Snapshot
+    const success = await this._bookingRepo.assignTechnician(
+      booking.getId(), 
+      techId, 
+      techSnapshot
+    );
+    
+    if (!success) {
+        throw new Error(ErrorMessages.BOOKING_ALREADY_ASSIGNED); 
+    }
+
+    // 4. Notify Customer (The "Technician Assigned" Screen)
     await this._notificationService.send({
         recipientId: booking.getCustomerId(),
         recipientType: "CUSTOMER",
-        type: "BOOKING_CONFIRMED" as any, // Add to enum
+        type: NotificationType.BOOKING_CONFIRMED, 
         title: "Technician Assigned! 🎉",
-        body: `${tech?.getName()} is on the way.`,
-        metadata: { bookingId: booking.getId(), techId },
+        body: `${techSnapshot.name} is on the way.`,
+        metadata: { 
+            bookingId: booking.getId(), 
+            techId: techId,
+            techName: techSnapshot.name,
+            techPhoto: techSnapshot.avatarUrl || ""
+        },
         clickAction: `/customer/bookings/${booking.getId()}`
     });
 
-    // 4. Notify Technician (Confirmation)
+    // 5. Notify Technician (Confirmation)
     await this._notificationService.send({
         recipientId: techId,
         recipientType: "TECHNICIAN",
-        type: "BOOKING_CONFIRMED" as any, 
+        type: NotificationType.BOOKING_CONFIRMED,
         title: "Booking Confirmed ✅",
         body: "Please proceed to the location.",
         metadata: { bookingId: booking.getId() },
@@ -83,7 +110,6 @@ export class RespondToBookingUseCase {
   // --- SCENARIO 2B: TECHNICIAN REJECTS (Flow B - The Loop) ---
   private async handleRejection(booking: Booking, techId: string, reason?: string) {
     // 1. Mark current attempt as REJECTED
-    // We update the entity in memory first to calculate the next step
     booking.rejectAssignment(techId, reason || "Declined by Technician");
 
     // 2. Find Next Candidate
@@ -94,12 +120,9 @@ export class RespondToBookingUseCase {
     if (nextCandidateId) {
         // --- RETRY LOGIC (Next Candidate) ---
         
-        // a. Create new attempt
-        // This sets status='ASSIGNED_PENDING' and new 45s timer
         booking.addAssignmentAttempt(nextCandidateId);
         
-        // b. Persist the rejection AND the new attempt
-        // We use addAssignmentAttempt repo method which pushes the new attempt
+        // Persist the rejection AND the new attempt
         await this._bookingRepo.addAssignmentAttempt(booking.getId(), {
             techId: nextCandidateId,
             attemptAt: new Date(),
@@ -108,12 +131,18 @@ export class RespondToBookingUseCase {
             adminForced: false
         });
 
+        // Use service name from snapshot if available
+        const serviceName = booking.getSnapshots().service.name || "Service Request";
+
+        // Calculate Earnings: 90% of Estimate (10% Fee) + Rounding
+        const estimatedPrice = booking.getPricing().estimated;
+        const earnings = Math.round((estimatedPrice * 0.9) * 100) / 100;
+
         // c. Trigger Socket for NEXT Tech
-        // (Similar to CreateBookingUseCase)
         await this._notificationService.sendBookingRequest(nextCandidateId, {
             bookingId: booking.getId(),
-            serviceName: "Service Request", // You might need to fetch Service name again or store in Booking
-            earnings: booking.getPricing().estimated * 0.8,
+            serviceName: serviceName,
+            earnings: earnings,
             distance: "Calculating...",
             address: booking.getLocation().address,
             expiresAt: booking.getAssignmentExpiresAt()!
@@ -123,15 +152,12 @@ export class RespondToBookingUseCase {
 
     } else {
         // --- FAILURE LOGIC (No candidates left) ---
-        
-        // Flow C: Total Failure
         await this._bookingRepo.updateStatus(booking.getId(), "FAILED_ASSIGNMENT");
         
-        // Notify Customer
         await this._notificationService.send({
             recipientId: booking.getCustomerId(),
             recipientType: "CUSTOMER",
-            type: "BOOKING_FAILED" as any, // Add to enum
+            type: "BOOKING_FAILED" as any, 
             title: "Booking Failed 😔",
             body: "Sorry, all technicians are currently busy. Please try again later.",
             metadata: { bookingId: booking.getId() }

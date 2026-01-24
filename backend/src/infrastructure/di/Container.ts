@@ -132,7 +132,9 @@ import { BookingMongoRepository } from "../database/repositories/BookingMongoRep
 import { CreateBookingUseCase } from "../../application/use-cases/booking/CreateBookingUseCase";
 import { RespondToBookingUseCase } from "../../application/use-cases/booking/RespondToBookingUseCase";
 import { BookingController } from "../../presentation/controllers/Booking/BookingController";
-
+import { UpdateJobStatusUseCase } from "../../application/use-cases/booking/UpdateJobStatusUseCase";
+import { AddExtraChargeUseCase } from "../../application/use-cases/booking/AddExtraChargeUseCase";
+import { RespondToExtraChargeUseCase } from "../../application/use-cases/booking/RespondToExtraChargeUseCase";
 // INFRASTRUCTURE SERVICE INSTANTIATION
 
 const imageService = new S3ImageService();
@@ -644,8 +646,26 @@ const respondToBooking = new RespondToBookingUseCase(
   logger
 
 )
+const updateJobStatusUseCase = new UpdateJobStatusUseCase(
+  bookingRepo,
+  notificationService,
+  logger
+);
+const addExtraChargeUseCase = new AddExtraChargeUseCase(
+  bookingRepo,
+  notificationService,
+  logger
+)
+const respondToExtraChargeUseCase = new RespondToExtraChargeUseCase(
+  bookingRepo,
+  notificationService,
+  logger
+)
 export const bookingController = new BookingController(
   createBookingUseCase,
   respondToBooking,
+  updateJobStatusUseCase,
+  addExtraChargeUseCase,
+  respondToExtraChargeUseCase,
   logger
 );

@@ -24,6 +24,16 @@ router.post(
   technicianAuth,
   bookingController.respondToBooking.bind(bookingController)
 );
+router.patch(
+  "/:id/status",
+  technicianAuth, 
+  bookingController.updateJobStatus.bind(bookingController)
+);
+router.post(
+  "/:id/extras/:chargeId/respond",
+  customerAuth, // Only customer can approve
+  bookingController.respondToExtraCharge.bind(bookingController)
+);
 // --- FUTURE ROUTES (Placeholders for next steps) ---
 /*
 

@@ -4,13 +4,14 @@ import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
 import { SuccessMessages, ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 import { Booking } from "../../../domain/entities/Booking";
 import { CreateBookingRequestDto } from "../../../application/dto/booking/CreateBookingRequestDto";
 import { RespondToBookingDto } from "../../../application/dto/booking/RespondToBookingDto";
+import { UpdateJobStatusDto } from "../../../application/dto/booking/UpdateJobStatusDto";
 import { BookingMapper } from "../../../application/mappers/BookingMapper";
+import { AddExtraChargeDto } from "../../../application/dto/booking/AddExtraChargeDto";
+import { RespondToExtraChargeDto } from "../../../application/dto/booking/RespondToExtraChargeDto";
 
-// Interface to ensure userId is available (from Auth Middleware)
 interface AuthenticatedRequest extends Request {
   userId?: string;
 }
@@ -18,8 +19,10 @@ interface AuthenticatedRequest extends Request {
 export class BookingController extends BaseController {
   constructor(
     private readonly _createBookingUseCase: IUseCase<Booking, [CreateBookingRequestDto]>,
-    // Fixed: Correctly typed the response use case
-    private readonly _respondToBookingUseCase: IUseCase<void, [RespondToBookingDto]>,
+    private readonly _respondToBookingUseCase: IUseCase<void, [RespondToBookingDto]>, 
+    private readonly _updateJobStatusUseCase: IUseCase<void, [UpdateJobStatusDto]>,
+    private readonly _addExtraChargeUseCase: IUseCase<void, [AddExtraChargeDto]>,
+    private readonly _respondToExtraChargeUseCase: IUseCase<void, [RespondToExtraChargeDto]>,
     _logger: ILogger
   ) {
     super(_logger);
@@ -51,11 +54,8 @@ export class BookingController extends BaseController {
       const booking = await this._createBookingUseCase.execute(input);
       const responseDto = BookingMapper.toResponse(booking);
 
-      return res.status(StatusCodes.CREATED).json({
-        success: true,
-        message: SuccessMessages.BOOKING_CREATED,
-        data: responseDto
-      });
+      // EFFECTIVE USE: this.created handles 201 + structure
+      return this.created(res, responseDto, SuccessMessages.BOOKING_CREATED);
 
     } catch (err) {
       return this.handleError(res, err, LogEvents.BOOKING_CREATION_FAILED);
@@ -73,7 +73,7 @@ export class BookingController extends BaseController {
       if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
       const bookingId = req.params.id;
-      const { response, reason } = req.body; // Expects "ACCEPT" or "REJECT"
+      const { response, reason } = req.body; 
 
       const input: RespondToBookingDto = {
         bookingId,
@@ -82,21 +82,104 @@ export class BookingController extends BaseController {
         reason
       };
 
-      // Execute logic (Atomic Lock / Recursive Re-assignment)
       await this._respondToBookingUseCase.execute(input);
 
       const message = response === "ACCEPT" 
         ? SuccessMessages.BOOKING_ACCEPTED 
         : "Booking rejected. Searching for next candidate...";
 
-      return res.status(StatusCodes.OK).json({
-        success: true,
-        message: message
-      });
+      // EFFECTIVE USE: this.ok handles 200 + structure
+      return this.ok(res, null, message);
 
     } catch (err) {
-      // Use a distinct log event for response failures
       return this.handleError(res, err, "BOOKING_RESPONSE_FAILED");
+    }
+  };
+
+  /**
+   * @route PATCH /api/bookings/:id/status
+   * @desc Technician updates job status (Flow C: EN_ROUTE -> REACHED -> IN_PROGRESS)
+   * @access Technician
+   */
+  updateJobStatus = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const technicianId = (req as AuthenticatedRequest).userId;
+      if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
+
+      const input: UpdateJobStatusDto = {
+        bookingId: req.params.id,
+        technicianId,
+        status: req.body.status, 
+        location: req.body.location,
+        otp: req.body.otp
+      };
+
+      await this._updateJobStatusUseCase.execute(input);
+
+      // EFFECTIVE USE: this.ok handles 200 + structure
+      return this.ok(res, null, `Job status updated to ${input.status}`);
+
+    } catch (err) {
+      return this.handleError(res, err, "JOB_STATUS_UPDATE_FAILED");
+    }
+  };
+
+  /**
+   * @route POST /api/bookings/:id/extras
+   * @desc Technician adds an extra charge (Flow D)
+   * @access Technician
+   */
+  addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const technicianId = (req as AuthenticatedRequest).userId;
+      if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
+
+      const input: AddExtraChargeDto = {
+        bookingId: req.params.id,
+        technicianId,
+        title: req.body.title,
+        amount: req.body.amount,
+        description: req.body.description,
+        proofUrl: req.body.proofUrl
+      };
+
+      await this._addExtraChargeUseCase.execute(input);
+
+      // EFFECTIVE USE: this.created handles 201 + structure
+      return this.created(res, null, "Extra charge added. Waiting for customer approval.");
+
+    } catch (err) {
+      return this.handleError(res, err, "ADD_EXTRA_CHARGE_FAILED");
+    }
+  };
+
+  /**
+   * @route POST /api/bookings/:id/extras/:chargeId/respond
+   * @desc Customer Approves/Rejects an extra charge
+   * @access Customer
+   */
+  respondToExtraCharge = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const customerId = (req as AuthenticatedRequest).userId;
+      if (!customerId) throw new Error(ErrorMessages.UNAUTHORIZED);
+
+      const { id: bookingId, chargeId } = req.params;
+      const { response } = req.body; 
+
+      const input: RespondToExtraChargeDto = {
+        bookingId,
+        customerId,
+        chargeId,
+        response
+      };
+
+      await this._respondToExtraChargeUseCase.execute(input);
+
+      // EFFECTIVE USE: this.ok handles 200 + structure
+      return this.ok(res, null, `Charge ${response.toLowerCase()}d successfully.`);
+
+    } catch (err) {
+      return this.handleError(res, err, "RESPOND_EXTRA_CHARGE_FAILED");
     }
   };
 }

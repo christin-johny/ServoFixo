@@ -81,3 +81,21 @@ export interface BookingTimestamps {
   completedAt?: Date;
   cancelledAt?: Date;
 }
+
+export interface BookingSnapshots {
+  technician?: {
+    name: string;
+    phone: string;
+    avatarUrl?: string; // Matches Tech Model
+    rating: number;
+  };
+  customer: {
+    name: string;
+    phone: string;
+    avatarUrl?: string;
+  };
+  service: {
+    name: string;
+    categoryId: string;
+  };
+}

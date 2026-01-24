@@ -11,8 +11,8 @@ import {
 } from "../mongoose/models/BookingModel";
 import { 
   BookingStatus, 
-  TechAssignmentAttempt, 
-  BookingTimelineEvent 
+  TechAssignmentAttempt,  
+  ExtraCharge
 } from "../../../../../shared/types/value-objects/BookingTypes";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
@@ -77,7 +77,6 @@ export class BookingMongoRepository implements IBookingRepository {
       }
     }
 
-    // Date filtering (useful for Admin Reports)
     if (filters.startDate || filters.endDate) {
       query["timestamps.createdAt"] = {};
       if (filters.startDate) query["timestamps.createdAt"].$gte = filters.startDate;
@@ -146,31 +145,26 @@ export class BookingMongoRepository implements IBookingRepository {
     await BookingModel.findByIdAndUpdate(id, { $set: update }).exec();
   }
 
-  /**
-   * Adds a new candidate attempt and starts the timer.
-   * Maps to Section 5.6 of PDF.
-   */
   async addAssignmentAttempt(id: string, attempt: TechAssignmentAttempt): Promise<void> {
     await BookingModel.findByIdAndUpdate(id, {
       $push: { assignedTechAttempts: attempt },
       $set: { 
         status: "ASSIGNED_PENDING", 
-        assignmentExpiresAt: attempt.expiresAt, // Critical for Cron Job
+        assignmentExpiresAt: attempt.expiresAt,
         "timestamps.updatedAt": new Date() 
       }
     }).exec();
   }
 
-  /**
-   * ATOMIC LOCK: Prevents Race Conditions (PDF Section 5.8).
-   * Only assigns if the booking is still pending and the attempt matches.
-   */
-  async assignTechnician(bookingId: string, technicianId: string): Promise<boolean> {
+  async assignTechnician(
+    bookingId: string, 
+    technicianId: string, 
+    techSnapshot: { name: string; phone: string; avatarUrl?: string; rating: number }
+  ): Promise<boolean> {
     const result = await BookingModel.findOneAndUpdate(
       {
         _id: bookingId,
         status: "ASSIGNED_PENDING",
-        // Ensure we are confirming the *current* pending attempt for *this* technician
         "assignedTechAttempts": { 
           $elemMatch: { techId: technicianId, status: "PENDING" } 
         }
@@ -179,16 +173,15 @@ export class BookingMongoRepository implements IBookingRepository {
         $set: {
           technicianId: technicianId,
           status: "ACCEPTED",
-          assignmentExpiresAt: null, // Clear the timer
+          assignmentExpiresAt: null,
           "timestamps.acceptedAt": new Date(),
           "timestamps.updatedAt": new Date(),
-          // Mark the specific attempt as ACCEPTED
-          "assignedTechAttempts.$[elem].status": "ACCEPTED"
+          "assignedTechAttempts.$[elem].status": "ACCEPTED",
+          "snapshots.technician": techSnapshot
         }
       },
       {
         new: true,
-        // Filter to identify which array element to update
         arrayFilters: [{ "elem.techId": technicianId, "elem.status": "PENDING" }]
       }
     ).exec();
@@ -228,6 +221,31 @@ export class BookingMongoRepository implements IBookingRepository {
     if (transactionId) update["payment.transactionId"] = transactionId;
 
     await BookingModel.findByIdAndUpdate(bookingId, { $set: update }).exec();
+  }async addExtraCharge(bookingId: string, charge: ExtraCharge): Promise<void> {
+    // Map domain value object to persistence shape
+    const chargeData = {
+      title: charge.title,
+      amount: charge.amount,
+      description: charge.description,
+      proofUrl: charge.proofUrl,
+      status: charge.status,
+      addedByTechId: charge.addedByTechId,
+      addedAt: charge.addedAt
+    };
+
+    const result = await BookingModel.findOneAndUpdate(
+      { _id: bookingId },
+      {
+        $push: { extraCharges: chargeData },
+        $set: { 
+          status: "EXTRAS_PENDING", 
+          "timestamps.updatedAt": new Date() 
+        }
+      },
+      { new: true }
+    ).exec();
+
+    if (!result) throw new Error("Booking not found");
   }
 
   // --- Internal Private Mappers (DB <-> Domain) ---
@@ -239,7 +257,7 @@ export class BookingMongoRepository implements IBookingRepository {
       techId: a.techId,
       attemptAt: a.attemptAt,
       expiresAt: a.expiresAt,
-      status: a.status,
+      status: a.status as TechAssignmentAttempt["status"], 
       adminForced: a.adminForced,
       rejectionReason: a.rejectionReason
     }));
@@ -280,12 +298,25 @@ export class BookingMongoRepository implements IBookingRepository {
       timeline: timeline,
       chatId: doc.chatId,
       meta: doc.meta,
-      timestamps: doc.timestamps
+      timestamps: doc.timestamps,
+      
+      // FIX: Ensure snapshots always have fallbacks (even if DB is missing them)
+      snapshots: {
+        technician: doc.snapshots?.technician,
+        customer: doc.snapshots?.customer || { name: "Unknown", phone: "" },
+        service: doc.snapshots?.service || { name: "Unknown", categoryId: "" }
+      }
     });
   }
 
   private toPersistence(entity: Booking): Partial<BookingDocument> {
     const props = entity.toProps();
+
+    // FIX: Fallback if props.snapshots is undefined to prevent assigning undefined to required fields
+    const snapshots = props.snapshots || {
+      customer: { name: "Unknown", phone: "" },
+      service: { name: "Unknown", categoryId: "" }
+    };
 
     return {
       customerId: props.customerId,
@@ -303,7 +334,7 @@ export class BookingMongoRepository implements IBookingRepository {
       assignedTechAttempts: props.assignedTechAttempts.map(a => ({
         techId: a.techId,
         attemptAt: a.attemptAt,
-        expiresAt: a.expiresAt, // Removed comma here
+        expiresAt: a.expiresAt,
         status: a.status,
         adminForced: a.adminForced || false,
         rejectionReason: a.rejectionReason
@@ -327,6 +358,13 @@ export class BookingMongoRepository implements IBookingRepository {
         reason: t.reason,
         meta: t.meta
       })),
+      
+      // FIX: Use the 'snapshots' variable which guarantees 'customer' and 'service' are present
+      snapshots: {
+        technician: snapshots.technician,
+        customer: snapshots.customer,
+        service: snapshots.service
+      },
 
       chatId: props.chatId,
       meta: props.meta,

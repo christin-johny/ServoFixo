@@ -9,7 +9,8 @@ import {
   ExtraCharge,
   BookingMeta,
   BookingTimelineEvent,
-  BookingTimestamps
+  BookingTimestamps,
+  BookingSnapshots
 } from "../../../../shared/types/value-objects/BookingTypes";
 
 export interface BookingProps {
@@ -36,6 +37,7 @@ export interface BookingProps {
   meta?: BookingMeta;
   
   timestamps?: BookingTimestamps;
+  snapshots?: BookingSnapshots;
 }
 
 export class Booking {
@@ -61,6 +63,7 @@ export class Booking {
   private _chatId?: string;
   private _meta: BookingMeta;
   private _timestamps: BookingTimestamps;
+  private _snapshots: BookingSnapshots;
 
   constructor(props: BookingProps) {
     this._id = props.id || "";
@@ -84,6 +87,10 @@ export class Booking {
     
     this._chatId = props.chatId;
     this._meta = props.meta || {};
+    this._snapshots = props.snapshots || {
+      customer: { name: "", phone: "" },
+      service: { name: "", categoryId: "" }
+    };
     
     this._timestamps = props.timestamps || {
       createdAt: new Date(),
@@ -109,6 +116,7 @@ export class Booking {
   public getChatId(): string | undefined { return this._chatId; }
   public getMeta(): BookingMeta { return this._meta; }
   public getTimestamps(): BookingTimestamps { return this._timestamps; }
+  public getSnapshots(): BookingSnapshots { return this._snapshots; }
 
   // --- Domain Methods ---
 
@@ -227,6 +235,21 @@ export class Booking {
           reason
       });
   }
+  public setInitialSnapshots(
+    customer: { name: string; phone: string; avatarUrl?: string },
+    service: { name: string; categoryId: string }
+  ): void {
+    this._snapshots.customer = customer;
+    this._snapshots.service = service;
+  }
+  public setTechnicianSnapshot(tech: { 
+    name: string; 
+    phone: string; 
+    avatarUrl?: string; 
+    rating: number;
+  }): void {
+    this._snapshots.technician = tech;
+  }
 
   public toProps(): BookingProps {
     return {
@@ -246,7 +269,8 @@ export class Booking {
       timeline: this._timeline,
       chatId: this._chatId,
       meta: this._meta,
-      timestamps: this._timestamps
+      timestamps: this._timestamps,
+      snapshots: this._snapshots,
     };
   }
 }

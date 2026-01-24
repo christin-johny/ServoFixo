@@ -1,7 +1,7 @@
 
 import { Booking } from "../entities/Booking";
 import { IBaseRepository } from "./IBaseRepository";
-import { BookingStatus, TechAssignmentAttempt } from "../../../../shared/types/value-objects/BookingTypes";
+import { BookingStatus, TechAssignmentAttempt,ExtraCharge } from "../../../../shared/types/value-objects/BookingTypes";
 
 export interface BookingFilterParams {
   customerId?: string;
@@ -53,7 +53,16 @@ export interface IBookingRepository extends IBaseRepository<Booking> {
    * Atomically locks the booking for a technician.
    * MUST use DB transaction or atomic update to prevent double-booking.
    */
-  assignTechnician(bookingId: string, technicianId: string): Promise<boolean>;
+  assignTechnician(
+    bookingId: string, 
+    technicianId: string, 
+    techSnapshot: { 
+      name: string; 
+      phone: string; 
+      avatarUrl?: string; 
+      rating: number; 
+    }
+  ): Promise<boolean>;
 
   /**
    * Updates an extra charge item (Approve/Reject)
@@ -64,4 +73,10 @@ export interface IBookingRepository extends IBaseRepository<Booking> {
    * Updates payment status after gateway callback
    */
   updatePaymentStatus(bookingId: string, status: "PAID" | "FAILED", transactionId?: string): Promise<void>;
+
+  /**
+   * Atomically pushes a new extra charge and updates status to EXTRAS_PENDING.
+   * Prevents race conditions during billing updates.
+   */
+  addExtraCharge(bookingId: string, charge: ExtraCharge): Promise<void>;
 }
