@@ -110,4 +110,44 @@ export class NotificationService implements INotificationService {
       priority: "URGENT"
     });
   }
+  
+async sendBookingRequest(
+    technicianId: string, 
+    payload: {
+      bookingId: string;
+      serviceName: string;
+      earnings: number;
+      distance: string;
+      address: string;
+      expiresAt: Date;
+    }
+  ): Promise<void> {
+    try {
+      const io = SocketServer.getInstance();
+      
+      // 1. Emit the critical Real-Time Event (Popup Trigger)
+      io.to(technicianId).emit("booking:assign_request", payload);
+
+      // 2. Create Persisted Notification
+      await this.send({
+        recipientId: technicianId,
+        recipientType: "TECHNICIAN",
+          
+        type: NotificationType.BOOKING_REQUEST, 
+        
+        title: "New Job Request! 🚀",
+        body: `New ${payload.serviceName} job nearby. Earn ₹${payload.earnings}.`,
+        metadata: {
+          bookingId: payload.bookingId,
+          expiresAt: payload.expiresAt.toISOString()
+        },
+        clickAction: `/technician/bookings/${payload.bookingId}`,
+        priority: "URGENT"
+      });
+
+      this._logger.info(`Booking Request Socket Event sent to ${technicianId}`);
+    } catch (error) {
+      this._logger.error(`Failed to send booking request socket to ${technicianId}`, error);
+    }
+  }
 }

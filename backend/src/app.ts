@@ -34,11 +34,13 @@ import adminRoutes from "./presentation/routes/admin";
 import customerRoutes from "./presentation/routes/customer/index";
 import technicianRoutes from './presentation/routes/technician/index.ts'
 import globalAuthRouter from './presentation/routes/GlobalAuthRouter';
+import bookingRoutes from './presentation/routes/booking.routes';
 
 app.use('/api/auth', globalAuthRouter);
 app.use("/api/admin", adminRoutes);
 app.use("/api/customer", customerRoutes);
 app.use("/api/technician", technicianRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 export const startServer = async () => {
   await connectDatabase();

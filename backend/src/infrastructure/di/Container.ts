@@ -126,6 +126,13 @@ import { TechnicianNotificationController } from "../../presentation/controllers
 import { MarkNotificationAsReadUseCase } from "../../application/use-cases/notification/MarkNotificationAsReadUseCase";
 import { MarkAllNotificationsAsReadUseCase } from "../../application/use-cases/notification/MarkAllNotificationsAsReadUseCase";
 
+//Booking 
+// --- Booking Module ---
+import { BookingMongoRepository } from "../database/repositories/BookingMongoRepository";
+import { CreateBookingUseCase } from "../../application/use-cases/booking/CreateBookingUseCase";
+import { RespondToBookingUseCase } from "../../application/use-cases/booking/RespondToBookingUseCase";
+import { BookingController } from "../../presentation/controllers/Booking/BookingController";
+
 // INFRASTRUCTURE SERVICE INSTANTIATION
 
 const imageService = new S3ImageService();
@@ -616,5 +623,29 @@ export const adminTechnicianController = new AdminTechnicianController(
   resolveServiceRequestUseCase,
   resolveZoneRequestUseCase,
   resolveBankRequestUseCase,
+  logger
+);
+ 
+
+const bookingRepo = new BookingMongoRepository();
+ 
+const createBookingUseCase = new CreateBookingUseCase(
+  bookingRepo,
+  customerRepo,     
+  serviceItemRepo,  
+  technicianRepo, 
+  notificationService,  
+  logger
+);
+const respondToBooking = new RespondToBookingUseCase(
+  bookingRepo,
+  technicianRepo,
+  notificationService,
+  logger
+
+)
+export const bookingController = new BookingController(
+  createBookingUseCase,
+  respondToBooking,
   logger
 );

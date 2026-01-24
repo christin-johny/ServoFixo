@@ -57,6 +57,19 @@ export enum ErrorMessages {
   MISSING_FIELDS="all fields are required",
   REQUEST_NOT_FOUND = "The specific change request was not found or already resolved",
   INVALID_RESOLUTION_ACTION = "Invalid resolution action. Must be APPROVE or REJECT",
+
+  // Booking Errors
+  BOOKING_NOT_FOUND = "Booking not found.",
+  INVALID_BOOKING_STATUS = "Invalid booking status transition.",
+  BOOKING_ALREADY_ASSIGNED = "This booking has already been assigned.",
+  BOOKING_EXPIRED = "Booking request has expired.",
+  
+  ZONE_MISMATCH = "Service is not available in this location.",
+  NO_TECHS_AVAILABLE = "No technicians available in your zone at this moment.",
+  
+  // Payment/Financial
+  PAYMENT_REQUIRED = "Payment is required to proceed.",
+  PAYMENT_FAILED = "Payment processing failed.",
 }
 
 export enum SuccessMessages {
@@ -101,4 +114,9 @@ export enum SuccessMessages {
   TECH_ONLINE = "You are now Online",
   TECH_OFFLINE = "You are now Offline",
   TECH_REQUEST_DISMISSED = "Notification cleared successfully",
+
+  BOOKING_CREATED = "Searching for a technician...",
+  BOOKING_ACCEPTED = "Booking confirmed successfully.",
+  BOOKING_UPDATED = "Booking status updated.",
+  BOOKING_CANCELLED = "Booking cancelled successfully.",
 }
