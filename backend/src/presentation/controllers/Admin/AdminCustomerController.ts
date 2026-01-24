@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { BaseController } from "../BaseController";
 import { IUseCase } from "../../../application/interfaces/IUseCase";  
 import {
   CustomerFilterSchema,
@@ -19,17 +20,19 @@ interface CustomerUpdateDto {
   [key: string]: unknown;
 }
 
-export class AdminCustomerController {
+export class AdminCustomerController extends BaseController {
   constructor(
     private readonly _getAllCustomersUseCase: IUseCase<unknown,[CustomerFilterDto]>, 
     private readonly _updateCustomerUseCase: IUseCase<unknown,[string, CustomerUpdateDto]>, 
     private readonly _getCustomerByIdUseCase: IUseCase<unknown, [string]>, 
     private readonly _deleteCustomerUseCase: IUseCase<void, [string]>, 
     private readonly _getAddressesByUserIdUseCase: IUseCase<unknown[],[string]>,
-    private readonly _logger: ILogger
-  ) {}
+    _logger: ILogger // Passed to BaseController
+  ) {
+    super(_logger);
+  }
 
-  async getAllCustomers(req: Request, res: Response): Promise<void> {
+  getAllCustomers = async (req: Request, res: Response): Promise<Response> => {
     try {
       const validationResult = CustomerFilterSchema.safeParse(req.query);
 
@@ -38,155 +41,83 @@ export class AdminCustomerController {
           reason: "Invalid Query",
           errors: validationResult.error.errors,
         });
-        res.status(StatusCodes.BAD_REQUEST).json({
+        return res.status(StatusCodes.BAD_REQUEST).json({
           message: ErrorMessages.INVALID_QUERY,
           errors: validationResult.error.errors,
         });
-        return;
       }
 
-      const filterDto = validationResult.data;
+      this._logger.info(LogEvents.ADMIN_CUSTOMER_FETCH_ALL_INIT, { filters: validationResult.data });
 
-      this._logger.info(LogEvents.ADMIN_CUSTOMER_FETCH_ALL_INIT, {
-        filters: filterDto,
-      });
+      const result = await this._getAllCustomersUseCase.execute(validationResult.data);
 
-      const result = await this._getAllCustomersUseCase.execute(filterDto);
-
-      res.status(StatusCodes.OK).json(result);
+      // ✅ Aligned with getCustomers: returns response.data directly
+      return res.status(StatusCodes.OK).json(result);
     } catch (error) {
-      this._logger.error(LogEvents.ADMIN_CUSTOMER_FETCH_ALL_FAILED, undefined, {
-        error,
-      });
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: ErrorMessages.INTERNAL_ERROR,
-      });
+      return this.handleError(res, error, LogEvents.ADMIN_CUSTOMER_FETCH_ALL_FAILED);
     }
   }
 
-  async updateCustomer(req: Request, res: Response): Promise<void> {
+  updateCustomer = async (req: Request, res: Response): Promise<Response> => {
     const customerId = req.params.id;
-
     try {
       const validationResult = CustomerUpdateSchema.safeParse(req.body);
 
       if (!validationResult.success) {
-        this._logger.warn(LogEvents.ADMIN_CUSTOMER_UPDATE_FAILED, {
-          customerId,
-          reason: "Validation Error",
-        });
-        res.status(StatusCodes.BAD_REQUEST).json({
+        return res.status(StatusCodes.BAD_REQUEST).json({
           message: ErrorMessages.INVALID_DATA,
           errors: validationResult.error.errors,
         });
-        return;
       }
 
-      const updateDto = validationResult.data;
+      this._logger.info(LogEvents.ADMIN_CUSTOMER_UPDATE_INIT, { customerId });
 
-      this._logger.info(LogEvents.ADMIN_CUSTOMER_UPDATE_INIT, {
-        customerId,
-        fields: Object.keys(updateDto),
-      });
+      const updatedCustomer = await this._updateCustomerUseCase.execute(customerId, validationResult.data);
 
-      const updatedCustomer = await this._updateCustomerUseCase.execute(
-        customerId,
-        updateDto
-      );
-
-      res.status(StatusCodes.OK).json(mapToResponseDto(updatedCustomer as any));
+      // ✅ Aligned with updateCustomer: returns response.data (the customer object)
+      return res.status(StatusCodes.OK).json(mapToResponseDto(updatedCustomer as any));
     } catch (error) {
-      this._logger.error(LogEvents.ADMIN_CUSTOMER_UPDATE_FAILED, undefined, {
-        error,
-        customerId,
-      });
-
-      if (error instanceof Error) {
-        res
-          .status(StatusCodes.INTERNAL_SERVER_ERROR)
-          .json({ message: error.message });
-        return;
-      }
-
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: ErrorMessages.INTERNAL_ERROR,
-      });
+      return this.handleError(res, error, LogEvents.ADMIN_CUSTOMER_UPDATE_FAILED);
     }
   }
 
-  async getCustomerById(req: Request, res: Response): Promise<void> {
+  getCustomerById = async (req: Request, res: Response): Promise<Response> => {
     const customerId = req.params.id;
-
     try {
-      this._logger.info(LogEvents.ADMIN_CUSTOMER_FETCH_BY_ID_INIT, {
-        customerId,
-      });
+      this._logger.info(LogEvents.ADMIN_CUSTOMER_FETCH_BY_ID_INIT, { customerId });
 
       const customer = await this._getCustomerByIdUseCase.execute(customerId);
 
-      res.status(StatusCodes.OK).json(mapToResponseDto(customer as any));
+      // ✅ Aligned with getCustomerById: returns response.data directly
+      return res.status(StatusCodes.OK).json(mapToResponseDto(customer as any));
     } catch (error) {
-      this._logger.error(
-        LogEvents.ADMIN_CUSTOMER_FETCH_BY_ID_FAILED,
-        undefined,
-        { error, customerId }
-      );
-
-      if (error instanceof Error) {
-        res
-          .status(StatusCodes.INTERNAL_SERVER_ERROR)
-          .json({ message: error.message });
-        return;
-      }
-
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: ErrorMessages.INTERNAL_ERROR,
-      });
+      return this.handleError(res, error, LogEvents.ADMIN_CUSTOMER_FETCH_BY_ID_FAILED);
     }
   }
 
-  async deleteCustomer(req: Request, res: Response): Promise<void> {
+  deleteCustomer = async (req: Request, res: Response): Promise<Response> => {
     const customerId = req.params.id;
     try {
       this._logger.info(LogEvents.ADMIN_CUSTOMER_DELETE_INIT, { customerId });
-
       await this._deleteCustomerUseCase.execute(customerId);
-      res.status(204).send();
+      
+      return res.status(StatusCodes.NO_CONTENT).send();
     } catch (error) {
-      this._logger.error(LogEvents.ADMIN_CUSTOMER_DELETE_FAILED, undefined, {
-        error,
-        customerId,
-      });
-      res
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ message: ErrorMessages.INTERNAL_ERROR });
+      return this.handleError(res, error, LogEvents.ADMIN_CUSTOMER_DELETE_FAILED);
     }
   }
 
-  async getCustomerAddresses(req: Request, res: Response): Promise<void> {
+  getCustomerAddresses = async (req: Request, res: Response): Promise<Response> => {
     const customerId = req.params.id;
     try {
-      this._logger.info(LogEvents.ADMIN_CUSTOMER_ADDRESS_FETCH_INIT, {
-        customerId,
-      });
+      this._logger.info(LogEvents.ADMIN_CUSTOMER_ADDRESS_FETCH_INIT, { customerId });
 
-      const addresses = await this._getAddressesByUserIdUseCase.execute(
-        customerId
-      );
-      res.status(StatusCodes.OK).json({ success: true, data: addresses });
+      const addresses = await this._getAddressesByUserIdUseCase.execute(customerId);
+
+      // ✅ Aligned with getCustomerAddresses: repository expects response.data.data
+      return this.ok(res, addresses); 
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-
-      this._logger.error(
-        LogEvents.ADMIN_CUSTOMER_ADDRESS_FETCH_FAILED,
-        errorMessage,
-        { customerId }
-      );
-
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: errorMessage || ErrorMessages.INTERNAL_ERROR,
-      });
+      return this.handleError(res, error, LogEvents.ADMIN_CUSTOMER_ADDRESS_FETCH_FAILED);
     }
   }
 }

@@ -86,9 +86,7 @@ const ServiceSkills: React.FC = () => {
                     Manage your operational zones and specialized skills.
                 </p>
             </div>
-
-            {/* --- 3. PENDING REQUESTS SUMMARY BANNER --- */}
-            {/* --- 3. UNIFIED STATUS & NOTIFICATION CENTER --- */}
+ 
             <div className="space-y-3">
                 {[...rejectedServices, ...rejectedZones].map(req => {
                     // Explicitly check type to avoid "unused expression" error
@@ -240,7 +238,7 @@ const ServiceSkills: React.FC = () => {
                                 ) : (
                                     <>
                                         <Plus className="w-3.5 h-3.5" />
-                                        Add Service
+                                        Manage Services
                                     </>
                                 )}
                             </button>

@@ -1,4 +1,8 @@
+// src/presentation/controllers/admin/AdminTechnicianController.ts
+
 import { Request, Response } from "express";
+import { BaseController } from "../BaseController";
+import { RequestMapper } from "../../utils/RequestMapper";
 import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { PaginatedTechnicianQueueResponse } from "../../../application/dto/technician/TechnicianQueueDto";
 import {
@@ -12,290 +16,140 @@ import {
   VerificationQueueFilters,
   QueueType,
 } from "../../../domain/repositories/ITechnicianRepository"; 
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import {
-  ErrorMessages,
-  SuccessMessages,
-} from "../../../../../shared/types/enums/ErrorMessages";
+import { SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { RequestAction ,PartnerRequestType } from "../../../../../shared/types/enums/RequestResolutionEnums";
- 
+import { RequestAction, PartnerRequestType } from "../../../../../shared/types/enums/RequestResolutionEnums";
 
-export class AdminTechnicianController {
+export class AdminTechnicianController extends BaseController {
   constructor(
-    private readonly _getQueueUseCase: IUseCase<
-      PaginatedTechnicianQueueResponse,
-      [VerificationQueueFilters]
-    >,
-    private readonly _getFullProfileUseCase: IUseCase<
-      AdminTechnicianProfileDto,
-      [string]
-    >,
-    private readonly _verifyTechnicianUseCase: IUseCase<
-      void,
-      [string, VerifyTechnicianDto]
-    >,
-    private readonly _getAllTechniciansUseCase: IUseCase<
-      PaginatedTechnicianQueueResponse,
-      [TechnicianFilterParams & { page: number; limit: number }]
-    >,
-    private readonly _updateTechnicianUseCase: IUseCase<
-      void,
-      [string, TechnicianUpdatePayload]
-    >,
+    private readonly _getQueueUseCase: IUseCase<PaginatedTechnicianQueueResponse, [VerificationQueueFilters]>,
+    private readonly _getFullProfileUseCase: IUseCase<AdminTechnicianProfileDto, [string]>,
+    private readonly _verifyTechnicianUseCase: IUseCase<void, [string, VerifyTechnicianDto]>,
+    private readonly _getAllTechniciansUseCase: IUseCase<PaginatedTechnicianQueueResponse, [TechnicianFilterParams & { page: number; limit: number }]>,
+    private readonly _updateTechnicianUseCase: IUseCase<void, [string, TechnicianUpdatePayload]>,
     private readonly _deleteTechnicianUseCase: IUseCase<void, [string]>,
-    private readonly _blockTechnicianUseCase: IUseCase<
-      void,
-      [string, boolean, string | undefined]
-    >,
+    private readonly _blockTechnicianUseCase: IUseCase<void, [string, boolean, string | undefined]>,
     private readonly _resolveServiceRequestUseCase: IUseCase<void, [string, ResolvePartnerRequestDto]>,
     private readonly _resolveZoneRequestUseCase: IUseCase<void, [string, ResolvePartnerRequestDto]>,
     private readonly _resolveBankRequestUseCase: IUseCase<void, [string, ResolvePartnerRequestDto]>,
-    private readonly _logger: ILogger
-  ) {}
+    _logger: ILogger 
+  ) {
+    super(_logger);
+  }
 
-  getVerificationQueue = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
+  getVerificationQueue = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const queueType = req.query.type as QueueType | undefined;
-
+      const { page, limit, search } = RequestMapper.toPagination(req.query);
       const params: VerificationQueueFilters = {
-        page: parseInt(req.query.page as string) || 1,
-        limit: parseInt(req.query.limit as string) || 10,
-        search: req.query.search as string | undefined,
+        page,
+        limit,
+        search,
+        type: req.query.type as QueueType | undefined,
         sort: (req.query.sort as "asc" | "desc") || "asc",
         sortBy: (req.query.sortBy as string) || "submittedAt",
-        type: queueType,
       };
 
       const result = await this._getQueueUseCase.execute(params);
-
-      return res.status(StatusCodes.OK).json({
-        success: true,
-        data: result,
-      });
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      this._logger.error(LogEvents.ADMIN_GET_TECH_QUEUE_FAILED, errorMessage, {
-        error: err,
-      });
-      return res
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ error: ErrorMessages.INTERNAL_ERROR });
+      return this.ok(res, result);
+    } catch (err) {
+      return this.handleError(res, err, LogEvents.ADMIN_GET_TECH_QUEUE_FAILED);
     }
   };
 
-  getTechnicianProfile = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
+  getTechnicianProfile = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { id } = req.params;
-      const result = await this._getFullProfileUseCase.execute(id);
-
-      return res.status(StatusCodes.OK).json({
-        success: true,
-        data: result,
-      });
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-
-      if (errorMessage === ErrorMessages.TECHNICIAN_NOT_FOUND) {
-        return res.status(StatusCodes.NOT_FOUND).json({ error: errorMessage });
-      }
-
-      return res
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ error: ErrorMessages.INTERNAL_ERROR });
+      const result = await this._getFullProfileUseCase.execute(req.params.id);
+      return this.ok(res, result);
+    } catch (err) {
+      return this.handleError(res, err, LogEvents.PROFILE_FETCH_FAILED);
     }
   };
 
   verifyTechnician = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { id } = req.params;
       const dto = req.body as VerifyTechnicianDto;
+      await this._verifyTechnicianUseCase.execute(req.params.id, dto);
 
-      if (!dto.action || !["APPROVE", "REJECT"].includes(dto.action)) {
-        return res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({ error: "Invalid action. Must be APPROVE or REJECT." });
-      }
-
-      await this._verifyTechnicianUseCase.execute(id, dto);
-
-      return res.status(StatusCodes.OK).json({
-        success: true,
-        message:
-          dto.action === "APPROVE"
-            ? "Technician Approved Successfully"
-            : "Technician Rejected",
-      });
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-
-      if (errorMessage === ErrorMessages.TECHNICIAN_NOT_FOUND) {
-        return res.status(StatusCodes.NOT_FOUND).json({ error: errorMessage });
-      }
-
-      return res
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ error: ErrorMessages.INTERNAL_ERROR });
+      const message = dto.action === "APPROVE" 
+        ? "Technician Approved Successfully" 
+        : "Technician Rejected";
+        
+      return this.ok(res, null, message);
+    } catch (err) {
+      return this.handleError(res, err, LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_FAILED);
     }
   };
- 
-getAllTechnicians = async (
-  req: Request,
-  res: Response
-): Promise<Response> => {
-  try {
-    this._logger.info(LogEvents.ADMIN_GET_ALL_TECHS_INIT, {
-      query: req.query,
-    });
- 
-    const filters: TechnicianFilterParams & { page: number; limit: number } = {
-      page: parseInt(req.query.page as string) || 1,
-      limit: parseInt(req.query.limit as string) || 10,
-      search: req.query.search as string | undefined,
-       
-      status: req.query.status as TechnicianFilterParams['status'], 
-      
-      zoneId: req.query.zoneId as string | undefined,
-    };
 
-    const result = await this._getAllTechniciansUseCase.execute(filters);
+  getAllTechnicians = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const { page, limit, search } = RequestMapper.toPagination(req.query);
+      const filters = {
+        page,
+        limit,
+        search,
+        status: req.query.status as TechnicianFilterParams['status'],
+        zoneId: req.query.zoneId as string | undefined,
+      };
 
-    return res.status(StatusCodes.OK).json({
-      success: true,
-      data: result,
-    });
-  } catch (err: unknown) {
-    this._logger.error(LogEvents.ADMIN_GET_ALL_TECHS_FAILED, String(err));
-    return res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ error: ErrorMessages.INTERNAL_ERROR });
-  }
-};
+      const result = await this._getAllTechniciansUseCase.execute(filters);
+      return this.ok(res, result);
+    } catch (err) {
+      return this.handleError(res, err, LogEvents.ADMIN_GET_ALL_TECHS_FAILED);
+    }
+  };
 
   updateTechnician = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { id } = req.params;
-      const updates = req.body as TechnicianUpdatePayload;
-
-      await this._updateTechnicianUseCase.execute(id, updates);
-
-      return res.status(StatusCodes.OK).json({
-        success: true,
-        message: SuccessMessages.TECH_UPDATED,
-      });
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      return res
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ error: errorMessage });
+      await this._updateTechnicianUseCase.execute(req.params.id, req.body);
+      return this.ok(res, null, SuccessMessages.TECH_UPDATED);
+    } catch (err) {
+      return this.handleError(res, err, LogEvents.CATEGORY_UPDATE_FAILED);  
     }
   };
 
-  toggleBlockTechnician = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
+  toggleBlockTechnician = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { id } = req.params;
       const { isSuspended, reason } = req.body;
+      await this._blockTechnicianUseCase.execute(req.params.id, isSuspended, reason);
 
-      await this._blockTechnicianUseCase.execute(id, isSuspended, reason);
-
-      return res.status(StatusCodes.OK).json({
-        success: true,
-        message: isSuspended
-          ? SuccessMessages.TECH_SUSPENDED
-          : SuccessMessages.TECH_ACTIVATED,
-      });
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      return res
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ error: errorMessage });
+      return this.ok(res, null, isSuspended ? SuccessMessages.TECH_SUSPENDED : SuccessMessages.TECH_ACTIVATED);
+    } catch (err) {
+      return this.handleError(res, err, LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_FAILED);
     }
   };
 
   deleteTechnician = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { id } = req.params;
-
-      await this._deleteTechnicianUseCase.execute(id);
-
-      return res.status(StatusCodes.OK).json({
-        success: true,
-        message: SuccessMessages.TECH_DELETED,
-      });
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      return res
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ error: errorMessage });
+      await this._deleteTechnicianUseCase.execute(req.params.id);
+      return this.ok(res, null, SuccessMessages.TECH_DELETED);
+    } catch (err) {
+      return this.handleError(res, err, LogEvents.CATEGORY_DELETE_FAILED);
     }
   };
 
-resolvePartnerRequest = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
+  resolvePartnerRequest = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { id } = req.params;
       const dto = req.body as ResolvePartnerRequestDto;
+      
+      const routes = {
+        [PartnerRequestType.SERVICE]: this._resolveServiceRequestUseCase,
+        [PartnerRequestType.ZONE]: this._resolveZoneRequestUseCase,
+        [PartnerRequestType.BANK]: this._resolveBankRequestUseCase,
+      };
 
-      // Basic Validation
-      if (!dto.action || !Object.values(RequestAction).includes(dto.action)) {
-        return res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({ error: ErrorMessages.INVALID_RESOLUTION_ACTION });
-      }
+      const useCase = routes[dto.requestType];
+      if (!useCase) throw new Error("Invalid request type");
 
-      this._logger.info(`${LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_INIT}: Type ${dto.requestType} for Tech ${id}`);
+      await useCase.execute(req.params.id, dto);
 
-      // ✅ Domain Routing Logic
-      switch (dto.requestType) {
-        case PartnerRequestType.SERVICE:
-          await this._resolveServiceRequestUseCase.execute(id, dto);
-          break;
-        case PartnerRequestType.ZONE:
-          await this._resolveZoneRequestUseCase.execute(id, dto);
-          break;
-        case PartnerRequestType.BANK:
-          await this._resolveBankRequestUseCase.execute(id, dto);
-          break;
-        default:
-          return res
-            .status(StatusCodes.BAD_REQUEST)
-            .json({ error: ErrorMessages.INVALID_DATA });
-      }
+      const message = dto.action === RequestAction.APPROVE
+        ? "Request approved and technician notified."
+        : "Request rejected and technician notified.";
 
-      return res.status(StatusCodes.OK).json({
-        success: true,
-        message:
-          dto.action === RequestAction.APPROVE
-            ? "Request approved and technician notified."
-            : "Request rejected and technician notified.",
-      });
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-
-      if (
-        errorMessage === ErrorMessages.TECHNICIAN_NOT_FOUND ||
-        errorMessage === ErrorMessages.REQUEST_NOT_FOUND
-      ) {
-        return res.status(StatusCodes.NOT_FOUND).json({ error: errorMessage });
-      }
-
-      this._logger.error(`${LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_FAILED}: ${errorMessage}`);
-      return res
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ error: ErrorMessages.INTERNAL_ERROR });
+      return this.ok(res, null, message);
+    } catch (err) {
+      return this.handleError(res, err, LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_FAILED);
     }
   };
 }
-

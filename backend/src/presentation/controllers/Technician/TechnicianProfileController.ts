@@ -1,12 +1,9 @@
 import { Request, Response } from "express";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import {
-  ErrorMessages,
-  SuccessMessages,
-} from "../../../../../shared/types/enums/ErrorMessages";
+import { BaseController } from "../BaseController";
 import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { SuccessMessages, ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { TechnicianResponseDto } from "../../../application/dto/technician/TechnicianResponseDto";
 import { UploadTechnicianFileInput } from "../../../application/use-cases/technician/profile/UploadTechnicianFileUseCase";
 import { ToggleStatusInput } from "../../../application/use-cases/technician/profile/ToggleOnlineStatusUseCase";
@@ -19,216 +16,61 @@ import {
   OnboardingStep5Dto,
   OnboardingStep6Dto,
 } from "../../../application/dto/technician/TechnicianOnboardingDtos";
- 
 import { 
   RequestServiceAddInput, 
   RequestZoneTransferInput, 
   RequestBankUpdateInput 
 } from "../../../application/dto/technician/TechnicianRequestDtos";
+import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
 
- 
+// Using your existing interface to prevent breaking changes
 interface AuthenticatedRequest extends Request {
   userId?: string;
   file?: Express.Multer.File;
 }
 
-export class TechnicianProfileController {
+export class TechnicianProfileController extends BaseController {
   constructor(
     private readonly _onboardingUseCase: IUseCase<boolean, [TechnicianOnboardingInput]>,
     private readonly _getProfileUseCase: IUseCase<TechnicianResponseDto | null, [string]>,
     private readonly _uploadFileUseCase: IUseCase<string, [string, UploadTechnicianFileInput]>,
     private readonly _toggleStatusUseCase: IUseCase<boolean, [ToggleStatusInput]>,
     private readonly _resubmitProfileUseCase: IUseCase<void, [string]>,
-    
     private readonly _requestServiceAddUseCase: IUseCase<void, [string, RequestServiceAddInput]>,
     private readonly _requestZoneTransferUseCase: IUseCase<void, [string, RequestZoneTransferInput]>,
     private readonly _requestBankUpdateUseCase: IUseCase<void, [string, RequestBankUpdateInput]>, 
     private readonly _dismissRequestUseCase: IUseCase<void, [string, string]>,
+    _logger: ILogger // Passed to BaseController
+  ) {
+    super(_logger);
+  }
 
-    private readonly _logger: ILogger
-  ) {}
+  /**
+   * Safe helper to extract technicianId with validation
+   */
+  private getTechId(req: Request): string {
+    const userId = (req as AuthenticatedRequest).userId;
+    if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
+    return userId;
+  }
 
-  getOnboardingStatus = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
+getOnboardingStatus = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const technicianId = (req as AuthenticatedRequest).userId;
-
-      this._logger.info(`${LogEvents.TECH_GET_ONBOARDING_STATUS_INIT}: ${technicianId}`);
-
-      if (!technicianId) {
-        return res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ error: ErrorMessages.UNAUTHORIZED });
-      }
-
+      const technicianId = this.getTechId(req);
       const profileDto = await this._getProfileUseCase.execute(technicianId);
-
-      if (!profileDto) {
-        return res
-          .status(StatusCodes.NOT_FOUND)
-          .json({ error: ErrorMessages.TECHNICIAN_NOT_FOUND });
-      }
-
+      if (!profileDto) throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
+ 
       return res.status(StatusCodes.OK).json(profileDto);
     } catch (err) {
-      return this.handleError(err, res);
-    }
-  };
-
-  updatePersonalDetails = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
-    try {
-      const technicianId = (req as AuthenticatedRequest).userId;
-
-      this._logger.info(`${LogEvents.TECH_UPDATE_DETAILS_INIT}: Step 1 - ${technicianId}`);
-
-      if (!technicianId)
-        return res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ error: ErrorMessages.UNAUTHORIZED });
-
-      const input: OnboardingStep1Dto = {
-        ...req.body,
-        step: 1,
-        technicianId: technicianId,
-      };
-      await this._onboardingUseCase.execute(input);
-      return res
-        .status(StatusCodes.OK)
-        .json({ message: SuccessMessages.TECH_STEP_SAVED, nextStep: 2 });
-    } catch (err) {
-      return this.handleError(err, res);
-    }
-  };
-
-  updateWorkPreferences = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
-    try {
-      const technicianId = (req as AuthenticatedRequest).userId;
-      this._logger.info(`${LogEvents.TECH_UPDATE_DETAILS_INIT}: Step 2 - ${technicianId}`);
-
-      if (!technicianId)
-        return res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ error: ErrorMessages.UNAUTHORIZED });
-
-      const input: OnboardingStep2Dto = { ...req.body, step: 2, technicianId };
-      await this._onboardingUseCase.execute(input);
-      return res
-        .status(StatusCodes.OK)
-        .json({ message: SuccessMessages.TECH_STEP_SAVED, nextStep: 3 });
-    } catch (err) {
-      return this.handleError(err, res);
-    }
-  };
-
-  updateZones = async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const technicianId = (req as AuthenticatedRequest).userId;
-      this._logger.info(`${LogEvents.TECH_UPDATE_DETAILS_INIT}: Step 3 - ${technicianId}`);
-
-      if (!technicianId)
-        return res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ error: ErrorMessages.UNAUTHORIZED });
-
-      const input: OnboardingStep3Dto = { ...req.body, step: 3, technicianId };
-      await this._onboardingUseCase.execute(input);
-      return res
-        .status(StatusCodes.OK)
-        .json({ message: SuccessMessages.TECH_STEP_SAVED, nextStep: 4 });
-    } catch (err) {
-      return this.handleError(err, res);
-    }
-  };
-
-  updateRateAgreement = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
-    try {
-      const technicianId = (req as AuthenticatedRequest).userId;
-      this._logger.info(`${LogEvents.TECH_UPDATE_DETAILS_INIT}: Step 4 - ${technicianId}`);
-
-      if (!technicianId)
-        return res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ error: ErrorMessages.UNAUTHORIZED });
-
-      const input: OnboardingStep4Dto = { ...req.body, step: 4, technicianId };
-      await this._onboardingUseCase.execute(input);
-      return res
-        .status(StatusCodes.OK)
-        .json({ message: SuccessMessages.TECH_STEP_SAVED, nextStep: 5 });
-    } catch (err) {
-      return this.handleError(err, res);
-    }
-  };
-
-  updateDocuments = async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const technicianId = (req as AuthenticatedRequest).userId;
-      this._logger.info(`${LogEvents.TECH_UPDATE_DETAILS_INIT}: Step 5 - ${technicianId}`);
-
-      if (!technicianId)
-        return res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ error: ErrorMessages.UNAUTHORIZED });
-
-      const input: OnboardingStep5Dto = { ...req.body, step: 5, technicianId };
-      await this._onboardingUseCase.execute(input);
-      return res
-        .status(StatusCodes.OK)
-        .json({ message: SuccessMessages.TECH_DOC_UPLOADED, nextStep: 6 });
-    } catch (err) {
-      return this.handleError(err, res);
-    }
-  };
-
-  updateBankDetails = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
-    try {
-      const technicianId = (req as AuthenticatedRequest).userId;
-      this._logger.info(`${LogEvents.TECH_UPDATE_DETAILS_INIT}: Step 6 - ${technicianId}`);
-
-      if (!technicianId)
-        return res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ error: ErrorMessages.UNAUTHORIZED });
-
-      const input: OnboardingStep6Dto = { ...req.body, step: 6, technicianId };
-      await this._onboardingUseCase.execute(input);
-      return res
-        .status(StatusCodes.OK)
-        .json({ message: SuccessMessages.TECH_PROFILE_SUBMITTED });
-    } catch (err) {
-      return this.handleError(err, res);
+      return this.handleError(res, err, LogEvents.TECH_PROFILE_ERROR);
     }
   };
 
   uploadAvatar = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const technicianId = (req as AuthenticatedRequest).userId;
+      const technicianId = this.getTechId(req);
       const file = (req as AuthenticatedRequest).file;
-
-      this._logger.info(`${LogEvents.AVATAR_UPLOAD_INIT}: ${technicianId}`);
-
-      if (!technicianId)
-        return res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ error: ErrorMessages.UNAUTHORIZED });
-      if (!file)
-        return res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({ error: ErrorMessages.NO_FILE });
+      if (!file) throw new Error(ErrorMessages.NO_FILE);
 
       const url = await this._uploadFileUseCase.execute(technicianId, {
         fileBuffer: file.buffer,
@@ -237,51 +79,103 @@ export class TechnicianProfileController {
         folder: "avatars",
       });
 
-      return res
-        .status(StatusCodes.OK)
-        .json({ message: SuccessMessages.TECH_DOC_UPLOADED, url: url });
+      // ✅ FIX: Frontend expects { url: "..." }
+      return res.status(StatusCodes.OK).json({ url });
     } catch (err) {
-      return this.handleError(err, res);
+      return this.handleError(res, err, LogEvents.AVATAR_UPLOAD_INIT);
     }
   };
-  dismissNotification = async (req: Request, res: Response): Promise<Response> => {
+
+  toggleOnlineStatus = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const technicianId = (req as AuthenticatedRequest).userId;
-      const { requestId } = req.params;
+      const technicianId = this.getTechId(req);
+      const { lat, lng } = req.body;
 
-      if (!technicianId) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({ error: ErrorMessages.UNAUTHORIZED });
-      }
-
-      this._logger.info(LogEvents.TECH_DISMISS_REQUEST_INIT, {technicianId,requestId});
-
-      await this._dismissRequestUseCase.execute(technicianId, requestId);
-
-      return res.status(StatusCodes.OK).json({ 
-        success: true, 
-        message: SuccessMessages.TECH_REQUEST_DISMISSED 
+      const isOnline = await this._toggleStatusUseCase.execute({
+        technicianId,
+        lat: lat ? parseFloat(lat) : undefined,
+        lng: lng ? parseFloat(lng) : undefined,
       });
 
+      // ✅ FIX: Match repository expectations
+      return res.status(StatusCodes.OK).json({ isOnline });
     } catch (err) {
-      return this.handleError(err, res);
+      return this.handleError(res, err, LogEvents.TECH_STATUS_TOGGLE_INIT);
     }
   };
+
+  updatePersonalDetails = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const technicianId = this.getTechId(req);
+      const input: OnboardingStep1Dto = { ...req.body, step: 1, technicianId };
+      await this._onboardingUseCase.execute(input);
+      return this.ok(res, { nextStep: 2 }, SuccessMessages.TECH_STEP_SAVED);
+    } catch (err) {
+      return this.handleError(res, err, LogEvents.TECH_UPDATE_DETAILS_INIT);
+    }
+  };
+
+  updateWorkPreferences = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const technicianId = this.getTechId(req);
+      const input: OnboardingStep2Dto = { ...req.body, step: 2, technicianId };
+      await this._onboardingUseCase.execute(input);
+      return this.ok(res, { nextStep: 3 }, SuccessMessages.TECH_STEP_SAVED);
+    } catch (err) {
+      return this.handleError(res, err, LogEvents.TECH_UPDATE_DETAILS_INIT);
+    }
+  };
+
+  updateZones = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const technicianId = this.getTechId(req);
+      const input: OnboardingStep3Dto = { ...req.body, step: 3, technicianId };
+      await this._onboardingUseCase.execute(input);
+      return this.ok(res, { nextStep: 4 }, SuccessMessages.TECH_STEP_SAVED);
+    } catch (err) {
+      return this.handleError(res, err, LogEvents.TECH_UPDATE_DETAILS_INIT);
+    }
+  };
+
+  updateRateAgreement = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const technicianId = this.getTechId(req);
+      const input: OnboardingStep4Dto = { ...req.body, step: 4, technicianId };
+      await this._onboardingUseCase.execute(input);
+      return this.ok(res, { nextStep: 5 }, SuccessMessages.TECH_STEP_SAVED);
+    } catch (err) {
+      return this.handleError(res, err, LogEvents.TECH_UPDATE_DETAILS_INIT);
+    }
+  };
+
+  updateDocuments = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const technicianId = this.getTechId(req);
+      const input: OnboardingStep5Dto = { ...req.body, step: 5, technicianId };
+      await this._onboardingUseCase.execute(input);
+      return this.ok(res, { nextStep: 6 }, SuccessMessages.TECH_DOC_UPLOADED);
+    } catch (err) {
+      return this.handleError(res, err, LogEvents.TECH_UPDATE_DETAILS_INIT);
+    }
+  };
+
+  updateBankDetails = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const technicianId = this.getTechId(req);
+      const input: OnboardingStep6Dto = { ...req.body, step: 6, technicianId };
+      await this._onboardingUseCase.execute(input);
+      return this.ok(res, null, SuccessMessages.TECH_PROFILE_SUBMITTED);
+    } catch (err) {
+      return this.handleError(res, err, LogEvents.TECH_UPDATE_DETAILS_INIT);
+    }
+  };
+
 
   uploadDocument = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const technicianId = (req as AuthenticatedRequest).userId;
+      const technicianId = this.getTechId(req);
       const file = (req as AuthenticatedRequest).file;
-
-      this._logger.info(`${LogEvents.TECH_DOC_UPLOAD_INIT}: ${technicianId}`);
-
-      if (!technicianId)
-        return res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ error: ErrorMessages.UNAUTHORIZED });
-      if (!file)
-        return res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({ error: ErrorMessages.NO_FILE });
+      if (!file) throw new Error(ErrorMessages.NO_FILE);
 
       const url = await this._uploadFileUseCase.execute(technicianId, {
         fileBuffer: file.buffer,
@@ -290,99 +184,62 @@ export class TechnicianProfileController {
         folder: "documents",
       });
 
-      return res
-        .status(StatusCodes.OK)
-        .json({ message: SuccessMessages.TECH_DOC_UPLOADED, url: url });
+      return this.ok(res, { url }, SuccessMessages.TECH_DOC_UPLOADED);
     } catch (err) {
-      return this.handleError(err, res);
+      return this.handleError(res, err, LogEvents.TECH_DOC_UPLOAD_INIT);
     }
   };
 
-  toggleOnlineStatus = async (
-    req: Request,
-    res: Response
-  ): Promise<Response> => {
+  dismissNotification = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const technicianId = (req as AuthenticatedRequest).userId;
-      const { lat, lng } = req.body;
-
-      this._logger.info(`${LogEvents.TECH_STATUS_TOGGLE_INIT}: ${technicianId} at ${lat},${lng}`);
-
-      if (!technicianId)
-        return res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ error: ErrorMessages.UNAUTHORIZED });
-
-      const newStatus = await this._toggleStatusUseCase.execute({
-        technicianId,
-        lat: lat ? parseFloat(lat) : undefined,
-        lng: lng ? parseFloat(lng) : undefined,
-      });
-
-      return res.status(StatusCodes.OK).json({
-        success: true,
-        isOnline: newStatus,
-        message: newStatus
-          ? SuccessMessages.TECH_ONLINE
-          : SuccessMessages.TECH_OFFLINE,
-      });
+      const technicianId = this.getTechId(req);
+      const { requestId } = req.params;
+      await this._dismissRequestUseCase.execute(technicianId, requestId);
+      return this.ok(res, null, SuccessMessages.TECH_REQUEST_DISMISSED);
     } catch (err) {
-      return this.handleError(err, res);
+      return this.handleError(res, err, LogEvents.TECH_DISMISS_REQUEST_INIT);
     }
   };
+
+
 
   resubmitProfile = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const technicianId = (req as AuthenticatedRequest).userId;
-      this._logger.info(`${LogEvents.TECH_RESUBMISSION_INIT}: ${technicianId}`);
-
-      if (!technicianId)
-        return res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ error: ErrorMessages.UNAUTHORIZED });
-
+      const technicianId = this.getTechId(req);
       await this._resubmitProfileUseCase.execute(technicianId);
-
-      return res.status(StatusCodes.OK).json({
-        success: true,
-        message: SuccessMessages.TECH_PROFILE_SUBMITTED,
-      });
+      return this.ok(res, null, SuccessMessages.TECH_PROFILE_SUBMITTED);
     } catch (err) {
-      return this.handleError(err, res);
+      return this.handleError(res, err, LogEvents.TECH_RESUBMISSION_INIT);
     }
   };
- 
-requestServiceAddition = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const technicianId = (req as any).userId; 
-    const { serviceId, categoryId, proofUrl, action } = req.body;
-    if (!serviceId || !categoryId || !action) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ error: ErrorMessages.MISSING_FIELDS });
+
+  requestServiceAddition = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const technicianId = this.getTechId(req);
+      const { serviceId, categoryId, proofUrl, action } = req.body;
+      if (!serviceId || !categoryId || !action) {
+        throw new Error(ErrorMessages.MISSING_FIELDS);
+      }
+
+      await this._requestServiceAddUseCase.execute(technicianId, {
+        serviceId,
+        categoryId,
+        proofUrl,
+        action  
+      });
+
+      return this.ok(res, null, SuccessMessages.TECH_REQUEST_SUBMITTED);
+    } catch (err) {
+      return this.handleError(res, err, LogEvents.TECH_PROFILE_ERROR);
     }
-    await this._requestServiceAddUseCase.execute(technicianId, {
-      serviceId,
-      categoryId,
-      proofUrl,
-      action  
-    });
+  };
 
-    return res.status(StatusCodes.OK).json({ 
-      success: true, 
-      message: SuccessMessages.TECH_REQUEST_SUBMITTED 
-    });
-
-  } catch (err) {
-    return this.handleError(err, res);
-  }
-};
- 
   requestZoneTransfer = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const technicianId = (req as any).userId;
+      const technicianId = this.getTechId(req);
       const { currentZoneId, requestedZoneId } = req.body;
-
       if (!currentZoneId || !requestedZoneId) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ error: ErrorMessages.MISSING_FIELDS });
+        throw new Error(ErrorMessages.MISSING_FIELDS);
       }
 
       await this._requestZoneTransferUseCase.execute(technicianId, {
@@ -390,24 +247,18 @@ requestServiceAddition = async (req: Request, res: Response): Promise<Response> 
         requestedZoneId
       });
 
-      return res.status(StatusCodes.OK).json({ 
-        success: true, 
-        message: SuccessMessages.TECH_REQUEST_SUBMITTED 
-      });
-
+      return this.ok(res, null, SuccessMessages.TECH_REQUEST_SUBMITTED);
     } catch (err) {
-      return this.handleError(err, res);
+      return this.handleError(res, err, LogEvents.TECH_PROFILE_ERROR);
     }
   };
 
-  //   ACTION: Bank Request
   requestBankUpdate = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const technicianId = (req as any).userId;
+      const technicianId = this.getTechId(req);
       const { accountHolderName, accountNumber, bankName, ifscCode, proofUrl, upiId } = req.body;
-
       if (!accountHolderName || !accountNumber || !bankName || !ifscCode || !proofUrl) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ error: ErrorMessages.MISSING_FIELDS });
+        throw new Error(ErrorMessages.MISSING_FIELDS);
       }
 
       await this._requestBankUpdateUseCase.execute(technicianId, {
@@ -419,22 +270,9 @@ requestServiceAddition = async (req: Request, res: Response): Promise<Response> 
         upiId
       });
 
-      return res.status(StatusCodes.OK).json({ 
-        success: true, 
-        message: "Bank update requested. Payouts are paused until verification." 
-      });
-
+      return this.ok(res, null, "Bank update requested. Payouts are paused until verification.");
     } catch (err) {
-      return this.handleError(err, res);
+      return this.handleError(res, err, LogEvents.TECH_PROFILE_ERROR);
     }
   };
-
-  private handleError(err: unknown, res: Response): Response {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    this._logger.error(`${LogEvents.TECH_PROFILE_ERROR}: ${errorMessage}`);
-    if (Object.values(ErrorMessages).includes(errorMessage as ErrorMessages)) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ error: errorMessage });
-    }
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
-  }
 }
