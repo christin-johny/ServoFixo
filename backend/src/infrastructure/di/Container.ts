@@ -651,6 +651,7 @@ const createBookingUseCase = new CreateBookingUseCase(
   serviceItemRepo,  
   technicianRepo, 
   notificationService,  
+  zoneService,
   logger
 );
 const respondToBookingUseCase = new RespondToBookingUseCase(

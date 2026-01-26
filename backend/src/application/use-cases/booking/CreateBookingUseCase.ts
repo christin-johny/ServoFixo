@@ -2,6 +2,7 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { IServiceItemRepository } from "../../../domain/repositories/IServiceItemRepository";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
+import { IZoneService } from "../../interfaces/IZoneService"; // <--- NEW IMPORT
 import { ILogger } from "../../interfaces/ILogger";
 import { INotificationService } from "../../services/INotificationService"; 
 import { CreateBookingRequestDto } from "../../dto/booking/CreateBookingRequestDto";
@@ -17,6 +18,7 @@ export class CreateBookingUseCase {
     private readonly _serviceRepo: IServiceItemRepository,
     private readonly _technicianRepo: ITechnicianRepository,
     private readonly _notificationService: INotificationService,
+    private readonly _zoneService: IZoneService, // <--- INJECTED SERVICE
     private readonly _logger: ILogger
   ) {}
 
@@ -33,19 +35,25 @@ export class CreateBookingUseCase {
       throw new Error(ErrorMessages.SERVICE_NOT_FOUND);
     }
 
-    // 3. Validation: Zone Integrity
-    if (customer.getDefaultZoneId() !== input.zoneId) {
-      this._logger.warn(`Zone mismatch for customer ${input.customerId}. Proceeding.`);
+    // 3. Validation: Zone Integrity (SERVER SIDE CALCULATION)
+    // We trust the Lat/Lng, not the Frontend's zoneId
+    const { lat, lng } = input.location.coordinates;
+    const zoneResult = await this._zoneService.checkServiceability(lat, lng);
+
+    if (!zoneResult.isServiceable || !zoneResult.zoneId) {
+       throw new Error("Sorry, we do not serve this location yet.");
     }
+    
+    const resolvedZoneId = zoneResult.zoneId;
 
     // 4. Calculate Estimates (Safe Access)
     const rawPrice = service.getBasePrice ? service.getBasePrice() : (service as any).price || 0;
-    const estimatedPrice = Math.round(rawPrice * 100) / 100; // Round to 2 decimals
+    const estimatedPrice = Math.round(rawPrice * 100) / 100; 
     const deliveryFee = 0; 
 
-    // 5. Matchmaking: Find Candidates
+    // 5. Matchmaking: Find Candidates using RESOLVED Zone
     const availableTechs = await this._technicianRepo.findAvailableInZone(
-      input.zoneId,
+      resolvedZoneId, // <--- Use calculated ID
       input.serviceId 
     );
 
@@ -61,7 +69,7 @@ export class CreateBookingUseCase {
     const booking = new Booking({
       customerId: input.customerId,
       serviceId: input.serviceId,
-      zoneId: input.zoneId,
+      zoneId: resolvedZoneId, // <--- Use calculated ID
       status: "REQUESTED",
       
       location: {
@@ -115,7 +123,10 @@ export class CreateBookingUseCase {
       const firstCandidateId = candidateIds[0];
       booking.addAssignmentAttempt(firstCandidateId);
     } else {
+      // Logic: Even if zone is valid, if no techs are there, we fail gracefully
       booking.updateStatus("FAILED_ASSIGNMENT", "system", "No available technicians in zone");
+      
+      // Notify Customer immediately via Socket/Push that search failed
       await this._notificationService.send({
           recipientId: booking.getCustomerId(),
           recipientType: "CUSTOMER",
@@ -130,11 +141,11 @@ export class CreateBookingUseCase {
     const createdBooking = await this._bookingRepo.create(booking);
 
     this._logger.info(
-      `Booking created: ${createdBooking.getId()} | Candidates: ${candidateIds.length}`
+      `Booking created: ${createdBooking.getId()} | Zone: ${resolvedZoneId} | Candidates: ${candidateIds.length}`
     );
 
     // 11. Trigger Real-Time Notification (Socket)
-if (candidateIds.length > 0) {
+    if (candidateIds.length > 0) {
         const firstCandidateId = candidateIds[0];
         const tech = sortedCandidates[0]; 
 
@@ -161,13 +172,13 @@ if (candidateIds.length > 0) {
             expiresAt: createdBooking.getAssignmentExpiresAt() || new Date(Date.now() + 45000)
         });
 
-        // B. Notify Admin (NEW: Live Dashboard)
+        // B. Notify Admin
         await this._notificationService.send({
-            recipientId: "ADMIN_BROADCAST_CHANNEL", // Ensure your socket service handles this room
+            recipientId: "ADMIN_BROADCAST_CHANNEL", 
             recipientType: "ADMIN",
             type: NotificationType.ADMIN_NEW_BOOKING, 
             title: "New Booking Received 🚨",
-            body: `New request for ${service.getName ? service.getName() : "Service"} in Zone ${input.zoneId}`,
+            body: `New request for ${service.getName ? service.getName() : "Service"} in Zone ${resolvedZoneId}`,
             metadata: { 
                 bookingId: booking.getId(),
                 customerId: booking.getCustomerId(),
@@ -180,6 +191,7 @@ if (candidateIds.length > 0) {
     return createdBooking;
   }
 
+  // ... (Helper methods sortCandidates and calculateDistance remain unchanged)
   private sortCandidates(
     techs: Technician[], 
     customerCoords: { lat: number; lng: number }

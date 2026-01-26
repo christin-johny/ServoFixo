@@ -46,8 +46,8 @@ export class BookingController extends BaseController {
 createBooking = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { userId, role } = req as AuthenticatedRequest;
-      if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
+      if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
       // GOD MODE LOGIC:
       // If Admin, use the 'customerId' from body. If Customer, use their token ID.
       let targetCustomerId = userId;
@@ -56,7 +56,6 @@ createBooking = async (req: Request, res: Response): Promise<Response> => {
           if (!req.body.customerId) throw new Error("Admin must provide customerId");
           targetCustomerId = req.body.customerId;
       }
-
       const input: CreateBookingRequestDto = {
         customerId: targetCustomerId, // <--- Updated line
         serviceId: req.body.serviceId,
@@ -69,7 +68,6 @@ createBooking = async (req: Request, res: Response): Promise<Response> => {
         requestedTime: req.body.requestedTime ? new Date(req.body.requestedTime) : undefined,
         meta: req.body.meta
       };
-
       const booking = await this._createBookingUseCase.execute(input);
       const responseDto = BookingMapper.toResponse(booking);
 

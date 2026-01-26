@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // Added useNavigate
+import { useSelector } from 'react-redux'; // Added useSelector
+import { type RootState } from '../../../../store/store'; 
 import {
    Star,
    ShieldCheck,
@@ -31,8 +33,9 @@ const MOCK_REVIEWS = [
 
 const ServiceDetails: React.FC = () => {
    const { id } = useParams<{ id: string }>();
+   const navigate = useNavigate();
    const { showSuccess } = useNotification();
-
+   const { user } = useSelector((state: RootState) => state.auth);
    const [service, setService] = useState<ServiceItem | null>(null);
    const [similarServices, setSimilarServices] = useState<ServiceItem[]>([]);
    const [loading, setLoading] = useState(true);
@@ -55,6 +58,25 @@ const ServiceDetails: React.FC = () => {
       };
       fetchData();
    }, [id]);
+
+   const handleBookNow = () => {
+      if (!service || !id) return;
+
+      // 1. Auth Check
+      if (!user) {
+         // If not logged in, force login (and maybe redirect back later)
+         navigate('/login'); 
+         return;
+      }
+ 
+      navigate('/booking/confirm', { 
+         state: { 
+            serviceId: id, 
+            serviceName: service.name, 
+            basePrice: service.basePrice 
+         } 
+      });
+   };
 
    const handleShare = async () => {
       const shareUrl = window.location.href;
@@ -228,9 +250,12 @@ const ServiceDetails: React.FC = () => {
                         <ShieldCheck className="w-5 h-5 text-blue-600" />
                         <span className="text-sm font-medium">Secure Payment</span>
                      </div>
-                     <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 active:scale-[0.98]">
-                        Book Now
-                     </button>
+                     <button 
+            onClick={handleBookNow} 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 active:scale-[0.98]"
+        >
+            Book Now
+        </button>
                   </div>
                </div>
             </div>
@@ -268,9 +293,12 @@ const ServiceDetails: React.FC = () => {
                <span className="text-xs text-gray-500 font-medium block">Total Price</span>
                <span className="text-xl font-bold text-gray-900">₹{displayPrice}</span>
             </div>
-            <button className="bg-blue-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-blue-200 active:scale-95">
-               Book Now
-            </button>
+            <button 
+        onClick={handleBookNow}
+        className="bg-blue-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-blue-200 active:scale-95"
+    >
+        Book Now
+    </button>
          </div>
 
          <div className="fixed bottom-0 left-0 w-full z-50 md:hidden bg-white">

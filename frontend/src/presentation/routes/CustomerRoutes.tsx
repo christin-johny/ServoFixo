@@ -13,6 +13,8 @@ const ForgotPassword = lazy(() => import("../pages/Customer/ForgotPassword"));
 const ServiceListing = lazy(() => import("../pages/Customer/Listing/ServiceListing"));
 const ServiceDetails = lazy(() => import("../pages/Customer/Listing/ServiceDetails"));
 const ProfilePage = lazy(() => import("../pages/Customer/Profile/ProfilePage")); 
+const BookingConfirm = lazy(() => import("../pages/Customer/Booking/BookingConfirm"));
+const SearchingScreen = lazy(() => import("../pages/Customer/Booking/SearchingScreen"));
 const CustomerRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
     <Routes>
@@ -29,6 +31,17 @@ const CustomerRoutes: React.FC = () => (
             </RoleProtectedRoute>
           } 
         />
+        <Route path="booking/confirm" element={
+    <RoleProtectedRoute requiredRole="customer" redirectTo="/login">
+        <BookingConfirm />
+    </RoleProtectedRoute>
+} />
+
+<Route path="booking/searching" element={
+    <RoleProtectedRoute requiredRole="customer" redirectTo="/login">
+        <SearchingScreen />
+    </RoleProtectedRoute>
+} />
       </Route>
 
       <Route path="login" element={<GuestOnlyGuard><CustomerLogin /></GuestOnlyGuard>} />
