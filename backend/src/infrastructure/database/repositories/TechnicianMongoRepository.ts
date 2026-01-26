@@ -178,13 +178,23 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       verificationStatus: "VERIFIED",
       isSuspended: false,
       "availability.isOnline": true,
+      "availability.isOnJob": false,
       zoneIds: zoneId,
       subServiceIds: subServiceId,
     };
     const docs = await TechnicianModel.find(query).limit(limit).exec();
     return docs.map((doc) => this.toDomain(doc));
   }
-
+  
+async updateAvailabilityStatus(id: string, isOnJob: boolean): Promise<void> {
+    await TechnicianModel.findByIdAndUpdate(id, {
+      $set: { 
+        "availability.isOnJob": isOnJob,
+        // Optional: Update lastJobCompletedAt if releasing
+        ...(isOnJob === false ? { "availability.lastJobCompletedAt": new Date() } : {})
+      }
+    }).exec();
+  }
   async updateTechnician(
     id: string,
     payload: TechnicianUpdatePayload
@@ -253,6 +263,29 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     }).exec();
   }
 
+async addRating(id: string, newRating: number): Promise<void> {
+    const tech = await TechnicianModel.findById(id);
+    if (!tech) return;
+
+    // Current Stats
+    const currentAvg = tech.ratings?.averageRating || 0;
+    const currentCount = tech.ratings?.totalReviews || 0;
+
+    // Calculate New Stats
+    const newCount = currentCount + 1;
+    const newAvg = ((currentAvg * currentCount) + newRating) / newCount;
+    
+    // Round to 1 decimal place (e.g., 4.7)
+    const roundedAvg = Math.round(newAvg * 10) / 10;
+
+    await TechnicianModel.findByIdAndUpdate(id, {
+      $set: {
+        "ratings.averageRating": roundedAvg,
+        "ratings.totalReviews": newCount
+      }
+    }).exec();
+  }
+  
   async addBankUpdateRequest(
     id: string,
     request: BankUpdateRequest
@@ -282,6 +315,7 @@ async dismissRequest(technicianId: string, requestId: string): Promise<void> {
       arrayFilters: [{ "elem._id": requestId }] 
     }
   ).exec();
+  
 
   if (result.matchedCount === 0) {
     throw new Error(ErrorMessages.REQUEST_NOT_FOUND);

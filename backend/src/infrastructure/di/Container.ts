@@ -119,8 +119,7 @@ import { WinstonLogger } from "../logging/WinstonLogger";
 
 // --- Notification Module ---
 import { NotificationMongoRepository } from "../database/repositories/NotificationMongoRepository";
-import { NotificationService } from "../services/NotificationService";
-import { SocketServer } from "../socket/SocketServer";
+import { NotificationService } from "../services/NotificationService"; 
 import { GetNotificationHistoryUseCase } from "../../application/use-cases/notification/GetNotificationHistoryUseCase";
 import { TechnicianNotificationController } from "../../presentation/controllers/Technician/TechnicianNotificationController";
 import { MarkNotificationAsReadUseCase } from "../../application/use-cases/notification/MarkNotificationAsReadUseCase";
@@ -135,6 +134,20 @@ import { BookingController } from "../../presentation/controllers/Booking/Bookin
 import { UpdateJobStatusUseCase } from "../../application/use-cases/booking/UpdateJobStatusUseCase";
 import { AddExtraChargeUseCase } from "../../application/use-cases/booking/AddExtraChargeUseCase";
 import { RespondToExtraChargeUseCase } from "../../application/use-cases/booking/RespondToExtraChargeUseCase";
+import { CompleteJobUseCase } from "../../application/use-cases/booking/CompleteJobUseCase";
+import { RazorpayService } from "../payments/RazorpayService";
+import { GetBookingDetailsUseCase } from "../../application/use-cases/booking/GetBookingDetailsUseCase";
+import { AdminForceAssignUseCase } from "../../application/use-cases/booking/AdminForceAssignUseCase";
+import { AdminBookingController } from "../../presentation/controllers/Admin/AdminBookingController";
+import { CustomerCancelBookingUseCase } from "../../application/use-cases/booking/CustomerCancelBookingUseCase";
+import { TechnicianCancelBookingUseCase } from "../../application/use-cases/booking/TechnicianCancelBookingUseCase";
+import { ProcessPaymentUseCase } from "../../application/use-cases/webhook/ProcessPaymentUseCase";
+import { PaymentWebhookController } from "../../presentation/controllers/webhook/PaymentWebhookController";
+import { ReviewMongoRepository } from "../database/repositories/ReviewMongoRepository";
+import { RateTechnicianUseCase } from "../../application/use-cases/booking/RateTechnicianUseCase";
+import { AdminForceStatusUseCase } from "../../application/use-cases/booking/AdminForceStatusUseCase";
+import { AdminUpdatePaymentUseCase } from "../../application/use-cases/booking/AdminUpdatePaymentUseCase";
+
 // INFRASTRUCTURE SERVICE INSTANTIATION
 
 const imageService = new S3ImageService();
@@ -142,6 +155,7 @@ const otpSessionRepo = new OtpSessionMongoRepository();
 const emailService = new NodemailerEmailService();
 const passwordHasher = new BcryptPasswordHasher();
 const jwtService = new JwtService();
+const paymentGateway = new RazorpayService();
 export const logger = new WinstonLogger();
 const cacheService = new RedisCacheService(redis);
 const googleAuthService = new GoogleAuthService(
@@ -384,7 +398,7 @@ export const customerAddressController = new CustomerAddressController(
   logger
 );
 
-const technicianRepo = new TechnicianMongoRepository();
+export const technicianRepo = new TechnicianMongoRepository();
 
 const reqTechnicianRegOtpUseCase = new RequestTechnicianRegistrationOtpUseCase(
   technicianRepo,
@@ -629,7 +643,7 @@ export const adminTechnicianController = new AdminTechnicianController(
 );
  
 
-const bookingRepo = new BookingMongoRepository();
+export const bookingRepo = new BookingMongoRepository();
  
 const createBookingUseCase = new CreateBookingUseCase(
   bookingRepo,
@@ -639,7 +653,7 @@ const createBookingUseCase = new CreateBookingUseCase(
   notificationService,  
   logger
 );
-const respondToBooking = new RespondToBookingUseCase(
+const respondToBookingUseCase = new RespondToBookingUseCase(
   bookingRepo,
   technicianRepo,
   notificationService,
@@ -661,11 +675,67 @@ const respondToExtraChargeUseCase = new RespondToExtraChargeUseCase(
   notificationService,
   logger
 )
+const completeJobUseCase = new CompleteJobUseCase(
+  bookingRepo,
+  paymentGateway,  
+  notificationService,
+  logger  
+)
+
+const getBookingDetailsUseCase = new GetBookingDetailsUseCase(bookingRepo);
+const customerCancelUseCase = new CustomerCancelBookingUseCase(bookingRepo, notificationService, logger);
+const technicianCancelUseCase = new TechnicianCancelBookingUseCase(bookingRepo, notificationService, logger);
+const reviewRepo = new ReviewMongoRepository();
+
+const rateTechnicianUseCase = new RateTechnicianUseCase(
+  bookingRepo,
+  technicianRepo,
+  reviewRepo, // <--- Inject the new repo
+  logger
+);
+
 export const bookingController = new BookingController(
   createBookingUseCase,
-  respondToBooking,
+  respondToBookingUseCase,
   updateJobStatusUseCase,
   addExtraChargeUseCase,
   respondToExtraChargeUseCase,
+  completeJobUseCase,
+  getBookingDetailsUseCase, 
+  customerCancelUseCase, 
+  technicianCancelUseCase,
+  rateTechnicianUseCase,
+  logger
+);
+const adminForceAssignUseCase = new AdminForceAssignUseCase(
+  bookingRepo,
+  technicianRepo,
+  notificationService,
+  logger
+);
+const adminForceStatusUseCase = new AdminForceStatusUseCase(
+    bookingRepo,
+    technicianRepo, // <--- Don't forget this!
+    logger
+);
+// 2. Initialize Controller
+ 
+const adminUpdatePaymentUseCase = new AdminUpdatePaymentUseCase(bookingRepo, logger);
+
+export const adminBookingController = new AdminBookingController(
+    adminForceAssignUseCase,
+    adminForceStatusUseCase, 
+    adminUpdatePaymentUseCase,
+    logger
+);
+const processPaymentUseCase = new ProcessPaymentUseCase(
+  bookingRepo,
+  technicianRepo,
+  logger
+);
+
+
+export const paymentWebhookController = new PaymentWebhookController(
+  processPaymentUseCase,
   logger
 );

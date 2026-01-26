@@ -18,20 +18,49 @@ export class RespondToBookingUseCase {
   async execute(input: RespondToBookingDto): Promise<void> {
     const booking = await this._bookingRepo.findById(input.bookingId);
     if (!booking) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
-
-    // 1. Validate State
+ 
     if (booking.getStatus() !== "ASSIGNED_PENDING") {
         this._logger.warn(`Late response attempt for booking ${input.bookingId}`);
         throw new Error(ErrorMessages.BOOKING_ALREADY_ASSIGNED);
     }
-
-    // 2. Validate Actor
+ 
     const currentAttempt = booking.getAttempts().find(a => a.status === "PENDING");
     if (!currentAttempt || currentAttempt.techId !== input.technicianId) {
         throw new Error("You are not the active candidate for this booking.");
     }
 
-    if (input.response === "ACCEPT") {
+if (input.response === "ACCEPT") {
+        // 1. Generate OTP (4 Digits)
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+        // 2. Accept Assignment (Domain Logic)
+        booking.acceptAssignment(input.technicianId);
+        
+        // 3. Save OTP to Booking (Add this method to Booking entity or set meta directly)
+        // assuming you added setOtp or access meta directly:
+        const currentMeta = booking.getMeta();
+        currentMeta.otp = otp; 
+        // Or if you added the setter: booking.setOtp(otp);
+
+        // 4. Persist
+        await this._bookingRepo.update(booking);
+        await this._technicianRepo.updateAvailabilityStatus(input.technicianId, true);
+
+        // 5. Notify Customer (Include OTP)
+        const tech = await this._technicianRepo .findById(input.technicianId);
+        
+        await this._notificationService.send({
+            recipientId: booking.getCustomerId(),
+            recipientType: "CUSTOMER",
+            type: "BOOKING_CONFIRMED" as any,
+            title: "Technician Assigned! ✅",
+            body: `${tech?.getName() || "Technician"} is assigned. OTP: ${otp}`,
+            metadata: { 
+                bookingId: booking.getId(),
+                otp: otp // Sending it in metadata helps the frontend display it clearly
+            },
+            clickAction: `/customer/bookings/${booking.getId()}`
+        });   
         await this.handleAcceptance(booking, input.technicianId);
     } else {
         await this.handleRejection(booking, input.technicianId, input.reason);
@@ -108,8 +137,10 @@ export class RespondToBookingUseCase {
   }
 
   // --- SCENARIO 2B: TECHNICIAN REJECTS (Flow B - The Loop) ---
+// --- SCENARIO 2B: TECHNICIAN REJECTS (Flow B - The Loop) ---
   private async handleRejection(booking: Booking, techId: string, reason?: string) {
-    // 1. Mark current attempt as REJECTED
+    // 1. Mark current attempt as REJECTED (Domain Logic)
+    // This updates the status of the 'techId' attempt in the entity's memory
     booking.rejectAssignment(techId, reason || "Declined by Technician");
 
     // 2. Find Next Candidate
@@ -120,16 +151,12 @@ export class RespondToBookingUseCase {
     if (nextCandidateId) {
         // --- RETRY LOGIC (Next Candidate) ---
         
+        // A. Add the new attempt to the Entity
         booking.addAssignmentAttempt(nextCandidateId);
         
-        // Persist the rejection AND the new attempt
-        await this._bookingRepo.addAssignmentAttempt(booking.getId(), {
-            techId: nextCandidateId,
-            attemptAt: new Date(),
-            expiresAt: new Date(Date.now() + 45000), // 45s
-            status: "PENDING",
-            adminForced: false
-        });
+        // B. Persist the ENTIRE change (Tech A = Rejected, Tech B = Pending)
+        // CRITICAL FIX: Use .update() instead of .addAssignmentAttempt() 
+        await this._bookingRepo.update(booking); 
 
         // Use service name from snapshot if available
         const serviceName = booking.getSnapshots().service.name || "Service Request";
@@ -138,12 +165,14 @@ export class RespondToBookingUseCase {
         const estimatedPrice = booking.getPricing().estimated;
         const earnings = Math.round((estimatedPrice * 0.9) * 100) / 100;
 
-        // c. Trigger Socket for NEXT Tech
+        // C. Trigger Socket for NEXT Tech
+        // Note: For 'distance', ideally you should recalculate it here using the new tech's location
+        // But "Calculating..." is fine for MVP.
         await this._notificationService.sendBookingRequest(nextCandidateId, {
             bookingId: booking.getId(),
             serviceName: serviceName,
             earnings: earnings,
-            distance: "Calculating...",
+            distance: "Calculating...", 
             address: booking.getLocation().address,
             expiresAt: booking.getAssignmentExpiresAt()!
         });
@@ -152,8 +181,14 @@ export class RespondToBookingUseCase {
 
     } else {
         // --- FAILURE LOGIC (No candidates left) ---
-        await this._bookingRepo.updateStatus(booking.getId(), "FAILED_ASSIGNMENT");
         
+        // 1. Update Domain State
+        booking.updateStatus("FAILED_ASSIGNMENT", "system", "All candidates rejected");
+        
+        // 2. Persist to DB
+        await this._bookingRepo.update(booking);
+        
+        // 3. Notify Customer
         await this._notificationService.send({
             recipientId: booking.getCustomerId(),
             recipientType: "CUSTOMER",
@@ -161,6 +196,16 @@ export class RespondToBookingUseCase {
             title: "Booking Failed 😔",
             body: "Sorry, all technicians are currently busy. Please try again later.",
             metadata: { bookingId: booking.getId() }
+        });
+        
+        // 4. Notify Admin (Optional but recommended)
+        await this._notificationService.send({
+             recipientId: "ADMIN_BROADCAST_CHANNEL",
+             recipientType: "ADMIN",
+             type: "ADMIN_BOOKING_FAILED" as any,
+             title: "Booking Failed",
+             body: `Booking ${booking.getId()} failed. All techs rejected.`,
+             metadata: { bookingId: booking.getId() }
         });
 
         this._logger.warn(`Booking ${booking.getId()} FAILED. Candidates exhausted.`);

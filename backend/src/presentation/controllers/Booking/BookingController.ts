@@ -11,9 +11,14 @@ import { UpdateJobStatusDto } from "../../../application/dto/booking/UpdateJobSt
 import { BookingMapper } from "../../../application/mappers/BookingMapper";
 import { AddExtraChargeDto } from "../../../application/dto/booking/AddExtraChargeDto";
 import { RespondToExtraChargeDto } from "../../../application/dto/booking/RespondToExtraChargeDto";
+import { CompleteJobDto } from "../../../application/dto/booking/CompleteJobDto";
+import { GetBookingDetailsDto } from "../../../application/dto/booking/GetBookingDetailsDto";
+import { CancelBookingDto } from "../../../application/dto/booking/CancelBookingDto";
+import { RateTechnicianDto } from "../../../application/dto/booking/RateTechnicianDto"; 
 
 interface AuthenticatedRequest extends Request {
   userId?: string;
+  role?: string;
 }
 
 export class BookingController extends BaseController {
@@ -23,6 +28,11 @@ export class BookingController extends BaseController {
     private readonly _updateJobStatusUseCase: IUseCase<void, [UpdateJobStatusDto]>,
     private readonly _addExtraChargeUseCase: IUseCase<void, [AddExtraChargeDto]>,
     private readonly _respondToExtraChargeUseCase: IUseCase<void, [RespondToExtraChargeDto]>,
+    private readonly _completeJobUseCase: IUseCase<void, [CompleteJobDto]>,
+    private readonly _getBookingDetailsUseCase: IUseCase<Booking, [GetBookingDetailsDto]>,
+    private readonly _customerCancelUseCase: IUseCase<void, [CancelBookingDto]>,
+    private readonly _technicianCancelUseCase: IUseCase<void, [CancelBookingDto]>,
+    private readonly _rateTechnicianUseCase: IUseCase<void, [RateTechnicianDto]>,  
     _logger: ILogger
   ) {
     super(_logger);
@@ -33,13 +43,22 @@ export class BookingController extends BaseController {
    * @desc Customer creates a new booking (Flow A: Matchmaking)
    * @access Customer
    */
-  createBooking = async (req: Request, res: Response): Promise<Response> => {
+createBooking = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const customerId = (req as AuthenticatedRequest).userId;
-      if (!customerId) throw new Error(ErrorMessages.UNAUTHORIZED);
+      const { userId, role } = req as AuthenticatedRequest;
+      if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
+
+      // GOD MODE LOGIC:
+      // If Admin, use the 'customerId' from body. If Customer, use their token ID.
+      let targetCustomerId = userId;
+      
+      if (role === "ADMIN") {
+          if (!req.body.customerId) throw new Error("Admin must provide customerId");
+          targetCustomerId = req.body.customerId;
+      }
 
       const input: CreateBookingRequestDto = {
-        customerId: customerId,
+        customerId: targetCustomerId, // <--- Updated line
         serviceId: req.body.serviceId,
         zoneId: req.body.zoneId,
         location: {
@@ -180,6 +199,120 @@ export class BookingController extends BaseController {
 
     } catch (err) {
       return this.handleError(res, err, "RESPOND_EXTRA_CHARGE_FAILED");
+    }
+  };
+  /**
+   * @route POST /api/bookings/:id/complete
+   * @desc Technician marks job as done and generates invoice (Flow E)
+   * @access Technician
+   */
+  completeJob = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const technicianId = (req as AuthenticatedRequest).userId;
+      if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
+
+      const input: CompleteJobDto = {
+        bookingId: req.params.id,
+        technicianId
+      };
+
+      await this._completeJobUseCase.execute(input);
+
+      // EFFECTIVE USE: this.ok()
+      return this.ok(res, null, "Job completed. Invoice sent to customer.");
+
+    } catch (err) {
+      return this.handleError(res, err, "JOB_COMPLETION_FAILED");
+    }
+  };
+  /**
+   * @route GET /api/bookings/:id
+   * @desc Get booking details (Secured by Role)
+   * @access Customer | Technician | Admin
+   */
+  getBookingDetails = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const authReq = req as AuthenticatedRequest;
+      const userId = authReq.userId;
+      const role = authReq.role; // Middleware must provide this
+
+      if (!userId || !role) throw new Error(ErrorMessages.UNAUTHORIZED);
+
+      const input: GetBookingDetailsDto = {
+        bookingId: req.params.id,
+        userId,
+        role: role as any // Cast to Enum
+      };
+
+      const booking = await this._getBookingDetailsUseCase.execute(input);
+      const responseDto = BookingMapper.toResponse(booking);
+
+      // EFFECTIVE USE: this.ok()
+      return this.ok(res, responseDto, "Booking details fetched successfully.");
+
+    } catch (err) {
+      return this.handleError(res, err, "GET_BOOKING_DETAILS_FAILED");
+    }
+  };
+  /**
+   * @route POST /api/bookings/:id/cancel
+   * @desc Smart Cancel (Routes to logic based on Role)
+   */
+  cancelBooking = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const { userId, role } = req as AuthenticatedRequest; // Ensure middleware sets 'role'
+      if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
+
+      const input: CancelBookingDto = {
+        bookingId: req.params.id,
+        userId,
+        reason: req.body.reason
+      };
+
+      if (role === "CUSTOMER") {
+          await this._customerCancelUseCase.execute(input);
+      } else if (role === "TECHNICIAN") {
+          await this._technicianCancelUseCase.execute(input);
+      } else {
+          // Admin cancellation can reuse customer logic or have its own
+          await this._customerCancelUseCase.execute(input); 
+      }
+
+      return this.ok(res, null, "Booking cancelled successfully.");
+
+    } catch (err) {
+      return this.handleError(res, err, "BOOKING_CANCELLATION_FAILED");
+    }
+  };
+
+  
+  rateTechnician = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const { userId, role } = req as AuthenticatedRequest;
+      
+      // 1. Guard Clause (Satisfies TypeScript that userId is not undefined)
+      if (!userId || role !== "CUSTOMER") {
+        return this.forbidden(res, "Only customers can rate technicians.");
+      }
+
+      const input: RateTechnicianDto = {
+        bookingId: req.params.id,
+        customerId: userId, // TypeScript now knows this is a string
+        rating: req.body.rating,
+        comment: req.body.comment
+      };
+
+      // Validate basic input
+      if (!input.rating || input.rating < 1 || input.rating > 5) {
+        return this.clientError(res, "Rating must be between 1 and 5.");
+      }
+
+      await this._rateTechnicianUseCase.execute(input);
+
+      return this.ok(res, null, "Rating submitted successfully.");
+
+    } catch (err) {
+      return this.handleError(res, err, "RATING_FAILED");
     }
   };
 }

@@ -13,6 +13,8 @@ const jwtService = new JwtService();
 const customerAuth = makeCustomerAuthMiddleware(jwtService);
 const technicianAuth = makeTechnicianAuthMiddleware(jwtService);
   
+// --- 1. Creation & Handshake ---
+
 router.post(
   "/", 
   customerAuth, 
@@ -24,24 +26,69 @@ router.post(
   technicianAuth,
   bookingController.respondToBooking.bind(bookingController)
 );
+ 
 router.patch(
   "/:id/status",
   technicianAuth, 
   bookingController.updateJobStatus.bind(bookingController)
 );
+
+router.post(
+  "/:id/extras",  
+  technicianAuth,
+  bookingController.addExtraCharge.bind(bookingController)
+);
+
 router.post(
   "/:id/extras/:chargeId/respond",
-  customerAuth, // Only customer can approve
+  customerAuth,  
   bookingController.respondToExtraCharge.bind(bookingController)
 );
-// --- FUTURE ROUTES (Placeholders for next steps) ---
-/*
+
+router.post(
+  "/:id/complete",
+  technicianAuth,   
+  bookingController.completeJob.bind(bookingController)
+);
+ 
 
 router.get(
-  "/:id",
-  commonAuth, // Allow customer/tech/admin
+  "/customer/:id", 
+  customerAuth,
+  (req, res, next) => {
+    (req as any).role = "CUSTOMER";  
+    next();
+  },
   bookingController.getBookingDetails.bind(bookingController)
 );
-*/
+ 
+router.get(
+  "/technician/:id", 
+  technicianAuth, 
+  (req, res, next) => {
+    (req as any).role = "TECHNICIAN";  
+    next();
+  },
+  bookingController.getBookingDetails.bind(bookingController)
+);
+router.post(
+  "/:id/cancel/customer", 
+  customerAuth, 
+  (req, res, next) => { (req as any).role = "CUSTOMER"; next(); },
+  bookingController.cancelBooking.bind(bookingController)
+);
+
+// Technician Cancel
+router.post(
+  "/:id/cancel/technician", 
+  technicianAuth, 
+  (req, res, next) => { (req as any).role = "TECHNICIAN"; next(); },
+  bookingController.cancelBooking.bind(bookingController)
+);
+router.post(
+  "/:id/rate",
+  customerAuth,  
+  bookingController.rateTechnician.bind(bookingController)
+);
 
 export default router;

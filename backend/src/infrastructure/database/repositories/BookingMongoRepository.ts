@@ -12,7 +12,8 @@ import {
 import { 
   BookingStatus, 
   TechAssignmentAttempt,  
-  ExtraCharge
+  ExtraCharge,
+  PaymentStatus
 } from "../../../../../shared/types/value-objects/BookingTypes";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
@@ -132,6 +133,20 @@ export class BookingMongoRepository implements IBookingRepository {
     return this.toDomain(doc);
   }
 
+  // --- Scheduler Queries ---
+
+  async findExpiredAssignments(): Promise<Booking[]> {
+    const now = new Date();
+    // Find bookings that are PENDING assignment AND the timer has passed
+    const docs = await BookingModel.find({
+      status: "ASSIGNED_PENDING",
+      assignmentExpiresAt: { $lte: now },
+      isDeleted: { $ne: true }
+    }).exec();
+
+    return docs.map(doc => this.toDomain(doc));
+  }
+
   // --- Core Booking Logic (Atomic Operations) ---
 
   async updateStatus(id: string, status: BookingStatus): Promise<void> {
@@ -209,20 +224,20 @@ export class BookingMongoRepository implements IBookingRepository {
     }
   }
 
-  async updatePaymentStatus(
-    bookingId: string, 
-    status: "PAID" | "FAILED", 
-    transactionId?: string
-  ): Promise<void> {
-    const update: any = { 
+async updatePaymentStatus(id: string, status: PaymentStatus, transactionId?: string): Promise<void> {
+    const updatePayload: any = {
       "payment.status": status,
-      "timestamps.updatedAt": new Date()
+      updatedAt: new Date()
     };
-    if (transactionId) update["payment.transactionId"] = transactionId;
 
-    await BookingModel.findByIdAndUpdate(bookingId, { $set: update }).exec();
-  }async addExtraCharge(bookingId: string, charge: ExtraCharge): Promise<void> {
-    // Map domain value object to persistence shape
+    if (transactionId) {
+      updatePayload["payment.transactionId"] = transactionId;
+    }
+
+    await BookingModel.findByIdAndUpdate(id, { $set: updatePayload }).exec();
+  }
+
+  async addExtraCharge(bookingId: string, charge: ExtraCharge): Promise<void> {
     const chargeData = {
       title: charge.title,
       amount: charge.amount,
@@ -246,6 +261,16 @@ export class BookingMongoRepository implements IBookingRepository {
     ).exec();
 
     if (!result) throw new Error("Booking not found");
+  }
+  async findByPaymentOrderId(orderId: string): Promise<Booking | null> {
+    // Queries the nested payment object for the order ID
+    const doc = await BookingModel.findOne({
+      "payment.razorpayOrderId": orderId,
+      isDeleted: { $ne: true }
+    }).exec();
+
+    if (!doc) return null;
+    return this.toDomain(doc);
   }
 
   // --- Internal Private Mappers (DB <-> Domain) ---
@@ -300,7 +325,6 @@ export class BookingMongoRepository implements IBookingRepository {
       meta: doc.meta,
       timestamps: doc.timestamps,
       
-      // FIX: Ensure snapshots always have fallbacks (even if DB is missing them)
       snapshots: {
         technician: doc.snapshots?.technician,
         customer: doc.snapshots?.customer || { name: "Unknown", phone: "" },
@@ -312,7 +336,6 @@ export class BookingMongoRepository implements IBookingRepository {
   private toPersistence(entity: Booking): Partial<BookingDocument> {
     const props = entity.toProps();
 
-    // FIX: Fallback if props.snapshots is undefined to prevent assigning undefined to required fields
     const snapshots = props.snapshots || {
       customer: { name: "Unknown", phone: "" },
       service: { name: "Unknown", categoryId: "" }
@@ -359,7 +382,6 @@ export class BookingMongoRepository implements IBookingRepository {
         meta: t.meta
       })),
       
-      // FIX: Use the 'snapshots' variable which guarantees 'customer' and 'service' are present
       snapshots: {
         technician: snapshots.technician,
         customer: snapshots.customer,

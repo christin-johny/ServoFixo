@@ -147,7 +147,16 @@ export class Booking {
     
     this.addTimelineEvent("ASSIGNED_PENDING", "system", "Attempting to assign technician");
   }
-
+public handleAssignmentTimeout(): void {
+      // Find the currently pending attempt
+      const pendingAttempt = this._assignedTechAttempts.find(a => a.status === "PENDING");
+      if (pendingAttempt) {
+          pendingAttempt.status = "TIMEOUT";
+      }
+      // Status remains ASSIGNED_PENDING if we are going to add another, 
+      // but if we fail, we update it later.
+      // For now, just mark the attempt.
+  }
   public acceptAssignment(techId: string): void {
     if (this._status !== "ASSIGNED_PENDING" && this._status !== "REQUESTED") {
       throw new Error("Booking is not pending assignment.");
@@ -169,6 +178,53 @@ export class Booking {
     this._timestamps.updatedAt = new Date();
     
     this.addTimelineEvent("ACCEPTED", `tech:${techId}`, "Technician accepted the job");
+  }
+  // --- OTP Management ---
+  public setOtp(otp: string): void {
+    if (!this._meta) {
+        this._meta = {};
+    }
+    // Ensure your BookingMeta type in shared/types has an optional 'otp' field
+    this._meta.otp = otp;
+    this._timestamps.updatedAt = new Date();
+  }
+  public adminForceAssign(
+      techId: string, 
+      snapshot: { 
+          tech: { name: string; phone: string; avatarUrl?: string; rating: number };
+          adminName: string 
+      }
+  ): void {
+    // 1. Reset any existing flow
+    this._status = "ACCEPTED";
+    this._technicianId = techId;
+    this._assignmentExpiresAt = undefined;
+    this._candidateIds = []; // Clear other candidates
+    
+    // 2. Set Snapshot
+    this.setTechnicianSnapshot(snapshot.tech);
+
+    // 3. Log it
+    this._timestamps.acceptedAt = new Date();
+    this._timestamps.updatedAt = new Date();
+    
+    // 4. Force status of any previous attempts to "CANCELLED_BY_SYSTEM"
+    this._assignedTechAttempts.forEach(a => {
+        if (a.status === "PENDING") {
+            a.status = "CANCELLED_BY_SYSTEM";
+            a.rejectionReason = "Admin forced new assignment";
+        }
+    });
+
+    // 5. Add Timeline Event
+    this.addTimelineEvent(
+        "ACCEPTED", 
+        `admin:${snapshot.adminName}`, 
+        "Admin forced assignment"
+    );
+  }
+  public adminForceStatus(status: BookingStatus, adminId: string, reason: string): void {
+      this.updateStatus(status, `admin:${adminId}`, reason);
   }
 
   public rejectAssignment(techId: string, reason: string = "REJECTED"): void {

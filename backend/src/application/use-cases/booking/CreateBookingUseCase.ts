@@ -8,6 +8,7 @@ import { CreateBookingRequestDto } from "../../dto/booking/CreateBookingRequestD
 import { Booking } from "../../../domain/entities/Booking";
 import { Technician } from "../../../domain/entities/Technician";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
 
 export class CreateBookingUseCase {
   constructor(
@@ -115,6 +116,14 @@ export class CreateBookingUseCase {
       booking.addAssignmentAttempt(firstCandidateId);
     } else {
       booking.updateStatus("FAILED_ASSIGNMENT", "system", "No available technicians in zone");
+      await this._notificationService.send({
+          recipientId: booking.getCustomerId(),
+          recipientType: "CUSTOMER",
+          type: NotificationType.BOOKING_FAILED,
+          title: "Booking Failed 😔",
+          body: "Sorry, no technicians are available in your area right now.",
+          metadata: { bookingId: booking.getId() }
+      });
     }
 
     // 10. Persist to Database
@@ -125,25 +134,24 @@ export class CreateBookingUseCase {
     );
 
     // 11. Trigger Real-Time Notification (Socket)
-    if (candidateIds.length > 0) {
+if (candidateIds.length > 0) {
         const firstCandidateId = candidateIds[0];
         const tech = sortedCandidates[0]; 
 
-        // Safely calculate distance
         let distKm = "0.0";
         if (tech.getCurrentLocation()?.coordinates) {
              const dist = this.calculateDistance(
                 input.location.coordinates.lat,
                 input.location.coordinates.lng,
-                tech.getCurrentLocation()!.coordinates[1], // Lat
-                tech.getCurrentLocation()!.coordinates[0]  // Lng
+                tech.getCurrentLocation()!.coordinates[1],
+                tech.getCurrentLocation()!.coordinates[0]
             );
             distKm = dist.toFixed(1);
         }
 
-        // Round earnings to 2 decimal places (10% Platform Fee)
         const earnings = Math.round((estimatedPrice * 0.9) * 100) / 100;
 
+        // A. Notify Technician
         await this._notificationService.sendBookingRequest(firstCandidateId, {
             bookingId: createdBooking.getId(),
             serviceName: service.getName ? service.getName() : "Service Request",
@@ -151,6 +159,21 @@ export class CreateBookingUseCase {
             distance: `${distKm} km`,
             address: input.location.address,
             expiresAt: createdBooking.getAssignmentExpiresAt() || new Date(Date.now() + 45000)
+        });
+
+        // B. Notify Admin (NEW: Live Dashboard)
+        await this._notificationService.send({
+            recipientId: "ADMIN_BROADCAST_CHANNEL", // Ensure your socket service handles this room
+            recipientType: "ADMIN",
+            type: NotificationType.ADMIN_NEW_BOOKING, 
+            title: "New Booking Received 🚨",
+            body: `New request for ${service.getName ? service.getName() : "Service"} in Zone ${input.zoneId}`,
+            metadata: { 
+                bookingId: booking.getId(),
+                customerId: booking.getCustomerId(),
+                zoneId: booking.getZoneId(),
+            },
+            clickAction: `/admin/bookings/${booking.getId()}`
         });
     }
 

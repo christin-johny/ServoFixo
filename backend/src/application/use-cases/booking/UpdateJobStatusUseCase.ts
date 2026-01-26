@@ -3,7 +3,6 @@ import { INotificationService } from "../../services/INotificationService";
 import { ILogger } from "../../interfaces/ILogger";
 import { UpdateJobStatusDto } from "../../dto/booking/UpdateJobStatusDto";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
 import { BookingStatus } from "../../../../../shared/types/value-objects/BookingTypes";
 
 export class UpdateJobStatusUseCase {
@@ -23,19 +22,44 @@ export class UpdateJobStatusUseCase {
     }
 
     // 2. Validation: Strict State Machine
-    // Prevents jumping steps (e.g., ACCEPTED -> IN_PROGRESS directly)
     const currentStatus = booking.getStatus();
     this.validateTransition(currentStatus, input.status);
 
-    // 3. Update Status in Entity (Logic)
-    // This updates the status and sets the timestamps (startedAt, etc.)
+    // --- NEW: OTP Verification Logic (Security Check) ---
+    // [Ref: Master Booking Logic, Page 8, Flow C.4]
+    if (input.status === "IN_PROGRESS") {
+        // Retrieve the OTP stored in the booking metadata
+        const requiredOtp = booking.getMeta().otp;
+        
+        // If an OTP exists, we MUST verify it matches the input
+        if (requiredOtp && requiredOtp !== input.otp) {
+            this._logger.warn(`OTP Mismatch for Booking ${booking.getId()}. Expected: ${requiredOtp}, Got: ${input.otp}`);
+            throw new Error("Invalid OTP. Please ask the customer for the correct 4-digit code.");
+        }
+    }
+
+    // 3. Update Status
     booking.updateStatus(input.status, `tech:${input.technicianId}`, "Status update by technician");
 
-    // 4. Persist to DB
+    // 4. Persist
     await this._bookingRepo.updateStatus(booking.getId(), input.status);
 
     // 5. Notify Customer
     await this.sendCustomerNotification(booking.getCustomerId(), input.status, booking.getId());
+
+    // 6. Notify Admin (Dashboard Sync)
+    await this._notificationService.send({
+        recipientId: "ADMIN_BROADCAST_CHANNEL",
+        recipientType: "ADMIN",
+        type: "ADMIN_STATUS_UPDATE" as any,
+        title: `Booking Update: ${input.status}`,
+        body: `Tech ${input.technicianId} is now ${input.status}`,
+        metadata: { 
+            bookingId: booking.getId(), 
+            status: input.status,
+            technicianId: input.technicianId
+        }
+    });
 
     this._logger.info(`Booking ${booking.getId()} moved to ${input.status}`);
   }
@@ -59,7 +83,6 @@ export class UpdateJobStatusUseCase {
   ) {
       let title = "";
       let body = "";
-      // Using generic type string for 'type' to avoid Enum import conflicts if not updated yet
       const notifType = "BOOKING_STATUS_UPDATE" as any; 
 
       switch(status) {
