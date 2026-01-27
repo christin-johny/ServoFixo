@@ -13,7 +13,7 @@ import { logout } from "../../../../store/authSlice";
 import { clearTechnicianData } from "../../../../store/technicianSlice";
 import { technicianLogout } from "../../../../infrastructure/repositories/technician/technicianAuthRepository";
 import { useNotification } from "../../../hooks/useNotification";
-import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
+import ConfirmModal from "../../../components/Shared/ConfirmModal/ConfirmModal";
 
 const TechnicianProfile: React.FC = () => {
   const navigate = useNavigate();

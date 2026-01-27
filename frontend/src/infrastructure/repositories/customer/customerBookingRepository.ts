@@ -3,7 +3,9 @@ import { BOOKING_ENDPOINTS } from "../../api/endpoints/Booking/booking.endpoints
 
 export interface CreateBookingPayload {
   serviceId: string;
-  customerId: string; // Explicitly passed or handled by backend token
+  customerId: string;
+  // zoneId is NOT sent here (Backend calculates it now)
+  
   location: {
     address: string;
     coordinates: {
@@ -11,7 +13,13 @@ export interface CreateBookingPayload {
       lng: number;
     };
   };
-  requestedTime: string; // ISO String
+ 
+  contact: {
+    name: string;
+    phone: string;
+  };
+
+  requestedTime: string;
   meta?: {
     instructions?: string;
   };
@@ -22,7 +30,6 @@ export interface BookingResponse {
   status: string;
   serviceId: string;
   customerId: string;
-  // Add other fields as needed
 }
 
 export const createBooking = async (

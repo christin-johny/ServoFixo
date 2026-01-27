@@ -6,7 +6,7 @@ import { useNotification } from '../../../hooks/useNotification';
 import type { CustomerDto } from '../../../../domain/types/AdminCustomerDtos';
 import CustomerEditModal from '../../../components/Admin/customer/CustomerEditModal';
 import * as customerService from '../../../../infrastructure/repositories/admin/customerService';
-import ConfirmModal from '../../../components/Admin/Modals/ConfirmModal';
+import ConfirmModal from '../../../components/Shared/ConfirmModal/ConfirmModal';
 
 const TABS = [
     { key: 'profile', icon: User, label: 'Overview' },

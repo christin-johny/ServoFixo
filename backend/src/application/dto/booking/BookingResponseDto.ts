@@ -31,7 +31,23 @@ export interface BookingResponseDto {
   
   chatId?: string;
   // -----------------------------
-
+snapshots: {
+    technician?: {
+        name: string;
+        phone: string;
+        avatarUrl?: string;
+        rating: number;
+    };
+    customer: {
+        name: string;
+        phone: string;
+        avatarUrl?: string;
+    };
+    service: {
+        name: string;
+        categoryId: string;
+    };
+  };
   meta: BookingMeta;
   timestamps: BookingTimestamps;
 }

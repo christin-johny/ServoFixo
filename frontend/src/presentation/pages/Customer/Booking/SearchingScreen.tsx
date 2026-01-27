@@ -29,9 +29,7 @@ const SearchingScreen: React.FC = () => {
     socketService.connect(user.id, "CUSTOMER");
 
     // 2. Listen for Flow B Success (Technician Assigned)
-    const handleConfirmation = (data: BookingConfirmedEvent) => {
-        // data contains { techName, vehicleNumber, otp, status... }
-        console.log("Technician found:", data);
+    const handleConfirmation = (data: BookingConfirmedEvent) => { 
         
         alert(`Technician Assigned! ${data.techName} is coming.`);
         // Navigate to the Tracking Page or Profile

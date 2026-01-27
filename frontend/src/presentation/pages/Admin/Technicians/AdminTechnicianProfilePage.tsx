@@ -10,7 +10,7 @@ import * as techRepo from '../../../../infrastructure/repositories/admin/technic
 import type { TechnicianProfileFull } from '../../../../domain/types/Technician'; 
 import type { UpdateTechnicianPayload } from '../../../../infrastructure/repositories/admin/technicianRepository';
 
-import ConfirmModal from '../../../components/Admin/Modals/ConfirmModal';
+import ConfirmModal from '../../../components/Shared/ConfirmModal/ConfirmModal';
 import TechnicianEditModal from '../../../components/Admin/technician/TechnicianEditModal';
 import TechnicianProfileSummary from '../../../components/Admin/technician/TechnicianProfileSummary';
 

@@ -14,7 +14,7 @@ import {
 } from "../../../../store/customerSlice";
 import { getProfile, getZoneByLocation, getMyAddresses } from "../../../../infrastructure/repositories/customer/customerRepository";
 import { customerLogout } from "../../../../infrastructure/repositories/authRepository";
-import ConfirmModal from "../../Admin/Modals/ConfirmModal";
+import ConfirmModal from "../../Shared/ConfirmModal/ConfirmModal";
 import LocationPickerModal from "./LocationPickerModal";
 
 const useCurrentUser = () => {

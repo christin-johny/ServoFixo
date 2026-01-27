@@ -8,7 +8,7 @@ import { useDebounce } from "../../../hooks/useDebounce";
 import CustomerEditModal from "../../../components/Admin/customer/CustomerEditModal";
 import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
 import { DataTable, type TableColumn } from "../../../components/Admin/Shared/DataTable"; // Import Generic Table
-import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
+import ConfirmModal from "../../../components/Shared/ConfirmModal/ConfirmModal";
 
 const AdminCustomersPage: React.FC = () => {
   const { showSuccess, showError } = useNotification();

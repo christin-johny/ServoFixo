@@ -125,7 +125,7 @@ export class Booking {
      this._timestamps.updatedAt = new Date();
   }
 
-  public addAssignmentAttempt(techId: string, expiresInSeconds: number = 45): void {
+  public addAssignmentAttempt(techId: string, expiresInSeconds: number = 60): void {
     if (this._status !== "REQUESTED" && this._status !== "ASSIGNED_PENDING") {
       throw new Error(`Cannot assign technician when booking is ${this._status}`);
     }

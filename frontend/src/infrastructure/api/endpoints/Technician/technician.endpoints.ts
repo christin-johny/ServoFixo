@@ -22,8 +22,7 @@ export const TECHNICIAN_PROFILE_ENDPOINTS = {
   STEP_4_RATES: "/technician/profile/onboarding/step-4",
   STEP_5_DOCUMENTS: "/technician/profile/onboarding/step-5",
   STEP_6_BANK: "/technician/profile/onboarding/step-6",
-
-  // File Uploads (Two separate endpoints as agreed)
+ 
   UPLOAD_AVATAR: "/technician/profile/onboarding/upload/avatar",
   UPLOAD_DOCUMENT: "/technician/profile/onboarding/upload/document",
 
@@ -36,4 +35,13 @@ export const NOTIFICATION_ENDPOINTS = {
   GET_ALL: "/technician/notifications",
   MARK_READ: (id: string) => `/technician/notifications/${id}/read`,
   MARK_ALL_READ: "/technician/notifications/read-all",
+};
+
+export const TECH_BOOKING_ENDPOINTS = { 
+  TECH_BOOKING_URL: (bookingId: string) => `/bookings/${bookingId}/respond`,
+ 
+  GET_BY_ID: (bookingId: string) => `/bookings/technician/${bookingId}`,
+ 
+  START_JOB: (bookingId: string) => `/bookings/${bookingId}/start`,
+  UPDATE_STATUS: (bookingId: string) => `/bookings/${bookingId}/status`,
 };

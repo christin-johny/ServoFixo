@@ -9,7 +9,7 @@ import { getMyAddresses, deleteAddress, setDefaultAddress, addAddress, updateAdd
 import { logout } from "../../../../store/authSlice";
 import { useNotification } from "../../../hooks/useNotification";
 
-import ConfirmModal from "../../../../presentation/components/Admin/Modals/ConfirmModal";
+import ConfirmModal from "../../../components/Shared/ConfirmModal/ConfirmModal";
 import Navbar from "../../../../presentation/components/Customer/Layout/Navbar";
 import BottomNav from "../../../../presentation/components/Customer/Layout/BottomNav";
 import Footer from "../../../../presentation/components/Customer/Layout/Footer";

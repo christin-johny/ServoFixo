@@ -16,26 +16,33 @@ export class GetBookingDetailsUseCase implements IUseCase<Booking, [GetBookingDe
 
     // --- GOD MODE CHECK ---
     if (input.role === UserRole.ADMIN) {
-        return booking; // Admin can see everything
+        return booking; 
     }
 
     // --- Customer Check ---
     if (input.role === UserRole.CUSTOMER) {
-        if (booking.getCustomerId() !== input.userId) {
+        // Convert both to strings to be safe
+        const bookingCustomerId = String(booking.getCustomerId());
+        if (bookingCustomerId !== input.userId) {
             throw new Error(ErrorMessages.UNAUTHORIZED);
         }
         return booking;
     }
 
     // --- Technician Check ---
-    if (input.role === UserRole.TECHNICIAN) {
-        // Tech can see if:
-        // 1. They are the assigned technician
-        // 2. OR they are in the candidate list (Request Phase)
-        const isAssigned = booking.getTechnicianId() === input.userId;
-        const isCandidate = booking.getCandidateIds().includes(input.userId);
+    if (input.role === UserRole.TECHNICIAN) { 
+        const reqUserId = input.userId; // Token ID is always string
+        const assignedTechId = booking.getTechnicianId() ? String(booking.getTechnicianId()) : null;
+        
+        // 1. Check Assignment (String vs String)
+        const isAssigned = assignedTechId === reqUserId;
 
-        if (!isAssigned && !isCandidate) {
+        // 2. Check Candidate List (Map ObjectIds to Strings first)
+        const candidateIds = booking.getCandidateIds().map(id => String(id));
+        const isCandidate = candidateIds.includes(reqUserId);
+ 
+
+        if (!isAssigned && !isCandidate) { 
             throw new Error(ErrorMessages.UNAUTHORIZED);
         }
         return booking;

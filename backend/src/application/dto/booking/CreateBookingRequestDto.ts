@@ -1,9 +1,9 @@
-// src/application/dto/booking/CreateBookingRequestDto.ts
-
 export class CreateBookingRequestDto {
-  customerId!: string; // Usually extracted from Token, but kept here for internal service use
+  customerId!: string; 
   serviceId!: string;
-  zoneId!: string;
+  
+  // Kept for backward compatibility, but we calculate it on server now
+  zoneId!: string; 
   
   location!: {
     address: string;
@@ -13,8 +13,12 @@ export class CreateBookingRequestDto {
     };
     mapLink?: string;
   };
+ 
+  contact?: {
+    name: string;
+    phone: string;
+  };
 
-  // Optional: User might want to schedule for later (Phase 2 feature)
   requestedTime?: Date; 
 
   meta?: {

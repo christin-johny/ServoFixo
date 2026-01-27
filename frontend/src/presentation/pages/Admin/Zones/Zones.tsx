@@ -7,7 +7,7 @@ import ZoneMap from "../../../components/Admin/Maps/ZoneMap";
 import * as zoneRepo from "../../../../infrastructure/repositories/admin/zoneRepository";
 import type { Zone, UpdateZoneDTO } from "../../../../domain/types/Zone";
 import { useNotification } from "../../../hooks/useNotification";
-import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
+import ConfirmModal from "../../../components/Shared/ConfirmModal/ConfirmModal";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
 

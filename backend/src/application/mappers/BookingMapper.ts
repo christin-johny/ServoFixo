@@ -26,6 +26,7 @@ export class BookingMapper {
       timeline: entity.getTimeline(),
       
       chatId: entity.getChatId(),
+      snapshots: entity.getSnapshots(),
       
       meta: entity.getMeta(),
       timestamps: entity.getTimestamps()

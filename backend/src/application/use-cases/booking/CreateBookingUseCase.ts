@@ -2,7 +2,7 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { IServiceItemRepository } from "../../../domain/repositories/IServiceItemRepository";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
-import { IZoneService } from "../../interfaces/IZoneService"; // <--- NEW IMPORT
+import { IZoneService } from "../../interfaces/IZoneService"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { INotificationService } from "../../services/INotificationService"; 
 import { CreateBookingRequestDto } from "../../dto/booking/CreateBookingRequestDto";
@@ -18,25 +18,23 @@ export class CreateBookingUseCase {
     private readonly _serviceRepo: IServiceItemRepository,
     private readonly _technicianRepo: ITechnicianRepository,
     private readonly _notificationService: INotificationService,
-    private readonly _zoneService: IZoneService, // <--- INJECTED SERVICE
+    private readonly _zoneService: IZoneService,
     private readonly _logger: ILogger
   ) {}
 
   async execute(input: CreateBookingRequestDto): Promise<Booking> {
+     
     // 1. Validation: Customer
     const customer = await this._customerRepo.findById(input.customerId);
     if (!customer) {
       throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
     }
-
     // 2. Validation: Service
     const service = await this._serviceRepo.findById(input.serviceId);
     if (!service) {
       throw new Error(ErrorMessages.SERVICE_NOT_FOUND);
-    }
-
-    // 3. Validation: Zone Integrity (SERVER SIDE CALCULATION)
-    // We trust the Lat/Lng, not the Frontend's zoneId
+    } 
+    // 3. Validation: Zone Integrity (Server Side Calculation)
     const { lat, lng } = input.location.coordinates;
     const zoneResult = await this._zoneService.checkServiceability(lat, lng);
 
@@ -45,15 +43,14 @@ export class CreateBookingUseCase {
     }
     
     const resolvedZoneId = zoneResult.zoneId;
-
-    // 4. Calculate Estimates (Safe Access)
+    // 4. Calculate Estimates
     const rawPrice = service.getBasePrice ? service.getBasePrice() : (service as any).price || 0;
     const estimatedPrice = Math.round(rawPrice * 100) / 100; 
     const deliveryFee = 0; 
 
-    // 5. Matchmaking: Find Candidates using RESOLVED Zone
+    // 5. Matchmaking: Find Candidates
     const availableTechs = await this._technicianRepo.findAvailableInZone(
-      resolvedZoneId, // <--- Use calculated ID
+      resolvedZoneId, 
       input.serviceId 
     );
 
@@ -64,12 +61,12 @@ export class CreateBookingUseCase {
     );
 
     const candidateIds = sortedCandidates.map(t => t.getId());
-
+ 
     // 7. Initialize Booking Entity
     const booking = new Booking({
       customerId: input.customerId,
       serviceId: input.serviceId,
-      zoneId: resolvedZoneId, // <--- Use calculated ID
+      zoneId: resolvedZoneId,
       status: "REQUESTED",
       
       location: {
@@ -104,12 +101,21 @@ export class CreateBookingUseCase {
         updatedAt: new Date(),
         scheduledAt: input.requestedTime
       }
-    });
+    }); 
  
+    // Priority: 1. Address Contact info, 2. Customer Profile info
+    const snapshotName = input.contact?.name || (customer.getName ? customer.getName() : (customer as any).name);
+    const snapshotPhone = input.contact?.phone || (customer.getPhone ? customer.getPhone() : (customer as any).phone);
+
+    // Final Validation: We need at least one phone number to proceed
+    if (!snapshotPhone) {
+        throw new Error("A phone number is required to book. Please update your address with a contact number.");
+    }
+
     booking.setInitialSnapshots(
         { 
-            name: customer.getName ? customer.getName() : (customer as any).name, 
-            phone: customer.getPhone ? customer.getPhone() : (customer as any).phone, 
+            name: snapshotName, 
+            phone: snapshotPhone, 
             avatarUrl: customer.getAvatarUrl()
         },
         { 
@@ -117,16 +123,13 @@ export class CreateBookingUseCase {
             categoryId: service.getCategoryId()
         }
     );
-
     // 9. Prepare Assignment (Flow A)
     if (candidateIds.length > 0) {
       const firstCandidateId = candidateIds[0];
       booking.addAssignmentAttempt(firstCandidateId);
     } else {
-      // Logic: Even if zone is valid, if no techs are there, we fail gracefully
       booking.updateStatus("FAILED_ASSIGNMENT", "system", "No available technicians in zone");
       
-      // Notify Customer immediately via Socket/Push that search failed
       await this._notificationService.send({
           recipientId: booking.getCustomerId(),
           recipientType: "CUSTOMER",
@@ -135,8 +138,7 @@ export class CreateBookingUseCase {
           body: "Sorry, no technicians are available in your area right now.",
           metadata: { bookingId: booking.getId() }
       });
-    }
-
+    } 
     // 10. Persist to Database
     const createdBooking = await this._bookingRepo.create(booking);
 
@@ -162,17 +164,15 @@ export class CreateBookingUseCase {
 
         const earnings = Math.round((estimatedPrice * 0.9) * 100) / 100;
 
-        // A. Notify Technician
         await this._notificationService.sendBookingRequest(firstCandidateId, {
             bookingId: createdBooking.getId(),
             serviceName: service.getName ? service.getName() : "Service Request",
             earnings: earnings, 
             distance: `${distKm} km`,
             address: input.location.address,
-            expiresAt: createdBooking.getAssignmentExpiresAt() || new Date(Date.now() + 45000)
+            expiresAt: createdBooking.getAssignmentExpiresAt() || new Date(Date.now() + 60000)
         });
 
-        // B. Notify Admin
         await this._notificationService.send({
             recipientId: "ADMIN_BROADCAST_CHANNEL", 
             recipientType: "ADMIN",
@@ -191,35 +191,20 @@ export class CreateBookingUseCase {
     return createdBooking;
   }
 
-  // ... (Helper methods sortCandidates and calculateDistance remain unchanged)
-  private sortCandidates(
-    techs: Technician[], 
-    customerCoords: { lat: number; lng: number }
-  ): Technician[] {
+  // Helpers
+  private sortCandidates(techs: Technician[], customerCoords: { lat: number; lng: number }): Technician[] {
     return techs.sort((a, b) => {
       const locA = a.getCurrentLocation()?.coordinates;
       const locB = b.getCurrentLocation()?.coordinates;
-
       if (!locA) return 1;
       if (!locB) return -1;
 
-      const distA = this.calculateDistance(
-        customerCoords.lat, customerCoords.lng, 
-        locA[1], locA[0]
-      );
-      
-      const distB = this.calculateDistance(
-        customerCoords.lat, customerCoords.lng, 
-        locB[1], locB[0]
-      );
+      const distA = this.calculateDistance(customerCoords.lat, customerCoords.lng, locA[1], locA[0]);
+      const distB = this.calculateDistance(customerCoords.lat, customerCoords.lng, locB[1], locB[0]);
 
-      if (Math.abs(distA - distB) > 0.5) {
-        return distA - distB; 
-      }
-
+      if (Math.abs(distA - distB) > 0.5) return distA - distB; 
       const ratingA = a.getRatings().averageRating || 0;
       const ratingB = b.getRatings().averageRating || 0;
-
       return ratingB - ratingA; 
     });
   }

@@ -16,14 +16,17 @@ import {
   fetchTechnicianFailure,
 } from "../../../../store/technicianSlice";
 import { useNotification } from "../../../hooks/useNotification";
-import ConfirmModal from "../../Admin/Modals/ConfirmModal";
+import ConfirmModal from "../../Shared/ConfirmModal/ConfirmModal";
 import LoaderFallback from "../../../components/LoaderFallback";
 
 import { getTechnicianProfileStatus } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
 import { technicianLogout } from "../../../../infrastructure/repositories/technician/technicianAuthRepository";
 import NotificationBell from "./NotificationBell";
 import { useTechnicianNotifications } from "../../../hooks/useTechnicianNotifications";
-
+ 
+import { socketService, type JobRequestEvent } from "../../../../infrastructure/api/socketClient";
+import { setIncomingJob } from "../../../../store/technicianBookingSlice";
+import IncomingJobModal from "../../../components/Technician/Booking/IncomingJobModal";
 interface NavItem {
   label: string;
   path: string;
@@ -154,6 +157,35 @@ useEffect(() => {
       loadProfile();
     }
   }, [accessToken, profile, dispatch]);
+  // Inside TechnicianLayout component, before return:
+
+  // --- NEW: LISTEN FOR JOBS ---
+  useEffect(() => {
+    const userId = accessToken ? JSON.parse(atob(accessToken.split('.')[1])).id : null; // Decode or use auth user id
+
+    // Safety check: ensure socket is connected (it should be via useTechnicianNotifications, but safe to verify)
+    if (userId) {// Listener for Flow A [cite: 208]
+       socketService.onJobRequest((data: JobRequestEvent) => { 
+           
+           // Dispatch to Redux to trigger the Modal
+           dispatch(setIncomingJob({
+               bookingId: data.bookingId,
+               serviceName: data.serviceName,
+               earnings: data.earnings,
+               distance: data.distance,
+               address: data.address,
+               expiresAt: data.expiresAt
+           }));
+           
+           // Optional: Play Sound here
+       });
+    }
+    
+    // Cleanup not strictly necessary here as Layout persists, but good practice if unmounted
+    return () => {
+        //socketService.offJobRequest(); // (If you implement offJobRequest in socketClient)
+    };
+  }, [dispatch, accessToken]);
 
   const isActive = (path: string) => {
     if (path === "/technician" && location.pathname !== "/technician") return false;
@@ -258,6 +290,7 @@ useEffect(() => {
         message="Are you sure you want to sign out of your account?"
         confirmText="Sign Out"
       />
+      <IncomingJobModal />
     </div>
   );
 };

@@ -171,38 +171,53 @@ export class BookingMongoRepository implements IBookingRepository {
     }).exec();
   }
 
-  async assignTechnician(
-    bookingId: string, 
-    technicianId: string, 
-    techSnapshot: { name: string; phone: string; avatarUrl?: string; rating: number }
-  ): Promise<boolean> {
-    const result = await BookingModel.findOneAndUpdate(
-      {
-        _id: bookingId,
-        status: "ASSIGNED_PENDING",
-        "assignedTechAttempts": { 
-          $elemMatch: { techId: technicianId, status: "PENDING" } 
-        }
-      },
-      {
-        $set: {
-          technicianId: technicianId,
-          status: "ACCEPTED",
-          assignmentExpiresAt: null,
-          "timestamps.acceptedAt": new Date(),
-          "timestamps.updatedAt": new Date(),
-          "assignedTechAttempts.$[elem].status": "ACCEPTED",
-          "snapshots.technician": techSnapshot
-        }
-      },
-      {
-        new: true,
-        arrayFilters: [{ "elem.techId": technicianId, "elem.status": "PENDING" }]
-      }
-    ).exec();
-
-    return !!result;
+async assignTechnician(
+  bookingId: string,
+  technicianId: string,
+  techSnapshot: {
+    name: string;
+    phone: string;
+    avatarUrl?: string;
+    rating: number;
   }
+): Promise<boolean> {
+  const result = await BookingModel.findOneAndUpdate(
+    {
+      _id: bookingId,
+      status: "ASSIGNED_PENDING",
+      assignedTechAttempts: {
+        $elemMatch: {
+          techId: technicianId,
+          status: "PENDING"
+        }
+      }
+    },
+    {
+      $set: {
+        technicianId,
+        status: "ACCEPTED",
+        assignmentExpiresAt: null,
+
+        "timestamps.acceptedAt": new Date(),
+
+        "assignedTechAttempts.$[elem].status": "ACCEPTED",
+        "snapshots.technician": techSnapshot
+      }
+    },
+    {
+      new: true,
+      arrayFilters: [
+        {
+          "elem.techId": technicianId,
+          "elem.status": "PENDING"
+        }
+      ]
+    }
+  ).exec();
+
+  return Boolean(result);
+}
+
 
   async updateExtraChargeStatus(
     bookingId: string, 

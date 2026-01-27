@@ -10,7 +10,7 @@ import type { TechnicianListItem, UpdateTechnicianPayload } from "../../../../in
 import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
 import { DataTable, type TableColumn } from "../../../components/Admin/Shared/DataTable";
 import TechnicianEditModal from "../../../components/Admin/technician/TechnicianEditModal";
-import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
+import ConfirmModal from "../../../components/Shared/ConfirmModal/ConfirmModal";
 
 const TechnicianList: React.FC = () => {
   const { showSuccess, showError } = useNotification();

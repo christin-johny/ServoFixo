@@ -7,7 +7,7 @@ import { Clock, Info, ChevronRight, Plus, MapPin } from 'lucide-react';
 import type { RootState } from '../../../../store/store';
 import { fetchAddressesStart, setAddresses } from '../../../../store/customerSlice';
 import { getMyAddresses,addAddress  } from '../../../../infrastructure/repositories/customer/customerRepository';
-import { createBooking } from '../../../../infrastructure/repositories/customer/bookingRepository';
+import { createBooking } from '../../../../infrastructure/repositories/customer/customerBookingRepository';
 import { useNotification } from '../../../hooks/useNotification';
 
 // Components
@@ -61,8 +61,9 @@ const BookingConfirm: React.FC = () => {
     loadData();
   }, [dispatch, serviceId, navigate]);
 
-  // 4. Handle "Find Technician"
+ 
   const handleConfirmBooking = async () => {
+    // 1. Basic Checks
     if (!selectedAddressId) {
       showError("Please select an address");
       return;
@@ -75,17 +76,30 @@ const BookingConfirm: React.FC = () => {
     const addressObj = addresses.find(a => a.id === selectedAddressId);
     if (!addressObj) return;
 
-    // VALIDATION: Ensure we have Coordinates (Crucial for Backend)
+    // 2. Validate Coordinates
     if (!addressObj.location?.lat || !addressObj.location?.lng) {
         showError("This address is missing GPS coordinates. Please add a new one with a pin.");
+        return;
+    }
+
+    // 3. Validate Phone (CRITICAL FIX)
+    // We check this BEFORE calling the backend
+    if (!addressObj.phone || addressObj.phone.trim().length < 10) {
+        showError("The selected address must have a valid phone number.");
         return;
     }
 
     setIsBookLoading(true);
     try {
       const response = await createBooking({
-        serviceId: serviceId!, // We checked serviceId in useEffect
+        serviceId: serviceId!,
         customerId: user.id,
+ 
+        contact: {
+            name: addressObj.name,
+            phone: addressObj.phone 
+        }, 
+
         location: {
             address: `${addressObj.houseNumber}, ${addressObj.street}, ${addressObj.city}`,
             coordinates: {
@@ -101,24 +115,13 @@ const BookingConfirm: React.FC = () => {
 
       showSuccess("Searching for technicians...");
       
-      // Navigate to Searching Screen
       navigate('/booking/searching', { 
         state: { bookingId: response.id } 
       });
 
-    } catch (err: unknown) {
+    } catch (err: unknown) { 
       let msg = "Booking failed";
-      
-      // Strict type check for error response structure
-      if (err && typeof err === 'object' && 'response' in err) {
-          const apiError = err as { response: { data: { message: string } } };
-          if (apiError.response?.data?.message) {
-              msg = apiError.response.data.message;
-          }
-      } else if (err instanceof Error) {
-          msg = err.message;
-      }
-      
+      if (err instanceof Error) msg = err.message;
       showError(msg);
     } finally {
       setIsBookLoading(false);

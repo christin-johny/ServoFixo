@@ -66,7 +66,7 @@ router.get(
   "/technician/:id", 
   technicianAuth, 
   (req, res, next) => {
-    (req as any).role = "TECHNICIAN";  
+    (req as any).role = "technician";  
     next();
   },
   bookingController.getBookingDetails.bind(bookingController)
@@ -74,15 +74,20 @@ router.get(
 router.post(
   "/:id/cancel/customer", 
   customerAuth, 
-  (req, res, next) => { (req as any).role = "CUSTOMER"; next(); },
+  (req, res, next) => { (req as any).role = "customer"; next(); },
   bookingController.cancelBooking.bind(bookingController)
+);
+router.post(
+  "/:id/start",
+  technicianAuth,
+  bookingController.startJob.bind(bookingController)
 );
 
 // Technician Cancel
 router.post(
   "/:id/cancel/technician", 
   technicianAuth, 
-  (req, res, next) => { (req as any).role = "TECHNICIAN"; next(); },
+  (req, res, next) => { (req as any).role = "technician"; next(); },
   bookingController.cancelBooking.bind(bookingController)
 );
 router.post(

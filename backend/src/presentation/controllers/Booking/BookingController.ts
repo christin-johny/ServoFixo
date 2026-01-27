@@ -46,20 +46,23 @@ export class BookingController extends BaseController {
 createBooking = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { userId, role } = req as AuthenticatedRequest;
-
+ 
       if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
-      // GOD MODE LOGIC:
-      // If Admin, use the 'customerId' from body. If Customer, use their token ID.
+      
       let targetCustomerId = userId;
       
       if (role === "ADMIN") {
           if (!req.body.customerId) throw new Error("Admin must provide customerId");
           targetCustomerId = req.body.customerId;
       }
+
       const input: CreateBookingRequestDto = {
-        customerId: targetCustomerId, // <--- Updated line
-        serviceId: req.body.serviceId,
-        zoneId: req.body.zoneId,
+        customerId: targetCustomerId,
+        serviceId: req.body.serviceId, 
+        zoneId: req.body.zoneId, 
+         
+        contact: req.body.contact,  
+
         location: {
           address: req.body.location?.address,
           coordinates: req.body.location?.coordinates,
@@ -68,14 +71,42 @@ createBooking = async (req: Request, res: Response): Promise<Response> => {
         requestedTime: req.body.requestedTime ? new Date(req.body.requestedTime) : undefined,
         meta: req.body.meta
       };
+
       const booking = await this._createBookingUseCase.execute(input);
       const responseDto = BookingMapper.toResponse(booking);
 
-      // EFFECTIVE USE: this.created handles 201 + structure
       return this.created(res, responseDto, SuccessMessages.BOOKING_CREATED);
 
     } catch (err) {
       return this.handleError(res, err, LogEvents.BOOKING_CREATION_FAILED);
+    }
+};
+startJob = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const technicianId = (req as AuthenticatedRequest).userId;
+      if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
+
+      const bookingId = req.params.id;
+      const { otp } = req.body; // Frontend sends { otp: "1234" }
+
+      if (!otp) {
+        return this.clientError(res, "OTP is required to start the job.");
+      }
+
+      // Reuse the existing Use Case logic, but force the status to IN_PROGRESS
+      const input: UpdateJobStatusDto = {
+        bookingId,
+        technicianId,
+        status: "IN_PROGRESS", 
+        otp: otp
+      };
+
+      await this._updateJobStatusUseCase.execute(input);
+
+      return this.ok(res, null, "OTP Verified. Job Started! 🚀");
+
+    } catch (err) {
+      return this.handleError(res, err, "START_JOB_FAILED");
     }
   };
 

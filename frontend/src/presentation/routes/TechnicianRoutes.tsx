@@ -16,7 +16,8 @@ const TechDashboard = React.lazy(() => import("../pages/Technician/Dashboard/Tec
 const TechnicianLayout = React.lazy(() => import("../components/Technician/Layout/TechnicianLayout"));
 const OnboardingWizard =React.lazy(() => import("../components/Technician/Onboarding/OnboardingWizard"));
 const TechnicianProfile=React.lazy(() => import("../pages/Technician/Profile/TechnicianProfile"));
-
+const ActiveJobPage=React.lazy(() => import("../pages/Technician/Job/ActiveJobPage"));
+ 
 const TechnicianRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
     <Routes>
@@ -50,6 +51,7 @@ const TechnicianRoutes: React.FC = () => (
         <Route path="profile/personal" element={<PersonalDetails/>} />
         <Route path="profile/services" element={<ServiceSkills/>} />
         <Route path="profile/payouts" element={<PayoutSettings/>} />
+        <Route path="jobs/:id" element={<ActiveJobPage />} />
       </Route>
 
       {/* Fallback */}
