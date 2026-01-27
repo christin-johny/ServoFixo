@@ -289,18 +289,18 @@ startJob = async (req: Request, res: Response): Promise<Response> => {
    */
   cancelBooking = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { userId, role } = req as AuthenticatedRequest; // Ensure middleware sets 'role'
+      const { userId, role } = req as AuthenticatedRequest;
       if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
       const input: CancelBookingDto = {
         bookingId: req.params.id,
         userId,
         reason: req.body.reason
-      };
+      }; 
 
-      if (role === "CUSTOMER") {
+      if (role === "customer") {
           await this._customerCancelUseCase.execute(input);
-      } else if (role === "TECHNICIAN") {
+      } else if (role === "technician") {
           await this._technicianCancelUseCase.execute(input);
       } else {
           // Admin cancellation can reuse customer logic or have its own

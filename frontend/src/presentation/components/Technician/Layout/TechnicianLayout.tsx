@@ -26,7 +26,7 @@ import { useTechnicianNotifications } from "../../../hooks/useTechnicianNotifica
  
 import { socketService, type JobRequestEvent } from "../../../../infrastructure/api/socketClient";
 import { setIncomingJob } from "../../../../store/technicianBookingSlice";
-import IncomingJobModal from "../../../components/Technician/Booking/IncomingJobModal";
+import IncomingJobModal from "../Job/IncomingJobModal";
 interface NavItem {
   label: string;
   path: string;

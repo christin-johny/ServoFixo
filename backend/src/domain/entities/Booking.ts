@@ -227,18 +227,36 @@ public handleAssignmentTimeout(): void {
       this.updateStatus(status, `admin:${adminId}`, reason);
   }
 
-  public rejectAssignment(techId: string, reason: string = "REJECTED"): void {
+public setTechnicianId(techId: string | null): void {
+    this._technicianId = techId;
+    this._timestamps.updatedAt = new Date();
+  }
+ 
+public rejectAssignment(techId: string, reason: string = "REJECTED"): void {
+    // 1. Find the attempt (Handles both PENDING invites and ACCEPTED active jobs)
     const attempt = this._assignedTechAttempts.find(
-      a => a.techId === techId && a.status === "PENDING"
+      a => a.techId === techId && (a.status === "PENDING" || a.status === "ACCEPTED")
     );
 
     if (attempt) {
-      attempt.status = reason === "TIMEOUT" ? "TIMEOUT" : "REJECTED";
+      // If they accepted and then cancelled, mark as CANCELLED_BY_TECH
+      const newStatus = attempt.status === "ACCEPTED" ? "CANCELLED_BY_TECH" : "REJECTED";
+      attempt.status = reason === "TIMEOUT" ? "TIMEOUT" : newStatus;
       attempt.rejectionReason = reason;
     }
-    // Note: Status stays ASSIGNED_PENDING until UseCase picks next candidate or fails
+    
+    // 2. Clear the active technician
+    if (this._technicianId === techId) {
+        this._technicianId = null;
+        
+        // 🚨 CRITICAL FIX: Reset status to REQUESTED
+        // This allows addAssignmentAttempt() to run without throwing an error
+        this._status = "REQUESTED"; 
+    }
+
     this._timestamps.updatedAt = new Date();
   }
+  
 
   public updateStatus(newStatus: BookingStatus, changedBy: string, reason?: string): void {
     this._status = newStatus;

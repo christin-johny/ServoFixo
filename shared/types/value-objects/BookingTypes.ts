@@ -42,7 +42,7 @@ export interface TechAssignmentAttempt {
   techId: string;
   attemptAt: Date;
   expiresAt: Date; // Keep this for individual attempt logic
-  status: "PENDING" | "ACCEPTED" | "REJECTED" | "TIMEOUT" | "BUSY" | "CANCELLED_BY_SYSTEM";
+  status: "PENDING" | "ACCEPTED" | "REJECTED" | "TIMEOUT" | "BUSY" | "CANCELLED_BY_SYSTEM" | "CANCELLED_BY_TECH";
   adminForced?: boolean;
   rejectionReason?: string;
 }

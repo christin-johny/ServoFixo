@@ -44,4 +44,5 @@ export const TECH_BOOKING_ENDPOINTS = {
  
   START_JOB: (bookingId: string) => `/bookings/${bookingId}/start`,
   UPDATE_STATUS: (bookingId: string) => `/bookings/${bookingId}/status`,
+  CANCEL_JOB:(bookingId:string)=>`/bookings/${bookingId}/cancel/technician`,
 };

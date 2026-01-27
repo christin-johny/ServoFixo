@@ -27,3 +27,8 @@ export const verifyBookingOtp = async (bookingId: string, otp: string) => {
   const response = await api.post(TECH_BOOKING_ENDPOINTS.START_JOB(bookingId), { otp });
   return response.data.data;
 };
+
+export const cancelBookingByTechnician = async (bookingId: string, reason: string) => { 
+  const response = await api.post(TECH_BOOKING_ENDPOINTS.CANCEL_JOB(bookingId), { reason });
+  return response.data;
+};
