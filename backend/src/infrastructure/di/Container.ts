@@ -669,6 +669,7 @@ const updateJobStatusUseCase = new UpdateJobStatusUseCase(
 const addExtraChargeUseCase = new AddExtraChargeUseCase(
   bookingRepo,
   notificationService,
+  imageService,
   logger
 )
 const respondToExtraChargeUseCase = new RespondToExtraChargeUseCase(

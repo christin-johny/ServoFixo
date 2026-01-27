@@ -32,3 +32,13 @@ export const cancelBookingByTechnician = async (bookingId: string, reason: strin
   const response = await api.post(TECH_BOOKING_ENDPOINTS.CANCEL_JOB(bookingId), { reason });
   return response.data;
 };
+
+export const addExtraCharge = async (bookingId: string, data: { title: string; amount: number; proofFile?: File }) => {
+  const formData = new FormData();
+  formData.append("title", data.title);
+  formData.append("amount", data.amount.toString());
+  if (data.proofFile) formData.append("proof", data.proofFile);
+
+  const response = await api.post(TECH_BOOKING_ENDPOINTS.ADD_EXTRA_CHARGE(bookingId), formData);
+  return response.data;
+};

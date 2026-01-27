@@ -17,6 +17,7 @@ const TechnicianLayout = React.lazy(() => import("../components/Technician/Layou
 const OnboardingWizard =React.lazy(() => import("../components/Technician/Onboarding/OnboardingWizard"));
 const TechnicianProfile=React.lazy(() => import("../pages/Technician/Profile/TechnicianProfile"));
 const ActiveJobPage=React.lazy(() => import("../pages/Technician/Job/ActiveJobPage"));
+const AddExtrasPage = React.lazy(() => import("../pages/Technician/Job/AddExtrasPage"));
  
 const TechnicianRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
@@ -27,9 +28,6 @@ const TechnicianRoutes: React.FC = () => (
       <Route path="forgot-password" element={<GuestOnlyGuard><TechForgotPassword /></GuestOnlyGuard>} />
       <Route path="verify-otp" element={<GuestOnlyGuard><TechVerifyOtp /></GuestOnlyGuard>} />
 
-      {/* =================================================
-          2. PROTECTED APP ROUTES (With Layout)
-      ================================================== */}
       <Route
         path="/"
         element={
@@ -52,6 +50,7 @@ const TechnicianRoutes: React.FC = () => (
         <Route path="profile/services" element={<ServiceSkills/>} />
         <Route path="profile/payouts" element={<PayoutSettings/>} />
         <Route path="jobs/:id" element={<ActiveJobPage />} />
+        <Route path="jobs/:id/extras" element={<AddExtrasPage />} />
       </Route>
 
       {/* Fallback */}

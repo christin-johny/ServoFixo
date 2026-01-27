@@ -20,13 +20,18 @@ interface AuthenticatedRequest extends Request {
   userId?: string;
   role?: string;
 }
+interface IFile {
+    buffer: Buffer;
+    originalName: string;
+    mimeType: string;
+}
 
 export class BookingController extends BaseController {
   constructor(
     private readonly _createBookingUseCase: IUseCase<Booking, [CreateBookingRequestDto]>,
     private readonly _respondToBookingUseCase: IUseCase<void, [RespondToBookingDto]>, 
     private readonly _updateJobStatusUseCase: IUseCase<void, [UpdateJobStatusDto]>,
-    private readonly _addExtraChargeUseCase: IUseCase<void, [AddExtraChargeDto]>,
+    private readonly _addExtraChargeUseCase: IUseCase<void, [AddExtraChargeDto, IFile?]>,
     private readonly _respondToExtraChargeUseCase: IUseCase<void, [RespondToExtraChargeDto]>,
     private readonly _completeJobUseCase: IUseCase<void, [CompleteJobDto]>,
     private readonly _getBookingDetailsUseCase: IUseCase<Booking, [GetBookingDetailsDto]>,
@@ -177,7 +182,7 @@ startJob = async (req: Request, res: Response): Promise<Response> => {
    * @desc Technician adds an extra charge (Flow D)
    * @access Technician
    */
-  addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
+addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
     try {
       const technicianId = (req as AuthenticatedRequest).userId;
       if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
@@ -188,12 +193,22 @@ startJob = async (req: Request, res: Response): Promise<Response> => {
         title: req.body.title,
         amount: req.body.amount,
         description: req.body.description,
-        proofUrl: req.body.proofUrl
+        proofUrl: req.body.proofUrl // Fallback if sent as string
       };
 
-      await this._addExtraChargeUseCase.execute(input);
+      // Extract File
+      let proofFile: IFile | undefined;
+      if (req.file) {
+          proofFile = {
+              buffer: req.file.buffer,
+              originalName: req.file.originalname,
+              mimeType: req.file.mimetype
+          };
+      }
 
-      // EFFECTIVE USE: this.created handles 201 + structure
+      // Pass file as second argument
+      await this._addExtraChargeUseCase.execute(input, proofFile);
+
       return this.created(res, null, "Extra charge added. Waiting for customer approval.");
 
     } catch (err) {

@@ -5,7 +5,7 @@ import {
 } from "../middlewares/customerAuth.middleware";  
 import { JwtService } from "../../infrastructure/security/JwtService";
 import { makeTechnicianAuthMiddleware } from "../middlewares/technicianAuth.middleware";
-
+import { upload } from "../../infrastructure/middleware/uploadMiddleware";
 const router = Router();
 const jwtService = new JwtService();
 
@@ -36,9 +36,9 @@ router.patch(
 router.post(
   "/:id/extras",  
   technicianAuth,
+  upload.single('proof'),  
   bookingController.addExtraCharge.bind(bookingController)
 );
-
 router.post(
   "/:id/extras/:chargeId/respond",
   customerAuth,  
