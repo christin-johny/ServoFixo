@@ -70,38 +70,47 @@ const Step5_Documents: React.FC<Step5Props> = ({ onNext, onBack, onSaveAndExit }
       if (isResubmission) setIsConsented(true);
     }
   }, [profile?.documents, isResubmission]);
+ 
+const handleUpload = async (file: File, type: DocType, id?: string) => {
+  if (file.size > 2 * 1024 * 1024) {
+    showError("File size must be less than 2MB");
+    return;
+  }
 
-  const handleUpload = async (file: File, type: DocType, id?: string) => {
-    if (file.size > 2 * 1024 * 1024) {
-      showError("File size must be less than 2MB");
-      return;
+  const docId = id || `doc_${Date.now()}`;
+  setUploadingId(type === 'OTHER' ? docId : type);
+
+  try {
+    const response = await technicianOnboardingRepository.uploadDocument(file);
+
+    // --- FIX APPLIED HERE ---
+    // The backend returns { data: { url: "..." } }, so we must access response.data.url
+    const uploadedUrl = response.data?.url || response.url; 
+
+    if (!uploadedUrl) {
+        throw new Error("No URL returned from server");
     }
 
-    const docId = id || `doc_${Date.now()}`;
-    setUploadingId(type === 'OTHER' ? docId : type);
-
-    try {
-      const response = await technicianOnboardingRepository.uploadDocument(file);
-
-      setDocuments(prev => {
-        const others = type === 'OTHER' ? prev.filter(d => d.id !== docId) : prev.filter(d => d.type !== type);
-        return [...others, {
-          id: docId,
-          type,
-          url: response.url,
-          file: file,
-          status: "PENDING",
-          customName: type === 'OTHER' ? "New Document" : undefined
-        }];
-      });
-      showSuccess("Document uploaded!");
-    } catch (err) {
-      console.error(err);
-      showError("Upload failed. Please try again.");
-    } finally {
-      setUploadingId(null);
-    }
-  };
+    setDocuments(prev => {
+      const others = type === 'OTHER' ? prev.filter(d => d.id !== docId) : prev.filter(d => d.type !== type);
+      return [...others, {
+        id: docId,
+        type,
+        url: uploadedUrl, // Use the extracted URL
+        file: file,
+        status: "PENDING",
+        customName: type === 'OTHER' ? "New Document" : undefined
+      }];
+    });
+    
+    showSuccess("Document uploaded!");
+  } catch (err) {
+    console.error("Upload error details:", err);
+    showError("Upload failed. Please try again.");
+  } finally {
+    setUploadingId(null);
+  }
+};
 
   const handleRemove = (id: string) => {
     setDocuments(prev => prev.filter(d => d.id !== id));

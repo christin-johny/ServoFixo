@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { MapPin, Search, Bell, User, ChevronDown, Menu, X, LogIn, LogOut, Home, Briefcase, Info, ChevronRight, type LucideIcon } from "lucide-react";
+import { MapPin, Search,  User, ChevronDown, Menu, X, LogIn, LogOut, Home, Briefcase, Info, ChevronRight, type LucideIcon } from "lucide-react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../../../../store/store";
@@ -9,13 +9,16 @@ import {
     fetchProfileSuccess,
     fetchProfileFailure,
     setCurrentLocation,
-    setAddresses, // Ensure this is imported
+    setAddresses, 
     clearCustomerData
 } from "../../../../store/customerSlice";
 import { getProfile, getZoneByLocation, getMyAddresses } from "../../../../infrastructure/repositories/customer/customerRepository";
 import { customerLogout } from "../../../../infrastructure/repositories/authRepository";
 import ConfirmModal from "../../Shared/ConfirmModal/ConfirmModal";
 import LocationPickerModal from "./LocationPickerModal";
+import NotificationBell from "../../Shared/Notification/NotificationBell";
+// ✅ IMPORT THE HOOK
+import { useCustomerNotifications } from "../../../hooks/useCustomerNotifications";
 
 const useCurrentUser = () => {
     const { profile, currentLocationName } = useSelector((state: RootState) => state.customer);
@@ -29,6 +32,9 @@ const useCurrentUser = () => {
 };
 
 const Navbar: React.FC = () => {
+    // ✅ ACTIVATE GLOBAL NOTIFICATION LISTENER
+    useCustomerNotifications();
+
     const navigate = useNavigate();
     const location = useLocation();
     const dispatch = useDispatch();
@@ -48,7 +54,7 @@ const Navbar: React.FC = () => {
     const profileMenuRef = useRef<HTMLDivElement | null>(null);
     const drawerRef = useRef<HTMLDivElement | null>(null);
 
-const triggerGeolocation = () => {
+    const triggerGeolocation = () => {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
@@ -71,7 +77,7 @@ const triggerGeolocation = () => {
         }
     };
 
-    //   Priority Hydration: Default Address > GPS
+    // Priority Hydration: Default Address > GPS
     useEffect(() => {
         if (isLoggedIn && !profile) {
             const loadInitialData = async () => {
@@ -89,7 +95,7 @@ const triggerGeolocation = () => {
                     const defaultAddr = addresses.find(a => a.isDefault && a.isServiceable);
 
                     if (defaultAddr) {
-                        //   Priority 1: Use Default Address
+                        // Priority 1: Use Default Address
                         const zoneName = await getZoneByLocation(
                             defaultAddr.location.lat, 
                             defaultAddr.location.lng
@@ -101,7 +107,7 @@ const triggerGeolocation = () => {
                             isManual: true
                         }));
                     } else {
-                        //   Priority 2: Fallback to GPS
+                        // Priority 2: Fallback to GPS
                         triggerGeolocation();
                     }
                 } catch (err: unknown) {
@@ -211,7 +217,6 @@ const triggerGeolocation = () => {
                         </button>
 
                         <div className="flex-1 min-w-0">
-                            {/*   Added onClick to trigger Modal */}
                             <button 
                                 onClick={() => setLocationModalOpen(true)}
                                 className="flex items-center gap-2 w-full text-left group"
@@ -224,7 +229,7 @@ const triggerGeolocation = () => {
 
                         <div className="flex items-center gap-3 ml-3">
                             {isLoggedIn ? (
-                                <IconButton icon={Bell} onClick={() => { }} badge />
+                                <NotificationBell />
                             ) : (
                                 <button onClick={() => navigate("/login")} className="text-xs font-bold text-blue-600 border border-blue-200 bg-blue-50 px-3 py-1.5 rounded-lg">
                                     Login
@@ -249,7 +254,6 @@ const triggerGeolocation = () => {
                     </div>
 
                     <div className="flex items-center gap-4 flex-1 justify-end">
-                        {/*   Added onClick to trigger Modal */}
                         <button 
                             onClick={() => setLocationModalOpen(true)}
                             className="hidden lg:flex items-center gap-2 bg-[#F3F4F6] rounded-full px-4 py-2.5 hover:bg-gray-200 transition-colors"
@@ -267,7 +271,7 @@ const triggerGeolocation = () => {
                             {isLoggedIn ? (
                                 <>
                                     <div className="flex items-center gap-3 pl-2 border-l border-gray-200 relative">
-                                        <IconButton icon={Bell} onClick={() => { }} badge />
+                                        <NotificationBell />
 
                                         {/* PROFILE DROPDOWN */}
                                         <div ref={profileMenuRef} className="relative">
@@ -375,7 +379,6 @@ const triggerGeolocation = () => {
                 </div>
             )}
 
-            {/*   Added LocationPickerModal Component */}
             <LocationPickerModal
                 isOpen={locationModalOpen}
                 onClose={() => setLocationModalOpen(false)}
@@ -419,18 +422,8 @@ const NavLink: React.FC<NavLinkProps> = ({ label, active, onClick }) => (
     <button onClick={onClick} className={`text-sm font-bold transition-colors ${active ? "text-blue-600" : "text-gray-600 hover:text-black"}`}>{label}</button>
 );
 
-interface IconButtonProps {
-    icon: LucideIcon;
-    onClick: () => void;
-    badge?: boolean;
-}
-
-const IconButton: React.FC<IconButtonProps> = ({ icon: Icon, onClick, badge }) => (
-    <button onClick={onClick} className="relative p-2.5 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
-        <Icon size={20} />
-        {badge && <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white" />}
-    </button>
-);
+ 
+ 
 
 interface DrawerItemProps {
     icon: LucideIcon;

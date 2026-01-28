@@ -319,14 +319,15 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
     try {
       const authReq = req as AuthenticatedRequest;
       const userId = authReq.userId;
-      const role = authReq.role; // Middleware must provide this
+      const role = authReq.role; 
+      
 
       if (!userId || !role) throw new Error(ErrorMessages.UNAUTHORIZED);
 
       const input: GetBookingDetailsDto = {
         bookingId: req.params.id,
         userId,
-        role: role as any // Cast to Enum
+        role: role as any  
       };
 
       const booking = await this._getBookingDetailsUseCase.execute(input);

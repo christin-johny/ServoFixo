@@ -18,27 +18,27 @@ export class CompleteJobUseCase implements IUseCase<void, [CompleteJobDto]> {
   async execute(input: CompleteJobDto): Promise<void> {
     const booking = await this._bookingRepo.findById(input.bookingId);
     if (!booking) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
-console.log('1')
+ 
     // 1. Authorization
     if (booking.getTechnicianId() !== input.technicianId) {
         throw new Error(ErrorMessages.UNAUTHORIZED);
     }
-console.log('2')
+ 
     // 2. Validate State
     if (booking.getStatus() !== "IN_PROGRESS") {
         throw new Error("Job must be IN_PROGRESS to complete it.");
     }
-    console.log('3')
+ 
     // 3. Validate Extra Charges (Prevent completing with pending disputes)
     const hasPendingCharges = booking.getExtraCharges().some(c => c.status === "PENDING");
     if (hasPendingCharges) {
         throw new Error("Cannot complete job. There are pending extra charges.");
     }
-console.log('4')
+ 
     // 4. Finalize Pricing
     booking.calculateFinalPrice();
     const finalAmount = booking.getPricing().final || booking.getPricing().estimated;
-console.log('5')
+ 
     // 5. Generate Payment Order (Razorpay)
     // We create the order now so the frontend can immediately show the "Pay Now" button
     const orderId = await this._paymentGateway.createOrder(
@@ -46,7 +46,7 @@ console.log('5')
         "INR", 
         booking.getId()
     );
-console.log('6')
+ 
     // 6. Update Booking State
     booking.updateStatus("COMPLETED", `tech:${input.technicianId}`, "Job finished by technician");
     

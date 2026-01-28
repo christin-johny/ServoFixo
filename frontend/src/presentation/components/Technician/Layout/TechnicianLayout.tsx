@@ -25,7 +25,7 @@ import { technicianLogout } from "../../../../infrastructure/repositories/techni
 // ✅ Added for Active Job Check
 import { getTechnicianJobs } from "../../../../infrastructure/repositories/technician/technicianBookingRepository"; 
 
-import NotificationBell from "./NotificationBell";
+import NotificationBell from "../../Shared/Notification/NotificationBell";
 import { useTechnicianNotifications } from "../../../hooks/useTechnicianNotifications";
  
 import { socketService, type JobRequestEvent } from "../../../../infrastructure/api/socketClient";

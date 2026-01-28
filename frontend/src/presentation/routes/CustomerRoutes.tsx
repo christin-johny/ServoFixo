@@ -5,6 +5,7 @@ import GuestOnlyGuard from "./GuestOnlyGuard";
 import CustomerHome from "../pages/Customer/Home/CustomerHome";
 import CustomerDataLoader from "../components/auth/CustomerDataLoader";
 import RoleProtectedRoute from "./RoleProtectedRoute";
+import ActiveBookingFooter from "../components/Customer/Layout/ActiveBookingFooter";
 
 const CustomerLogin = lazy(() => import("../pages/Customer/CustomerLogin"));
 const CustomerRegister = lazy(() => import("../pages/Customer/Register"));
@@ -15,10 +16,11 @@ const ServiceDetails = lazy(() => import("../pages/Customer/Listing/ServiceDetai
 const ProfilePage = lazy(() => import("../pages/Customer/Profile/ProfilePage")); 
 const BookingConfirm = lazy(() => import("../pages/Customer/Booking/BookingConfirm"));
 const SearchingScreen = lazy(() => import("../pages/Customer/Booking/SearchingScreen"));
+const BookingTrackingPage = lazy(() => import("../pages/Customer/Booking/BookingTrackingPage"));
+
 const CustomerRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
     <Routes>
-
       <Route element={<CustomerDataLoader><Outlet /></CustomerDataLoader>}>
         <Route index element={<CustomerHome />} />
         <Route path="services" element={<ServiceListing />} />
@@ -32,24 +34,30 @@ const CustomerRoutes: React.FC = () => (
           } 
         />
         <Route path="booking/confirm" element={
-    <RoleProtectedRoute requiredRole="customer" redirectTo="/login">
-        <BookingConfirm />
-    </RoleProtectedRoute>
-} />
-
-<Route path="booking/searching" element={
-    <RoleProtectedRoute requiredRole="customer" redirectTo="/login">
-        <SearchingScreen />
-    </RoleProtectedRoute>
-} />
+            <RoleProtectedRoute requiredRole="customer" redirectTo="/login">
+                <BookingConfirm />
+            </RoleProtectedRoute>
+        } />
+        <Route path="booking/searching" element={
+            <RoleProtectedRoute requiredRole="customer" redirectTo="/login">
+                <SearchingScreen />
+            </RoleProtectedRoute>
+        } />
+        {/* Real-time Tracking Route */}
+        <Route path="booking/:id/track" element={
+            <RoleProtectedRoute requiredRole="customer" redirectTo="/login">
+                <BookingTrackingPage />
+            </RoleProtectedRoute>
+        } />
       </Route>
 
       <Route path="login" element={<GuestOnlyGuard><CustomerLogin /></GuestOnlyGuard>} />
       <Route path="register" element={<GuestOnlyGuard><CustomerRegister /></GuestOnlyGuard>} />
       <Route path="verify-otp" element={<GuestOnlyGuard><VerifyOtp /></GuestOnlyGuard>} />
       <Route path="forgot-password" element={<GuestOnlyGuard><ForgotPassword /></GuestOnlyGuard>} />
-
     </Routes>
+    {/* Persistent Active Job Tracker */}
+    <ActiveBookingFooter />
   </Suspense>
 );
 

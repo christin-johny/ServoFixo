@@ -30,8 +30,6 @@ export class RespondToBookingUseCase {
     }
 
     if (input.response === "ACCEPT") {
-        // ✅ CLEAN FIX: Just delegate to handleAcceptance. 
-        // Do NOT call .update() here, or you break the atomic lock in the helper.
         await this.handleAcceptance(booking, input.technicianId);
     } else {
         await this.handleRejection(booking, input.technicianId, input.reason);
@@ -64,12 +62,13 @@ export class RespondToBookingUseCase {
       rating: tech.getRatings().averageRating || 0
     }; 
 
+    // 3. Save Snapshot to DB (Direct Write)
+    // We do this first to ensure the data is definitely in the DB.
     const success = await this._bookingRepo.assignTechnician(
       booking.getId(), 
       techId, 
       techSnapshot
     );
-    
     
     if (!success) {
         throw new Error(ErrorMessages.BOOKING_ALREADY_ASSIGNED); 
@@ -77,11 +76,25 @@ export class RespondToBookingUseCase {
  
     await this._technicianRepo.updateAvailabilityStatus(techId, true);
 
-    // 5. Generate and Save OTP
-    // (We do this AFTER assignment to ensure we only generate keys for confirmed jobs)
+    // ✅ CRITICAL FIX: Patch the In-Memory Booking Object
+    // We manually inject the snapshot into the booking object.
+    // This prevents the next step (.update) from overwriting the DB with empty snapshots.
+    const currentSnapshots = booking.getSnapshots();
+    if (currentSnapshots) {
+        // If it's a reference, this updates it in place
+        Object.assign(currentSnapshots, { technician: techSnapshot });
+    } else {
+        // Fallback: If snapshots property is missing/null, try to force set it (depending on Entity structure)
+        // This handles cases where _snapshots might be private/protected
+        (booking as any)._snapshots = { 
+             ...((booking as any)._snapshots || {}),
+             technician: techSnapshot 
+        };
+    }
+
+    // 4. Update Status & Generate OTP
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     
-    // Update Memory
     booking.acceptAssignment(techId); 
     if (booking.setOtp) {
         booking.setOtp(otp);
@@ -89,10 +102,11 @@ export class RespondToBookingUseCase {
         booking.getMeta().otp = otp;
     }
 
-    // Persist OTP (Safe update because we own the booking now)
+    // 5. Persist Status & OTP (And Snapshot!)
+    // Now that 'booking' has the snapshot in memory, this save is safe.
     await this._bookingRepo.update(booking);
 
-    // 6. Notify Customer (The "Technician Assigned" Screen)
+    // 6. Notify Customer
     await this._notificationService.send({
         recipientId: booking.getCustomerId(),
         recipientType: "CUSTOMER",
@@ -104,12 +118,12 @@ export class RespondToBookingUseCase {
             techId: techId,
             techName: techSnapshot.name,
             techPhoto: techSnapshot.avatarUrl || "",
-            otp: otp // Important for UI
+            otp: otp 
         },
         clickAction: `/customer/bookings/${booking.getId()}`
     });
 
-    // 7. Notify Technician (Confirmation)
+    // 7. Notify Technician
     await this._notificationService.send({
         recipientId: techId,
         recipientType: "TECHNICIAN",
@@ -123,7 +137,7 @@ export class RespondToBookingUseCase {
     this._logger.info(`Booking ${booking.getId()} ACCEPTED by ${techId}`);
   }
 
-  // --- SCENARIO 2B: TECHNICIAN REJECTS (Remains unchanged) ---
+  // --- SCENARIO 2B: TECHNICIAN REJECTS (Unchanged) ---
   private async handleRejection(booking: Booking, techId: string, reason?: string) {
     booking.rejectAssignment(techId, reason || "Declined by Technician");
 

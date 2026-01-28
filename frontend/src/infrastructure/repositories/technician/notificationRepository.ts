@@ -18,17 +18,11 @@ export const notificationRepository = {
     });
     return response.data.data;
   },
-
-  /**
-   * Marks a specific notification as read by its ID.
-   */
+ 
   markAsRead: async (notificationId: string): Promise<void> => {
     await axiosClient.patch(NOTIFICATION_ENDPOINTS.MARK_READ(notificationId));
   },
-
-  /**
-   * Marks all unread notifications for the technician as read.
-   */
+ 
   markAllAsRead: async (): Promise<void> => {
     await axiosClient.post(NOTIFICATION_ENDPOINTS.MARK_ALL_READ);
   },

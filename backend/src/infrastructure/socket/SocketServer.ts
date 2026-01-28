@@ -14,17 +14,17 @@ export class SocketServer {
     });
 
     this._io.on("connection", (socket) => { 
-      const techId = socket.handshake.query.techId as string;
+  const techId = socket.handshake.query.techId as string;
+  const userId = socket.handshake.query.userId as string; // Add this line
 
-      if (techId) { 
-        socket.join(techId);
-        logger.info(`Technician Connected: ${techId}`);
-
-        socket.on("disconnect", () => {
-          logger.info(`Technician Disconnected: ${techId}`);
-        });
-      }
-    });
+  if (techId) { 
+    socket.join(techId);
+    logger.info(`Technician Connected: ${techId}`);
+  } else if (userId) { // Add this block for Customers
+    socket.join(userId);
+    logger.info(`Customer Connected: ${userId}`);
+  }
+});
 
     return this._io;
   }

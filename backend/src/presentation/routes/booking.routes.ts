@@ -56,6 +56,7 @@ router.get(
   "/customer/:id", 
   customerAuth,
   (req, res, next) => {
+    
     (req as any).role = "CUSTOMER";  
     next();
   },

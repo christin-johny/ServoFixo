@@ -17,7 +17,8 @@ export class GetBookingDetailsUseCase implements IUseCase<Booking, [GetBookingDe
     // --- GOD MODE CHECK ---
     if (input.role === UserRole.ADMIN) {
         return booking; 
-    }
+    } 
+
 
     // --- Customer Check ---
     if (input.role === UserRole.CUSTOMER) {
