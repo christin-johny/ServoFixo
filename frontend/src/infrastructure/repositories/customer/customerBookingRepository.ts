@@ -73,3 +73,7 @@ export const getBookingById = async (id: string): Promise<BookingResponse> => {
   const response = await api.get(BOOKING_ENDPOINTS.GET_BY_ID(id));
   return response.data.data;
 };
+
+export const cancelBooking = async (id: string, reason: string): Promise<void> => {
+    await api.post(BOOKING_ENDPOINTS.CANCEL(id), { reason });
+};

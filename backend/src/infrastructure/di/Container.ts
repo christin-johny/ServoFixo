@@ -686,7 +686,7 @@ const completeJobUseCase = new CompleteJobUseCase(
 )
 
 const getBookingDetailsUseCase = new GetBookingDetailsUseCase(bookingRepo);
-const customerCancelUseCase = new CustomerCancelBookingUseCase(bookingRepo, notificationService, logger);
+const customerCancelUseCase = new CustomerCancelBookingUseCase(bookingRepo, technicianRepo, notificationService, logger);
 const technicianCancelUseCase = new TechnicianCancelBookingUseCase(bookingRepo,technicianRepo, notificationService, logger);
 const reviewRepo = new ReviewMongoRepository();
 

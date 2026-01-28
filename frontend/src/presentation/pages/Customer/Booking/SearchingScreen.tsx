@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react';
+import { AlertCircle, RefreshCw, ArrowLeft, XCircle } from 'lucide-react'; // Added XCircle
 import type { RootState } from '../../../../store/store';
 import { socketService, type BookingConfirmedEvent, type BookingFailedEvent } from '../../../../infrastructure/api/socketClient';
-import { getBookingById } from '../../../../infrastructure/repositories/customer/customerBookingRepository';
+import { getBookingById, cancelBooking } from '../../../../infrastructure/repositories/customer/customerBookingRepository'; // Import cancelBooking
 import { setActiveBooking, clearActiveBooking } from '../../../../store/customerSlice';
 import Navbar from '../../../../presentation/components/Customer/Layout/Navbar';
+import ConfirmModal from '../../../components/Shared/ConfirmModal/ConfirmModal';  
 
 interface LocationState {
     bookingId: string;
@@ -22,6 +23,10 @@ const SearchingScreen: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const [hasFailed, setHasFailed] = useState(false);
   const [failReason, setFailReason] = useState("");
+  
+  // ✅ Cancellation State
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     if (!bookingId || !user?.id) {
@@ -33,10 +38,7 @@ const SearchingScreen: React.FC = () => {
         try {
             const booking = await getBookingById(bookingId);
             
-            // 1. Success Check
             if (['ACCEPTED', 'EN_ROUTE', 'REACHED', 'IN_PROGRESS'].includes(booking.status)) {
-                
-                // ✅ FIX: Removed "|| {}" to prevent Type '{}' error
                 const techSnapshot = booking.snapshots?.technician; 
                 const meta = booking.meta;
 
@@ -53,10 +55,9 @@ const SearchingScreen: React.FC = () => {
                 });
             }
             
-            // 2. Failure Check
             if (booking.status === 'FAILED_ASSIGNMENT' || booking.status === 'CANCELLED') {
                 setHasFailed(true);
-                setFailReason("No technicians were available in your area.");
+                setFailReason("Booking was cancelled or failed.");
                 dispatch(clearActiveBooking());
             }
 
@@ -68,16 +69,12 @@ const SearchingScreen: React.FC = () => {
 
     socketService.connect(user.id, "CUSTOMER");
 
-    // Success Listener
     socketService.onBookingConfirmed((data: BookingConfirmedEvent) => { 
-        console.log("[Searching] Technician Found via Socket:", data);
         dispatch(setActiveBooking({ id: bookingId, status: data.status }));
         navigate(`/booking/${bookingId}/track`, { state: { technician: data } }); 
     });
 
-    // Failed Listener
     socketService.onBookingFailed((data: BookingFailedEvent) => {
-        console.log("Booking Failed:", data);
         setHasFailed(true);
         setFailReason(data.reason);
         dispatch(clearActiveBooking());
@@ -87,6 +84,22 @@ const SearchingScreen: React.FC = () => {
         socketService.offTrackingListeners();
     };
   }, [bookingId, user, navigate, dispatch]);
+
+  // ✅ Cancel Handler
+  const handleCancelSearch = async () => {
+      if (!bookingId) return;
+      setIsCancelling(true);
+      try {
+          await cancelBooking(bookingId, "Cancelled by user during search");
+          dispatch(clearActiveBooking());
+          navigate('/');
+      } catch (err) {
+          console.error("Cancellation failed", err);
+      } finally {
+          setIsCancelling(false);
+          setIsCancelModalOpen(false);
+      }
+  };
 
   if (hasFailed) {
       return (
@@ -131,8 +144,27 @@ const SearchingScreen: React.FC = () => {
                 <img src="https://cdn-icons-png.flaticon.com/512/3208/3208728.png" className="w-24 h-24 object-contain opacity-80" alt="Searching" />
             </div>
             <h2 className="relative z-10 text-2xl font-bold text-gray-900 mb-3 tracking-tight">Finding your expert...</h2>
-            <p className="relative z-10 text-gray-500 max-w-xs leading-relaxed font-medium">Please wait while we match you with a nearby technician.</p>
+            <p className="relative z-10 text-gray-500 max-w-xs leading-relaxed font-medium mb-8">Please wait while we match you with a nearby technician.</p>
+            
+            {/* ✅ Cancel Button */}
+            <button 
+                onClick={() => setIsCancelModalOpen(true)}
+                className="relative z-10 flex items-center gap-2 px-6 py-3 bg-white border-2 border-red-100 text-red-600 rounded-full font-bold shadow-sm hover:bg-red-50 transition-all"
+            >
+                <XCircle size={20} /> Cancel Request
+            </button>
         </div>
+
+        {/* ✅ Confirm Modal */}
+        <ConfirmModal 
+            isOpen={isCancelModalOpen}
+            onClose={() => setIsCancelModalOpen(false)}
+            onConfirm={handleCancelSearch}
+            title="Cancel Search?"
+            message="Are you sure you want to stop searching? You won't be charged."
+            confirmText="Yes, Cancel"
+            isLoading={isCancelling}
+        />
     </div>
   );
 };

@@ -3,16 +3,20 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
     CheckCircle2, 
-    AlertTriangle,  
+    AlertTriangle, 
+    Phone, 
+    MessageSquare, 
     MapPin, 
     FileText, 
     ChevronRight,
     ShieldCheck,
     Truck,
     Wrench,
-    Check
+    Check,
+    XCircle
 } from 'lucide-react';
 
+// Store & Types
 import type { RootState } from '../../../../store/store';
 import { 
     socketService, 
@@ -23,14 +27,23 @@ import {
 } from '../../../../infrastructure/api/socketClient';
 import { 
     getBookingById, 
+    cancelBooking,
     type BookingResponse 
 } from '../../../../infrastructure/repositories/customer/customerBookingRepository';
-import { updateActiveBookingStatus, setActiveBooking, clearActiveBooking } from '../../../../store/customerSlice';
+import { 
+    updateActiveBookingStatus, 
+    setActiveBooking, 
+    clearActiveBooking,
+    setActiveTechnician 
+} from '../../../../store/customerSlice';
+
+// Components
 import Navbar from '../../../../presentation/components/Customer/Layout/Navbar';
+import ConfirmModal from '../../../components/Shared/ConfirmModal/ConfirmModal';
 
-// --- 1. STRICT TYPING ---
+// --- 1. STRICT TYPE DEFINITIONS ---
 
-// Extend to match actual backend response including fields not in the base repo interface yet
+// Extend the repository response to include all fields used in UI
 interface ExtendedBookingResponse extends BookingResponse {
     location?: {
         address: string;
@@ -41,6 +54,21 @@ interface ExtendedBookingResponse extends BookingResponse {
         deliveryFee: number;
         discount: number;
         tax: number;
+        final?: number;
+    };
+    snapshots?: {
+        technician?: {
+            name: string;
+            phone: string;
+            avatarUrl?: string;
+            rating?: number;
+            // Added vehicle here to satisfy Typescript when accessing it from snapshot
+            vehicle?: string; 
+        };
+        service?: {
+            name: string;
+            categoryId: string;
+        };
     };
 }
 
@@ -57,6 +85,11 @@ interface StepperStep {
     icon: React.ElementType;
 }
 
+// Navigation State Type
+interface LocationState {
+    technician?: BookingConfirmedEvent;
+}
+
 const STEPS: StepperStep[] = [
     { key: 'ACCEPTED', label: 'Order Confirmed', icon: FileText },
     { key: 'EN_ROUTE', label: 'Technician En Route', icon: Truck },
@@ -70,44 +103,76 @@ const BookingTrackingPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  
+  // Redux Selectors
   const { user } = useSelector((state: RootState) => state.auth);
+  // We use this Redux state as a fallback if API/Socket data is temporarily missing
+  const { activeTechnician } = useSelector((state: RootState) => state.customer);
 
-  // State
+  // --- Local State ---
   const [bookingData, setBookingData] = useState<ExtendedBookingResponse | null>(null);
   
-  // Status (Initialize from nav state to prevent flicker)
+  // Initialize status safely
   const [status, setStatus] = useState<string>(() => {
-      const navState = location.state as { technician?: { status: string } } | null;
-      return navState?.technician?.status || "ACCEPTED";
+      const state = location.state as LocationState | null;
+      return state?.technician?.status || "ACCEPTED";
   });
   
   const [extraRequest, setExtraRequest] = useState<ExtraChargeRequest | null>(null);
   const [billTotal, setBillTotal] = useState<number | null>(null);
 
+  // Cancellation UI State
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
   // --- Effects ---
+
   useEffect(() => {
     if (!user?.id || !id) return;
 
-    // 1. Fetch & Sync Data
+    // 1. Fetch & Sync Data (Handles Page Reloads)
     const syncBookingData = async () => {
         try {
+            // Cast response to Extended to ensure TS knows about pricing/location fields
             const data = await getBookingById(id) as ExtendedBookingResponse;
-            setBookingData(data);
-            setStatus(data.status);
             
-            dispatch(setActiveBooking({ id: data.id, status: data.status }));
-
+            // Handle cancelled/paid states immediately
+            if (data.status === 'CANCELLED') {
+                dispatch(clearActiveBooking());
+                navigate('/');
+                return;
+            }
             if (data.status === 'PAID') {
                 dispatch(clearActiveBooking());
                 navigate('/profile');
+                return;
             }
-        } catch (err) {
-            console.error("[Tracking] Sync failed", err);
+
+            setBookingData(data);
+            setStatus(data.status);
+            
+            // Update Global Footer State
+            dispatch(setActiveBooking({ id: data.id, status: data.status }));
+
+            // Update Global Technician Cache (Persistence Fix)
+            if (data.snapshots?.technician) {
+                dispatch(setActiveTechnician({
+                    name: data.snapshots.technician.name,
+                    photo: data.snapshots.technician.avatarUrl,
+                    phone: data.snapshots.technician.phone,
+                    vehicle: data.snapshots.technician.vehicle,
+                    otp: data.meta?.otp
+                }));
+            }
+
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : "Sync failed";
+            console.error("[Tracking] Sync error:", msg);
         }
     };
     syncBookingData();
 
-    // 2. Socket Listeners
+    // 2. Real-time Socket Listeners
     socketService.connect(user.id, "CUSTOMER");
 
     socketService.onBookingStatusUpdate((data: BookingStatusEvent) => {
@@ -128,45 +193,73 @@ const BookingTrackingPage: React.FC = () => {
         setBillTotal(data.totalAmount);
     });
 
+    // Cleanup
     return () => {
         socketService.offTrackingListeners();
     };
   }, [id, user, dispatch, navigate]);
 
-  // --- Actions ---
+  // --- Handlers ---
+
   const handleApproveExtra = (approved: boolean) => {
-      // API call logic would go here
-      console.log("Approved:", approved);
+      // TODO: Wire up API call to bookingController.respondToExtraCharge
+      console.log(`Extra charge ${approved ? 'APPROVED' : 'REJECTED'}`);
       setExtraRequest(null); 
   };
 
   const handlePayNow = () => {
       if (id) {
-        navigate(`/booking/${id}/payment`, { state: { amount: billTotal }});
+          navigate(`/booking/${id}/payment`, { state: { amount: billTotal }});
       }
   };
 
-  // --- DATA NORMALIZATION (The Fix) ---
-  const navState = location.state as { technician?: BookingConfirmedEvent } | null;
+  const handleCancelBooking = async () => {
+      if (!id) return;
+      setIsCancelling(true);
+      try {
+          await cancelBooking(id, "Cancelled by user via Tracking Page");
+          dispatch(clearActiveBooking());
+          navigate('/');
+      } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : "Cancellation failed";
+          console.error("Cancel Error:", msg);
+          alert(msg); // Simple feedback
+      } finally {
+          setIsCancelling(false);
+          setIsCancelModalOpen(false);
+      }
+  };
+
+  // --- Helpers & Computed Values ---
+
+  // Cancellation Rule: Cannot cancel if Reached, Started, Done, or Paid
+  const canCancel = !['REACHED', 'IN_PROGRESS', 'COMPLETED', 'PAID', 'CANCELLED'].includes(status);
+
+  // Data Sources
+  const navState = location.state as LocationState | null;
   const snapshotTech = bookingData?.snapshots?.technician;
   const navTech = navState?.technician;
 
-  // We merge data sources to ensure we always display SOMETHING
+  // Normalized Technician Object (Priority: Snapshot -> Redux Cache -> Nav State)
   const displayTech = {
-      name: snapshotTech?.name || navTech?.techName || "Technician Assigned",
-      photo: snapshotTech?.avatarUrl || navTech?.photoUrl, 
+      name: snapshotTech?.name || activeTechnician?.name || navTech?.techName || "Technician Assigned",
+      photo: snapshotTech?.avatarUrl || activeTechnician?.photo || navTech?.photoUrl, 
+      vehicle: snapshotTech?.vehicle || activeTechnician?.vehicle || navTech?.vehicleNumber || "",
       rating: snapshotTech?.rating || 4.8,
-      phone: snapshotTech?.phone || ""
+      phone: snapshotTech?.phone || activeTechnician?.phone || ""
   };
 
   const serviceName = bookingData?.snapshots?.service?.name || "Service Request";
   const address = bookingData?.location?.address || "Loading location...";
   const pricing = bookingData?.pricing || { estimated: 0, deliveryFee: 0 };
-  const otp = bookingData?.meta?.otp || navTech?.otp || "----";
+  const otp = bookingData?.meta?.otp || activeTechnician?.otp || navTech?.otp || "----";
 
-  // Calculate Stepper Progress
+  // Stepper Index Calculation
   const currentStepIndex = STEPS.findIndex(s => s.key === status);
-  const activeIndex = currentStepIndex === -1 ? 0 : currentStepIndex;
+  // If status is not found (e.g. EXTRAS_PENDING), keep the last known index or default to 0
+  const activeIndex = currentStepIndex === -1 
+        ? (status === 'PAID' ? 5 : 0) 
+        : currentStepIndex;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-32 font-sans">
@@ -185,16 +278,29 @@ const BookingTrackingPage: React.FC = () => {
                 </p>
             </div>
             
-            {/* Status Badge */}
-            <div className="self-start md:self-auto">
+            <div className="flex items-center gap-3 self-start md:self-auto">
+               {/* Cancel Button (Visible only if allowed) */}
+               {canCancel && (
+                   <button 
+                       onClick={() => setIsCancelModalOpen(true)}
+                       className="px-4 py-2 rounded-full text-sm font-bold border border-red-200 text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                   >
+                       <XCircle size={16} /> Cancel
+                   </button>
+               )}
+
                <span className={`px-4 py-2 rounded-full text-sm font-bold border flex items-center gap-2 ${
-                   status === 'COMPLETED' 
+                   status === 'COMPLETED' || status === 'PAID'
                    ? 'bg-green-50 text-green-700 border-green-200' 
                    : 'bg-blue-50 text-blue-700 border-blue-200'
                }`}>
                   <span className="relative flex h-2.5 w-2.5">
-                    {status !== 'COMPLETED' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>}
-                    <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${status === 'COMPLETED' ? 'bg-green-500' : 'bg-blue-500'}`}></span>
+                    {(status !== 'COMPLETED' && status !== 'PAID') && (
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    )}
+                    <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                        (status === 'COMPLETED' || status === 'PAID') ? 'bg-green-500' : 'bg-blue-500'
+                    }`}></span>
                   </span>
                   {status.replace("_", " ")}
                </span>
@@ -203,28 +309,27 @@ const BookingTrackingPage: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            {/* --- LEFT COLUMN --- */}
+            {/* --- LEFT COLUMN: Status & Technician --- */}
             <div className="lg:col-span-2 space-y-6">
                 
-                {/* 1. PROGRESS STEPPER (Responsive) */}
+                {/* 1. PROGRESS STEPPER */}
                 <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200">
                     <h2 className="text-lg font-bold text-gray-900 mb-8">Live Status</h2>
                     <div className="relative">
-                        {/* DESKTOP LINE */}
+                        {/* Desktop Horizontal Line */}
                         <div className="hidden md:block absolute top-5 left-0 w-full h-1 bg-gray-100 rounded-full -z-10" />
                         <div 
                             className="hidden md:block absolute top-5 left-0 h-1 bg-blue-600 rounded-full transition-all duration-700 -z-10"
                             style={{ width: `${(activeIndex / (STEPS.length - 1)) * 100}%` }}
                         />
 
-                        {/* MOBILE LINE */}
+                        {/* Mobile Vertical Line */}
                         <div className="md:hidden absolute left-5 top-0 bottom-0 w-1 bg-gray-100 rounded-full -z-10" />
                         <div 
                             className="md:hidden absolute left-5 top-0 w-1 bg-blue-600 rounded-full transition-all duration-700 -z-10"
                             style={{ height: `${(activeIndex / (STEPS.length - 1)) * 100}%` }}
                         />
 
-                        {/* STEPS LOOP */}
                         <div className="flex flex-col md:flex-row justify-between gap-8 md:gap-0">
                             {STEPS.map((step, idx) => {
                                 const isCompleted = idx < activeIndex;
@@ -257,12 +362,11 @@ const BookingTrackingPage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* 2. TECHNICIAN CARD (Fixed Data Access) */}
+                {/* 2. TECHNICIAN CARD */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                         <div className="flex items-center gap-4">
                             <div className="relative">
-                                {/* ✅ DISPLAY TECH PHOTO correctly now */}
                                 <img 
                                     src={displayTech.photo || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"} 
                                     alt={displayTech.name} 
@@ -271,30 +375,35 @@ const BookingTrackingPage: React.FC = () => {
                                 <div className="absolute -bottom-1 -right-1 bg-green-500 border-2 border-white w-4 h-4 rounded-full"></div>
                             </div>
                             <div>
-                                {/* ✅ DISPLAY TECH NAME correctly now */}
                                 <h3 className="text-lg font-bold text-gray-900">{displayTech.name}</h3>
                                 <div className="flex items-center gap-2 mt-1">
                                     <div className="flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded text-[10px] font-bold text-blue-700 uppercase tracking-wide border border-blue-100">
                                         <ShieldCheck size={10} /> Verified Partner
                                     </div>
-                                    
+                                    {displayTech.vehicle && (
+                                        <span className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-0.5 rounded">
+                                            {displayTech.vehicle}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>
                         
-                        {/* Call/Message Buttons */}
-                        {/* <div className="flex gap-3 w-full sm:w-auto">
+                        <div className="flex gap-3 w-full sm:w-auto">
                             <button className="flex-1 sm:flex-none h-12 w-12 flex items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors">
                                 <MessageSquare size={20} />
                             </button>
-                            <button className="flex-1 sm:flex-none h-12 px-6 flex items-center justify-center gap-2 rounded-xl bg-black text-white font-bold hover:bg-gray-900 transition-colors shadow-lg shadow-gray-200">
+                            <a 
+                                href={`tel:${displayTech.phone}`}
+                                className="flex-1 sm:flex-none h-12 px-6 flex items-center justify-center gap-2 rounded-xl bg-black text-white font-bold hover:bg-gray-900 transition-colors shadow-lg shadow-gray-200"
+                            >
                                 <Phone size={18} />
                                 <span>Call</span>
-                            </button>
-                        </div> */}
+                            </a>
+                        </div>
                     </div>
 
-                    {/* OTP Display */}
+                    {/* OTP Display - Only show when relevant */}
                     {['ACCEPTED', 'EN_ROUTE', 'REACHED'].includes(status) && (
                         <div className="mt-6 bg-blue-600 rounded-xl p-4 flex items-center justify-between text-white shadow-lg shadow-blue-200">
                             <div className="flex items-center gap-3">
@@ -312,7 +421,7 @@ const BookingTrackingPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* --- RIGHT COLUMN --- */}
+            {/* --- RIGHT COLUMN: Details --- */}
             <div className="space-y-6">
                 
                 {/* 1. SERVICE INFO */}
@@ -371,6 +480,17 @@ const BookingTrackingPage: React.FC = () => {
         </div>
 
         {/* --- MODALS --- */}
+
+        {/* Cancel Modal */}
+        <ConfirmModal 
+            isOpen={isCancelModalOpen}
+            onClose={() => setIsCancelModalOpen(false)}
+            onConfirm={handleCancelBooking}
+            title="Cancel Booking?"
+            message="Are you sure you want to cancel? If the technician is already en route, this may affect your rating."
+            confirmText="Yes, Cancel Booking"
+            isLoading={isCancelling}
+        />
 
         {/* Extra Charge Modal */}
         {extraRequest && (

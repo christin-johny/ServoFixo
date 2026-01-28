@@ -4,7 +4,6 @@ import { BookingResponseDto } from "../dto/booking/BookingResponseDto";
 export class BookingMapper {
   /**
    * Maps Domain Entity to the standard Response DTO.
-   * This is what the Frontend receives.
    */
   static toResponse(entity: Booking): BookingResponseDto {
     return {
@@ -19,14 +18,15 @@ export class BookingMapper {
       pricing: entity.getPricing(),
       payment: entity.getPayment(),
       
-      // Detailed arrays
       candidateIds: entity.getCandidateIds(),
       assignedTechAttempts: entity.getAttempts(),
       extraCharges: entity.getExtraCharges(),
       timeline: entity.getTimeline(),
       
       chatId: entity.getChatId(),
-      snapshots: entity.getSnapshots(),
+      
+      // ✅ SAFEGUARD: Handle case where snapshots might be null
+      snapshots: entity.getSnapshots() || undefined,
       
       meta: entity.getMeta(),
       timestamps: entity.getTimestamps()
@@ -34,13 +34,11 @@ export class BookingMapper {
   }
 
   /**
-   * Maps raw data (e.g. from a queue or external service) to Domain Entity.
-   * Note: The Repository has its own private mapper for DB persistence.
+   * Maps raw DB data to Domain Entity.
    */
   static toDomain(raw: any): Booking {
     if (!raw) throw new Error("Booking data is null/undefined");
     
-    // Ensure nested arrays are mapped safely
     const attempts = (raw.assignedTechAttempts || []).map((a: any) => ({
       techId: a.techId,
       attemptAt: a.attemptAt ? new Date(a.attemptAt) : new Date(),
@@ -89,6 +87,13 @@ export class BookingMapper {
         extraCharges: charges,
         timeline: timeline,
         chatId: raw.chatId,
+        
+        // ✅ ADDED THIS: Was missing in your uploaded file!
+        snapshots: raw.snapshots ? {
+            technician: raw.snapshots.technician,
+            customer: raw.snapshots.customer,
+            service: raw.snapshots.service
+        } : undefined,
         
         meta: raw.meta || {},
         timestamps: {
