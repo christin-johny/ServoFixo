@@ -5,6 +5,7 @@ import {
   Briefcase, 
   User,
   LogOut,
+  ChevronRight, // ✅ Added for Floating Bar
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../../../store/store";
@@ -21,16 +22,27 @@ import LoaderFallback from "../../../components/LoaderFallback";
 
 import { getTechnicianProfileStatus } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
 import { technicianLogout } from "../../../../infrastructure/repositories/technician/technicianAuthRepository";
+// ✅ Added for Active Job Check
+import { getTechnicianJobs } from "../../../../infrastructure/repositories/technician/technicianBookingRepository"; 
+
 import NotificationBell from "./NotificationBell";
 import { useTechnicianNotifications } from "../../../hooks/useTechnicianNotifications";
  
 import { socketService, type JobRequestEvent } from "../../../../infrastructure/api/socketClient";
 import { setIncomingJob } from "../../../../store/technicianBookingSlice";
 import IncomingJobModal from "../Job/IncomingJobModal";
+
+// --- Types ---
 interface NavItem {
   label: string;
   path: string;
   icon: React.ElementType;
+}
+
+// Local interface to avoid 'any' for the job check
+interface JobStatusSummary {
+  id: string;
+  status: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -132,18 +144,22 @@ const TechnicianLayout: React.FC = () => {
   const { showSuccess, showError } = useNotification();
   const location = useLocation();
 
+  // --- NEW: State for Active Job Check ---
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
+
   //   Pulling state and hooks
   const { profile, loading } = useSelector((state: RootState) => state.technician);
   const { accessToken } = useSelector((state: RootState) => state.auth);
-  const { fetchNotifications } = useTechnicianNotifications(); //
+  const { fetchNotifications } = useTechnicianNotifications();
+
   //   Corrected: Fetch notifications once globally when accessToken is available
-useEffect(() => {
+  useEffect(() => {
     if (accessToken) {
       fetchNotifications(); // Fetches history and starts Socket.io listener
     }
   }, [accessToken, fetchNotifications]);
 
-useEffect(() => {
+  useEffect(() => {
     if (accessToken && !profile) {
       const loadProfile = async () => {
         dispatch(fetchTechnicianStart());
@@ -157,17 +173,38 @@ useEffect(() => {
       loadProfile();
     }
   }, [accessToken, profile, dispatch]);
-  // Inside TechnicianLayout component, before return:
 
-  // --- NEW: LISTEN FOR JOBS ---
+  // --- NEW: Check for Active Job on Mount & Navigation ---
   useEffect(() => {
-    const userId = accessToken ? JSON.parse(atob(accessToken.split('.')[1])).id : null; // Decode or use auth user id
+    const checkActiveJob = async () => {
+      if (!accessToken) return;
+      try {
+        const response = await getTechnicianJobs(); 
+const jobs = response.data;
+        // Filter for specific active statuses
+        const runningJob = (jobs as JobStatusSummary[]).find((j) => 
+            ['ACCEPTED', 'EN_ROUTE', 'REACHED', 'IN_PROGRESS', 'EXTRAS_PENDING'].includes(j.status)
+        );
+        
+        if (runningJob) {
+            setActiveJobId(runningJob.id);
+        } else {
+            setActiveJobId(null);
+        }
+      } catch (error) {
+        console.error("Failed to check active job", error);
+      }
+    };
 
-    // Safety check: ensure socket is connected (it should be via useTechnicianNotifications, but safe to verify)
-    if (userId) {// Listener for Flow A [cite: 208]
+    checkActiveJob();
+  }, [accessToken, location.pathname]); 
+
+  // --- LISTEN FOR JOBS ---
+  useEffect(() => {
+    const userId = accessToken ? JSON.parse(atob(accessToken.split('.')[1])).id : null; 
+
+    if (userId) {
        socketService.onJobRequest((data: JobRequestEvent) => { 
-           
-           // Dispatch to Redux to trigger the Modal
            dispatch(setIncomingJob({
                bookingId: data.bookingId,
                serviceName: data.serviceName,
@@ -176,14 +213,11 @@ useEffect(() => {
                address: data.address,
                expiresAt: data.expiresAt
            }));
-           
-           // Optional: Play Sound here
        });
     }
     
-    // Cleanup not strictly necessary here as Layout persists, but good practice if unmounted
     return () => {
-        //socketService.offJobRequest(); // (If you implement offJobRequest in socketClient)
+        // Cleanup if needed
     };
   }, [dispatch, accessToken]);
 
@@ -209,6 +243,9 @@ useEffect(() => {
   };
 
   if (loading && !profile) return <LoaderFallback />;
+
+  // Hide the floating bar if we are ALREADY on the active job page
+  const isOnActiveJobPage = activeJobId && location.pathname.includes(`/jobs/${activeJobId}`);
 
   return (
     <div className="min-h-screen bg-slate-50/50 flex flex-col md:flex-row font-sans text-gray-900">
@@ -253,6 +290,25 @@ useEffect(() => {
           <Outlet />
         </div>
       </main>
+
+      {/* ✅ NEW: FLOATING STATUS BAR (Appears if active job exists & user is elsewhere) */}
+      {activeJobId && !isOnActiveJobPage && (
+        <div 
+          onClick={() => navigate(`/technician/jobs/${activeJobId}`)}
+          className="fixed bottom-[70px] md:bottom-8 left-4 right-4 md:left-[270px] md:right-8 bg-gray-900 text-white p-3 rounded-xl shadow-2xl z-50 flex items-center justify-between cursor-pointer animate-pulse-slow border border-gray-700 hover:scale-[1.01] transition-transform"
+        >
+           <div className="flex items-center gap-3">
+              <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></div>
+              <div>
+                 <p className="text-xs font-bold text-gray-200 uppercase tracking-wider">Job in Progress</p>
+                 <p className="text-[10px] text-gray-400">Tap to return to active job</p>
+              </div>
+           </div>
+           <div className="bg-white/10 p-1.5 rounded-full">
+             <ChevronRight className="w-4 h-4 text-white" />
+           </div>
+        </div>
+      )}
 
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)]">
         <div className="flex justify-around items-center px-2">

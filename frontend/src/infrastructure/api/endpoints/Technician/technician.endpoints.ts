@@ -46,4 +46,6 @@ export const TECH_BOOKING_ENDPOINTS = {
   UPDATE_STATUS: (bookingId: string) => `/bookings/${bookingId}/status`,
   CANCEL_JOB:(bookingId:string)=>`/bookings/${bookingId}/cancel/technician`,
   ADD_EXTRA_CHARGE: (id: string) => `/bookings/${id}/extras`,
+  COMPLETE_JOB: (id: string) => `/bookings/${id}/complete`,
+  GET_HISTORY: '/bookings/technician/history',
 };

@@ -13,7 +13,7 @@ import CategoryCard from "../../../components/Admin/category/CategoryCard";
 import CategoryModal from "../../../components/Admin/category/CategoryModal";
 import ServiceItemModal from "../../../components/Admin/Modals/ServiceItemModal";
 import ConfirmModal from "../../../components/Shared/ConfirmModal/ConfirmModal";
-import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
+import { SearchFilterBar, PaginationBar } from "../../../components/Shared/Table/DataTableControls";
 
 const getErrorMessage = (error: unknown): string => {
     if (typeof error === 'object' && error !== null && 'response' in error) {

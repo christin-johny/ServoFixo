@@ -9,7 +9,7 @@ import type { Zone, UpdateZoneDTO } from "../../../../domain/types/Zone";
 import { useNotification } from "../../../hooks/useNotification";
 import ConfirmModal from "../../../components/Shared/ConfirmModal/ConfirmModal";
 import { useDebounce } from "../../../hooks/useDebounce";
-import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
+import { SearchFilterBar, PaginationBar } from "../../../components/Shared/Table/DataTableControls";
 
 const zoneNameSchema = z
   .string()

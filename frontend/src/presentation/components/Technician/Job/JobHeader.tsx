@@ -20,10 +20,9 @@ export const JobHeader: React.FC<JobHeaderProps> = ({ job, onCancel }) => {
 
   return (
     <>
-      {/* 1. TOP ACTION BAR (Cancel) */}
+      {/* 1. TOP ACTION BAR (Cancel) - Mobile Optimized */}
       {['ACCEPTED', 'EN_ROUTE', 'REACHED'].includes(job.status) && (
-        <div className="max-w-5xl mx-auto px-4 pt-4 pb-2">
-          <div className="flex justify-end">
+        <div className="flex justify-end mb-3">
             <button
               onClick={onCancel}
               className="group flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-100 bg-white text-red-600 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm active:scale-95"
@@ -31,16 +30,17 @@ export const JobHeader: React.FC<JobHeaderProps> = ({ job, onCancel }) => {
               <AlertTriangle className="w-3.5 h-3.5" />
               <span className="text-[11px] font-bold uppercase tracking-wide">Cancel Job</span>
             </button>
-          </div>
         </div>
       )}
 
-      {/* 2. INDUSTRIAL JOB CARD */}
-      <div className="max-w-5xl mx-auto px-4">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 relative">
+      {/* 2. INDUSTRIAL JOB CARD (No external margins, fills parent) */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 relative overflow-hidden">
           
+          {/* Decorative Top Line */}
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-80"></div>
+
           {/* HEADER ROW: Meta Data Tags */}
-          <div className="flex flex-wrap items-center gap-3 mb-3">
+          <div className="flex flex-wrap items-center gap-3 mb-4 mt-1">
             
             {/* Status Badge */}
             <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ring-1 ring-inset ${getStatusColor(job.status)}`}>
@@ -72,9 +72,10 @@ export const JobHeader: React.FC<JobHeaderProps> = ({ job, onCancel }) => {
 
           {/* MAIN TITLE ROW */}
           <div className="mb-6">
-            <h1 className="text-xl font-extrabold text-gray-900 leading-tight tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 leading-tight tracking-tight">
               {job.snapshots.service.name || job.service.name}
             </h1>
+            {/* Optional Customer Name Subtitle could go here */}
           </div>
 
           {/* TIMELINE PROGRESS */}
@@ -104,8 +105,6 @@ export const JobHeader: React.FC<JobHeaderProps> = ({ job, onCancel }) => {
               );
             })}
           </div>
-
-        </div>
       </div>
     </>
   );

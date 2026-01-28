@@ -61,6 +61,11 @@ router.get(
   },
   bookingController.getBookingDetails.bind(bookingController)
 );
+router.get(
+  "/technician/history",
+  technicianAuth,
+  bookingController.getTechnicianHistory.bind(bookingController)
+);
  
 router.get(
   "/technician/:id", 
@@ -82,6 +87,8 @@ router.post(
   technicianAuth,
   bookingController.startJob.bind(bookingController)
 );
+
+
 
 // Technician Cancel
 router.post(

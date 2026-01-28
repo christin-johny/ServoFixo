@@ -14,7 +14,7 @@ import type { TechnicianQueueItemDto } from "../../../../domain/types/Technician
 import { useDebounce } from "../../../hooks/useDebounce";
 import { useNotification } from "../../../hooks/useNotification";
 import * as techRepo from "../../../../infrastructure/repositories/admin/technicianRepository";
-import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
+import { SearchFilterBar, PaginationBar } from "../../../components/Shared/Table/DataTableControls";
 
 const TechnicianVerificationQueue: React.FC = () => {
   const navigate = useNavigate();

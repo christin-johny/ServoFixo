@@ -15,7 +15,9 @@ import { CompleteJobDto } from "../../../application/dto/booking/CompleteJobDto"
 import { GetBookingDetailsDto } from "../../../application/dto/booking/GetBookingDetailsDto";
 import { CancelBookingDto } from "../../../application/dto/booking/CancelBookingDto";
 import { RateTechnicianDto } from "../../../application/dto/booking/RateTechnicianDto"; 
-
+import { GetTechnicianHistoryDto } from "../../../application/use-cases/booking/GetTechnicianHistoryUseCase";
+import { PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
+import { BookingStatus } from "../../../../../shared/types/value-objects/BookingTypes"; 
 interface AuthenticatedRequest extends Request {
   userId?: string;
   role?: string;
@@ -37,7 +39,8 @@ export class BookingController extends BaseController {
     private readonly _getBookingDetailsUseCase: IUseCase<Booking, [GetBookingDetailsDto]>,
     private readonly _customerCancelUseCase: IUseCase<void, [CancelBookingDto]>,
     private readonly _technicianCancelUseCase: IUseCase<void, [CancelBookingDto]>,
-    private readonly _rateTechnicianUseCase: IUseCase<void, [RateTechnicianDto]>,  
+    private readonly _rateTechnicianUseCase: IUseCase<void, [RateTechnicianDto]>, 
+    private readonly _getTechnicianHistoryUseCase: IUseCase<PaginatedBookingResult, [GetTechnicianHistoryDto]>, 
     _logger: ILogger
   ) {
     super(_logger);
@@ -245,6 +248,44 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
       return this.handleError(res, err, "RESPOND_EXTRA_CHARGE_FAILED");
     }
   };
+
+  getTechnicianHistory = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const technicianId = (req as AuthenticatedRequest).userId;
+      if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
+
+      // Extract Query Params (Default to Page 1, Limit 10)
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 10;
+      const search = req.query.search as string;
+      
+      // Handle status filter (e.g. from Tabs)
+      const status = req.query.status as BookingStatus  ;
+
+      const input: GetTechnicianHistoryDto = {
+        technicianId,
+        page,
+        limit,
+        search,
+        status
+      };
+
+      const result = await this._getTechnicianHistoryUseCase.execute(input);
+
+      // Return in the format your DataTable expects
+      return this.ok(res, {
+        data: result.data.map(b => BookingMapper.toResponse(b)), 
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: Math.ceil(result.total / limit)
+      }, "History fetched successfully");
+
+    } catch (err) {
+      return this.handleError(res, err, "GET_TECH_HISTORY_FAILED");
+    }
+  };
+
   /**
    * @route POST /api/bookings/:id/complete
    * @desc Technician marks job as done and generates invoice (Flow E)
@@ -254,7 +295,7 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
     try {
       const technicianId = (req as AuthenticatedRequest).userId;
       if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
-
+      
       const input: CompleteJobDto = {
         bookingId: req.params.id,
         technicianId

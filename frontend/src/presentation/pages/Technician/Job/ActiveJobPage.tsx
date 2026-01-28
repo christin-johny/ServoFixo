@@ -1,6 +1,6 @@
-// src/presentation/pages/Technician/Job/ActiveJobPage.tsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { useNotification } from "../../../hooks/useNotification";
 import {
   getTechnicianBookingById,
@@ -12,12 +12,28 @@ import LoaderFallback from "../../../components/LoaderFallback";
 import ConfirmModal from "../../../components/Shared/ConfirmModal/ConfirmModal";
 import CancellationModal from "../../../components/Technician/Job/CancellationModal";
 
-// Import split components
+// Components
 import { JobHeader } from "../../../components/Technician/Job/JobHeader";
 import { JobFooter } from "../../../components/Technician/Job/JobFooter";
-import { CustomerCard, LocationCard, OtpCard, TimerCard } from "../../../components/Technician/Job/JobCards";
+import { 
+  CustomerCard, 
+  LocationCard, 
+  OtpCard, 
+  TimerCard 
+} from "../../../components/Technician/Job/JobCards";
 
-// Define Interface locally or import from a shared types file
+// --- Strict Types ---
+
+// Define the shape of the API Error response
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
+// Define JobDetails locally or import from domain types
 export interface JobDetails {
   id: string;
   status: string;
@@ -25,8 +41,20 @@ export interface JobDetails {
   customer: { name: string; phone: string; avatarUrl?: string };
   location: { address: string; coordinates: { lat: number; lng: number } };
   pricing: { estimated: number };
-  snapshots: { customer: { name: string; phone: string }; service: { name: string }; };
+  snapshots: { 
+    customer: { name: string; phone: string }; 
+    service: { name: string }; 
+  };
   meta?: { instructions?: string };
+}
+
+interface ModalConfig {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmText: string;
+  variant: "primary" | "success" | "danger";
+  action: () => void;
 }
 
 const ActiveJobPage: React.FC = () => {
@@ -37,30 +65,32 @@ const ActiveJobPage: React.FC = () => {
   const [job, setJob] = useState<JobDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [otp, setOtp] = useState(["", "", "", ""]);
+  const [otp, setOtp] = useState<string[]>(["", "", "", ""]);
   
   // Modals
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [modalConfig, setModalConfig] = useState<{
-    isOpen: boolean; title: string; message: string; confirmText: string;
-    variant: "primary" | "success" | "danger"; action: () => void;
-  }>({
+  const [modalConfig, setModalConfig] = useState<ModalConfig>({
     isOpen: false, title: "", message: "", confirmText: "Confirm", variant: "primary", action: () => { }
   });
 
-  // Load Job
+  // --- Load Job ---
   const fetchJob = async () => {
     try {
       if (!id) return;
       const data = await getTechnicianBookingById(id);
-      setJob(data);
-    } catch { showError("Failed to load job details."); } 
-    finally { setLoading(false); }
+      // Ensure the data matches our JobDetails interface (or cast if you trust the backend)
+      setJob(data as JobDetails);
+    } catch { 
+      showError("Failed to load job details."); 
+      navigate("/technician/dashboard");
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   useEffect(() => { fetchJob(); }, [id]);
 
-  // Actions
+  // --- Actions ---
   const executeStatusUpdate = async (status: string) => {
     if (!job) return;
     setModalConfig(prev => ({ ...prev, isOpen: false }));
@@ -69,8 +99,11 @@ const ActiveJobPage: React.FC = () => {
       await updateBookingStatus(job.id, status);
       showSuccess("Status Updated");
       fetchJob();
-    } catch  { showError("Failed to update status."); } 
-    finally { setActionLoading(false); }
+    } catch { 
+      showError("Failed to update status."); 
+    } finally { 
+      setActionLoading(false); 
+    }
   };
 
   const executeStartJob = async () => {
@@ -85,38 +118,13 @@ const ActiveJobPage: React.FC = () => {
       showSuccess("Job Started!");
       fetchJob();
     } catch (err: unknown) {
-  let msg = "Invalid OTP.";
-
-  if (
-    typeof err === "object" &&
-    err !== null &&
-    "response" in err
-  ) {
-    const response = (err as { response?: unknown }).response;
-
-    if (
-      typeof response === "object" &&
-      response !== null &&
-      "data" in response
-    ) {
-      const data = (response as { data?: unknown }).data;
-
-      if (
-        typeof data === "object" &&
-        data !== null &&
-        "message" in data &&
-        typeof data.message === "string"
-      ) {
-        msg = data.message;
-      }
+      const error = err as ApiError;
+      const msg = error.response?.data?.message || "Invalid OTP";
+      showError(msg);
+      setOtp(["", "", "", ""]);
+    } finally { 
+      setActionLoading(false); 
     }
-  }
-
-  showError(msg);
-  setOtp(["", "", "", ""]);
-}
-
-    finally { setActionLoading(false); }
   };
 
   const handleCancelJob = async (reason: string) => {
@@ -127,41 +135,16 @@ const ActiveJobPage: React.FC = () => {
       showSuccess("Job cancelled");
       navigate("/technician/dashboard");
     } catch (err: unknown) {
-  let msg = "Failed to cancel job";
-
-  if (
-    typeof err === "object" &&
-    err !== null &&
-    "response" in err
-  ) {
-    const response = (err as { response?: unknown }).response;
-
-    if (
-      typeof response === "object" &&
-      response !== null &&
-      "data" in response
-    ) {
-      const data = (response as { data?: unknown }).data;
-
-      if (
-        typeof data === "object" &&
-        data !== null &&
-        "message" in data &&
-        typeof data.message === "string"
-      ) {
-        msg = data.message;
-      }
+      const error = err as ApiError;
+      const msg = error.response?.data?.message || "Failed to cancel job";
+      showError(msg);
+      setIsCancelModalOpen(false);
+    } finally { 
+      setActionLoading(false); 
     }
-  }
-
-  showError(msg);
-  setIsCancelModalOpen(false);
-}
-
-    finally { setActionLoading(false); }
   };
 
-  // UI Handlers (Trigger Modals)
+  // --- UI Handlers ---
   const triggers = {
     enRoute: () => setModalConfig({
       isOpen: true, title: "Start Travel?", message: "Notify customer you are en route?", confirmText: "Yes, Leaving", variant: "primary", action: () => executeStatusUpdate("EN_ROUTE")
@@ -180,31 +163,76 @@ const ActiveJobPage: React.FC = () => {
   const isWorking = job.status === "IN_PROGRESS";
 
   return (
-    <div className="min-h-screen bg-[#F8F9FC] relative flex flex-col font-sans">
-      <ConfirmModal 
-        isOpen={modalConfig.isOpen} onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))} 
-        onConfirm={modalConfig.action} title={modalConfig.title} message={modalConfig.message} 
-        confirmText={modalConfig.confirmText} variant={modalConfig.variant} 
-      />
-      <CancellationModal 
-        isOpen={isCancelModalOpen} onClose={() => setIsCancelModalOpen(false)} 
-        onConfirm={handleCancelJob} isLoading={actionLoading} 
-      />
+    <div className="w-full min-h-screen space-y-6 animate-fade-in pb-32 md:pb-12 font-sans relative rounded-[20px] ">
+      
+      {/* --- 1. NAVIGATION & HEADER --- */}
+      <div className="space-y-4 pt-2 px-4 md:px-8">
+        <div>
+            <button
+                onClick={() => navigate("/technician/dashboard")}
+                className="group flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors px-1"
+            >
+                <div className="p-1 rounded-full bg-white border border-gray-200 group-hover:border-gray-300 shadow-sm transition-all">
+                    <ArrowLeft className="w-4 h-4" />
+                </div>
+                Back to Dashboard
+            </button>
+        </div>
 
-      <div className="flex-1 pb-48">
-        <JobHeader job={job} onCancel={() => setIsCancelModalOpen(true)} />
-
-        <div className="max-w-5xl mx-auto px-4 mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <CustomerCard job={job} />
-            <LocationCard job={job} isWorking={isWorking} />
-            
-            {job.status === "REACHED" && <OtpCard otp={otp} setOtp={setOtp} />}
-            {isWorking && <TimerCard />}
-          </div>
+        <div className="flex flex-col gap-1 px-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                Active Job
+            </h1>
+            <p className="text-sm text-gray-500">
+                Manage service execution and details.
+            </p>
         </div>
       </div>
 
+      {/* --- 2. MAIN CONTENT GRID --- */}
+      <div className="px-4 md:px-8">
+        <div className="grid md:grid-cols-12 gap-6">
+          
+          {/* MAIN COLUMN (8 cols) */}
+          <div className="md:col-span-8 space-y-6">
+             {/* Status Header Card */}
+             <JobHeader 
+                job={job} 
+                onCancel={() => setIsCancelModalOpen(true)} 
+             />
+
+             {/* Action Cards (OTP / Timer) */}
+             {(job.status === "REACHED" || isWorking) && (
+               <div className="animate-fade-in-up">
+                  {job.status === "REACHED" && <OtpCard otp={otp} setOtp={setOtp} />}
+                  {isWorking && <TimerCard />}
+               </div>
+             )}
+             
+             {/* Customer & Location Details */}
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CustomerCard job={job} />
+                <LocationCard job={job} isWorking={isWorking} />
+             </div>
+          </div>
+
+          {/* SIDE COLUMN (4 cols) */}
+          <div className="md:col-span-4 space-y-6">
+              <div className="hidden md:block bg-blue-50/50 rounded-2xl p-6 border border-blue-100">
+                 <h4 className="font-bold text-blue-900 mb-2">Technician Guide</h4>
+                 <ul className="text-sm text-blue-800/80 space-y-2 list-disc pl-4">
+                    <li>Verify customer identity before starting.</li>
+                    <li>Ensure OTP is entered correctly.</li>
+                    <li>Add extra parts using the 'Extras' tab below.</li>
+                    <li>Take photos of work before closing the job.</li>
+                 </ul>
+              </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* --- 3. FOOTER (Fixed Bottom) --- */}
       <JobFooter 
         status={job.status} 
         loading={actionLoading}
@@ -213,6 +241,18 @@ const ActiveJobPage: React.FC = () => {
         onStart={triggers.start}
         onExtras={() => navigate(`/technician/jobs/${id}/extras`)}
         onComplete={() => navigate(`/technician/jobs/${id}/complete`)}
+      />
+
+      {/* --- MODALS --- */}
+      <ConfirmModal 
+        isOpen={modalConfig.isOpen} onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))} 
+        onConfirm={modalConfig.action} title={modalConfig.title} message={modalConfig.message} 
+        confirmText={modalConfig.confirmText} variant={modalConfig.variant} 
+      />
+      
+      <CancellationModal 
+        isOpen={isCancelModalOpen} onClose={() => setIsCancelModalOpen(false)} 
+        onConfirm={handleCancelJob} isLoading={actionLoading} 
       />
     </div>
   );

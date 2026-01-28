@@ -16,6 +16,7 @@ import {
   PaymentStatus
 } from "../../../../../shared/types/value-objects/BookingTypes";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { isValidObjectId } from "mongoose";
 
 export class BookingMongoRepository implements IBookingRepository {
   
@@ -59,17 +60,19 @@ export class BookingMongoRepository implements IBookingRepository {
     return this.toDomain(doc);
   }
 
-  async findAllPaginated(
+async findAllPaginated(
     page: number, 
     limit: number, 
     filters: BookingFilterParams
   ): Promise<PaginatedBookingResult> {
     const query: FilterQuery<BookingDocument> = { isDeleted: { $ne: true } };
 
+    // 1. Basic Filters (Existing)
     if (filters.customerId) query.customerId = filters.customerId;
     if (filters.technicianId) query.technicianId = filters.technicianId;
     if (filters.zoneId) query.zoneId = filters.zoneId;
     
+    // 2. Status Filter (Existing)
     if (filters.status) {
       if (Array.isArray(filters.status)) {
         query.status = { $in: filters.status };
@@ -78,18 +81,39 @@ export class BookingMongoRepository implements IBookingRepository {
       }
     }
 
+    // 3. Date Range Filter (Existing)
     if (filters.startDate || filters.endDate) {
       query["timestamps.createdAt"] = {};
       if (filters.startDate) query["timestamps.createdAt"].$gte = filters.startDate;
       if (filters.endDate) query["timestamps.createdAt"].$lte = filters.endDate;
     }
 
+    // ✅ 4. NEW: Search Logic (Booking ID + Service Name)
+    // This allows the Search Bar in your DataTable to work!
+    if (filters.search) {
+      const searchRegex = new RegExp(filters.search, 'i'); // Case insensitive
+      
+      const orConditions: any[] = [
+        { "snapshots.service.name": searchRegex } // Search Service Name
+      ];
+
+      // If search term looks like a MongoID, search by _id too
+      if (isValidObjectId(filters.search)) {
+        orConditions.push({ _id: filters.search });
+      }
+
+      // Merge into query
+      query.$or = orConditions;
+    }
+
     const skip = (page - 1) * limit;
+    
+    // Execute
     const [docs, total] = await Promise.all([
       BookingModel.find(query)
         .skip(skip)
         .limit(limit)
-        .sort({ "timestamps.createdAt": -1 })
+        .sort({ "timestamps.createdAt": -1 }) 
         .exec(),
       BookingModel.countDocuments(query)
     ]);

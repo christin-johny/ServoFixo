@@ -1,5 +1,4 @@
-// src/shared/types/value-objects/BookingTypes.ts
-
+ 
 export type BookingStatus = 
   | "REQUESTED" 
   | "ASSIGNED_PENDING" 

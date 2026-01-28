@@ -6,8 +6,8 @@ import type { CustomerDto, CustomerUpdatePayload } from "../../../../domain/type
 import { useNotification } from "../../../hooks/useNotification";
 import { useDebounce } from "../../../hooks/useDebounce";
 import CustomerEditModal from "../../../components/Admin/customer/CustomerEditModal";
-import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
-import { DataTable, type TableColumn } from "../../../components/Admin/Shared/DataTable"; // Import Generic Table
+import { SearchFilterBar, PaginationBar } from "../../../components/Shared/Table/DataTableControls";
+import { DataTable, type TableColumn } from "../../../components/Shared/Table/DataTable"; // Import Generic Table
 import ConfirmModal from "../../../components/Shared/ConfirmModal/ConfirmModal";
 
 const AdminCustomersPage: React.FC = () => {

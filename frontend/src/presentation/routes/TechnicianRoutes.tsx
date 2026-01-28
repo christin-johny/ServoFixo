@@ -18,7 +18,8 @@ const OnboardingWizard =React.lazy(() => import("../components/Technician/Onboar
 const TechnicianProfile=React.lazy(() => import("../pages/Technician/Profile/TechnicianProfile"));
 const ActiveJobPage=React.lazy(() => import("../pages/Technician/Job/ActiveJobPage"));
 const AddExtrasPage = React.lazy(() => import("../pages/Technician/Job/AddExtrasPage"));
- 
+ const CompleteJobPage = React.lazy(() => import("../pages/Technician/Job/CompleteJobPage"));
+ const MyJobsPage = React.lazy(() => import("../pages/Technician/Job/MyJobsPage"));
 const TechnicianRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
     <Routes>
@@ -43,7 +44,7 @@ const TechnicianRoutes: React.FC = () => (
         <Route path="onboarding" element={<OnboardingWizard />} />
 
         {/* Placeholders for Future Modules */}
-        <Route path="jobs" element={<div className="p-8">Jobs Module (Coming Soon)</div>} />
+        <Route path="jobs" element={<MyJobsPage />} />
         <Route path="wallet" element={<div className="p-8">Wallet Module (Coming Soon)</div>} />
         <Route path="profile" element={<TechnicianProfile/>} />
         <Route path="profile/personal" element={<PersonalDetails/>} />
@@ -51,6 +52,7 @@ const TechnicianRoutes: React.FC = () => (
         <Route path="profile/payouts" element={<PayoutSettings/>} />
         <Route path="jobs/:id" element={<ActiveJobPage />} />
         <Route path="jobs/:id/extras" element={<AddExtrasPage />} />
+        <Route path="jobs/:id/complete" element={<CompleteJobPage />} />
       </Route>
 
       {/* Fallback */}

@@ -6,6 +6,7 @@ export interface BookingFilterParams {
   customerId?: string;
   technicianId?: string;
   zoneId?: string;
+  search?:string;
   status?: BookingStatus | BookingStatus[];
   startDate?: Date;
   endDate?: Date;

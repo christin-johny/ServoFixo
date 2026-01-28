@@ -4,6 +4,13 @@ import { TECH_BOOKING_ENDPOINTS } from "../../api/endpoints/Technician/technicia
 export interface JobResponsePayload {
   response: "ACCEPT" | "REJECT";
 }
+export interface JobHistoryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string | string[];
+}
+
 
 export const respondToBooking = async (
   bookingId: string,
@@ -41,4 +48,14 @@ export const addExtraCharge = async (bookingId: string, data: { title: string; a
 
   const response = await api.post(TECH_BOOKING_ENDPOINTS.ADD_EXTRA_CHARGE(bookingId), formData);
   return response.data;
+};
+
+export const completeJob = async (bookingId: string) => {
+  const response = await api.post(TECH_BOOKING_ENDPOINTS.COMPLETE_JOB(bookingId));
+  return response.data;
+};
+
+export const getTechnicianJobs = async (params: JobHistoryParams = {}) => {
+  const response = await api.get(TECH_BOOKING_ENDPOINTS.GET_HISTORY, { params }); 
+  return response.data.data; 
 };
