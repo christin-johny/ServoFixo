@@ -78,8 +78,20 @@ const ActiveJobPage: React.FC = () => {
     try {
       if (!id) return;
       const data = await getTechnicianBookingById(id);
-      // Ensure the data matches our JobDetails interface (or cast if you trust the backend)
-      setJob(data as JobDetails);
+      
+      // Ensure the data matches our JobDetails interface
+      const jobData = data as JobDetails;
+      setJob(jobData);
+
+      // --- LOGIC: AUTO-REDIRECT TO PAYMENT SCREEN ---
+      // If job is COMPLETED, it means we are waiting for payment.
+      // Redirect to CompleteJobPage which handles the "Waiting" UI.
+      if (jobData.status === 'COMPLETED') {
+        navigate(`/technician/jobs/${id}/complete`, { replace: true });
+        return;
+      }
+      // ------------------------------------------------
+
     } catch { 
       showError("Failed to load job details."); 
       navigate("/technician/dashboard");

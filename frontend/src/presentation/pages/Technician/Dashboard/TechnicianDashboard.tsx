@@ -1,25 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { 
-  Power, Star, DollarSign, ShieldAlert, Briefcase, 
-  Timer, AlertCircle, Loader2, ChevronRight,
-  PlayCircle,type LucideIcon,MapPin
+  Power, MapPin, Star, DollarSign, ShieldAlert, Briefcase, 
+  Timer, AlertCircle, Loader2, type LucideIcon, ChevronRight,
+  PlayCircle, Clock
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useNotification } from "../../../hooks/useNotification";
 import type { RootState, AppDispatch } from "../../../../store/store";
 import { setAvailability } from "../../../../store/technicianSlice";
 import { toggleOnlineStatus } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
-import { getTechnicianJobs } from "../../../../infrastructure/repositories/technician/technicianBookingRepository";
+import { 
+    getTechnicianJobs, 
+    type JobHistoryParams 
+} from "../../../../infrastructure/repositories/technician/technicianBookingRepository";
 
-// --- Strict Types ---
-
-// 1. Define Params Interface for getTechnicianJobs
-interface JobQueryParams {
-  status?: string[];
-  page?: number;
-  limit?: number;
-}
+// --- Types ---
 
 interface ProfileWithRejection {
   globalRejectionReason?: string;
@@ -31,7 +27,7 @@ interface ApiError {
   message?: string;     
 }
 
-// 2. Strict Type for the Active Job Data
+// Strict Type for the Active Job Data
 interface ActiveJobSummary {
   id: string;
   status: string;
@@ -83,20 +79,19 @@ const TechnicianDashboard: React.FC = () => {
   const rawGlobalReason = profileRejection?.globalRejectionReason || profileRejection?.rejectionReason;
   const showGlobalReason = rawGlobalReason && rawGlobalReason !== "Invalid Documents";
 
-  // --- NEW: Fetch Active Job on Mount ---
+  // --- FETCH ACTIVE JOB (Including 'COMPLETED' for Payment Pending) ---
   useEffect(() => {
     if (isVerified) {
         const fetchActiveJob = async () => {
             try {
-                // ✅ FIXED: Strictly typed parameters object
-                const queryParams: JobQueryParams = { 
-                    status: ['ACCEPTED', 'EN_ROUTE', 'REACHED', 'IN_PROGRESS', 'EXTRAS_PENDING'],
+                // ✅ UPDATED: Added 'COMPLETED' to the list so unpaid jobs show up here
+                const queryParams: JobHistoryParams = { 
+                    status: ['ACCEPTED', 'EN_ROUTE', 'REACHED', 'IN_PROGRESS', 'EXTRAS_PENDING', 'COMPLETED'],
                     page: 1,
                     limit: 1
                 };
 
-                // ✅ FIXED: Single cast to the expected response interface
-                const response = await getTechnicianJobs(queryParams) as JobsApiResponse;
+                const response = await getTechnicianJobs(queryParams) as unknown as JobsApiResponse;
                 
                 if (response.data && response.data.length > 0) {
                      setActiveJob(response.data[0]);
@@ -162,6 +157,50 @@ const TechnicianDashboard: React.FC = () => {
     }
   };
 
+  // --- HELPER: Render Correct Banner Style ---
+  const renderActiveJobBanner = () => {
+    if (!activeJob) return null;
+
+    const isPaymentPending = activeJob.status === 'COMPLETED';
+
+    return (
+        <div 
+            onClick={() => navigate(`/technician/jobs/${activeJob.id}`)}
+            className={`
+                border rounded-lg p-3 flex items-center justify-between gap-3 shadow-sm cursor-pointer transition-colors group
+                ${isPaymentPending ? 'bg-amber-50 border-amber-200 hover:bg-amber-100' : 'bg-green-50 border-green-200 hover:bg-green-100'}
+            `}
+        >
+          <div className="flex items-center gap-3">
+             <div className={`
+                 p-2 rounded-full transition-colors group-hover:bg-white
+                 ${isPaymentPending ? 'bg-amber-100 text-amber-700 group-hover:text-amber-800' : 'bg-green-100 text-green-700 group-hover:text-green-800'}
+             `}>
+                {isPaymentPending ? (
+                    <Clock className="w-5 h-5 animate-pulse" />
+                ) : (
+                    <PlayCircle className="w-5 h-5 animate-pulse" />
+                )}
+             </div>
+             <div>
+               <h3 className={`text-sm font-bold ${isPaymentPending ? 'text-amber-900' : 'text-green-900'}`}>
+                   {isPaymentPending ? "Payment Pending" : "Active Job in Progress"}
+               </h3>
+               <p className={`text-xs ${isPaymentPending ? 'text-amber-700' : 'text-green-700'}`}>
+                  {activeJob.snapshots?.service?.name || activeJob.service.name} • {isPaymentPending ? "Tap to collect" : "Tap to resume"}
+               </p>
+             </div>
+          </div>
+          <div className={`
+              p-1.5 rounded-full shadow-sm bg-white
+              ${isPaymentPending ? 'text-amber-700' : 'text-green-700'}
+          `}>
+             <ChevronRight className="w-4 h-4" />
+          </div>
+        </div>
+    );
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       
@@ -188,7 +227,7 @@ const TechnicianDashboard: React.FC = () => {
         </button>
       </div>
 
-      {/* --- STATUS BANNERS (Compact) --- */}
+      {/* --- STATUS BANNERS --- */}
 
       {/* Case A: Incomplete */}
       {isIncomplete && (
@@ -217,7 +256,7 @@ const TechnicianDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Case C: REJECTED (Compact & Readable) */}
+      {/* Case C: REJECTED */}
       {isRejected && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
           <div className="flex items-start md:items-center gap-3">
@@ -242,28 +281,8 @@ const TechnicianDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* --- ACTIVE JOB BANNER --- */}
-      {activeJob && (
-        <div 
-            onClick={() => navigate(`/technician/jobs/${activeJob.id}`)}
-            className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center justify-between gap-3 shadow-sm cursor-pointer hover:bg-green-100 transition-colors group"
-        >
-          <div className="flex items-center gap-3">
-             <div className="bg-green-100 p-2 rounded-full text-green-700 group-hover:bg-white group-hover:text-green-800 transition-colors">
-                <PlayCircle className="w-5 h-5 animate-pulse" />
-             </div>
-             <div>
-               <h3 className="text-sm font-bold text-green-900">Active Job in Progress</h3>
-               <p className="text-xs text-green-700">
-                  {activeJob.snapshots?.service?.name || activeJob.service.name} • Tap to resume
-               </p>
-             </div>
-          </div>
-          <div className="bg-white text-green-700 p-1.5 rounded-full shadow-sm">
-             <ChevronRight className="w-4 h-4" />
-          </div>
-        </div>
-      )}
+      {/* --- NEW: ACTIVE JOB BANNER (Green or Amber) --- */}
+      {renderActiveJobBanner()}
 
       {/* --- STATS GRID --- */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

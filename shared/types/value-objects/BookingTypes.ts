@@ -14,7 +14,7 @@ export type BookingStatus =
   | "DISPUTED"
   | "CLOSED";
 
-export type PaymentStatus = "PENDING" | "CAPTURED" | "FAILED" | "REFUNDED";
+export type PaymentStatus = "PENDING" | "CAPTURED" | "FAILED" | "REFUNDED"|"PAID";
 
 export interface BookingLocation {
   address: string;
