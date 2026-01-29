@@ -3,9 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
     CheckCircle2, 
-    AlertTriangle, 
-    Phone, 
-    MessageSquare, 
+    AlertTriangle,  
     MapPin, 
     FileText, 
     ChevronRight,
@@ -36,14 +34,10 @@ import {
     clearActiveBooking,
     setActiveTechnician 
 } from '../../../../store/customerSlice';
-
-// Components
+ 
 import Navbar from '../../../../presentation/components/Customer/Layout/Navbar';
 import ConfirmModal from '../../../components/Shared/ConfirmModal/ConfirmModal';
-
-// --- 1. STRICT TYPE DEFINITIONS ---
-
-// Extend the repository response to include all fields used in UI
+ 
 interface ExtendedBookingResponse extends BookingResponse {
     location?: {
         address: string;
@@ -61,8 +55,7 @@ interface ExtendedBookingResponse extends BookingResponse {
             name: string;
             phone: string;
             avatarUrl?: string;
-            rating?: number;
-            // Added vehicle here to satisfy Typescript when accessing it from snapshot
+            rating?: number; 
             vehicle?: string; 
         };
         service?: {
@@ -103,16 +96,12 @@ const BookingTrackingPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  
-  // Redux Selectors
-  const { user } = useSelector((state: RootState) => state.auth);
-  // We use this Redux state as a fallback if API/Socket data is temporarily missing
+   
+  const { user } = useSelector((state: RootState) => state.auth); 
   const { activeTechnician } = useSelector((state: RootState) => state.customer);
-
-  // --- Local State ---
+ 
   const [bookingData, setBookingData] = useState<ExtendedBookingResponse | null>(null);
-  
-  // Initialize status safely
+   
   const [status, setStatus] = useState<string>(() => {
       const state = location.state as LocationState | null;
       return state?.technician?.status || "ACCEPTED";
@@ -120,17 +109,13 @@ const BookingTrackingPage: React.FC = () => {
   
   const [extraRequest, setExtraRequest] = useState<ExtraChargeRequest | null>(null);
   const [billTotal, setBillTotal] = useState<number | null>(null);
-
-  // Cancellation UI State
+ 
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
-
-  // --- Effects ---
+ 
 
   useEffect(() => {
-    if (!user?.id || !id) return;
-
-    // 1. Fetch & Sync Data (Handles Page Reloads)
+    if (!user?.id || !id) return; 
     const syncBookingData = async () => {
         try {
             // Cast response to Extended to ensure TS knows about pricing/location fields
@@ -233,8 +218,7 @@ const BookingTrackingPage: React.FC = () => {
   // --- Helpers & Computed Values ---
 
   // Cancellation Rule: Cannot cancel if Reached, Started, Done, or Paid
-  const canCancel = !['REACHED', 'IN_PROGRESS', 'COMPLETED', 'PAID', 'CANCELLED'].includes(status);
-
+  const canCancel = ![ 'EXTRAS_PENDING', 'COMPLETED', 'PAID', 'CANCELLED'].includes(status);
   // Data Sources
   const navState = location.state as LocationState | null;
   const snapshotTech = bookingData?.snapshots?.technician;
@@ -389,7 +373,7 @@ const BookingTrackingPage: React.FC = () => {
                             </div>
                         </div>
                         
-                        <div className="flex gap-3 w-full sm:w-auto">
+                        {/* <div className="flex gap-3 w-full sm:w-auto">
                             <button className="flex-1 sm:flex-none h-12 w-12 flex items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors">
                                 <MessageSquare size={20} />
                             </button>
@@ -400,7 +384,7 @@ const BookingTrackingPage: React.FC = () => {
                                 <Phone size={18} />
                                 <span>Call</span>
                             </a>
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* OTP Display - Only show when relevant */}

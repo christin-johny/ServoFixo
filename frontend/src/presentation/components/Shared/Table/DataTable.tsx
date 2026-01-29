@@ -13,7 +13,7 @@ interface DataTableProps<T> {
   columns: TableColumn<T>[];
   keyField: keyof T;
   isLoading?: boolean;
-  // ✅ FIX: Allow string OR ReactNode (JSX) to fix the error
+  //  FIX: Allow string OR ReactNode (JSX) to fix the error
   emptyMessage?: string | React.ReactNode; 
   onRowClick?: (item: T) => void;
   renderMobileCard?: (item: T) => React.ReactNode;
@@ -41,7 +41,7 @@ export const DataTable = <T,>({
   if (data.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-gray-400 min-h-[400px]">
-        {/* ✅ FIX: Render custom JSX if provided, else default string */}
+        {/*  FIX: Render custom JSX if provided, else default string */}
         {typeof emptyMessage === 'string' ? (
            <>
              <Inbox size={48} className="opacity-20 mb-2" />

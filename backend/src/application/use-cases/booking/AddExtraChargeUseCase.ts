@@ -14,16 +14,16 @@ export interface IFile {
     mimeType: string;
 }
 
-// ✅ FIX: Update the generic type to accept [Dto, IFile?]
+//  FIX: Update the generic type to accept [Dto, IFile?]
 export class AddExtraChargeUseCase implements IUseCase<void, [AddExtraChargeDto, IFile?]> {
   constructor(
     private readonly _bookingRepo: IBookingRepository,
     private readonly _notificationService: INotificationService,
-    private readonly _imageService: IImageService, // ✅ Injected Image Service
+    private readonly _imageService: IImageService, //  Injected Image Service
     private readonly _logger: ILogger
   ) {}
 
-  // ✅ FIX: Update execute to accept proofFile
+  //  FIX: Update execute to accept proofFile
   async execute(input: AddExtraChargeDto, proofFile?: IFile): Promise<void> {
     const booking = await this._bookingRepo.findById(input.bookingId);
     if (!booking) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
@@ -55,7 +55,7 @@ export class AddExtraChargeUseCase implements IUseCase<void, [AddExtraChargeDto,
         title: input.title,
         amount: Number(input.amount),
         description: input.description || "",
-        proofUrl: uploadedProofUrl, // ✅ Use the uploaded URL
+        proofUrl: uploadedProofUrl, //  Use the uploaded URL
         status: "PENDING",
         addedByTechId: input.technicianId,
         addedAt: new Date()

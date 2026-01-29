@@ -76,7 +76,7 @@ export class RespondToBookingUseCase {
  
     await this._technicianRepo.updateAvailabilityStatus(techId, true);
 
-    // ✅ CRITICAL FIX: Patch the In-Memory Booking Object
+    //  CRITICAL FIX: Patch the In-Memory Booking Object
     // We manually inject the snapshot into the booking object.
     // This prevents the next step (.update) from overwriting the DB with empty snapshots.
     const currentSnapshots = booking.getSnapshots();

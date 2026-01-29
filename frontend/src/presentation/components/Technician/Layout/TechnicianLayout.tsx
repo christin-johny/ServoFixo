@@ -5,7 +5,7 @@ import {
   Briefcase, 
   User,
   LogOut,
-  ChevronRight, // ✅ Added for Floating Bar
+  ChevronRight, //  Added for Floating Bar
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../../../store/store";
@@ -22,7 +22,7 @@ import LoaderFallback from "../../../components/LoaderFallback";
 
 import { getTechnicianProfileStatus } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
 import { technicianLogout } from "../../../../infrastructure/repositories/technician/technicianAuthRepository";
-// ✅ Added for Active Job Check
+//  Added for Active Job Check
 import { getTechnicianJobs } from "../../../../infrastructure/repositories/technician/technicianBookingRepository"; 
 
 import NotificationBell from "../../Shared/Notification/NotificationBell";
@@ -291,7 +291,7 @@ const jobs = response.data;
         </div>
       </main>
 
-      {/* ✅ NEW: FLOATING STATUS BAR (Appears if active job exists & user is elsewhere) */}
+      {/*  NEW: FLOATING STATUS BAR (Appears if active job exists & user is elsewhere) */}
       {activeJobId && !isOnActiveJobPage && (
         <div 
           onClick={() => navigate(`/technician/jobs/${activeJobId}`)}

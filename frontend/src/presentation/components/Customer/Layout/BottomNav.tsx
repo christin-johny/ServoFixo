@@ -48,7 +48,7 @@ const BottomNav: React.FC = () => {
   );
 };
 
-// ✅ STRICTLY TYPED PROPS
+//  STRICTLY TYPED PROPS
 interface NavButtonProps {
   icon: LucideIcon;
   label: string;

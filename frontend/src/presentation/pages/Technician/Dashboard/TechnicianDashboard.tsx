@@ -84,7 +84,7 @@ const TechnicianDashboard: React.FC = () => {
     if (isVerified) {
         const fetchActiveJob = async () => {
             try {
-                // ✅ UPDATED: Added 'COMPLETED' to the list so unpaid jobs show up here
+                //  UPDATED: Added 'COMPLETED' to the list so unpaid jobs show up here
                 const queryParams: JobHistoryParams = { 
                     status: ['ACCEPTED', 'EN_ROUTE', 'REACHED', 'IN_PROGRESS', 'EXTRAS_PENDING', 'COMPLETED'],
                     page: 1,

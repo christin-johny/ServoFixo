@@ -21,7 +21,7 @@ export interface CreateBookingPayload {
   };
 }
 
-// ✅ Corrected Interface to match Backend Response
+//  Corrected Interface to match Backend Response
 export interface BookingResponse {
   id: string;
   status: string;
@@ -76,4 +76,14 @@ export const getBookingById = async (id: string): Promise<BookingResponse> => {
 
 export const cancelBooking = async (id: string, reason: string): Promise<void> => {
     await api.post(BOOKING_ENDPOINTS.CANCEL(id), { reason });
+};
+
+export const respondToExtraCharge = async (
+  bookingId: string, 
+  chargeId: string, 
+  response: "APPROVE" | "REJECT"
+): Promise<void> => { 
+    await api.post(`/bookings/${bookingId}/extras/${chargeId}/respond`, { 
+        response 
+    });
 };

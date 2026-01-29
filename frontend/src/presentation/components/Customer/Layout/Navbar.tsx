@@ -17,7 +17,7 @@ import { customerLogout } from "../../../../infrastructure/repositories/authRepo
 import ConfirmModal from "../../Shared/ConfirmModal/ConfirmModal";
 import LocationPickerModal from "./LocationPickerModal";
 import NotificationBell from "../../Shared/Notification/NotificationBell";
-// ✅ IMPORT THE HOOK
+//  IMPORT THE HOOK
 import { useCustomerNotifications } from "../../../hooks/useCustomerNotifications";
 
 const useCurrentUser = () => {
@@ -32,7 +32,7 @@ const useCurrentUser = () => {
 };
 
 const Navbar: React.FC = () => {
-    // ✅ ACTIVATE GLOBAL NOTIFICATION LISTENER
+    //  ACTIVATE GLOBAL NOTIFICATION LISTENER
     useCustomerNotifications();
 
     const navigate = useNavigate();

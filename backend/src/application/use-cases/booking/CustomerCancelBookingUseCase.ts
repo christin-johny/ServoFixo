@@ -29,7 +29,7 @@ export class CustomerCancelBookingUseCase implements IUseCase<void, [CancelBooki
         throw new Error("Cancellation is not allowed at this stage.");
     }
 
-    // ✅ FIX: HANDLE "WAITING SCREEN" (Request Withdrawn)
+    //  FIX: HANDLE "WAITING SCREEN" (Request Withdrawn)
     // When status is ASSIGNED_PENDING, 'technicianId' is null. 
     // We must find the tech from the 'attempts' array.
     if (currentStatus === "ASSIGNED_PENDING") {

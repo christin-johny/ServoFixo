@@ -51,7 +51,7 @@ export class AdminCustomerController extends BaseController {
 
       const result = await this._getAllCustomersUseCase.execute(validationResult.data);
 
-      // ✅ Aligned with getCustomers: returns response.data directly
+      //  Aligned with getCustomers: returns response.data directly
       return res.status(StatusCodes.OK).json(result);
     } catch (error) {
       return this.handleError(res, error, LogEvents.ADMIN_CUSTOMER_FETCH_ALL_FAILED);
@@ -74,7 +74,7 @@ export class AdminCustomerController extends BaseController {
 
       const updatedCustomer = await this._updateCustomerUseCase.execute(customerId, validationResult.data);
 
-      // ✅ Aligned with updateCustomer: returns response.data (the customer object)
+      //  Aligned with updateCustomer: returns response.data (the customer object)
       return res.status(StatusCodes.OK).json(mapToResponseDto(updatedCustomer as any));
     } catch (error) {
       return this.handleError(res, error, LogEvents.ADMIN_CUSTOMER_UPDATE_FAILED);
@@ -88,7 +88,7 @@ export class AdminCustomerController extends BaseController {
 
       const customer = await this._getCustomerByIdUseCase.execute(customerId);
 
-      // ✅ Aligned with getCustomerById: returns response.data directly
+      //  Aligned with getCustomerById: returns response.data directly
       return res.status(StatusCodes.OK).json(mapToResponseDto(customer as any));
     } catch (error) {
       return this.handleError(res, error, LogEvents.ADMIN_CUSTOMER_FETCH_BY_ID_FAILED);
@@ -114,7 +114,7 @@ export class AdminCustomerController extends BaseController {
 
       const addresses = await this._getAddressesByUserIdUseCase.execute(customerId);
 
-      // ✅ Aligned with getCustomerAddresses: repository expects response.data.data
+      //  Aligned with getCustomerAddresses: repository expects response.data.data
       return this.ok(res, addresses); 
     } catch (error: unknown) {
       return this.handleError(res, error, LogEvents.ADMIN_CUSTOMER_ADDRESS_FETCH_FAILED);

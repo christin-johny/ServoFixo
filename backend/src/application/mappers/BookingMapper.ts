@@ -24,8 +24,7 @@ export class BookingMapper {
       timeline: entity.getTimeline(),
       
       chatId: entity.getChatId(),
-      
-      // ✅ SAFEGUARD: Handle case where snapshots might be null
+       
       snapshots: entity.getSnapshots() || undefined,
       
       meta: entity.getMeta(),
@@ -87,8 +86,7 @@ export class BookingMapper {
         extraCharges: charges,
         timeline: timeline,
         chatId: raw.chatId,
-        
-        // ✅ ADDED THIS: Was missing in your uploaded file!
+         
         snapshots: raw.snapshots ? {
             technician: raw.snapshots.technician,
             customer: raw.snapshots.customer,

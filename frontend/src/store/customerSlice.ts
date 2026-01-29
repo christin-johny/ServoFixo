@@ -52,7 +52,7 @@ interface CustomerState {
   activeBookingId: string | null;
   activeBookingStatus: string | null;
   
-  // ✅ NEW: Store Technician details here
+  //  NEW: Store Technician details here
   activeTechnician: {
       name: string;
       photo?: string;
@@ -130,7 +130,7 @@ const customerSlice = createSlice({
       state.activeBookingStatus = action.payload.status;
     },
     
-    // ✅ ADDED THIS REDUCER
+    //  ADDED THIS REDUCER
     setActiveTechnician(state, action: PayloadAction<CustomerState['activeTechnician']>) {
         state.activeTechnician = action.payload;
     },
@@ -146,7 +146,7 @@ const customerSlice = createSlice({
   },
 });
 
-// ✅ ADDED setActiveTechnician TO EXPORTS BELOW
+//  ADDED setActiveTechnician TO EXPORTS BELOW
 export const {
   fetchProfileStart,
   fetchProfileSuccess,

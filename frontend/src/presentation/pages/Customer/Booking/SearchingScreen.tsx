@@ -24,7 +24,7 @@ const SearchingScreen: React.FC = () => {
   const [hasFailed, setHasFailed] = useState(false);
   const [failReason, setFailReason] = useState("");
   
-  // ✅ Cancellation State
+  //  Cancellation State
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
@@ -85,7 +85,7 @@ const SearchingScreen: React.FC = () => {
     };
   }, [bookingId, user, navigate, dispatch]);
 
-  // ✅ Cancel Handler
+  //  Cancel Handler
   const handleCancelSearch = async () => {
       if (!bookingId) return;
       setIsCancelling(true);
@@ -146,7 +146,7 @@ const SearchingScreen: React.FC = () => {
             <h2 className="relative z-10 text-2xl font-bold text-gray-900 mb-3 tracking-tight">Finding your expert...</h2>
             <p className="relative z-10 text-gray-500 max-w-xs leading-relaxed font-medium mb-8">Please wait while we match you with a nearby technician.</p>
             
-            {/* ✅ Cancel Button */}
+            {/*  Cancel Button */}
             <button 
                 onClick={() => setIsCancelModalOpen(true)}
                 className="relative z-10 flex items-center gap-2 px-6 py-3 bg-white border-2 border-red-100 text-red-600 rounded-full font-bold shadow-sm hover:bg-red-50 transition-all"
@@ -155,7 +155,7 @@ const SearchingScreen: React.FC = () => {
             </button>
         </div>
 
-        {/* ✅ Confirm Modal */}
+        {/*  Confirm Modal */}
         <ConfirmModal 
             isOpen={isCancelModalOpen}
             onClose={() => setIsCancelModalOpen(false)}

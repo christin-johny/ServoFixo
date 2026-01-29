@@ -88,7 +88,7 @@ async findAllPaginated(
       if (filters.endDate) query["timestamps.createdAt"].$lte = filters.endDate;
     }
 
-    // ✅ 4. NEW: Search Logic (Booking ID + Service Name)
+    //  4. NEW: Search Logic (Booking ID + Service Name)
     // This allows the Search Bar in your DataTable to work!
     if (filters.search) {
       const searchRegex = new RegExp(filters.search, 'i'); // Case insensitive
