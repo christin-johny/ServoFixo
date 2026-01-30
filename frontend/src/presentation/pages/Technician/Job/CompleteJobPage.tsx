@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux"; 
 import { 
   ArrowLeft, CheckCircle2, IndianRupee, 
   Receipt, ShieldCheck, Layers, Loader2, RefreshCw 
 } from "lucide-react";
 import { useNotification } from "../../../hooks/useNotification";
 import { getTechnicianBookingById, completeJob } from "../../../../infrastructure/repositories/technician/technicianBookingRepository";
+import { socketService } from "../../../../infrastructure/api/socketClient"; 
+import {type  RootState } from "../../../../store/store";  
 import LoaderFallback from "../../../components/LoaderFallback";
 import type { JobDetails } from "../../../../domain/types/JobDetails";
 
@@ -34,6 +37,7 @@ const CompleteJobPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showSuccess, showError } = useNotification();
+  const { user } = useSelector((state: RootState) => state.auth); // ✅ Get Tech ID
 
   const [job, setJob] = useState<ExtendedJob | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,18 +56,11 @@ const CompleteJobPage: React.FC = () => {
       const extendedData = data as ExtendedJob;
       setJob(extendedData);
 
-      // --- LOGIC FIX: RESTORE STATE BASED ON BACKEND STATUS ---
-      // If the user comes back and the status is ALREADY 'COMPLETED', 
-      // it means they sent the bill previously. We must show the waiting screen.
       if (extendedData.status === 'COMPLETED') {
           setPaymentStatus("WAITING_FOR_PAYMENT");
-      } 
-      // If it's already paid, show the success screen
-      else if (extendedData.status === 'PAID') {
+      } else if (extendedData.status === 'PAID') {
           setPaymentStatus("PAID");
       }
-      // Otherwise, it stays 'IDLE' (Invoice Review Mode)
-
     } catch { 
       showError("Failed to load job details."); 
     } finally { 
@@ -71,35 +68,32 @@ const CompleteJobPage: React.FC = () => {
     }
   };
 
-  // --- 2. POLLING: Watch for Payment Completion ---
+  // ✅ Socket Logic: Real-Time Sync
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
+    if (!id || !user?.id) return;
 
-    // Start polling ONLY if we are in the waiting state
-    if (paymentStatus === "WAITING_FOR_PAYMENT" && id) {
-        interval = setInterval(async () => {
-            try {
-                const updatedJob = await getTechnicianBookingById(id);
-                
-                // If status changes to PAID, update UI and stop polling
-                if (updatedJob.status === 'PAID') {
-                    setPaymentStatus("PAID");
-                    setJob(updatedJob as ExtendedJob);
-                    showSuccess("Payment Received! Job Closed.");
-                    clearInterval(interval);
-                    
-                    setTimeout(() => {
-                        navigate("/technician/dashboard");
-                    }, 2000);
-                }
-            } catch (err) {
-                console.error("Polling error", err);
-            }
-        }, 3000); // Check every 3 seconds
-    }
+    socketService.connect(user.id, "TECHNICIAN");
 
-    return () => clearInterval(interval);
-  }, [paymentStatus, id, navigate, showSuccess]);
+    // A. Listen for Charge Updates (Updates final bill if approved late)
+    socketService.onChargeUpdate((data) => {
+        if (data.bookingId === id) loadJob();
+    });
+
+    // B. Listen for Payment Updates (No more polling needed!)
+    socketService.onBookingStatusUpdate((data) => {
+        if (data.bookingId === id && data.status === 'PAID') {
+             setPaymentStatus("PAID");
+             showSuccess("Payment Received! Job Closed.");
+             setTimeout(() => {
+                navigate("/technician/dashboard");
+             }, 2000);
+        }
+    });
+
+    return () => {
+        socketService.offTrackingListeners();
+    };
+  }, [id, user?.id]);
 
   const handleSendBill = async () => {
     if (!id) return;
@@ -107,7 +101,6 @@ const CompleteJobPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       await completeJob(id);
-      // Update local state to trigger the "Waiting" UI and Polling
       setPaymentStatus("WAITING_FOR_PAYMENT");
       showSuccess("Bill sent to customer. Waiting for payment...");
     } catch (err) {
@@ -129,7 +122,6 @@ const CompleteJobPage: React.FC = () => {
   const baseServiceCharge = grandTotal - extrasTotal;
 
   // --- VIEW A: WAITING / PAID SCREEN ---
-  // This renders automatically if loadJob() detects 'COMPLETED' or 'PAID'
   if (paymentStatus === "WAITING_FOR_PAYMENT" || paymentStatus === "PAID") {
       return (
         <div className="w-full min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-center animate-fade-in">
@@ -174,7 +166,7 @@ const CompleteJobPage: React.FC = () => {
       );
   }
 
-  // --- VIEW B: INVOICE REVIEW (First Time Load) ---
+  // --- VIEW B: INVOICE REVIEW ---
   return (
     <div className="w-full min-h-screen bg-[#F8F9FC] flex flex-col font-sans text-gray-900 pb-48">
       

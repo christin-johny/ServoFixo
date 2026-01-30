@@ -20,6 +20,11 @@ router.post(
   customerAuth, 
   bookingController.createBooking.bind(bookingController)
 );
+router.get(
+  "/", 
+  customerAuth, 
+  bookingController.getCustomerBookings.bind(bookingController)
+);
 
 router.post(
   "/:id/respond",

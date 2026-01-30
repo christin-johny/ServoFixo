@@ -10,14 +10,21 @@ import {
     fetchProfileFailure,
     setCurrentLocation,
     setAddresses, 
-    clearCustomerData
+    clearCustomerData,
+    setActiveBooking,      // ✅ Import
+    setActiveTechnician    // ✅ Import
 } from "../../../../store/customerSlice";
-import { getProfile, getZoneByLocation, getMyAddresses } from "../../../../infrastructure/repositories/customer/customerRepository";
+import { 
+    getProfile, 
+    getZoneByLocation, 
+    getMyAddresses 
+} from "../../../../infrastructure/repositories/customer/customerRepository";
+import { getActiveBooking } from "../../../../infrastructure/repositories/customer/customerBookingRepository"; // ✅ Import
 import { customerLogout } from "../../../../infrastructure/repositories/authRepository";
 import ConfirmModal from "../../Shared/ConfirmModal/ConfirmModal";
 import LocationPickerModal from "./LocationPickerModal";
 import NotificationBell from "../../Shared/Notification/NotificationBell";
-//  IMPORT THE HOOK
+import ActiveBookingFooter from "./ActiveBookingFooter"; // ✅ Import Footer
 import { useCustomerNotifications } from "../../../hooks/useCustomerNotifications";
 
 const useCurrentUser = () => {
@@ -42,7 +49,7 @@ const Navbar: React.FC = () => {
 
     const { accessToken } = useSelector((state: RootState) => state.auth);
     const isLoggedIn = !!accessToken;
-    const { profile } = useSelector((state: RootState) => state.customer);
+    const { profile, activeBookingId } = useSelector((state: RootState) => state.customer); 
     const user = useCurrentUser();
 
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -77,43 +84,32 @@ const Navbar: React.FC = () => {
         }
     };
 
-    // Priority Hydration: Default Address > GPS
     useEffect(() => {
         if (isLoggedIn && !profile) {
             const loadInitialData = async () => {
                 dispatch(fetchProfileStart());
                 try {
-                    // 1. Fetch Profile
                     const userData = await getProfile();
                     dispatch(fetchProfileSuccess(userData));
 
-                    // 2. Fetch Addresses immediately to find the default
                     const addresses = await getMyAddresses();
                     dispatch(setAddresses(addresses));
 
-                    // 3. Find serviceable default address
                     const defaultAddr = addresses.find(a => a.isDefault && a.isServiceable);
-
                     if (defaultAddr) {
-                        // Priority 1: Use Default Address
-                        const zoneName = await getZoneByLocation(
-                            defaultAddr.location.lat, 
-                            defaultAddr.location.lng
-                        );
-
+                        const zoneName = await getZoneByLocation(defaultAddr.location.lat, defaultAddr.location.lng);
                         dispatch(setCurrentLocation({
                             name: zoneName,
                             coords: defaultAddr.location,
                             isManual: true
                         }));
                     } else {
-                        // Priority 2: Fallback to GPS
                         triggerGeolocation();
                     }
                 } catch (err: unknown) {
                     const message = err instanceof Error ? err.message : "Failed to load data";
                     dispatch(fetchProfileFailure(message));
-                    triggerGeolocation(); // Fallback on API failure
+                    triggerGeolocation();
                 }
             };
             loadInitialData();
@@ -121,23 +117,39 @@ const Navbar: React.FC = () => {
             triggerGeolocation();
         }
     }, [isLoggedIn, profile, dispatch]);
-
+  
     useEffect(() => {
-        if (isLoggedIn && !profile) {
-            const loadProfile = async () => {
-                dispatch(fetchProfileStart());
+        // Only fetch if logged in AND we don't have an ID yet (e.g. after refresh)
+        if (isLoggedIn && !activeBookingId) {
+            const fetchActiveJob = async () => {
                 try {
-                    const data = await getProfile();
-                    dispatch(fetchProfileSuccess(data));
-                } catch (err: unknown) {
-                    const message = err instanceof Error ? err.message : "Failed to load profile";
-                    dispatch(fetchProfileFailure(message));
+                    console.log("🔄 [Navbar] Fetching active booking...");
+                    const booking = await getActiveBooking();
+                    
+                    if (booking) {
+                        console.log("✅ [Navbar] Restoring Active Job:", booking.id);
+                        
+                        // 1. Set Booking ID & Status
+                        dispatch(setActiveBooking({ id: booking.id, status: booking.status }));
+                        
+                        // 2. Set Technician Details (Critical for Tracking Page)
+                        if (booking.snapshots?.technician) {
+                            dispatch(setActiveTechnician({
+                                name: booking.snapshots.technician.name,
+                                phone: booking.snapshots.technician.phone,
+                                photo: booking.snapshots.technician.avatarUrl,
+                                vehicle: "",
+                                otp: booking.meta?.otp
+                            }));
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch active booking", err);
                 }
-
             };
-            loadProfile();
+            fetchActiveJob();
         }
-    }, [isLoggedIn, profile, dispatch]);
+    }, [isLoggedIn, activeBookingId, dispatch]);
 
     useEffect(() => {
         const urlSearch = searchParams.get('search');
@@ -165,15 +177,10 @@ const Navbar: React.FC = () => {
     
     useEffect(() => {
         function handleClickOutside(e: MouseEvent) {
-            if (
-                profileMenuOpen &&
-                profileMenuRef.current &&
-                !profileMenuRef.current.contains(e.target as Node)
-            ) {
+            if (profileMenuOpen && profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
                 setProfileMenuOpen(false);
             }
         }
-
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [profileMenuOpen]);
@@ -190,9 +197,8 @@ const Navbar: React.FC = () => {
         setIsLoggingOut(true);
         try {
             await customerLogout();
-        } catch (err) {
-            console.warn("Logout failed:", err);
-        } finally {
+        } catch (err) { console.warn("Logout failed:", err); } 
+        finally {
             dispatch(logout());
             dispatch(clearCustomerData());
             localStorage.removeItem("accessToken");
@@ -204,207 +210,158 @@ const Navbar: React.FC = () => {
     };
 
     const isActive = (path: string) => path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
+    
+    // Hide footer on specific pages to avoid double headers
+    const shouldShowFooter = !location.pathname.includes('/track') && !location.pathname.includes('/booking/');
 
     return (
-        <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm transition-all duration-300">
-            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <>
+            <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm transition-all duration-300">
+                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
 
-                {/* --- MOBILE LAYOUT --- */}
-                <div className="flex flex-col gap-3 py-3 md:hidden">
-                    <div className="flex items-start justify-between gap-3">
-                        <button onClick={() => setDrawerOpen(true)} className="mt-1 p-1 rounded-md hover:bg-gray-100">
-                            <Menu size={24} className="text-gray-700" />
-                        </button>
-
-                        <div className="flex-1 min-w-0">
-                            <button 
-                                onClick={() => setLocationModalOpen(true)}
-                                className="flex items-center gap-2 w-full text-left group"
-                            >
-                                <MapPin size={18} className="text-blue-600 flex-shrink-0" />
-                                <span className="font-bold text-gray-900 text-sm truncate">{user.location}</span>
-                                <ChevronDown size={14} className="text-gray-400 flex-shrink-0" />
+                    {/* --- MOBILE LAYOUT --- */}
+                    <div className="flex flex-col gap-3 py-3 md:hidden">
+                        <div className="flex items-start justify-between gap-3">
+                            <button onClick={() => setDrawerOpen(true)} className="mt-1 p-1 rounded-md hover:bg-gray-100">
+                                <Menu size={24} className="text-gray-700" />
                             </button>
-                        </div>
 
-                        <div className="flex items-center gap-3 ml-3">
-                            {isLoggedIn ? (
-                                <NotificationBell />
-                            ) : (
-                                <button onClick={() => navigate("/login")} className="text-xs font-bold text-blue-600 border border-blue-200 bg-blue-50 px-3 py-1.5 rounded-lg">
-                                    Login
+                            <div className="flex-1 min-w-0">
+                                <button onClick={() => setLocationModalOpen(true)} className="flex items-center gap-2 w-full text-left group">
+                                    <MapPin size={18} className="text-blue-600 flex-shrink-0" />
+                                    <span className="font-bold text-gray-900 text-sm truncate">{user.location}</span>
+                                    <ChevronDown size={14} className="text-gray-400 flex-shrink-0" />
                                 </button>
-                            )}
-                        </div>
-                    </div>
-                    <SearchBar query={query} setQuery={setQuery} onSubmit={handleSearch} className="w-full" />
-                </div>
+                            </div>
 
-                {/* --- DESKTOP LAYOUT --- */}
-                <div className="hidden md:flex items-center h-20 justify-between gap-6">
-                    <div className="flex items-center gap-8 lg:gap-12">
-                        <div className="flex-shrink-0 cursor-pointer" onClick={() => navigate("/")}>
-                            <img src="/assets/logo.png" alt="ServoFixo" className="h-12 w-auto object-contain" />
+                            <div className="flex items-center gap-3 ml-3">
+                                {isLoggedIn ? (
+                                    <NotificationBell />
+                                ) : (
+                                    <button onClick={() => navigate("/login")} className="text-xs font-bold text-blue-600 border border-blue-200 bg-blue-50 px-3 py-1.5 rounded-lg">Login</button>
+                                )}
+                            </div>
                         </div>
-                        <nav className="flex items-center gap-6">
-                            <NavLink label="Home" active={isActive("/")} onClick={() => navigate("/")} />
-                            <NavLink label="Services" active={isActive("/services")} onClick={() => navigate("/services")} />
-                            <NavLink label="About" active={isActive("/about")} onClick={() => navigate("/about")} />
-                        </nav>
+                        <SearchBar query={query} setQuery={setQuery} onSubmit={handleSearch} className="w-full" />
                     </div>
 
-                    <div className="flex items-center gap-4 flex-1 justify-end">
-                        <button 
-                            onClick={() => setLocationModalOpen(true)}
-                            className="hidden lg:flex items-center gap-2 bg-[#F3F4F6] rounded-full px-4 py-2.5 hover:bg-gray-200 transition-colors"
-                        >
-                            <MapPin size={18} className="text-blue-600" />
-                            <span className="text-sm font-bold text-gray-700">{user.location}</span>
-                            <ChevronDown size={14} className="text-gray-400" />
-                        </button>
-
-                        <div className="flex-1 max-w-md hidden md:block">
-                            <SearchBar query={query} setQuery={setQuery} onSubmit={handleSearch} />
+                    {/* --- DESKTOP LAYOUT --- */}
+                    <div className="hidden md:flex items-center h-20 justify-between gap-6">
+                        <div className="flex items-center gap-8 lg:gap-12">
+                            <div className="flex-shrink-0 cursor-pointer" onClick={() => navigate("/")}>
+                                <img src="/assets/logo.png" alt="ServoFixo" className="h-12 w-auto object-contain" />
+                            </div>
+                            <nav className="flex items-center gap-6">
+                                <NavLink label="Home" active={isActive("/")} onClick={() => navigate("/")} />
+                                <NavLink label="Services" active={isActive("/services")} onClick={() => navigate("/services")} />
+                                <NavLink label="About" active={isActive("/about")} onClick={() => navigate("/about")} />
+                            </nav>
                         </div>
 
-                        <div className="flex items-center gap-3 pl-2 border-l border-gray-200">
-                            {isLoggedIn ? (
-                                <>
-                                    <div className="flex items-center gap-3 pl-2 border-l border-gray-200 relative">
+                        <div className="flex items-center gap-4 flex-1 justify-end">
+                            <button onClick={() => setLocationModalOpen(true)} className="hidden lg:flex items-center gap-2 bg-[#F3F4F6] rounded-full px-4 py-2.5 hover:bg-gray-200 transition-colors">
+                                <MapPin size={18} className="text-blue-600" />
+                                <span className="text-sm font-bold text-gray-700">{user.location}</span>
+                                <ChevronDown size={14} className="text-gray-400" />
+                            </button>
+
+                            <div className="flex-1 max-w-md hidden md:block">
+                                <SearchBar query={query} setQuery={setQuery} onSubmit={handleSearch} />
+                            </div>
+
+                            <div className="flex items-center gap-3 pl-2 border-l border-gray-200">
+                                {isLoggedIn ? (
+                                    <>
                                         <NotificationBell />
-
-                                        {/* PROFILE DROPDOWN */}
                                         <div ref={profileMenuRef} className="relative">
-                                            <button
-                                                onClick={() => setProfileMenuOpen(prev => !prev)}
-                                                className="p-1 rounded-full border border-transparent hover:border-gray-200 transition-all"
-                                            >
+                                            <button onClick={() => setProfileMenuOpen(prev => !prev)} className="p-1 rounded-full border border-transparent hover:border-gray-200 transition-all">
                                                 <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors">
                                                     <User size={18} />
                                                 </div>
                                             </button>
-
                                             {profileMenuOpen && (
                                                 <div className="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
-
-                                                    {/* USER INFO */}
                                                     <div className="px-4 py-3 border-b border-gray-100">
-                                                        <p className="font-bold text-sm text-gray-900 truncate">
-                                                            {user.name}
-                                                        </p>
-                                                        <p className="text-xs text-gray-500 truncate">
-                                                            {user.email}
-                                                        </p>
+                                                        <p className="font-bold text-sm text-gray-900 truncate">{user.name}</p>
+                                                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
                                                     </div>
-
-                                                    {/* ACTIONS */}
-                                                    <button
-                                                        onClick={() => {
-                                                            navigate("/profile");
-                                                            setProfileMenuOpen(false);
-                                                        }}
-                                                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                                    >
+                                                    <button onClick={() => { navigate("/profile"); setProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
                                                         <User size={16} /> My Profile
                                                     </button>
-
-                                                    <button
-                                                        onClick={() => {
-                                                            setLogoutModalOpen(true);
-                                                            setProfileMenuOpen(false);
-                                                        }}
-                                                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50"
-                                                    >
+                                                    <button onClick={() => { setLogoutModalOpen(true); setProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50">
                                                         <LogOut size={16} /> Logout
                                                     </button>
                                                 </div>
                                             )}
                                         </div>
-                                    </div>
-
-                                </>
-                            ) : (
-                                <button onClick={() => navigate("/login")} className="flex items-center gap-2 bg-blue-600 hover:bg-black text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all">
-                                    <LogIn size={16} /> <span>Login</span>
-                                </button>
-                            )}
+                                    </>
+                                ) : (
+                                    <button onClick={() => navigate("/login")} className="flex items-center gap-2 bg-blue-600 hover:bg-black text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all">
+                                        <LogIn size={16} /> <span>Login</span>
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* --- MOBILE DRAWER --- */}
-            {drawerOpen && (
-                <div className="fixed inset-0 z-[100]">
-                    <div className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" onClick={() => setDrawerOpen(false)} />
-                    <aside ref={drawerRef} className="absolute left-0 top-0 h-full w-[280px] bg-white shadow-2xl flex flex-col animate-slide-in-left">
-                        <div className="bg-blue-600 p-6 text-white relative overflow-hidden shrink-0">
-                            <div className="relative z-10 flex flex-col gap-3">
-                                <div className="flex justify-between items-start">
-                                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-blue-600 font-bold text-xl shadow-md">
-                                        {isLoggedIn ? user.name.charAt(0).toUpperCase() : <User size={24} />}
+                {/* --- MOBILE DRAWER --- */}
+                {drawerOpen && (
+                    <div className="fixed inset-0 z-[100]">
+                        <div className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" onClick={() => setDrawerOpen(false)} />
+                        <aside ref={drawerRef} className="absolute left-0 top-0 h-full w-[280px] bg-white shadow-2xl flex flex-col animate-slide-in-left">
+                            <div className="bg-blue-600 p-6 text-white relative overflow-hidden shrink-0">
+                                <div className="relative z-10 flex flex-col gap-3">
+                                    <div className="flex justify-between items-start">
+                                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-blue-600 font-bold text-xl shadow-md">
+                                            {isLoggedIn ? user.name.charAt(0).toUpperCase() : <User size={24} />}
+                                        </div>
+                                        <button onClick={() => setDrawerOpen(false)} className="bg-white/20 p-1.5 rounded-full hover:bg-white/30 transition-colors"><X size={18} /></button>
                                     </div>
-                                    <button onClick={() => setDrawerOpen(false)} className="bg-white/20 p-1.5 rounded-full hover:bg-white/30 transition-colors"><X size={18} /></button>
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-lg truncate">{user.name}</h3>
-                                    <p className="text-blue-100 text-xs truncate">{isLoggedIn ? user.email : "Sign in to access more"}</p>
-                                    <p className="text-blue-100 text-xs truncate">{isLoggedIn ? user.phone : "Sign in to access more"}</p>
+                                    <div>
+                                        <h3 className="font-bold text-lg truncate">{user.name}</h3>
+                                        <p className="text-blue-100 text-xs truncate">{isLoggedIn ? user.email : "Sign in to access more"}</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1 pb-20">
-                            <DrawerItem icon={Home} label="Home" onClick={() => { navigate("/"); setDrawerOpen(false); }} active={isActive('/')} />
-                            <DrawerItem icon={Briefcase} label="Services" onClick={() => { navigate("/services"); setDrawerOpen(false); }} active={isActive('/services')} />
-                            <DrawerItem icon={Info} label="About Us" onClick={() => { navigate("/about"); setDrawerOpen(false); }} active={isActive('/about')} />
-                            <div className="my-4 border-t border-gray-100"></div>
-                            {isLoggedIn && (
-                                <DrawerItem icon={User} label="My Profile" onClick={() => { navigate("/profile"); setDrawerOpen(false); }} active={isActive('/profile')} />
-                            )}
-                        </div>
+                            <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1 pb-20">
+                                <DrawerItem icon={Home} label="Home" onClick={() => { navigate("/"); setDrawerOpen(false); }} active={isActive('/')} />
+                                <DrawerItem icon={Briefcase} label="Services" onClick={() => { navigate("/services"); setDrawerOpen(false); }} active={isActive('/services')} />
+                                <DrawerItem icon={Info} label="About Us" onClick={() => { navigate("/about"); setDrawerOpen(false); }} active={isActive('/about')} />
+                                <div className="my-4 border-t border-gray-100"></div>
+                                {isLoggedIn && (
+                                    <DrawerItem icon={User} label="My Profile" onClick={() => { navigate("/profile"); setDrawerOpen(false); }} active={isActive('/profile')} />
+                                )}
+                            </div>
 
-                        <div className="p-4 bg-gray-50 border-t border-gray-100 shrink-0">
-                            {isLoggedIn ? (
-                                <button onClick={() => setLogoutModalOpen(true)} className="w-full flex items-center justify-center gap-2 bg-white border border-red-200 text-red-600 py-3 rounded-xl font-semibold mb-12 shadow-sm hover:bg-red-50">
-                                    <LogOut size={18} /> Logout
-                                </button>
-                            ) : (
-                                <button onClick={() => { navigate("/login"); setDrawerOpen(false); }} className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-xl font-bold mb-12 shadow-md hover:bg-blue-700">
-                                    <LogIn size={18} /> Login / Register
-                                </button>
-                            )}
-                        </div>
-                    </aside>
-                </div>
-            )}
+                            <div className="p-4 bg-gray-50 border-t border-gray-100 shrink-0">
+                                {isLoggedIn ? (
+                                    <button onClick={() => setLogoutModalOpen(true)} className="w-full flex items-center justify-center gap-2 bg-white border border-red-200 text-red-600 py-3 rounded-xl font-semibold mb-12 shadow-sm hover:bg-red-50">
+                                        <LogOut size={18} /> Logout
+                                    </button>
+                                ) : (
+                                    <button onClick={() => { navigate("/login"); setDrawerOpen(false); }} className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-xl font-bold mb-12 shadow-md hover:bg-blue-700">
+                                        <LogIn size={18} /> Login / Register
+                                    </button>
+                                )}
+                            </div>
+                        </aside>
+                    </div>
+                )}
 
-            <LocationPickerModal
-                isOpen={locationModalOpen}
-                onClose={() => setLocationModalOpen(false)}
-            />
-
-            <ConfirmModal
-                isOpen={logoutModalOpen}
-                onClose={() => setLogoutModalOpen(false)}
-                onConfirm={confirmLogout}
-                title="Confirm Logout"
-                message="Are you sure you want to log out of your account?"
-                confirmText="Yes, Logout"
-                isLoading={isLoggingOut}
-            />
-        </header>
+                <LocationPickerModal isOpen={locationModalOpen} onClose={() => setLocationModalOpen(false)} />
+                <ConfirmModal isOpen={logoutModalOpen} onClose={() => setLogoutModalOpen(false)} onConfirm={confirmLogout} title="Confirm Logout" message="Are you sure you want to log out?" confirmText="Yes, Logout" isLoading={isLoggingOut} />
+            </header>
+            
+            {/* ✅ GLOBAL FOOTER INJECTION */}
+            {shouldShowFooter && <ActiveBookingFooter />}
+        </>
     );
 };
 
 
-interface SearchBarProps {
-    query: string;
-    setQuery: (query: string) => void;
-    onSubmit: (e?: React.FormEvent) => void;
-    className?: string;
-}
-
+interface SearchBarProps { query: string; setQuery: (query: string) => void; onSubmit: (e?: React.FormEvent) => void; className?: string; }
 const SearchBar: React.FC<SearchBarProps> = ({ query, setQuery, onSubmit, className = "" }) => (
     <form onSubmit={onSubmit} className={`flex items-center gap-3 bg-[#F3F4F6] rounded-full px-4 py-2.5 transition-all focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:bg-white focus-within:shadow-md ${className}`}>
         <Search size={18} className="text-gray-400 flex-shrink-0" />
@@ -412,26 +369,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ query, setQuery, onSubmit, classN
     </form>
 );
 
-interface NavLinkProps {
-    label: string;
-    active: boolean;
-    onClick: () => void;
-}
-
+interface NavLinkProps { label: string; active: boolean; onClick: () => void; }
 const NavLink: React.FC<NavLinkProps> = ({ label, active, onClick }) => (
     <button onClick={onClick} className={`text-sm font-bold transition-colors ${active ? "text-blue-600" : "text-gray-600 hover:text-black"}`}>{label}</button>
 );
 
- 
- 
-
-interface DrawerItemProps {
-    icon: LucideIcon;
-    label: string;
-    onClick: () => void;
-    active: boolean;
-}
-
+interface DrawerItemProps { icon: LucideIcon; label: string; onClick: () => void; active: boolean; }
 const DrawerItem: React.FC<DrawerItemProps> = ({ icon: Icon, label, onClick, active }) => (
     <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${active ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-100"}`}>
         <Icon size={20} className={active ? "text-blue-600" : "text-gray-500"} />

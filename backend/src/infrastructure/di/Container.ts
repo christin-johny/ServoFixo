@@ -148,6 +148,7 @@ import { RateTechnicianUseCase } from "../../application/use-cases/booking/RateT
 import { AdminForceStatusUseCase } from "../../application/use-cases/booking/AdminForceStatusUseCase";
 import { AdminUpdatePaymentUseCase } from "../../application/use-cases/booking/AdminUpdatePaymentUseCase";
 import { GetTechnicianHistoryUseCase } from "../../application/use-cases/booking/GetTechnicianHistoryUseCase";
+import { GetCustomerBookingsUseCase } from "../../application/use-cases/booking/GetCustomerBookingsUseCase";
 
 // INFRASTRUCTURE SERVICE INSTANTIATION
 
@@ -693,10 +694,11 @@ const reviewRepo = new ReviewMongoRepository();
 const rateTechnicianUseCase = new RateTechnicianUseCase(
   bookingRepo,
   technicianRepo,
-  reviewRepo, // <--- Inject the new repo
+  reviewRepo, 
   logger
 );
 const getTechnicianHistoryUseCase = new GetTechnicianHistoryUseCase(bookingRepo,logger)
+const getCustomerBookingsUseCase = new GetCustomerBookingsUseCase(bookingRepo)
 export const bookingController = new BookingController(
   createBookingUseCase,
   respondToBookingUseCase,
@@ -709,6 +711,7 @@ export const bookingController = new BookingController(
   technicianCancelUseCase,
   rateTechnicianUseCase,
   getTechnicianHistoryUseCase,
+  getCustomerBookingsUseCase,
   logger
 );
 const adminForceAssignUseCase = new AdminForceAssignUseCase(

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux"; // ✅ Needed for user ID
 import { 
   ArrowLeft, Plus, Tag, IndianRupee, Camera, X, 
   FileText, CheckCircle2, AlertTriangle, Clock, Ban 
 } from "lucide-react"; 
 import { useNotification } from "../../../hooks/useNotification";
 import { getTechnicianBookingById, addExtraCharge } from "../../../../infrastructure/repositories/technician/technicianBookingRepository";
+import { socketService } from "../../../../infrastructure/api/socketClient"; // ✅ Import Socket
+import {type  RootState } from "../../../../store/store"; // ✅ Import RootState
 import LoaderFallback from "../../../components/LoaderFallback";
 import type { JobDetails } from "../../../../domain/types/JobDetails";
 
@@ -37,6 +40,7 @@ const AddExtrasPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showSuccess, showError } = useNotification();
+  const { user } = useSelector((state: RootState) => state.auth); // ✅ Get Tech ID
 
   const [job, setJob] = useState<ExtendedJobDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,8 +52,7 @@ const AddExtrasPage: React.FC = () => {
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  useEffect(() => { loadJob(); }, [id]);
-
+  // Define loadJob outside useEffect so it can be called by listeners
   const loadJob = async () => {
     try {
       if (!id) return;
@@ -61,6 +64,37 @@ const AddExtrasPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // ✅ Socket Logic
+  useEffect(() => {
+    if (!id || !user?.id) return;
+
+    // 1. Initial Load
+    loadJob();
+
+    // 2. Connect Socket
+    socketService.connect(user.id, "TECHNICIAN");
+
+    // 3. Listen for Charge Updates (Customer Approved/Rejected)
+    socketService.onChargeUpdate((data) => {
+      console.log("[AddExtras] Charge Updated:", data);
+      if (data.bookingId === id) {
+        loadJob(); // 🔄 Auto-refresh list
+      }
+    });
+
+    // 4. Listen for Status Updates (e.g. Back to IN_PROGRESS)
+    socketService.onBookingStatusUpdate((data) => {
+        if (data.bookingId === id) {
+            loadJob();
+        }
+    });
+
+    // Cleanup
+    return () => {
+        socketService.offTrackingListeners();
+    };
+  }, [id, user?.id]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -115,8 +149,6 @@ const AddExtrasPage: React.FC = () => {
 
   // --- CALCULATION LOGIC ---
   const basePrice = job.pricing.estimated;
-  
-  // Only sum up items that are NOT rejected
   const approvedOrPendingExtras = (job.extraCharges || []).filter(item => item.status !== 'REJECTED');
   const extrasTotal = approvedOrPendingExtras.reduce((sum, item) => sum + item.amount, 0);
   const finalTotal = basePrice + extrasTotal;
@@ -211,7 +243,7 @@ const AddExtrasPage: React.FC = () => {
            </div>
         </div>
 
-        {/* RIGHT: INPUT FORM (Same as before) */}
+        {/* RIGHT: INPUT FORM */}
         <div className="md:col-span-8 space-y-6 order-1 md:order-1">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
                 <div className="flex items-center justify-between mb-6 pb-3 border-b border-gray-100">

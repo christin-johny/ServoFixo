@@ -18,6 +18,7 @@ import { RateTechnicianDto } from "../../../application/dto/booking/RateTechnici
 import { GetTechnicianHistoryDto } from "../../../application/use-cases/booking/GetTechnicianHistoryUseCase";
 import { PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
 import { BookingStatus } from "../../../../../shared/types/value-objects/BookingTypes"; 
+import { GetCustomerBookingsUseCase, GetCustomerBookingsDto } from "../../../application/use-cases/booking/GetCustomerBookingsUseCase";
 interface AuthenticatedRequest extends Request {
   userId?: string;
   role?: string;
@@ -41,6 +42,7 @@ export class BookingController extends BaseController {
     private readonly _technicianCancelUseCase: IUseCase<void, [CancelBookingDto]>,
     private readonly _rateTechnicianUseCase: IUseCase<void, [RateTechnicianDto]>, 
     private readonly _getTechnicianHistoryUseCase: IUseCase<PaginatedBookingResult, [GetTechnicianHistoryDto]>, 
+    private readonly _getCustomerBookingsUseCase: IUseCase<PaginatedBookingResult, [GetCustomerBookingsDto]>,
     _logger: ILogger
   ) {
     super(_logger);
@@ -152,6 +154,44 @@ startJob = async (req: Request, res: Response): Promise<Response> => {
     }
   };
 
+
+  /**
+   * @route GET /api/bookings
+   * @desc Get customer bookings (Active or History)
+   * @access Customer
+   */
+  getCustomerBookings = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const customerId = (req as AuthenticatedRequest).userId;
+      if (!customerId) throw new Error(ErrorMessages.UNAUTHORIZED);
+
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 10;
+      const status = req.query.status as string;
+
+      const input: GetCustomerBookingsDto = {
+        customerId,
+        page,
+        limit,
+        status // "active" or "COMPLETED" etc.
+      };
+
+      const result = await this._getCustomerBookingsUseCase.execute(input);
+
+      return this.ok(res, {
+        data: result.data.map(b => BookingMapper.toResponse(b)), 
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        totalPages: Math.ceil(result.total / limit)
+      }, "Bookings fetched successfully");
+
+    } catch (err) {
+      return this.handleError(res, err, "GET_CUSTOMER_BOOKINGS_FAILED");
+    }
+  };
+
+  
   /**
    * @route PATCH /api/bookings/:id/status
    * @desc Technician updates job status (Flow C: EN_ROUTE -> REACHED -> IN_PROGRESS)

@@ -17,10 +17,7 @@ import {
 // Store & Types
 import type { RootState } from '../../../../store/store';
 import { 
-    socketService, 
-    type BookingStatusEvent, 
-    type ApprovalRequestEvent, 
-    type PaymentRequestEvent,
+    socketService,  
     type BookingConfirmedEvent 
 } from '../../../../infrastructure/api/socketClient';
 import { 
@@ -29,11 +26,9 @@ import {
     respondToExtraCharge, 
     type BookingResponse 
 } from '../../../../infrastructure/repositories/customer/customerBookingRepository';
-import { 
-    updateActiveBookingStatus, 
+import {  
     setActiveBooking, 
-    clearActiveBooking,
-    setActiveTechnician 
+    clearActiveBooking, 
 } from '../../../../store/customerSlice';
 import { type ExtraCharge } from '../../../../../../shared/types/value-objects/BookingTypes';
 
@@ -118,71 +113,60 @@ const BookingTrackingPage: React.FC = () => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [isProcessingExtra, setIsProcessingExtra] = useState(false);
+ 
 
-  useEffect(() => {
-    if (!user?.id || !id) return; 
-    
-    const syncBookingData = async () => {
-        try {
-            const data = await getBookingById(id) as ExtendedBookingResponse;
-            
-            if (data.status === 'CANCELLED') {
-                dispatch(clearActiveBooking());
-                navigate('/');
-                return;
-            }
-            if (data.status === 'PAID') {
-                dispatch(clearActiveBooking());
-                navigate('/profile');
-                return;
-            }
+  const syncBookingData = async () => {
+      if (!id) return;
+      try {
+          const data = await getBookingById(id) as ExtendedBookingResponse;
+          
+          setBookingData(data);
+          setStatus(data.status);
+          dispatch(setActiveBooking({ id: data.id, status: data.status }));
+ 
+          if (data.status === 'COMPLETED' && data.pricing?.final) {
+             setBillTotal(data.pricing.final);
+          } else {
+             setBillTotal(null); // Hide modal if status is IN_PROGRESS or EXTRAS_PENDING
+          }
 
-            setBookingData(data);
-            setStatus(data.status);
-            
-            dispatch(setActiveBooking({ id: data.id, status: data.status }));
+          // Check for pending extras
+          if (data.extraCharges) {
+             const pending = data.extraCharges.find(c => c.status === 'PENDING');
+             if (pending) {
+                setExtraRequest({
+                  itemId: pending.id,
+                  title: pending.title,
+                  amount: pending.amount,
+                  proofUrl: pending.proofUrl
+                });
+             } else {
+                setExtraRequest(null);
+             }
+          }
+      } catch (err) {
+          console.error("Sync failed", err);
+      }
+  };
 
-            // Check for PENDING extras on load
-            if (data.extraCharges && data.extraCharges.length > 0) {
-                const pendingCharge = data.extraCharges.find(c => c.status === 'PENDING');
-                if (pendingCharge) {
-                    setExtraRequest({
-                        itemId: pendingCharge.id,
-                        title: pendingCharge.title,
-                        amount: pendingCharge.amount,
-                        proofUrl: pendingCharge.proofUrl
-                    });
-                }
-            }
+useEffect(() => {
+    if (!user?.id || !id) return;
 
-            if (data.snapshots?.technician) {
-                dispatch(setActiveTechnician({
-                    name: data.snapshots.technician.name,
-                    photo: data.snapshots.technician.avatarUrl,
-                    phone: data.snapshots.technician.phone,
-                    vehicle: data.snapshots.technician.vehicle,
-                    otp: data.meta?.otp
-                }));
-            }
-
-        } catch (err: unknown) {
-            console.error("[Tracking] Sync error:", err);
-        }
-    };
+    // Initial Load
     syncBookingData();
 
     socketService.connect(user.id, "CUSTOMER");
 
-    socketService.onBookingStatusUpdate((data: BookingStatusEvent) => {
-        setStatus(data.status);
-        dispatch(updateActiveBookingStatus(data.status));
-        if (data.status === 'IN_PROGRESS') {
-             setExtraRequest(null);
-        }
+    // --- SOCKET LISTENERS ---
+
+    // A. Status Update -> RE-FETCH DATA
+    socketService.onBookingStatusUpdate(( ) => {
+        // We call syncBookingData() so pricing/extras update instantly
+        syncBookingData(); 
     });
 
-    socketService.onApprovalRequest((data: ApprovalRequestEvent) => {
-        console.log("[Tracking] Approval Request Received:", data);
+    // B. Approval Request -> SHOW MODAL
+    socketService.onApprovalRequest((data) => {
         setExtraRequest({
             itemId: data.extraItem.id,
             title: data.extraItem.title,
@@ -190,15 +174,15 @@ const BookingTrackingPage: React.FC = () => {
             proofUrl: data.extraItem.proofUrl
         });
     });
-
-    socketService.onPaymentRequest((data: PaymentRequestEvent) => {
-        setBillTotal(data.totalAmount);
+ 
+    socketService.onChargeUpdate(() => {
+        syncBookingData();
     });
 
     return () => {
         socketService.offTrackingListeners();
     };
-  }, [id, user, dispatch, navigate]);
+  }, [id, user]);
 
   const handleApproveExtra = async (approved: boolean) => {
       if (!id || !extraRequest) return;
@@ -247,7 +231,7 @@ const BookingTrackingPage: React.FC = () => {
       }
   };
 
-  const canCancel = !['EXTRAS_PENDING', 'COMPLETED', 'PAID', 'CANCELLED'].includes(status);
+  const canCancel = !['EXTRAS_PENDING', 'COMPLETED', 'PAID', 'CANCELLED','IN_PROGRESS'].includes(status);
   
   const navState = location.state as LocationState | null;
   const snapshotTech = bookingData?.snapshots?.technician;

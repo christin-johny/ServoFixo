@@ -3,7 +3,7 @@ import type { Notification } from "../../domain/types/Notification";
 import store from "../../store/store";
 import { setIncomingJob, clearIncomingJob } from "../../store/technicianBookingSlice";
 import { setActiveTechnician, clearActiveBooking } from "../../store/customerSlice";
-import { NotificationType } from "../../../../shared/types/value-objects/NotificationTypes"; // ✅ Imports strict Enum
+import { NotificationType } from "../../../../shared/types/value-objects/NotificationTypes";
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
 
@@ -44,6 +44,12 @@ export interface ApprovalRequestEvent {
   };
 }
 
+export interface ChargeUpdateEvent {
+  bookingId: string;
+  chargeId: string;
+  status: "APPROVED" | "REJECTED";
+}
+
 export interface PaymentRequestEvent {
   bookingId: string;
   totalAmount: number;
@@ -58,29 +64,32 @@ export interface BookingFailedEvent {
   bookingId: string;
   reason: string;
 }
+
 interface RawConfirmationPayload {
   bookingId?: string;
   techName?: string;
   otp?: string;
-  photoUrl?: string;  
-  vehicle?: string;    
-  metadata?: {        
+  photoUrl?: string;
+  vehicle?: string;
+  metadata?: {
     bookingId?: string;
     techName?: string;
     otp?: string;
     techPhoto?: string;
   };
 }
+
 class SocketService {
   private socket: Socket | null = null;
   private currentUserId: string | null = null;
- 
+
   private uiNotificationCallback: ((data: Notification) => void) | null = null;
   private bookingConfirmedCallback: ((data: BookingConfirmedEvent) => void) | null = null;
   private bookingFailedCallback: ((data: BookingFailedEvent) => void) | null = null;
   private statusUpdateCallback: ((data: BookingStatusEvent) => void) | null = null;
   private bookingCancelledCallback: ((data: BookingCancelledEvent) => void) | null = null;
   private approvalRequestCallback: ((data: ApprovalRequestEvent) => void) | null = null;
+  private chargeUpdateCallback: ((data: ChargeUpdateEvent) => void) | null = null; // ✅ NEW
   private paymentRequestCallback: ((data: PaymentRequestEvent) => void) | null = null;
 
   connect(userId: string, role: UserRole): void {
@@ -110,10 +119,9 @@ class SocketService {
     this.socket.on("connect", () => {
       console.log(`[Socket] Connected as ${role}. ID: ${this.socket?.id}`);
     });
- 
+
     // --- Direct Listeners ---
     this.socket.on("booking:confirmed", (data) => {
-      console.log("[Socket] Direct 'booking:confirmed'", data);
       this.handleBookingConfirmed(data, role);
     });
 
@@ -124,7 +132,7 @@ class SocketService {
     this.socket.on("booking:status_update", (data: BookingStatusEvent) => {
       this.statusUpdateCallback?.(data);
     });
- 
+
     // --- Master Notification Listener ---
     this.socket.on("NOTIFICATION_RECEIVED", (data: Notification) => {
       console.log(`[Socket] Notification Received: ${data.type}`);
@@ -135,7 +143,7 @@ class SocketService {
       }
     });
   }
- 
+
   private handleCoreNotificationLogic(data: Notification, role: UserRole) {
     // 1. Cancellation
     if (data.type === NotificationType.BOOKING_CANCELLED) {
@@ -179,29 +187,33 @@ class SocketService {
       });
     }
 
-    // 5. ✅ EXTRA CHARGE APPROVAL REQUEST (Uncommented & Fixed)
-    // Now TypeScript knows 'BOOKING_APPROVAL_REQUEST' exists in NotificationType
+    // 5. Extra Charge Approval Request (Customer Side)
     if (data.type === NotificationType.BOOKING_APPROVAL_REQUEST) {
-      console.log("[Socket] Approval Request. Triggering Modal...");
-
       const extraEvent: ApprovalRequestEvent = {
         bookingId: data.metadata.bookingId,
         extraItem: {
           id: data.metadata.chargeId,
-          // Fallback logic in case Backend title is missing in metadata
-          title: data.metadata.title || data.title || "Additional Item", 
+          title: data.metadata.title || data.title || "Additional Item",
           amount: Number(data.metadata.amount),
           proofUrl: data.metadata.proofUrl,
         },
       };
-
       this.approvalRequestCallback?.(extraEvent);
     }
+
+    // 6. ✅ Charge Update (Technician Side)
+    if (data.type === NotificationType.CHARGE_UPDATE) {
+      this.chargeUpdateCallback?.({
+        bookingId: data.metadata.bookingId,
+        chargeId: data.metadata.chargeId,
+        status: data.metadata.status as "APPROVED" | "REJECTED"
+      });
+    }
   }
-  
+
   private handleBookingConfirmed(data: RawConfirmationPayload, role: UserRole) {
-    const eventData: BookingConfirmedEvent = { 
-      bookingId: data.bookingId || data.metadata?.bookingId || "", 
+    const eventData: BookingConfirmedEvent = {
+      bookingId: data.bookingId || data.metadata?.bookingId || "",
       techName: data.techName || data.metadata?.techName || "",
       otp: data.otp || data.metadata?.otp,
       status: "ACCEPTED",
@@ -239,7 +251,7 @@ class SocketService {
       this.currentUserId = null;
     }
   }
- 
+
   onNotification(callback: (notification: Notification) => void): void {
     this.uiNotificationCallback = callback;
   }
@@ -255,6 +267,9 @@ class SocketService {
   onApprovalRequest(callback: (data: ApprovalRequestEvent) => void): void {
     this.approvalRequestCallback = callback;
   }
+  onChargeUpdate(callback: (data: ChargeUpdateEvent) => void): void { // ✅ NEW
+    this.chargeUpdateCallback = callback;
+  }
   onPaymentRequest(callback: (data: PaymentRequestEvent) => void): void {
     this.paymentRequestCallback = callback;
   }
@@ -265,12 +280,13 @@ class SocketService {
     this.bookingFailedCallback = callback;
   }
 
-  offTrackingListeners(): void { 
+  offTrackingListeners(): void {
     this.bookingConfirmedCallback = null;
     this.statusUpdateCallback = null;
     this.bookingCancelledCallback = null;
     this.bookingFailedCallback = null;
     this.approvalRequestCallback = null;
+    this.chargeUpdateCallback = null; // ✅ NEW
     this.paymentRequestCallback = null;
   }
 }
