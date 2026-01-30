@@ -3,12 +3,13 @@ import type { Notification } from "../../domain/types/Notification";
 import store from "../../store/store";
 import { setIncomingJob, clearIncomingJob } from "../../store/technicianBookingSlice";
 import { setActiveTechnician, clearActiveBooking } from "../../store/customerSlice";
-import { NotificationType } from "../../../../shared/types/value-objects/NotificationTypes";
+import { NotificationType } from "../../../../shared/types/value-objects/NotificationTypes"; // ✅ Imports strict Enum
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
 
 export type UserRole = "CUSTOMER" | "TECHNICIAN" | "ADMIN";
- 
+
+// --- Events Interfaces ---
 
 export interface BookingConfirmedEvent {
   bookingId: string;
@@ -57,7 +58,19 @@ export interface BookingFailedEvent {
   bookingId: string;
   reason: string;
 }
-
+interface RawConfirmationPayload {
+  bookingId?: string;
+  techName?: string;
+  otp?: string;
+  photoUrl?: string;  
+  vehicle?: string;    
+  metadata?: {        
+    bookingId?: string;
+    techName?: string;
+    otp?: string;
+    techPhoto?: string;
+  };
+}
 class SocketService {
   private socket: Socket | null = null;
   private currentUserId: string | null = null;
@@ -98,30 +111,25 @@ class SocketService {
       console.log(`[Socket] Connected as ${role}. ID: ${this.socket?.id}`);
     });
  
-    this.socket.on("booking:confirmed", (data ) => {
+    // --- Direct Listeners ---
+    this.socket.on("booking:confirmed", (data) => {
       console.log("[Socket] Direct 'booking:confirmed'", data);
       this.handleBookingConfirmed(data, role);
     });
 
-    // B. Job Assignment (Technician)
     this.socket.on("booking:assign_request", (data: JobRequestEvent) => {
-      console.log("[Socket] Direct 'booking:assign_request'");
       store.dispatch(setIncomingJob(data));
     });
 
-    // C. Status Updates (Tracking Page)
     this.socket.on("booking:status_update", (data: BookingStatusEvent) => {
-      console.log("[Socket] Direct 'booking:status_update'", data);
       this.statusUpdateCallback?.(data);
     });
  
+    // --- Master Notification Listener ---
     this.socket.on("NOTIFICATION_RECEIVED", (data: Notification) => {
       console.log(`[Socket] Notification Received: ${data.type}`);
-
-      // A. Run Core Logic (Redirections, State Updates, Modals)
       this.handleCoreNotificationLogic(data, role);
 
-      // B. Pass to UI (Toast Messages)
       if (this.uiNotificationCallback) {
         this.uiNotificationCallback(data);
       }
@@ -130,9 +138,7 @@ class SocketService {
  
   private handleCoreNotificationLogic(data: Notification, role: UserRole) {
     // 1. Cancellation
-    if (
-      data.type === NotificationType.BOOKING_CANCELLED 
-    ) {
+    if (data.type === NotificationType.BOOKING_CANCELLED) {
       if (role.toUpperCase() === "TECHNICIAN") {
         store.dispatch(clearIncomingJob());
         this.bookingCancelledCallback?.({
@@ -144,10 +150,8 @@ class SocketService {
       }
     }
 
-    // 2. Confirmation (Fallback if direct event fails)
-    if (
-      data.type === NotificationType.BOOKING_CONFIRMED  
-    ) {
+    // 2. Confirmation
+    if (data.type === NotificationType.BOOKING_CONFIRMED) {
       const eventData = {
         bookingId: data.metadata.bookingId,
         techName: data.metadata.techName,
@@ -159,10 +163,8 @@ class SocketService {
       this.handleBookingConfirmed(eventData, role);
     }
 
-    // 3. Status Updates (Fallback)
-    if (
-      data.type === NotificationType.BOOKING_STATUS_UPDATE  
-    ) {
+    // 3. Status Updates
+    if (data.type === NotificationType.BOOKING_STATUS_UPDATE) {
       this.statusUpdateCallback?.({
         bookingId: data.metadata.bookingId,
         status: data.metadata.status,
@@ -170,41 +172,37 @@ class SocketService {
     }
 
     // 4. Failed Assignment
-    if (
-      data.type === NotificationType.BOOKING_FAILED  
-    ) {
+    if (data.type === NotificationType.BOOKING_FAILED) {
       this.bookingFailedCallback?.({
         bookingId: data.metadata.bookingId,
         reason: data.body || "No technicians available.",
       });
     }
 
-    // 5.  EXTRA CHARGE APPROVAL REQUEST (Triggers Modal)
-    // if (
-    //   data.type === NotificationType.BOOKING_APPROVAL_REQUEST  
-    // ) {
-    //   console.log("[Socket] Approval Request. Triggering Modal...");
+    // 5. ✅ EXTRA CHARGE APPROVAL REQUEST (Uncommented & Fixed)
+    // Now TypeScript knows 'BOOKING_APPROVAL_REQUEST' exists in NotificationType
+    if (data.type === NotificationType.BOOKING_APPROVAL_REQUEST) {
+      console.log("[Socket] Approval Request. Triggering Modal...");
 
-    //   // Mapper: Convert Backend 'Flat' Metadata to Frontend 'Nested' Event
-    //   // Note: Backend metadata doesn't have 'title', so we use 'Notification Title' as fallback
-    //   const extraEvent: ApprovalRequestEvent = {
-    //     bookingId: data.metadata.bookingId,
-    //     extraItem: {
-    //       id: data.metadata.chargeId,
-    //       title: data.title || "Additional Item", // Fallback title
-    //       amount: Number(data.metadata.amount),
-    //       proofUrl: data.metadata.proofUrl,
-    //     },
-    //   };
+      const extraEvent: ApprovalRequestEvent = {
+        bookingId: data.metadata.bookingId,
+        extraItem: {
+          id: data.metadata.chargeId,
+          // Fallback logic in case Backend title is missing in metadata
+          title: data.metadata.title || data.title || "Additional Item", 
+          amount: Number(data.metadata.amount),
+          proofUrl: data.metadata.proofUrl,
+        },
+      };
 
-    //   this.approvalRequestCallback?.(extraEvent);
-    // }
+      this.approvalRequestCallback?.(extraEvent);
+    }
   }
- 
-  private handleBookingConfirmed(data: any, role: UserRole) {
-    const eventData: BookingConfirmedEvent = {
-      bookingId: data.bookingId || data.metadata?.bookingId,
-      techName: data.techName || data.metadata?.techName,
+  
+  private handleBookingConfirmed(data: RawConfirmationPayload, role: UserRole) {
+    const eventData: BookingConfirmedEvent = { 
+      bookingId: data.bookingId || data.metadata?.bookingId || "", 
+      techName: data.techName || data.metadata?.techName || "",
       otp: data.otp || data.metadata?.otp,
       status: "ACCEPTED",
       photoUrl: data.photoUrl || data.metadata?.techPhoto,
@@ -221,7 +219,7 @@ class SocketService {
           })
         );
       } catch (err) {
-        console.warn("[Socket] Redux update failed (Safe to ignore):", err);
+        console.warn("[Socket] Redux update failed:", err);
       }
     }
 
@@ -245,31 +243,24 @@ class SocketService {
   onNotification(callback: (notification: Notification) => void): void {
     this.uiNotificationCallback = callback;
   }
-
   offNotification(): void {
     this.uiNotificationCallback = null;
   }
-
   onBookingConfirmed(callback: (data: BookingConfirmedEvent) => void): void {
     this.bookingConfirmedCallback = callback;
   }
-
   onBookingStatusUpdate(callback: (data: BookingStatusEvent) => void): void {
     this.statusUpdateCallback = callback;
   }
- 
   onApprovalRequest(callback: (data: ApprovalRequestEvent) => void): void {
     this.approvalRequestCallback = callback;
   }
-
   onPaymentRequest(callback: (data: PaymentRequestEvent) => void): void {
     this.paymentRequestCallback = callback;
   }
-
   onBookingCancelled(callback: (data: BookingCancelledEvent) => void): void {
     this.bookingCancelledCallback = callback;
   }
-
   onBookingFailed(callback: (data: BookingFailedEvent) => void): void {
     this.bookingFailedCallback = callback;
   }

@@ -1,5 +1,3 @@
-// src/domain/entities/Booking.ts
-
 import {
   BookingStatus,
   BookingLocation,
@@ -28,10 +26,10 @@ export interface BookingProps {
   
   candidateIds: string[]; 
   assignedTechAttempts: TechAssignmentAttempt[];
-  assignmentExpiresAt?: Date; // Critical for 45s timer queries
+  assignmentExpiresAt?: Date;  
   
   extraCharges: ExtraCharge[];
-  timeline: BookingTimelineEvent[]; // Critical for disputes
+  timeline: BookingTimelineEvent[]; 
   
   chatId?: string;
   meta?: BookingMeta;
@@ -117,8 +115,7 @@ export class Booking {
   public getMeta(): BookingMeta { return this._meta; }
   public getTimestamps(): BookingTimestamps { return this._timestamps; }
   public getSnapshots(): BookingSnapshots { return this._snapshots; }
-
-  // --- Domain Methods ---
+ 
 
   public setCandidates(techIds: string[]): void {
      this._candidateIds = techIds;
@@ -136,27 +133,25 @@ export class Booking {
     this._assignedTechAttempts.push({
       techId,
       attemptAt: now,
-      expiresAt: expiresAt, // Redundant but good for history
+      expiresAt: expiresAt, 
       status: "PENDING",
       adminForced: false
     });
 
-    this._assignmentExpiresAt = expiresAt; // Top-level for DB queries
+    this._assignmentExpiresAt = expiresAt; 
     this._status = "ASSIGNED_PENDING";
     this._timestamps.updatedAt = new Date();
     
     this.addTimelineEvent("ASSIGNED_PENDING", "system", "Attempting to assign technician");
   }
-public handleAssignmentTimeout(): void {
-      // Find the currently pending attempt
+
+  public handleAssignmentTimeout(): void { 
       const pendingAttempt = this._assignedTechAttempts.find(a => a.status === "PENDING");
       if (pendingAttempt) {
           pendingAttempt.status = "TIMEOUT";
-      }
-      // Status remains ASSIGNED_PENDING if we are going to add another, 
-      // but if we fail, we update it later.
-      // For now, just mark the attempt.
+      } 
   }
+
   public acceptAssignment(techId: string): void {
     if (this._status !== "ASSIGNED_PENDING" && this._status !== "REQUESTED") {
       throw new Error("Booking is not pending assignment.");
@@ -172,92 +167,81 @@ public handleAssignmentTimeout(): void {
 
     this._technicianId = techId;
     this._status = "ACCEPTED";
-    this._assignmentExpiresAt = undefined; // Clear the timer
+    this._assignmentExpiresAt = undefined;  
     
     this._timestamps.acceptedAt = new Date();
     this._timestamps.updatedAt = new Date();
     
     this.addTimelineEvent("ACCEPTED", `tech:${techId}`, "Technician accepted the job");
-  }
-  // --- OTP Management ---
+  } 
+
   public setOtp(otp: string): void {
     if (!this._meta) {
         this._meta = {};
-    }
-    // Ensure your BookingMeta type in shared/types has an optional 'otp' field
+    } 
     this._meta.otp = otp;
     this._timestamps.updatedAt = new Date();
   }
+
   public adminForceAssign(
       techId: string, 
       snapshot: { 
           tech: { name: string; phone: string; avatarUrl?: string; rating: number };
           adminName: string 
       }
-  ): void {
-    // 1. Reset any existing flow
+  ): void { 
     this._status = "ACCEPTED";
     this._technicianId = techId;
     this._assignmentExpiresAt = undefined;
-    this._candidateIds = []; // Clear other candidates
-    
-    // 2. Set Snapshot
+    this._candidateIds = []; 
+     
     this.setTechnicianSnapshot(snapshot.tech);
-
-    // 3. Log it
+ 
     this._timestamps.acceptedAt = new Date();
     this._timestamps.updatedAt = new Date();
-    
-    // 4. Force status of any previous attempts to "CANCELLED_BY_SYSTEM"
+     
     this._assignedTechAttempts.forEach(a => {
         if (a.status === "PENDING") {
             a.status = "CANCELLED_BY_SYSTEM";
             a.rejectionReason = "Admin forced new assignment";
         }
     });
-
-    // 5. Add Timeline Event
+ 
     this.addTimelineEvent(
         "ACCEPTED", 
         `admin:${snapshot.adminName}`, 
         "Admin forced assignment"
     );
   }
+
   public adminForceStatus(status: BookingStatus, adminId: string, reason: string): void {
       this.updateStatus(status, `admin:${adminId}`, reason);
   }
 
-public setTechnicianId(techId: string | null): void {
+  public setTechnicianId(techId: string | null): void {
     this._technicianId = techId;
     this._timestamps.updatedAt = new Date();
   }
  
-public rejectAssignment(techId: string, reason: string = "REJECTED"): void {
-    // 1. Find the attempt (Handles both PENDING invites and ACCEPTED active jobs)
+  public rejectAssignment(techId: string, reason: string = "REJECTED"): void { 
     const attempt = this._assignedTechAttempts.find(
       a => a.techId === techId && (a.status === "PENDING" || a.status === "ACCEPTED")
     );
 
-    if (attempt) {
-      // If they accepted and then cancelled, mark as CANCELLED_BY_TECH
+    if (attempt) { 
       const newStatus = attempt.status === "ACCEPTED" ? "CANCELLED_BY_TECH" : "REJECTED";
       attempt.status = reason === "TIMEOUT" ? "TIMEOUT" : newStatus;
       attempt.rejectionReason = reason;
     }
-    
-    // 2. Clear the active technician
+     
     if (this._technicianId === techId) {
         this._technicianId = null;
-        
-        // 🚨 CRITICAL FIX: Reset status to REQUESTED
-        // This allows addAssignmentAttempt() to run without throwing an error
         this._status = "REQUESTED"; 
     }
 
     this._timestamps.updatedAt = new Date();
   }
   
-
   public updateStatus(newStatus: BookingStatus, changedBy: string, reason?: string): void {
     this._status = newStatus;
     
@@ -269,14 +253,19 @@ public rejectAssignment(techId: string, reason: string = "REJECTED"): void {
     this.addTimelineEvent(newStatus, changedBy, reason);
   }
 
-  public addExtraCharge(charge: ExtraCharge): void {
-    if (this._status !== "IN_PROGRESS" && this._status !== "EXTRAS_PENDING") {
-      throw new Error("Cannot add extra charges at this stage.");
+  // ✅ CRITICAL FIX: Allow adding charges in other active statuses
+  public addExtraCharge(charge: ExtraCharge): void { 
+    const allowedStatuses = ["ACCEPTED", "EN_ROUTE", "REACHED", "IN_PROGRESS", "EXTRAS_PENDING"];
+    
+    if (!allowedStatuses.includes(this._status)) {
+      throw new Error(`Cannot add extra charges when status is ${this._status}`);
     }
+
     this._extraCharges.push(charge);
     this.updateStatus("EXTRAS_PENDING", `tech:${charge.addedByTechId}`, `Added charge: ${charge.title}`);
   }
 
+  // ✅ Logic to update status and auto-resume to IN_PROGRESS
   public updateExtraChargeStatus(chargeId: string, status: "APPROVED" | "REJECTED", changedBy: string): void {
     const charge = this._extraCharges.find(c => c.id === chargeId);
     if (!charge) throw new Error("Charge not found");
@@ -284,21 +273,27 @@ public rejectAssignment(techId: string, reason: string = "REJECTED"): void {
     charge.status = status;
     
     const hasPending = this._extraCharges.some(c => c.status === "PENDING");
-    if (!hasPending) {
-      // If all cleared, go back to IN_PROGRESS
+    
+    // Logic: If we are in 'EXTRAS_PENDING' and all charges are resolved, resume to 'IN_PROGRESS'
+    if (!hasPending && this._status === 'EXTRAS_PENDING') {
       this.updateStatus("IN_PROGRESS", changedBy, "All extra charges resolved");
     } else {
         this._timestamps.updatedAt = new Date();
+        this.addTimelineEvent("EXTRAS_PENDING", changedBy, `Charge ${status.toLowerCase()}`);
     }
   }
 
   public calculateFinalPrice(): void {
-    let totalExtras = 0;
-    this._extraCharges.forEach(charge => {
-      if (charge.status === "APPROVED") totalExtras += charge.amount;
-    });
-
-    this._pricing.final = this._pricing.estimated + totalExtras + this._pricing.deliveryFee;
+    const basePrice = this._pricing.estimated || 0;
+    const delivery = this._pricing.deliveryFee || 0;
+    const discount = this._pricing.discount || 0;
+    const tax = this._pricing.tax || 0;
+ 
+    const extrasTotal = this._extraCharges
+      .filter((c) => c.status === "APPROVED")
+      .reduce((sum, c) => sum + c.amount, 0);
+ 
+    this._pricing.final = basePrice + delivery + extrasTotal + tax - discount;
   }
 
   private addTimelineEvent(status: BookingStatus, changedBy: string, reason?: string) {
@@ -309,6 +304,7 @@ public rejectAssignment(techId: string, reason: string = "REJECTED"): void {
           reason
       });
   }
+
   public setInitialSnapshots(
     customer: { name: string; phone: string; avatarUrl?: string },
     service: { name: string; categoryId: string }
@@ -316,6 +312,7 @@ public rejectAssignment(techId: string, reason: string = "REJECTED"): void {
     this._snapshots.customer = customer;
     this._snapshots.service = service;
   }
+
   public setTechnicianSnapshot(tech: { 
     name: string; 
     phone: string; 

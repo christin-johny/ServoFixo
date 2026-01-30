@@ -36,7 +36,6 @@ export class CustomerCancelBookingUseCase implements IUseCase<void, [CancelBooki
         const pendingAttempt = booking.getAttempts().find(a => a.status === "PENDING");
         
         if (pendingAttempt) {
-            console.log(`[Cancel] Withdrawing request from Tech: ${pendingAttempt.techId}`);
             
             // 1. Notify the candidate tech to CLOSE their modal instantly
             await this._notificationService.send({

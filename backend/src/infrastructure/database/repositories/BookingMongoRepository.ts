@@ -18,6 +18,7 @@ import {
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { isValidObjectId } from "mongoose";
 
+
 export class BookingMongoRepository implements IBookingRepository {
   
   // --- Standard CRUD ---
@@ -60,19 +61,17 @@ export class BookingMongoRepository implements IBookingRepository {
     return this.toDomain(doc);
   }
 
-async findAllPaginated(
+  async findAllPaginated(
     page: number, 
     limit: number, 
     filters: BookingFilterParams
   ): Promise<PaginatedBookingResult> {
     const query: FilterQuery<BookingDocument> = { isDeleted: { $ne: true } };
 
-    // 1. Basic Filters (Existing)
     if (filters.customerId) query.customerId = filters.customerId;
     if (filters.technicianId) query.technicianId = filters.technicianId;
     if (filters.zoneId) query.zoneId = filters.zoneId;
     
-    // 2. Status Filter (Existing)
     if (filters.status) {
       if (Array.isArray(filters.status)) {
         query.status = { $in: filters.status };
@@ -81,34 +80,25 @@ async findAllPaginated(
       }
     }
 
-    // 3. Date Range Filter (Existing)
     if (filters.startDate || filters.endDate) {
       query["timestamps.createdAt"] = {};
       if (filters.startDate) query["timestamps.createdAt"].$gte = filters.startDate;
       if (filters.endDate) query["timestamps.createdAt"].$lte = filters.endDate;
     }
 
-    //  4. NEW: Search Logic (Booking ID + Service Name)
-    // This allows the Search Bar in your DataTable to work!
     if (filters.search) {
-      const searchRegex = new RegExp(filters.search, 'i'); // Case insensitive
-      
+      const searchRegex = new RegExp(filters.search, 'i');
       const orConditions: any[] = [
-        { "snapshots.service.name": searchRegex } // Search Service Name
+        { "snapshots.service.name": searchRegex }
       ];
-
-      // If search term looks like a MongoID, search by _id too
       if (isValidObjectId(filters.search)) {
         orConditions.push({ _id: filters.search });
       }
-
-      // Merge into query
       query.$or = orConditions;
     }
 
     const skip = (page - 1) * limit;
     
-    // Execute
     const [docs, total] = await Promise.all([
       BookingModel.find(query)
         .skip(skip)
@@ -157,11 +147,8 @@ async findAllPaginated(
     return this.toDomain(doc);
   }
 
-  // --- Scheduler Queries ---
-
   async findExpiredAssignments(): Promise<Booking[]> {
     const now = new Date();
-    // Find bookings that are PENDING assignment AND the timer has passed
     const docs = await BookingModel.find({
       status: "ASSIGNED_PENDING",
       assignmentExpiresAt: { $lte: now },
@@ -175,7 +162,6 @@ async findAllPaginated(
 
   async updateStatus(id: string, status: BookingStatus): Promise<void> {
     const update: any = { status };
-    
     if (status === "IN_PROGRESS") update["timestamps.startedAt"] = new Date();
     if (status === "COMPLETED") update["timestamps.completedAt"] = new Date();
     if (status === "CANCELLED") update["timestamps.cancelledAt"] = new Date();
@@ -195,61 +181,43 @@ async findAllPaginated(
     }).exec();
   }
 
-async assignTechnician(
-  bookingId: string,
-  technicianId: string,
-  techSnapshot: {
-    name: string;
-    phone: string;
-    avatarUrl?: string;
-    rating: number;
+  async assignTechnician(
+    bookingId: string,
+    technicianId: string,
+    techSnapshot: { name: string; phone: string; avatarUrl?: string; rating: number }
+  ): Promise<boolean> {
+    const result = await BookingModel.findOneAndUpdate(
+      {
+        _id: bookingId,
+        status: "ASSIGNED_PENDING",
+        assignedTechAttempts: { $elemMatch: { techId: technicianId, status: "PENDING" } }
+      },
+      {
+        $set: {
+          technicianId,
+          status: "ACCEPTED",
+          assignmentExpiresAt: null,
+          "timestamps.acceptedAt": new Date(),
+          "assignedTechAttempts.$[elem].status": "ACCEPTED",
+          "snapshots.technician": techSnapshot
+        }
+      },
+      {
+        new: true,
+        arrayFilters: [{ "elem.techId": technicianId, "elem.status": "PENDING" }]
+      }
+    ).exec();
+    return Boolean(result);
   }
-): Promise<boolean> {
-  const result = await BookingModel.findOneAndUpdate(
-    {
-      _id: bookingId,
-      status: "ASSIGNED_PENDING",
-      assignedTechAttempts: {
-        $elemMatch: {
-          techId: technicianId,
-          status: "PENDING"
-        }
-      }
-    },
-    {
-      $set: {
-        technicianId,
-        status: "ACCEPTED",
-        assignmentExpiresAt: null,
-
-        "timestamps.acceptedAt": new Date(),
-
-        "assignedTechAttempts.$[elem].status": "ACCEPTED",
-        "snapshots.technician": techSnapshot
-      }
-    },
-    {
-      new: true,
-      arrayFilters: [
-        {
-          "elem.techId": technicianId,
-          "elem.status": "PENDING"
-        }
-      ]
-    }
-  ).exec();
-
-  return Boolean(result);
-}
-
 
   async updateExtraChargeStatus(
     bookingId: string, 
     chargeId: string, 
     status: "APPROVED" | "REJECTED"
   ): Promise<void> {
+    // ✅ FIX: Query by 'extraCharges.id' (String) instead of 'extraCharges._id' (ObjectId)
     const result = await BookingModel.updateOne(
-      { _id: bookingId, "extraCharges._id": chargeId },
+      { _id: bookingId, "extraCharges.id": chargeId }, 
       {
         $set: {
           "extraCharges.$.status": status,
@@ -259,25 +227,26 @@ async assignTechnician(
     ).exec();
 
     if (result.matchedCount === 0) {
+      // Logic: If update failed, it likely means the ID wasn't found as a String ID
       throw new Error("Booking or Charge not found");
     }
   }
 
-async updatePaymentStatus(id: string, status: PaymentStatus, transactionId?: string): Promise<void> {
+  async updatePaymentStatus(id: string, status: PaymentStatus, transactionId?: string): Promise<void> {
     const updatePayload: any = {
       "payment.status": status,
       updatedAt: new Date()
     };
-
     if (transactionId) {
       updatePayload["payment.transactionId"] = transactionId;
     }
-
     await BookingModel.findByIdAndUpdate(id, { $set: updatePayload }).exec();
   }
 
-  async addExtraCharge(bookingId: string, charge: ExtraCharge): Promise<void> {
+async addExtraCharge(bookingId: string, charge: ExtraCharge): Promise<ExtraCharge> {
     const chargeData = {
+      // ❌ REMOVE THIS LINE: _id: charge.id 
+      // We let MongoDB generate the _id automatically.
       title: charge.title,
       amount: charge.amount,
       description: charge.description,
@@ -296,23 +265,37 @@ async updatePaymentStatus(id: string, status: PaymentStatus, transactionId?: str
           "timestamps.updatedAt": new Date() 
         }
       },
-      { new: true }
+      { new: true } // Return the updated document
     ).exec();
 
     if (!result) throw new Error("Booking not found");
+
+    // Retrieve the item we just added (it will be the last one in the array)
+    // We do this to get the real _id generated by MongoDB
+    const addedItem = result.extraCharges[result.extraCharges.length - 1] as any;
+
+    if (!addedItem) throw new Error("Failed to add charge");
+
+    // Return the Domain Object with the REAL Database ID
+    return {
+        id: addedItem._id.toString(), // <--- The Real ID (e.g., "65e...")
+        title: addedItem.title,
+        amount: addedItem.amount,
+        description: addedItem.description,
+        proofUrl: addedItem.proofUrl,
+        status: addedItem.status,
+        addedByTechId: addedItem.addedByTechId,
+        addedAt: addedItem.addedAt
+    };
   }
   async findByPaymentOrderId(orderId: string): Promise<Booking | null> {
-    // Queries the nested payment object for the order ID
     const doc = await BookingModel.findOne({
       "payment.razorpayOrderId": orderId,
       isDeleted: { $ne: true }
     }).exec();
-
     if (!doc) return null;
     return this.toDomain(doc);
   }
-
-  // --- Internal Private Mappers (DB <-> Domain) ---
 
   private toDomain(doc: BookingDocument): Booking {
     if (!doc) throw new Error("Booking document is undefined");
@@ -327,7 +310,7 @@ async updatePaymentStatus(id: string, status: PaymentStatus, transactionId?: str
     }));
 
     const charges = (doc.extraCharges || []).map((c: any) => ({
-      id: c._id ? c._id.toString() : "",
+      id: c.id || c._id?.toString(), // Support both for safety
       title: c.title,
       amount: c.amount,
       description: c.description,
@@ -363,7 +346,6 @@ async updatePaymentStatus(id: string, status: PaymentStatus, transactionId?: str
       chatId: doc.chatId,
       meta: doc.meta,
       timestamps: doc.timestamps,
-      
       snapshots: {
         technician: doc.snapshots?.technician,
         customer: doc.snapshots?.customer || { name: "Unknown", phone: "" },
@@ -374,7 +356,6 @@ async updatePaymentStatus(id: string, status: PaymentStatus, transactionId?: str
 
   private toPersistence(entity: Booking): Partial<BookingDocument> {
     const props = entity.toProps();
-
     const snapshots = props.snapshots || {
       customer: { name: "Unknown", phone: "" },
       service: { name: "Unknown", categoryId: "" }
@@ -389,10 +370,8 @@ async updatePaymentStatus(id: string, status: PaymentStatus, transactionId?: str
       location: props.location,
       pricing: props.pricing,
       payment: props.payment,
-      
       candidateIds: props.candidateIds,
       assignmentExpiresAt: props.assignmentExpiresAt,
-
       assignedTechAttempts: props.assignedTechAttempts.map(a => ({
         techId: a.techId,
         attemptAt: a.attemptAt,
@@ -401,9 +380,8 @@ async updatePaymentStatus(id: string, status: PaymentStatus, transactionId?: str
         adminForced: a.adminForced || false,
         rejectionReason: a.rejectionReason
       })),
-
       extraCharges: props.extraCharges.map(c => ({
-        _id: c.id, 
+        id: c.id, // ✅ FIX: Use 'id' here as well
         title: c.title,
         amount: c.amount,
         description: c.description,
@@ -412,7 +390,6 @@ async updatePaymentStatus(id: string, status: PaymentStatus, transactionId?: str
         addedByTechId: c.addedByTechId,
         addedAt: c.addedAt
       })) as any,
-
       timeline: props.timeline.map(t => ({
         status: t.status,
         changedBy: t.changedBy,
@@ -420,13 +397,11 @@ async updatePaymentStatus(id: string, status: PaymentStatus, transactionId?: str
         reason: t.reason,
         meta: t.meta
       })),
-      
       snapshots: {
         technician: snapshots.technician,
         customer: snapshots.customer,
         service: snapshots.service
       },
-
       chatId: props.chatId,
       meta: props.meta,
       timestamps: props.timestamps,

@@ -6,75 +6,75 @@ import { AddExtraChargeDto } from "../../dto/booking/AddExtraChargeDto";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { ExtraCharge } from "../../../../../shared/types/value-objects/BookingTypes";
 import { IImageService } from "../../interfaces/IImageService"; 
+import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes"; // ✅ Import Enum
 
-// Define IFile locally or import it if you have a shared type
 export interface IFile {
     buffer: Buffer;
     originalName: string;
     mimeType: string;
 }
 
-//  FIX: Update the generic type to accept [Dto, IFile?]
+// ... imports (NO mongoose import needed!)
+
 export class AddExtraChargeUseCase implements IUseCase<void, [AddExtraChargeDto, IFile?]> {
   constructor(
     private readonly _bookingRepo: IBookingRepository,
     private readonly _notificationService: INotificationService,
-    private readonly _imageService: IImageService, //  Injected Image Service
+    private readonly _imageService: IImageService,
     private readonly _logger: ILogger
   ) {}
 
-  //  FIX: Update execute to accept proofFile
   async execute(input: AddExtraChargeDto, proofFile?: IFile): Promise<void> {
     const booking = await this._bookingRepo.findById(input.bookingId);
     if (!booking) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
 
     if (booking.getTechnicianId() !== input.technicianId) {
         throw new Error(ErrorMessages.UNAUTHORIZED);
-    }
-
-    // 1. Handle Image Upload
-    let uploadedProofUrl = input.proofUrl || "";
+    } 
     
+    // 1. Handle Image Upload (Same as before)
+    let uploadedProofUrl = input.proofUrl || "";
     if (proofFile) {
         try {
             uploadedProofUrl = await this._imageService.uploadImage(
-                proofFile.buffer,
-                proofFile.originalName,
-                proofFile.mimeType
+                proofFile.buffer, proofFile.originalName, proofFile.mimeType
             );
-            this._logger.info(`Proof image uploaded: ${uploadedProofUrl}`);
         } catch (error) {
-            this._logger.error("Failed to upload proof image", `${error}`);
-            throw new Error("Failed to upload proof image");
+             throw new Error("Failed to upload proof image");
         }
     }
 
-    // 2. Create the Charge Object
-    const newCharge: ExtraCharge = {
-        id: new Date().getTime().toString(),
+    // 2. Create Temporary Charge Object
+    // The ID here is temporary. MongoDB will replace it.
+    const tempCharge: ExtraCharge = {
+        id: "TEMP_ID", 
         title: input.title,
         amount: Number(input.amount),
         description: input.description || "",
-        proofUrl: uploadedProofUrl, //  Use the uploaded URL
+        proofUrl: uploadedProofUrl,
         status: "PENDING",
         addedByTechId: input.technicianId,
         addedAt: new Date()
-    };
+    }; 
 
     // 3. Update Domain & Persist
-    booking.addExtraCharge(newCharge);
-    await this._bookingRepo.addExtraCharge(booking.getId(), newCharge);
+    // ✅ FIX: Await the REAL saved object from the Repo
+    const savedCharge = await this._bookingRepo.addExtraCharge(booking.getId(), tempCharge);
 
-    // 4. Notify Customer
+    // Update in-memory domain with the REAL ID
+    booking.addExtraCharge(savedCharge); 
+
+    // 4. Notify Customer with the REAL ID
     await this._notificationService.send({
         recipientId: booking.getCustomerId(),
         recipientType: "CUSTOMER",
-        type: "BOOKING_APPROVAL_REQUEST" as any,
+        type: NotificationType.BOOKING_APPROVAL_REQUEST, 
         title: "Additional Part Required ⚠️",
         body: `Technician added ${input.title} for ₹${input.amount}. Please approve.`,
         metadata: { 
             bookingId: booking.getId(), 
-            chargeId: newCharge.id,
+            chargeId: savedCharge.id, // <--- Socket now sends the exact ID that exists in DB
+            title: input.title,
             amount: input.amount.toString(),
             proofUrl: uploadedProofUrl
         },

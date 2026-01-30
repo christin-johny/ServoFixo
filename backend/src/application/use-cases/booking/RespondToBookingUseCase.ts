@@ -137,7 +137,7 @@ export class RespondToBookingUseCase {
     this._logger.info(`Booking ${booking.getId()} ACCEPTED by ${techId}`);
   }
 
-  // --- SCENARIO 2B: TECHNICIAN REJECTS (Unchanged) ---
+  // --- SCENARIO 2B: TECHNICIAN REJECTS  
   private async handleRejection(booking: Booking, techId: string, reason?: string) {
     booking.rejectAssignment(techId, reason || "Declined by Technician");
 

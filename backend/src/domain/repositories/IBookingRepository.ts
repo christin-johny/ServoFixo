@@ -61,6 +61,7 @@ export interface IBookingRepository extends IBaseRepository<Booking> {
 
   updatePaymentStatus(bookingId: string, status: PaymentStatus, transactionId?: string): Promise<void>;
 
-  addExtraCharge(bookingId: string, charge: ExtraCharge): Promise<void>;
+addExtraCharge(bookingId: string, charge: ExtraCharge): Promise<ExtraCharge>;
+
   findByPaymentOrderId(orderId: string): Promise<Booking | null>;
 }

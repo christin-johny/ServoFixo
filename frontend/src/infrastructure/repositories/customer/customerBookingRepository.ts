@@ -83,7 +83,7 @@ export const respondToExtraCharge = async (
   chargeId: string, 
   response: "APPROVE" | "REJECT"
 ): Promise<void> => { 
-    await api.post(`/bookings/${bookingId}/extras/${chargeId}/respond`, { 
+    await api.post(BOOKING_ENDPOINTS.EXTRA_CHARGES(bookingId,chargeId), { 
         response 
     });
 };
