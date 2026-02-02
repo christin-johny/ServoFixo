@@ -683,6 +683,7 @@ const completeJobUseCase = new CompleteJobUseCase(
   bookingRepo,
   paymentGateway,  
   notificationService,
+  imageService,
   logger  
 )
 

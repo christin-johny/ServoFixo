@@ -1,9 +1,6 @@
 import api from "../../api/axiosClient";
 import { BOOKING_ENDPOINTS } from "../../api/endpoints/Booking/booking.endpoints";
-
-// --- 1. Define Strict Types for API Response ---
-
-// Generic API Wrapper (The outer shell)
+ 
 interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -17,8 +14,7 @@ interface PaginatedData<T> {
   limit: number;
   totalPages: number;
 }
-
-// --- 2. Payload Interfaces ---
+ 
 
 export interface CreateBookingPayload {
   serviceId: string;

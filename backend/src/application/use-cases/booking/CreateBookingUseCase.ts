@@ -191,7 +191,6 @@ export class CreateBookingUseCase {
     return createdBooking;
   }
 
-  // Helpers
   private sortCandidates(techs: Technician[], customerCoords: { lat: number; lng: number }): Technician[] {
     return techs.sort((a, b) => {
       const locA = a.getCurrentLocation()?.coordinates;

@@ -17,7 +17,7 @@ export class RespondToExtraChargeUseCase implements IUseCase<void, [RespondToExt
   async execute(input: RespondToExtraChargeDto): Promise<void> {
     const booking = await this._bookingRepo.findById(input.bookingId);
     if (!booking) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
-  console.log(input)
+ 
     if (booking.getCustomerId() !== input.customerId) {
         throw new Error(ErrorMessages.UNAUTHORIZED);
     }

@@ -7,6 +7,7 @@ import {
 export interface BookingDocument extends Document {
   customerId: string;
   technicianId?: string;
+  completionPhotos?: string[];
   serviceId: string;
   zoneId: string;
   
@@ -152,6 +153,7 @@ const BookingSchema: Schema<BookingDocument> = new Schema(
     }],
     
     assignmentExpiresAt: { type: Date, index: true },
+    completionPhotos: [{ type: String }],
  
     extraCharges: [{ title: String, amount: Number, status: String, addedByTechId: String }],
     timeline: [{ status: String, changedBy: String, timestamp: Date, reason: String }],

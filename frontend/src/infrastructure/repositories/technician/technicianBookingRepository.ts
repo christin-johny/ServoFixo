@@ -49,10 +49,19 @@ export const addExtraCharge = async (bookingId: string, data: { title: string; a
   const response = await api.post(TECH_BOOKING_ENDPOINTS.ADD_EXTRA_CHARGE(bookingId), formData);
   return response.data;
 };
-
-export const completeJob = async (bookingId: string) => {
-  const response = await api.post(TECH_BOOKING_ENDPOINTS.COMPLETE_JOB(bookingId));
-  return response.data;
+ 
+export const completeJob = async (id: string, proofFile?: File): Promise<void> => {
+    if (proofFile) {
+        const formData = new FormData();
+        formData.append("proof", proofFile); 
+ 
+        await api.post(TECH_BOOKING_ENDPOINTS.COMPLETE_JOB(id), formData, {
+            headers: { "Content-Type": undefined }
+        });
+        
+    } else {
+        await api.post(TECH_BOOKING_ENDPOINTS.COMPLETE_JOB(id), {});
+    }
 };
 
 export const getTechnicianJobs = async (params: JobHistoryParams = {}) => {

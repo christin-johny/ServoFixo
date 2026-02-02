@@ -118,7 +118,7 @@ export class BookingMongoRepository implements IBookingRepository {
 
   async findActiveBookingForTechnician(technicianId: string): Promise<Booking | null> {
     const activeStatuses: BookingStatus[] = [
-      "ACCEPTED", "EN_ROUTE", "REACHED", "IN_PROGRESS", "EXTRAS_PENDING"
+      "ACCEPTED", "EN_ROUTE", "REACHED", "IN_PROGRESS", "EXTRAS_PENDING","COMPLETED"
     ];
     
     const doc = await BookingModel.findOne({
@@ -134,9 +134,8 @@ export class BookingMongoRepository implements IBookingRepository {
   async findActiveBookingForCustomer(customerId: string): Promise<Booking | null> {
     const activeStatuses: BookingStatus[] = [
       "REQUESTED", "ASSIGNED_PENDING", "ACCEPTED", "EN_ROUTE", 
-      "REACHED", "IN_PROGRESS", "EXTRAS_PENDING"
-    ];
-
+      "REACHED", "IN_PROGRESS", "EXTRAS_PENDING",'COMPLETED'
+    ]; 
     const doc = await BookingModel.findOne({
       customerId,
       status: { $in: activeStatuses },

@@ -76,10 +76,9 @@ const AddExtrasPage: React.FC = () => {
     socketService.connect(user.id, "TECHNICIAN");
 
     // 3. Listen for Charge Updates (Customer Approved/Rejected)
-    socketService.onChargeUpdate((data) => {
-      console.log("[AddExtras] Charge Updated:", data);
+    socketService.onChargeUpdate((data) => { 
       if (data.bookingId === id) {
-        loadJob(); // 🔄 Auto-refresh list
+        loadJob(); 
       }
     });
 

@@ -11,20 +11,20 @@ import {
     setCurrentLocation,
     setAddresses, 
     clearCustomerData,
-    setActiveBooking,      // ✅ Import
-    setActiveTechnician    // ✅ Import
+    setActiveBooking,       
+    setActiveTechnician     
 } from "../../../../store/customerSlice";
 import { 
     getProfile, 
     getZoneByLocation, 
     getMyAddresses 
 } from "../../../../infrastructure/repositories/customer/customerRepository";
-import { getActiveBooking } from "../../../../infrastructure/repositories/customer/customerBookingRepository"; // ✅ Import
+import { getActiveBooking } from "../../../../infrastructure/repositories/customer/customerBookingRepository"; 
 import { customerLogout } from "../../../../infrastructure/repositories/authRepository";
 import ConfirmModal from "../../Shared/ConfirmModal/ConfirmModal";
 import LocationPickerModal from "./LocationPickerModal";
 import NotificationBell from "../../Shared/Notification/NotificationBell";
-import ActiveBookingFooter from "./ActiveBookingFooter"; // ✅ Import Footer
+import ActiveBookingFooter from "./ActiveBookingFooter" 
 import { useCustomerNotifications } from "../../../hooks/useCustomerNotifications";
 
 const useCurrentUser = () => {
@@ -122,12 +122,10 @@ const Navbar: React.FC = () => {
         // Only fetch if logged in AND we don't have an ID yet (e.g. after refresh)
         if (isLoggedIn && !activeBookingId) {
             const fetchActiveJob = async () => {
-                try {
-                    console.log("🔄 [Navbar] Fetching active booking...");
+                try { 
                     const booking = await getActiveBooking();
                     
-                    if (booking) {
-                        console.log("✅ [Navbar] Restoring Active Job:", booking.id);
+                    if (booking) { 
                         
                         // 1. Set Booking ID & Status
                         dispatch(setActiveBooking({ id: booking.id, status: booking.status }));

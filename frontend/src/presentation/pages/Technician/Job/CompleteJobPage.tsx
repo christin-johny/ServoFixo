@@ -3,7 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux"; 
 import { 
   ArrowLeft, CheckCircle2, IndianRupee, 
-  Receipt, ShieldCheck, Layers, Loader2, RefreshCw 
+  Receipt, ShieldCheck, Layers, Loader2, RefreshCw,
+  Camera, X 
 } from "lucide-react";
 import { useNotification } from "../../../hooks/useNotification";
 import { getTechnicianBookingById, completeJob } from "../../../../infrastructure/repositories/technician/technicianBookingRepository";
@@ -42,7 +43,8 @@ const CompleteJobPage: React.FC = () => {
   const [job, setJob] = useState<ExtendedJob | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+const [proofFile, setProofFile] = useState<File | null>(null); // ✅ State for File
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   // State to track view mode
   const [paymentStatus, setPaymentStatus] = useState<"IDLE" | "WAITING_FOR_PAYMENT" | "PAID">("IDLE");
 
@@ -95,14 +97,31 @@ const CompleteJobPage: React.FC = () => {
     };
   }, [id, user?.id]);
 
+const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) return showError("File size must be < 5MB");
+      setProofFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const removeImage = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setProofFile(null);
+    setPreviewUrl(null);
+  };
+
   const handleSendBill = async () => {
     if (!id) return;
-    
+    if (!proofFile) return showError("Work proof photo is required."); // ✅ Validation
+
     setIsSubmitting(true);
     try {
-      await completeJob(id);
+      // ✅ Use completeJob with File (You need to update your repo function to accept file)
+      await completeJob(id, proofFile); 
       setPaymentStatus("WAITING_FOR_PAYMENT");
-      showSuccess("Bill sent to customer. Waiting for payment...");
+      showSuccess("Bill sent to customer.");
     } catch (err) {
       const error = err as ApiError;
       showError(error.response?.data?.message || "Failed to send bill");
@@ -116,10 +135,14 @@ const CompleteJobPage: React.FC = () => {
   const serviceName = job.snapshots?.service?.name || job.service?.name || "Service Charge";
   const jobIdDisplay = job.id ? job.id.slice(-8).toUpperCase() : "UNKNOWN";
 
-  const grandTotal = job.pricing?.estimated || 0; 
+const baseServiceCharge = job.pricing?.estimated || 0; 
+
+  // 2. Calculate Extras (e.g., 200)
   const approvedExtras = (job.extraCharges || []).filter(e => e.status === "APPROVED");
   const extrasTotal = approvedExtras.reduce((sum, item) => sum + item.amount, 0);
-  const baseServiceCharge = grandTotal - extrasTotal;
+
+  // 3. Grand Total is Base + Extras (e.g., 700)
+  const grandTotal = baseServiceCharge + extrasTotal;
 
   // --- VIEW A: WAITING / PAID SCREEN ---
   if (paymentStatus === "WAITING_FOR_PAYMENT" || paymentStatus === "PAID") {
@@ -197,6 +220,33 @@ const CompleteJobPage: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 max-w-3xl w-full mx-auto p-4 md:p-8 space-y-6">
 
+<div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 animate-fade-in-up">
+            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4 flex items-center gap-2">
+                <Camera className="w-4 h-4 text-blue-600" /> Work Proof (Required)
+            </h3>
+            
+            {!previewUrl ? (
+                <label className="group flex flex-col items-center justify-center w-full h-40 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <div className="p-3 bg-white rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                            <Camera className="w-6 h-6 text-gray-400 group-hover:text-blue-600" />
+                        </div>
+                        <p className="text-sm font-semibold text-gray-600">Click to take photo</p>
+                    </div>
+                    <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                </label>
+            ) : (
+                <div className="relative w-full h-56 rounded-xl overflow-hidden border border-gray-200 shadow-sm group">
+                    <img src={previewUrl} alt="Work Proof" className="w-full h-full object-cover" />
+                    <button onClick={removeImage} className="absolute top-2 right-2 p-2 bg-white rounded-full text-red-600 shadow-lg hover:scale-110 transition-transform">
+                        <X className="w-5 h-5" />
+                    </button>
+                    <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-md font-medium flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Ready to Upload
+                    </div>
+                </div>
+            )}
+        </div>
         {/* Invoice Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative animate-fade-in-up">
            <div className="bg-gray-50/50 p-6 border-b border-gray-100 flex items-center justify-between">

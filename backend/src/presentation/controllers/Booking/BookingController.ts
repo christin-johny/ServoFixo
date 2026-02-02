@@ -36,7 +36,7 @@ export class BookingController extends BaseController {
     private readonly _updateJobStatusUseCase: IUseCase<void, [UpdateJobStatusDto]>,
     private readonly _addExtraChargeUseCase: IUseCase<void, [AddExtraChargeDto, IFile?]>,
     private readonly _respondToExtraChargeUseCase: IUseCase<void, [RespondToExtraChargeDto]>,
-    private readonly _completeJobUseCase: IUseCase<void, [CompleteJobDto]>,
+    private readonly _completeJobUseCase: IUseCase<void, [CompleteJobDto, IFile?]>,
     private readonly _getBookingDetailsUseCase: IUseCase<Booking, [GetBookingDetailsDto]>,
     private readonly _customerCancelUseCase: IUseCase<void, [CancelBookingDto]>,
     private readonly _technicianCancelUseCase: IUseCase<void, [CancelBookingDto]>,
@@ -326,7 +326,7 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
     }
   };
 
-  /**
+/**
    * @route POST /api/bookings/:id/complete
    * @desc Technician marks job as done and generates invoice (Flow E)
    * @access Technician
@@ -339,17 +339,27 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
       const input: CompleteJobDto = {
         bookingId: req.params.id,
         technicianId
-      };
+      }; 
+ 
+      let proofFile: IFile | undefined;
+      if (req.file) {
+          proofFile = {
+              buffer: req.file.buffer,
+              originalName: req.file.originalname,
+              mimeType: req.file.mimetype
+          };
+      }
 
-      await this._completeJobUseCase.execute(input);
+      // ✅ PASS FILE TO USE CASE
+      await this._completeJobUseCase.execute(input, proofFile);
 
-      // EFFECTIVE USE: this.ok()
       return this.ok(res, null, "Job completed. Invoice sent to customer.");
 
     } catch (err) {
       return this.handleError(res, err, "JOB_COMPLETION_FAILED");
     }
   };
+
   /**
    * @route GET /api/bookings/:id
    * @desc Get booking details (Secured by Role)

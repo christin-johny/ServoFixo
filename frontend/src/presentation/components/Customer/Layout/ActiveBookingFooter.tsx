@@ -1,15 +1,43 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Clock, ChevronRight } from 'lucide-react';
+import { Clock, ChevronRight, CreditCard } from 'lucide-react';
 import type { RootState } from '../../../../store/store';
 
 const ActiveBookingFooter: React.FC = () => {
     const navigate = useNavigate();
     const { activeBookingId, activeBookingStatus } = useSelector((state: RootState) => state.customer);
 
-    if (!activeBookingId) return null;
+    // 1. Hide if no ID, or if the flow is completely finished/cancelled
+    if (!activeBookingId || activeBookingStatus === 'PAID' || activeBookingStatus === 'CANCELLED') {
+        return null;
+    }
 
+    // --- CASE 1: JOB COMPLETED (Show "Pay Now") ---
+    if (activeBookingStatus === 'COMPLETED') {
+        return (
+            <div 
+                onClick={() => navigate(`/booking/${activeBookingId}/track`)}
+                className="fixed bottom-[80px] left-4 right-4 bg-green-600 text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between animate-slide-up cursor-pointer z-[60] border border-green-400 md:bottom-6 md:max-w-md md:left-auto"
+            >
+                <div className="flex items-center gap-3">
+                    <div className="bg-white/20 p-2 rounded-full animate-bounce">
+                        <CreditCard size={20} />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold uppercase opacity-90 tracking-wider">Payment Due</p>
+                        <p className="text-sm font-bold truncate">Job Completed. Pay Now.</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold bg-white/20 px-3 py-1 rounded-full">Pay Bill</span>
+                    <ChevronRight size={18} />
+                </div>
+            </div>
+        );
+    }
+
+    // --- CASE 2: JOB IN PROGRESS (Show "Track Now") ---
     return (
         <div 
             onClick={() => navigate(`/booking/${activeBookingId}/track`)}

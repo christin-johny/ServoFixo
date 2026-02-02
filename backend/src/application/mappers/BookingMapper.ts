@@ -21,6 +21,7 @@ export class BookingMapper {
       candidateIds: entity.getCandidateIds(),
       assignedTechAttempts: entity.getAttempts(),
       extraCharges: entity.getExtraCharges(),
+      completionPhotos: entity.getCompletionPhotos(),
       timeline: entity.getTimeline(),
       
       chatId: entity.getChatId(),
@@ -86,6 +87,7 @@ export class BookingMapper {
         extraCharges: charges,
         timeline: timeline,
         chatId: raw.chatId,
+        completionPhotos: raw.completionPhotos || [],
          
         snapshots: raw.snapshots ? {
             technician: raw.snapshots.technician,

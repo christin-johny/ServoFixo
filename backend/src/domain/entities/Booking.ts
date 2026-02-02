@@ -27,7 +27,7 @@ export interface BookingProps {
   candidateIds: string[]; 
   assignedTechAttempts: TechAssignmentAttempt[];
   assignmentExpiresAt?: Date;  
-  
+  completionPhotos?: string[];
   extraCharges: ExtraCharge[];
   timeline: BookingTimelineEvent[]; 
   
@@ -57,7 +57,7 @@ export class Booking {
   
   private _extraCharges: ExtraCharge[];
   private _timeline: BookingTimelineEvent[];
-  
+  private _completionPhotos: string[];
   private _chatId?: string;
   private _meta: BookingMeta;
   private _timestamps: BookingTimestamps;
@@ -79,7 +79,8 @@ export class Booking {
     this._candidateIds = props.candidateIds || [];
     this._assignedTechAttempts = props.assignedTechAttempts || [];
     this._assignmentExpiresAt = props.assignmentExpiresAt;
-    
+
+    this._completionPhotos = props.completionPhotos || [];
     this._extraCharges = props.extraCharges || [];
     this._timeline = props.timeline || [];
     
@@ -115,6 +116,7 @@ export class Booking {
   public getMeta(): BookingMeta { return this._meta; }
   public getTimestamps(): BookingTimestamps { return this._timestamps; }
   public getSnapshots(): BookingSnapshots { return this._snapshots; }
+  public getCompletionPhotos(): string[] { return this._completionPhotos; }
  
 
   public setCandidates(techIds: string[]): void {
@@ -143,6 +145,10 @@ export class Booking {
     this._timestamps.updatedAt = new Date();
     
     this.addTimelineEvent("ASSIGNED_PENDING", "system", "Attempting to assign technician");
+  }
+  public addCompletionPhoto(url: string): void {
+      this._completionPhotos.push(url);
+      this._timestamps.updatedAt = new Date();
   }
 
   public handleAssignmentTimeout(): void { 
@@ -339,6 +345,7 @@ export class Booking {
       extraCharges: this._extraCharges,
       timeline: this._timeline,
       chatId: this._chatId,
+      completionPhotos: this._completionPhotos,
       meta: this._meta,
       timestamps: this._timestamps,
       snapshots: this._snapshots,

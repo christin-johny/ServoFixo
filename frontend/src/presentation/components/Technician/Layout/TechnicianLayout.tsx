@@ -5,7 +5,8 @@ import {
   Briefcase, 
   User,
   LogOut,
-  ChevronRight, //  Added for Floating Bar
+  ChevronRight, 
+  CreditCard // ✅ Added Icon
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../../../store/store";
@@ -22,14 +23,12 @@ import LoaderFallback from "../../../components/LoaderFallback";
 
 import { getTechnicianProfileStatus } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
 import { technicianLogout } from "../../../../infrastructure/repositories/technician/technicianAuthRepository";
-//  Added for Active Job Check
 import { getTechnicianJobs } from "../../../../infrastructure/repositories/technician/technicianBookingRepository"; 
 
 import NotificationBell from "../../Shared/Notification/NotificationBell";
 import { useTechnicianNotifications } from "../../../hooks/useTechnicianNotifications";
  
-import { socketService, type JobRequestEvent } from "../../../../infrastructure/api/socketClient";
-import { setIncomingJob } from "../../../../store/technicianBookingSlice";
+import { socketService } from "../../../../infrastructure/api/socketClient"; 
 import IncomingJobModal from "../Job/IncomingJobModal";
 
 // --- Types ---
@@ -39,7 +38,6 @@ interface NavItem {
   icon: React.ElementType;
 }
 
-// Local interface to avoid 'any' for the job check
 interface JobStatusSummary {
   id: string;
   status: string;
@@ -144,20 +142,20 @@ const TechnicianLayout: React.FC = () => {
   const { showSuccess, showError } = useNotification();
   const location = useLocation();
 
-  // --- NEW: State for Active Job Check ---
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  // ✅ NEW: Store status to change UI dynamically
+  const [activeJobStatus, setActiveJobStatus] = useState<string | null>(null);
 
-  //   Pulling state and hooks
   const { profile, loading } = useSelector((state: RootState) => state.technician);
-  const { accessToken } = useSelector((state: RootState) => state.auth);
+  const { accessToken, user } = useSelector((state: RootState) => state.auth);
   const { fetchNotifications } = useTechnicianNotifications();
 
-  //   Corrected: Fetch notifications once globally when accessToken is available
   useEffect(() => {
-    if (accessToken) {
-      fetchNotifications(); // Fetches history and starts Socket.io listener
+    if (accessToken && user?.id) {
+        socketService.connect(user.id, "TECHNICIAN");
+        fetchNotifications();
     }
-  }, [accessToken, fetchNotifications]);
+  }, [accessToken, user?.id, fetchNotifications]);
 
   useEffect(() => {
     if (accessToken && !profile) {
@@ -174,22 +172,25 @@ const TechnicianLayout: React.FC = () => {
     }
   }, [accessToken, profile, dispatch]);
 
-  // --- NEW: Check for Active Job on Mount & Navigation ---
+  // --- Active Job Check ---
   useEffect(() => {
     const checkActiveJob = async () => {
       if (!accessToken) return;
       try {
         const response = await getTechnicianJobs(); 
-const jobs = response.data;
-        // Filter for specific active statuses
+        const jobs = response.data;
+
+        // ✅ INCLUDES 'COMPLETED'
         const runningJob = (jobs as JobStatusSummary[]).find((j) => 
-            ['ACCEPTED', 'EN_ROUTE', 'REACHED', 'IN_PROGRESS', 'EXTRAS_PENDING'].includes(j.status)
+            ['ACCEPTED', 'EN_ROUTE', 'REACHED', 'IN_PROGRESS', 'EXTRAS_PENDING', 'COMPLETED'].includes(j.status)
         );
         
         if (runningJob) {
             setActiveJobId(runningJob.id);
+            setActiveJobStatus(runningJob.status); // ✅ Set Status
         } else {
             setActiveJobId(null);
+            setActiveJobStatus(null);
         }
       } catch (error) {
         console.error("Failed to check active job", error);
@@ -198,28 +199,6 @@ const jobs = response.data;
 
     checkActiveJob();
   }, [accessToken, location.pathname]); 
-
-  // --- LISTEN FOR JOBS ---
-  useEffect(() => {
-    const userId = accessToken ? JSON.parse(atob(accessToken.split('.')[1])).id : null; 
-
-    if (userId) {
-       socketService.onJobRequest((data: JobRequestEvent) => { 
-           dispatch(setIncomingJob({
-               bookingId: data.bookingId,
-               serviceName: data.serviceName,
-               earnings: data.earnings,
-               distance: data.distance,
-               address: data.address,
-               expiresAt: data.expiresAt
-           }));
-       });
-    }
-    
-    return () => {
-        // Cleanup if needed
-    };
-  }, [dispatch, accessToken]);
 
   const isActive = (path: string) => {
     if (path === "/technician" && location.pathname !== "/technician") return false;
@@ -242,10 +221,25 @@ const jobs = response.data;
     }
   };
 
+  // ✅ Helper to navigate correctly
+  const handleFooterClick = () => {
+    if (!activeJobId) return;
+    
+    // If completed, maybe go to the specific invoice/complete page?
+    // Adjust this path if your completion page is different (e.g., /complete)
+    if (activeJobStatus === 'COMPLETED') {
+        navigate(`/technician/jobs/${activeJobId}/complete`); 
+    } else {
+        navigate(`/technician/jobs/${activeJobId}`);
+    }
+  };
+
   if (loading && !profile) return <LoaderFallback />;
 
-  // Hide the floating bar if we are ALREADY on the active job page
-  const isOnActiveJobPage = activeJobId && location.pathname.includes(`/jobs/${activeJobId}`);
+  // Hide footer if we are ALREADY on the job page (to prevent double headers)
+  const isOnActiveJobPage = activeJobId && (
+    location.pathname.includes(`/jobs/${activeJobId}`)
+  );
 
   return (
     <div className="min-h-screen bg-slate-50/50 flex flex-col md:flex-row font-sans text-gray-900">
@@ -253,6 +247,7 @@ const jobs = response.data;
         <SidebarContent onLogoutClick={() => setIsLogoutModalOpen(true)} />
       </aside>
 
+      {/* ... Mobile Header Code ... */}
       <div className="md:hidden bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 h-16 flex items-center justify-between sticky top-0 z-40 shadow-sm transition-all">
         <div className="flex items-center gap-3">
           <img src="/assets/logo.png" alt="Logo" className="h-8 w-8 object-contain" />
@@ -260,10 +255,7 @@ const jobs = response.data;
         </div>
         <div className="flex items-center gap-3">
           <NotificationBell />
-          <button
-            onClick={() => setIsLogoutModalOpen(true)}
-            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors active:scale-95"
-          >
+          <button onClick={() => setIsLogoutModalOpen(true)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors active:scale-95">
             <LogOut className="w-5 h-5" />
           </button>
         </div>
@@ -275,14 +267,11 @@ const jobs = response.data;
             <div className="p-2 bg-white border border-gray-200 rounded-lg shadow-sm text-blue-600">
               <activeItem.icon className="w-5 h-5" strokeWidth={2} />
             </div>
-            <h2 className="text-lg font-bold text-gray-800 tracking-tight">
-              {activeItem.label}
-            </h2>
+            <h2 className="text-lg font-bold text-gray-800 tracking-tight">{activeItem.label}</h2>
           </div>
-
           <div className="flex items-center gap-4">
-            <div className="h-6 w-px bg-gray-200 mx-1"></div>
-            <NotificationBell/>
+             <div className="h-6 w-px bg-gray-200 mx-1"></div>
+             <NotificationBell/>
           </div>
         </header>
 
@@ -291,17 +280,32 @@ const jobs = response.data;
         </div>
       </main>
 
-      {/*  NEW: FLOATING STATUS BAR (Appears if active job exists & user is elsewhere) */}
+      {/* ✅ DYNAMIC FLOATING STATUS BAR */}
       {activeJobId && !isOnActiveJobPage && (
         <div 
-          onClick={() => navigate(`/technician/jobs/${activeJobId}`)}
-          className="fixed bottom-[70px] md:bottom-8 left-4 right-4 md:left-[270px] md:right-8 bg-gray-900 text-white p-3 rounded-xl shadow-2xl z-50 flex items-center justify-between cursor-pointer animate-pulse-slow border border-gray-700 hover:scale-[1.01] transition-transform"
+          onClick={handleFooterClick}
+          className={`fixed bottom-[70px] md:bottom-8 left-4 right-4 md:left-[270px] md:right-8 
+             ${activeJobStatus === 'COMPLETED' ? 'bg-green-600 border-green-500' : 'bg-gray-900 border-gray-700'} 
+             text-white p-3 rounded-xl shadow-2xl z-50 flex items-center justify-between cursor-pointer animate-pulse-slow border hover:scale-[1.01] transition-transform`}
         >
            <div className="flex items-center gap-3">
-              <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></div>
+              {activeJobStatus === 'COMPLETED' ? (
+                  // Waiting for Payment UI
+                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-bounce">
+                     <CreditCard className="w-4 h-4 text-white" />
+                  </div>
+              ) : (
+                  // Job in Progress UI
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping ml-2"></div>
+              )}
+              
               <div>
-                 <p className="text-xs font-bold text-gray-200 uppercase tracking-wider">Job in Progress</p>
-                 <p className="text-[10px] text-gray-400">Tap to return to active job</p>
+                 <p className="text-xs font-bold text-gray-200 uppercase tracking-wider">
+                     {activeJobStatus === 'COMPLETED' ? 'Waiting for Payment' : 'Job in Progress'}
+                 </p>
+                 <p className="text-[10px] text-gray-300">
+                     {activeJobStatus === 'COMPLETED' ? 'Tap to view invoice status' : 'Tap to return to active job'}
+                 </p>
               </div>
            </div>
            <div className="bg-white/10 p-1.5 rounded-full">
@@ -310,42 +314,24 @@ const jobs = response.data;
         </div>
       )}
 
+      {/* ... Mobile Bottom Nav & Modals ... */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)]">
         <div className="flex justify-around items-center px-2">
           {NAV_ITEMS.map((item) => {
             const active = isActive(item.path);
             return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`group flex flex-col items-center justify-center w-full py-3 space-y-1 transition-all duration-200 ${active ? "text-blue-600" : "text-gray-400 hover:text-gray-600"
-                  }`}
-              >
-                <div className={`relative p-1 rounded-full transition-all duration-300 ${active ? "bg-blue-50 transform -translate-y-1" : ""
-                  }`}>
-                  <item.icon
-                    className={`w-6 h-6 ${active ? "fill-blue-600 text-blue-600" : ""}`}
-                    strokeWidth={active ? 2.5 : 2}
-                  />
+              <button key={item.path} onClick={() => navigate(item.path)} className={`group flex flex-col items-center justify-center w-full py-3 space-y-1 transition-all duration-200 ${active ? "text-blue-600" : "text-gray-400 hover:text-gray-600"}`}>
+                <div className={`relative p-1 rounded-full transition-all duration-300 ${active ? "bg-blue-50 transform -translate-y-1" : ""}`}>
+                  <item.icon className={`w-6 h-6 ${active ? "fill-blue-600 text-blue-600" : ""}`} strokeWidth={active ? 2.5 : 2} />
                 </div>
-                <span className={`text-[10px] font-semibold transition-colors ${active ? "text-blue-600" : "text-gray-500"
-                  }`}>
-                  {item.label}
-                </span>
+                <span className={`text-[10px] font-semibold transition-colors ${active ? "text-blue-600" : "text-gray-500"}`}>{item.label}</span>
               </button>
             );
           })}
         </div>
       </div>
-
-      <ConfirmModal
-        isOpen={isLogoutModalOpen}
-        onClose={() => setIsLogoutModalOpen(false)}
-        onConfirm={handleLogoutConfirm}
-        title="Sign Out"
-        message="Are you sure you want to sign out of your account?"
-        confirmText="Sign Out"
-      />
+      
+      <ConfirmModal isOpen={isLogoutModalOpen} onClose={() => setIsLogoutModalOpen(false)} onConfirm={handleLogoutConfirm} title="Sign Out" message="Are you sure you want to sign out?" confirmText="Sign Out" />
       <IncomingJobModal />
     </div>
   );

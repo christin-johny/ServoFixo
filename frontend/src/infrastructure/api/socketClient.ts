@@ -89,7 +89,7 @@ class SocketService {
   private statusUpdateCallback: ((data: BookingStatusEvent) => void) | null = null;
   private bookingCancelledCallback: ((data: BookingCancelledEvent) => void) | null = null;
   private approvalRequestCallback: ((data: ApprovalRequestEvent) => void) | null = null;
-  private chargeUpdateCallback: ((data: ChargeUpdateEvent) => void) | null = null; // ✅ NEW
+  private chargeUpdateCallback: ((data: ChargeUpdateEvent) => void) | null = null; 
   private paymentRequestCallback: ((data: PaymentRequestEvent) => void) | null = null;
 
   connect(userId: string, role: UserRole): void {
@@ -187,7 +187,7 @@ class SocketService {
       });
     }
 
-    // 5. Extra Charge Approval Request (Customer Side)
+    // 5. Extra Charge Approval Request
     if (data.type === NotificationType.BOOKING_APPROVAL_REQUEST) {
       const extraEvent: ApprovalRequestEvent = {
         bookingId: data.metadata.bookingId,
@@ -201,13 +201,43 @@ class SocketService {
       this.approvalRequestCallback?.(extraEvent);
     }
 
-    // 6. ✅ Charge Update (Technician Side)
+    // 6. Charge Update (Technician Side)
     if (data.type === NotificationType.CHARGE_UPDATE) {
       this.chargeUpdateCallback?.({
         bookingId: data.metadata.bookingId,
         chargeId: data.metadata.chargeId,
         status: data.metadata.status as "APPROVED" | "REJECTED"
       });
+    }
+
+    // ✅ 7. JOB COMPLETED (Handles Payment Request)
+    // Strictly typed check. Requires NotificationType.JOB_COMPLETED to exist.
+    if (data.type === NotificationType.JOB_COMPLETED) {
+        console.log("✅ JOB_COMPLETED received. Triggering Payment Modal...");
+
+        // A. Update Status to 'COMPLETED'
+        this.statusUpdateCallback?.({
+            bookingId: data.metadata.bookingId,
+            status: "COMPLETED"
+        });
+
+        // B. Trigger Payment Modal if amount exists
+        const total = data.metadata.totalAmount || data.metadata.amount;
+        if (total) {
+            this.paymentRequestCallback?.({
+                bookingId: data.metadata.bookingId,
+                totalAmount: Number(total)
+            });
+        }
+    }
+    
+    // 8. PAYMENT_REQUEST (Keep as explicit type if needed, or remove if unused)
+    // Only if you added PAYMENT_REQUEST to your enum
+    if (data.type === NotificationType.PAYMENT_REQUEST) {
+        this.paymentRequestCallback?.({
+            bookingId: data.metadata.bookingId,
+            totalAmount: Number(data.metadata.totalAmount || data.metadata.amount)
+        });
     }
   }
 
@@ -267,7 +297,7 @@ class SocketService {
   onApprovalRequest(callback: (data: ApprovalRequestEvent) => void): void {
     this.approvalRequestCallback = callback;
   }
-  onChargeUpdate(callback: (data: ChargeUpdateEvent) => void): void { // ✅ NEW
+  onChargeUpdate(callback: (data: ChargeUpdateEvent) => void): void {
     this.chargeUpdateCallback = callback;
   }
   onPaymentRequest(callback: (data: PaymentRequestEvent) => void): void {
@@ -286,7 +316,7 @@ class SocketService {
     this.bookingCancelledCallback = null;
     this.bookingFailedCallback = null;
     this.approvalRequestCallback = null;
-    this.chargeUpdateCallback = null; // ✅ NEW
+    this.chargeUpdateCallback = null;
     this.paymentRequestCallback = null;
   }
 }

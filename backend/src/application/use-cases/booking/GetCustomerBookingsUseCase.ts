@@ -24,7 +24,8 @@ export class GetCustomerBookingsUseCase implements IUseCase<PaginatedBookingResu
             "EN_ROUTE", 
             "REACHED", 
             "IN_PROGRESS", 
-            "EXTRAS_PENDING"
+            "EXTRAS_PENDING",
+            "COMPLETED"
         ];
     } else if (input.status) {
         // If it's a specific status (e.g., 'COMPLETED')

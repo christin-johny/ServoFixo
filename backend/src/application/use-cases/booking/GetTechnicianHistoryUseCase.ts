@@ -7,7 +7,8 @@ export interface GetTechnicianHistoryDto {
   technicianId: string;
   page: number;
   limit: number; 
-  status?: BookingStatus | BookingStatus[]; 
+  // ✅ FIX 1: Allow string here so we can pass "active"
+  status?: string | BookingStatus | BookingStatus[]; 
   search?: string;
 }
 
@@ -18,12 +19,30 @@ export class GetTechnicianHistoryUseCase implements IUseCase<PaginatedBookingRes
   ) {}
 
   async execute(input: GetTechnicianHistoryDto): Promise<PaginatedBookingResult> {
+    
+    let statusFilter: BookingStatus | BookingStatus[] | undefined;
+
+    // ✅ FIX 2: Handle "active" status and INCLUDE 'COMPLETED'
+    if (input.status === 'active') {
+        statusFilter = [
+            "ACCEPTED", 
+            "EN_ROUTE", 
+            "REACHED", 
+            "IN_PROGRESS", 
+            "EXTRAS_PENDING",
+            "COMPLETED" // <--- 🔴 CRITICAL: Keep job visible during payment
+        ];
+    } else {
+        // Pass through other statuses (e.g. 'CANCELLED' or specific filters)
+        statusFilter = input.status as BookingStatus | BookingStatus[];
+    }
+
     return await this._bookingRepo.findAllPaginated(
       input.page,
       input.limit,
       {
         technicianId: input.technicianId,
-        status: input.status,  
+        status: statusFilter,  
         search: input.search
       }
     );

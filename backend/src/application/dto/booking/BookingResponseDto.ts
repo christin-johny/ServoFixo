@@ -22,7 +22,7 @@ export interface BookingResponseDto {
   location: BookingLocation;
   pricing: BookingPricing;
   payment: BookingPayment;
-  
+  completionPhotos: string [],
   // --- New Fields Added below ---
   candidateIds: string[]; 
   assignedTechAttempts: TechAssignmentAttempt[];

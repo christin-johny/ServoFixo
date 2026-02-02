@@ -52,7 +52,8 @@ router.post(
 
 router.post(
   "/:id/complete",
-  technicianAuth,   
+  technicianAuth,
+  upload.single('proof'),  
   bookingController.completeJob.bind(bookingController)
 );
  

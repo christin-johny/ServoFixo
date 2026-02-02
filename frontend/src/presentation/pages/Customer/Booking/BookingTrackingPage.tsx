@@ -14,7 +14,6 @@ import {
     XCircle, 
 } from 'lucide-react';
 
-// Store & Types
 import type { RootState } from '../../../../store/store';
 import { 
     socketService,  
@@ -114,8 +113,8 @@ const BookingTrackingPage: React.FC = () => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [isProcessingExtra, setIsProcessingExtra] = useState(false);
  
-
-  const syncBookingData = async () => {
+  // ✅ SMART SYNC: Retries if price is missing for completed jobs
+  const syncBookingData = async (retryCount = 0) => {
       if (!id) return;
       try {
           const data = await getBookingById(id) as ExtendedBookingResponse;
@@ -124,13 +123,23 @@ const BookingTrackingPage: React.FC = () => {
           setStatus(data.status);
           dispatch(setActiveBooking({ id: data.id, status: data.status }));
  
-          if (data.status === 'COMPLETED' && data.pricing?.final) {
-             setBillTotal(data.pricing.final);
+          // --- LOGIC FOR BILL TOTAL ---
+          if (data.status === 'COMPLETED') {
+             // Case A: Price is ready -> Show Modal
+             if (data.pricing?.final) {
+                 console.log("✅ Price found:", data.pricing.final);
+                 setBillTotal(data.pricing.final);
+             } 
+             // Case B: Job is done, but Price is missing -> RETRY AUTOMATICALLY
+             else if (retryCount < 5) {
+                 console.log("⏳ Job completed but price missing. Retrying in 1s...");
+                 setTimeout(() => syncBookingData(retryCount + 1), 1000);
+             }
           } else {
-             setBillTotal(null); // Hide modal if status is IN_PROGRESS or EXTRAS_PENDING
+             // Hide modal if status is IN_PROGRESS or EXTRAS_PENDING
+             setBillTotal(null); 
           }
 
-          // Check for pending extras
           if (data.extraCharges) {
              const pending = data.extraCharges.find(c => c.status === 'PENDING');
              if (pending) {
@@ -149,23 +158,26 @@ const BookingTrackingPage: React.FC = () => {
       }
   };
 
-useEffect(() => {
+  useEffect(() => {
     if (!user?.id || !id) return;
 
-    // Initial Load
     syncBookingData();
-
     socketService.connect(user.id, "CUSTOMER");
 
     // --- SOCKET LISTENERS ---
 
-    // A. Status Update -> RE-FETCH DATA
-    socketService.onBookingStatusUpdate(( ) => {
-        // We call syncBookingData() so pricing/extras update instantly
-        syncBookingData(); 
+    // 1. Status Update Listener
+    socketService.onBookingStatusUpdate((data) => {
+        console.log("📩 Socket Status Update:", data.status);
+        if (data.status === 'COMPLETED') {
+            setStatus('COMPLETED');
+            syncBookingData(); 
+        } else {
+            syncBookingData();
+        }
     });
 
-    // B. Approval Request -> SHOW MODAL
+    // 2. Extra Charge Listener
     socketService.onApprovalRequest((data) => {
         setExtraRequest({
             itemId: data.extraItem.id,
@@ -173,6 +185,13 @@ useEffect(() => {
             amount: data.extraItem.amount,
             proofUrl: data.extraItem.proofUrl
         });
+    });
+
+    // 3. Payment Request Listener (Direct Trigger)
+    socketService.onPaymentRequest((data) => {
+        console.log("💰 Payment Request Event:", data);
+        setStatus('COMPLETED');
+        setBillTotal(data.totalAmount); 
     });
  
     socketService.onChargeUpdate(() => {
@@ -191,7 +210,6 @@ useEffect(() => {
       try {
           await respondToExtraCharge(id, extraRequest.itemId, approved ? "APPROVE" : "REJECT");
           
-          // Optimistic Update
           if (bookingData && bookingData.extraCharges) {
               const updatedCharges = bookingData.extraCharges.map(c => 
                   c.id === extraRequest.itemId 
@@ -419,7 +437,7 @@ useEffect(() => {
                     </div>
                 </div>
 
-                {/* ✅ Billing Estimate with Extras List */}
+                {/* Billing Estimate */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Billing Estimate</h3>
                     <div className="space-y-3">
@@ -434,7 +452,6 @@ useEffect(() => {
                             </div>
                         )}
 
-                        {/* ✅ List All Extra Charges */}
                         {bookingData?.extraCharges && bookingData.extraCharges.length > 0 && (
                             <div className="py-2 border-y border-dashed border-gray-200 my-2 space-y-2">
                                 <p className="text-xs font-bold text-gray-400 uppercase">Extras Added</p>
@@ -484,7 +501,7 @@ useEffect(() => {
             isLoading={isCancelling}
         />
 
-        {/* Extra Charge Modal (Auto-Opens if PENDING) */}
+        {/* Extra Charge Modal */}
         {extraRequest && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
                 <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in slide-in-from-bottom-4 border border-gray-200">
