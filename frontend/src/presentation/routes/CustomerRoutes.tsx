@@ -17,6 +17,9 @@ const ProfilePage = lazy(() => import("../pages/Customer/Profile/ProfilePage"));
 const BookingConfirm = lazy(() => import("../pages/Customer/Booking/BookingConfirm"));
 const SearchingScreen = lazy(() => import("../pages/Customer/Booking/SearchingScreen"));
 const BookingTrackingPage = lazy(() => import("../pages/Customer/Booking/BookingTrackingPage"));
+const PaymentPage = lazy(() => import("../pages/Customer/Booking/PaymentPage"));
+const RateTechnicianPage = lazy(() => import("../pages/Customer/Booking/RateTechnicianPage"));
+const PaymentFailedPage = lazy(() => import("../pages/Customer/Booking/PaymentFailedPage"));
 
 const CustomerRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
@@ -49,6 +52,21 @@ const CustomerRoutes: React.FC = () => (
                 <BookingTrackingPage />
             </RoleProtectedRoute>
         } />
+        <Route path="booking/:id/payment" element={
+            <RoleProtectedRoute requiredRole="customer" redirectTo="/login">
+                <PaymentPage />
+            </RoleProtectedRoute>
+        } />
+        <Route path="booking/:id/rate" element={
+            <RoleProtectedRoute requiredRole="customer" redirectTo="/login">
+              <RateTechnicianPage />
+            </RoleProtectedRoute>
+        } />
+        <Route path="booking/:id/payment/failed" element={
+        <RoleProtectedRoute requiredRole="customer" redirectTo="/login">
+            <PaymentFailedPage />
+        </RoleProtectedRoute>
+    } />
       </Route>
 
       <Route path="login" element={<GuestOnlyGuard><CustomerLogin /></GuestOnlyGuard>} />

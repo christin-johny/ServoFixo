@@ -35,8 +35,7 @@ export class PaymentWebhookController {
             orderId: payload.payment.entity.order_id,
             transactionId: payload.payment.entity.id
         };
-
-        // 3. Delegate to Business Logic
+ 
         await this._processPaymentUseCase.execute(dto);
       }
 

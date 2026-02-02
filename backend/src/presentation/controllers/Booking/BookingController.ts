@@ -18,7 +18,8 @@ import { RateTechnicianDto } from "../../../application/dto/booking/RateTechnici
 import { GetTechnicianHistoryDto } from "../../../application/use-cases/booking/GetTechnicianHistoryUseCase";
 import { PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
 import { BookingStatus } from "../../../../../shared/types/value-objects/BookingTypes"; 
-import { GetCustomerBookingsUseCase, GetCustomerBookingsDto } from "../../../application/use-cases/booking/GetCustomerBookingsUseCase";
+import {  GetCustomerBookingsDto } from "../../../application/use-cases/booking/GetCustomerBookingsUseCase";
+import {VerifyPaymentDto} from '../../../application/dto/booking/VerifyPaymentDto'
 interface AuthenticatedRequest extends Request {
   userId?: string;
   role?: string;
@@ -43,6 +44,7 @@ export class BookingController extends BaseController {
     private readonly _rateTechnicianUseCase: IUseCase<void, [RateTechnicianDto]>, 
     private readonly _getTechnicianHistoryUseCase: IUseCase<PaginatedBookingResult, [GetTechnicianHistoryDto]>, 
     private readonly _getCustomerBookingsUseCase: IUseCase<PaginatedBookingResult, [GetCustomerBookingsDto]>,
+    private readonly _verifyPaymentUseCase: IUseCase<void, [VerifyPaymentDto]>,
     _logger: ILogger
   ) {
     super(_logger);
@@ -421,13 +423,31 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
     }
   };
 
+  // Inside BookingController class...
+
+  verifyPayment = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const input = {
+        bookingId: req.params.id,
+        orderId: req.body.razorpay_order_id,
+        paymentId: req.body.razorpay_payment_id,
+        signature: req.body.razorpay_signature
+      };
+
+      await this._verifyPaymentUseCase.execute(input);
+
+      return this.ok(res, null, "Payment verified successfully.");
+
+    } catch (err) {
+      return this.handleError(res, err, "PAYMENT_VERIFICATION_FAILED");
+    }
+  };
+
   
   rateTechnician = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { userId, role } = req as AuthenticatedRequest;
-      
-      // 1. Guard Clause (Satisfies TypeScript that userId is not undefined)
-      if (!userId || role !== "CUSTOMER") {
+      const { userId, role } = req as AuthenticatedRequest;  
+      if (!userId || role !== "customer") {
         return this.forbidden(res, "Only customers can rate technicians.");
       }
 

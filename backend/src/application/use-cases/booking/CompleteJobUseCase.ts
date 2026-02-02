@@ -53,6 +53,7 @@ export class CompleteJobUseCase implements IUseCase<void, [CompleteJobDto, IFile
              proofFile.originalName, 
              proofFile.mimeType
          );
+         console.log(photoUrl)
          // Assuming you added 'addCompletionPhoto' to your Entity in the previous step
          booking.addCompletionPhoto(photoUrl);
     } 

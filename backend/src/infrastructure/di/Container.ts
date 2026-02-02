@@ -149,6 +149,7 @@ import { AdminForceStatusUseCase } from "../../application/use-cases/booking/Adm
 import { AdminUpdatePaymentUseCase } from "../../application/use-cases/booking/AdminUpdatePaymentUseCase";
 import { GetTechnicianHistoryUseCase } from "../../application/use-cases/booking/GetTechnicianHistoryUseCase";
 import { GetCustomerBookingsUseCase } from "../../application/use-cases/booking/GetCustomerBookingsUseCase";
+import { VerifyPaymentUseCase } from "../../application/use-cases/booking/VerifyPaymentUseCase";
 
 // INFRASTRUCTURE SERVICE INSTANTIATION
 
@@ -700,6 +701,17 @@ const rateTechnicianUseCase = new RateTechnicianUseCase(
 );
 const getTechnicianHistoryUseCase = new GetTechnicianHistoryUseCase(bookingRepo,logger)
 const getCustomerBookingsUseCase = new GetCustomerBookingsUseCase(bookingRepo)
+
+const paymentService = new RazorpayService();
+
+const verifyPaymentUseCase = new VerifyPaymentUseCase(
+  bookingRepo,
+  technicianRepo,
+  paymentService,
+  notificationService,
+  logger
+);
+
 export const bookingController = new BookingController(
   createBookingUseCase,
   respondToBookingUseCase,
@@ -713,6 +725,7 @@ export const bookingController = new BookingController(
   rateTechnicianUseCase,
   getTechnicianHistoryUseCase,
   getCustomerBookingsUseCase,
+  verifyPaymentUseCase,
   logger
 );
 const adminForceAssignUseCase = new AdminForceAssignUseCase(
@@ -739,6 +752,7 @@ export const adminBookingController = new AdminBookingController(
 const processPaymentUseCase = new ProcessPaymentUseCase(
   bookingRepo,
   technicianRepo,
+  notificationService,
   logger
 );
 

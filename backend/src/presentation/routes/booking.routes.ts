@@ -95,7 +95,11 @@ router.post(
   bookingController.startJob.bind(bookingController)
 );
 
-
+router.post(
+  "/:id/payment/verify",
+  customerAuth,
+  bookingController.verifyPayment.bind(bookingController)
+);
 
 // Technician Cancel
 router.post(
