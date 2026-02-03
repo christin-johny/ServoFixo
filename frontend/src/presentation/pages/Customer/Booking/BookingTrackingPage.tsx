@@ -35,6 +35,11 @@ import Navbar from '../../../../presentation/components/Customer/Layout/Navbar';
 import ConfirmModal from '../../../components/Shared/ConfirmModal/ConfirmModal';
 import { useNotification } from '../../../hooks/useNotification';
 
+interface BookingMeta {
+    otp?: string;
+    instructions?: string;
+}
+
 interface ExtendedBookingResponse extends BookingResponse {
     location?: {
         address: string;
@@ -61,6 +66,7 @@ interface ExtendedBookingResponse extends BookingResponse {
         };
     };
     extraCharges?: ExtraCharge[];
+    meta?: BookingMeta
 }
 
 interface ExtraChargeRequest {
@@ -127,12 +133,10 @@ const BookingTrackingPage: React.FC = () => {
           if (data.status === 'COMPLETED') {
              // Case A: Price is ready -> Show Modal
              if (data.pricing?.final) {
-                 console.log("✅ Price found:", data.pricing.final);
                  setBillTotal(data.pricing.final);
              } 
              // Case B: Job is done, but Price is missing -> RETRY AUTOMATICALLY
              else if (retryCount < 5) {
-                 console.log("⏳ Job completed but price missing. Retrying in 1s...");
                  setTimeout(() => syncBookingData(retryCount + 1), 1000);
              }
           } else {
@@ -168,7 +172,6 @@ const BookingTrackingPage: React.FC = () => {
 
     // 1. Status Update Listener
     socketService.onBookingStatusUpdate((data) => {
-        console.log("📩 Socket Status Update:", data.status);
         if (data.status === 'COMPLETED') {
             setStatus('COMPLETED');
             syncBookingData(); 
@@ -189,7 +192,6 @@ const BookingTrackingPage: React.FC = () => {
 
     // 3. Payment Request Listener (Direct Trigger)
     socketService.onPaymentRequest((data) => {
-        console.log("💰 Payment Request Event:", data);
         setStatus('COMPLETED');
         setBillTotal(data.totalAmount); 
     });

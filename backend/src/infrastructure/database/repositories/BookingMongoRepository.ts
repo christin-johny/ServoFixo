@@ -50,6 +50,14 @@ export class BookingMongoRepository implements IBookingRepository {
     ).exec();
     return !!result;
   }
+  async markAsRated(bookingId: string): Promise<void> {
+      await BookingModel.findByIdAndUpdate(bookingId, {
+          $set: { 
+              isRated: true,
+              "timestamps.updatedAt": new Date()
+          }
+      }).exec();
+  }
 
   async findById(id: string): Promise<Booking | null> {
     const doc = await BookingModel.findOne({
@@ -339,6 +347,7 @@ async addExtraCharge(bookingId: string, charge: ExtraCharge): Promise<ExtraCharg
       assignmentExpiresAt: doc.assignmentExpiresAt,
       extraCharges: charges,
       timeline: timeline,
+      isRated: doc.isRated || false,
       completionPhotos: doc.completionPhotos || [],
       chatId: doc.chatId,
       meta: doc.meta,
@@ -367,6 +376,7 @@ async addExtraCharge(bookingId: string, charge: ExtraCharge): Promise<ExtraCharg
       location: props.location,
       pricing: props.pricing,
       payment: props.payment,
+      isRated: props.isRated,
       candidateIds: props.candidateIds,
       assignmentExpiresAt: props.assignmentExpiresAt,
       assignedTechAttempts: props.assignedTechAttempts.map(a => ({

@@ -6,7 +6,7 @@ export interface GetCustomerBookingsDto {
   customerId: string;
   page: number;
   limit: number;
-  status?: string; // We accept string here to handle 'active' keyword
+  status?: string; // e.g., 'active', 'completed', 'cancelled'
 }
 
 export class GetCustomerBookingsUseCase implements IUseCase<PaginatedBookingResult, [GetCustomerBookingsDto]> {
@@ -16,20 +16,42 @@ export class GetCustomerBookingsUseCase implements IUseCase<PaginatedBookingResu
     
     let statusFilter: BookingStatus | BookingStatus[] | undefined;
  
-    if (input.status === 'active') {
+    switch (input.status) {
+      case 'active':
         statusFilter = [
-            "REQUESTED", 
-            "ASSIGNED_PENDING", 
-            "ACCEPTED", 
-            "EN_ROUTE", 
-            "REACHED", 
-            "IN_PROGRESS", 
-            "EXTRAS_PENDING",
-            "COMPLETED"
-        ];
-    } else if (input.status) {
-        // If it's a specific status (e.g., 'COMPLETED')
-        statusFilter = input.status as BookingStatus;
+            "PENDING",             
+            "REQUESTED",           
+            "ASSIGNED_PENDING",    
+            "CONFIRMED",           
+            "ACCEPTED",            
+            "EN_ROUTE",            
+            "REACHED",             
+            "IN_PROGRESS",         
+            "EXTRAS_PENDING"       
+        ] as BookingStatus[];
+        break;
+
+      case 'completed': 
+        statusFilter = [
+            "COMPLETED", 
+            "PAID"
+        ] as BookingStatus[];
+        break;
+
+      case 'cancelled': 
+        statusFilter = [
+            "CANCELLED", 
+            "REJECTED", 
+            "EXPIRED"
+        ] as BookingStatus[];
+        break;
+
+      default:
+        if (input.status) {
+             statusFilter = input.status as BookingStatus;
+        } else {
+            statusFilter = undefined; 
+        }
     }
 
     return await this._bookingRepo.findAllPaginated(

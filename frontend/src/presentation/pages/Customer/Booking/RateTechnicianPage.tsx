@@ -28,10 +28,16 @@ const RateTechnicianPage: React.FC = () => {
         });
         
         showSuccess("Thank you for your feedback!");
-        navigate('/');  
-    } catch (err) {
-        showError(err.response?.data?.message || "Failed to submit rating");
-    } finally {
+        navigate('/booking/history');  
+    } catch (err: unknown) {
+  const msg =
+    err instanceof Error
+      ? err.message
+      : "Failed to submit rating";
+
+  showError(msg);
+}
+finally {
         setSubmitting(false);
     }
   };

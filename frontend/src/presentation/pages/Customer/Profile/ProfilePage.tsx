@@ -1,13 +1,17 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { User, Camera, ChevronRight, Mail, Phone, MapPin, Pencil, Trash2, type LucideIcon } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom"; 
+import { User, Camera, ChevronRight, Mail, Phone, MapPin, Pencil, Trash2, type LucideIcon, Clock } from "lucide-react";
 import type { IAddress, IAddressFormInput } from "../../../../domain/types/AddressTypes";
 import type { RootState } from "../../../../store/store";
 import { fetchAddressesStart, setAddresses, clearCustomerData, updateAvatar, updateProfileSuccess } from "../../../../store/customerSlice";
 import { getMyAddresses, deleteAddress, setDefaultAddress, addAddress, updateAddress, updateProfile, uploadAvatar, changePassword } from "../../../../infrastructure/repositories/customer/customerRepository";
 import { logout } from "../../../../store/authSlice";
 import { useNotification } from "../../../hooks/useNotification";
+
+// History Imports
+import { getMyBookings,type BookingResponse } from "../../../../infrastructure/repositories/customer/customerBookingRepository";
+import BookingHistoryCard from "../../../../presentation/components/Customer/Booking/BookingHistoryCard";
 
 import ConfirmModal from "../../../components/Shared/ConfirmModal/ConfirmModal";
 import Navbar from "../../../../presentation/components/Customer/Layout/Navbar";
@@ -16,8 +20,6 @@ import Footer from "../../../../presentation/components/Customer/Layout/Footer";
 import AddressModal from '../../../../presentation/components/Customer/Profile/AddressModal';
 import UpdateDetailsModal from '../../../../presentation/components/Customer/Profile/UpdateDetailsModal';
 import ChangePasswordModal from "../../../../presentation/components/Customer/Profile/ChangePasswordModal";
-
-// Import Shared Cropper
 import ImageCropperModal from "../../../../presentation/components/Shared/ImageCropper/ImageCropperModal";
 
 interface ChangePasswordInput {
@@ -48,22 +50,22 @@ const ProfilePage: React.FC = () => {
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-
   const [showDeleteAddressModal, setShowDeleteAddressModal] = useState(false);
   const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
-
   const [isSaving, setIsSaving] = useState(false);
   const [editingAddress, setEditingAddress] = useState<IAddress | null>(null);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
-
-  // Cropper State
+  
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [isCropping, setIsCropping] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-
-  //   NEW: Track image loading errors
   const [imgError, setImgError] = useState(false);
 
+  // Recent Activity State
+  const [recentBookings, setRecentBookings] = useState<BookingResponse[]>([]);
+  const [bookingsLoading, setBookingsLoading] = useState(true);
+
+  // 1. Fetch Addresses
   useEffect(() => {
     const loadAddresses = async () => {
       dispatch(fetchAddressesStart());
@@ -77,11 +79,24 @@ const ProfilePage: React.FC = () => {
     loadAddresses();
   }, [dispatch]);
 
-  //   NEW: Reset image error when the URL changes (e.g. after upload)
+  // 2. Fetch Recent Activity
   useEffect(() => {
-    setImgError(false);
-  }, [profile?.avatarUrl]);
+    const loadRecentActivity = async () => {
+        try {
+            const result = await getMyBookings({ limit: 3, page: 1 });
+            setRecentBookings(result.data);
+        } catch (err) {
+            console.error("Failed to load recent activity", err);
+        } finally {
+            setBookingsLoading(false);
+        }
+    };
+    loadRecentActivity();
+  }, []);
 
+  useEffect(() => { setImgError(false); }, [profile?.avatarUrl]);
+
+  // --- HANDLERS (Same as before) ---
   const handleUpdateProfile = async (formData: { name: string; phone: string }) => {
     try {
       const updatedData = await updateProfile(formData);
@@ -91,36 +106,23 @@ const ProfilePage: React.FC = () => {
     } catch (err: unknown) {
       let message = "Failed to update profile";
       if (err && typeof err === "object" && "response" in err) {
-        const axiosErr = err as { response?: { data?: { message?: string } } };
-        if (axiosErr.response?.data?.message) {
-          message = axiosErr.response.data.message;
-        }
+         const axiosErr = err as { response?: { data?: { message?: string } } }; 
+         if (axiosErr.response?.data?.message) message = axiosErr.response.data.message;
       }
       showError(message);
-      throw err;
     }
   };
 
   const handleAvatarClick = () => fileInputRef.current?.click();
-
+  
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      showError("Only image files are allowed");
-      return;
-    }
-
+    if (!file.type.startsWith("image/")) { showError("Only image files are allowed"); return; }
     const reader = new FileReader();
     reader.addEventListener("load", () => {
-      if (typeof reader.result === "string") {
-        setImageSrc(reader.result);
-        setIsCropping(true);
-      }
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      if (typeof reader.result === "string") { setImageSrc(reader.result); setIsCropping(true); }
+      if (fileInputRef.current) fileInputRef.current.value = "";
     });
     reader.readAsDataURL(file);
   };
@@ -129,115 +131,61 @@ const ProfilePage: React.FC = () => {
     setIsUploadingAvatar(true);
     try {
       const file = new File([blob], "profile_avatar.jpg", { type: "image/jpeg" });
-      
       const { avatarUrl } = await uploadAvatar(file);
       dispatch(updateAvatar(avatarUrl));
       showSuccess("Profile picture updated!");
-      
       setIsCropping(false);
       setImageSrc(null);
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        showError(err.message);
-      } else {
-        showError("Failed to upload image");
-      }
-    } finally {
-      setIsUploadingAvatar(false);
-    }
+      showError(err instanceof Error ? err.message : "Failed to upload image");
+    } finally { setIsUploadingAvatar(false); }
   };
 
   const handleChangePassword = async (data: ChangePasswordInput) => {
-    try {
-      await changePassword(data);
-      showSuccess("Password updated successfully!");
-      setIsChangePasswordOpen(false);
-    } catch (err: unknown) {
-      showError('Failed to change password');
-      throw err;
-    }
+    try { await changePassword(data); showSuccess("Password updated successfully!"); setIsChangePasswordOpen(false); } 
+    catch (err: unknown) { showError('Failed to change password'); throw err; }
   };
 
   const handleAddAddress = async (formData: IAddressFormInput) => {
     setIsSaving(true);
     try {
-      if (editingAddress && editingAddress.id) {
-        await updateAddress(editingAddress.id, formData);
-        showSuccess("Address updated successfully!");
-      } else {
-        await addAddress(formData);
-        showSuccess("Address added successfully!");
-      }
-
+      if (editingAddress?.id) { await updateAddress(editingAddress.id, formData); showSuccess("Address updated successfully!"); } 
+      else { await addAddress(formData); showSuccess("Address added successfully!"); }
       const updated = await getMyAddresses();
       dispatch(setAddresses(updated));
       setIsAddressModalOpen(false);
       setEditingAddress(null);
     } catch (err: unknown) {
-      let message = "Failed to save address.";
-      if (err && typeof err === "object" && "response" in err) {
-        const axiosErr = err as { response?: { data?: { message?: string } } };
-        if (axiosErr.response?.data?.message) {
-          message = axiosErr.response.data.message;
-        }
-      }
-      showError(message);
-    } finally {
-      setIsSaving(false);
-    }
+       let message = "Failed to save address.";
+       if (err && typeof err === "object" && "response" in err) {
+          const axiosErr = err as { response?: { data?: { message?: string } } };
+          if (axiosErr.response?.data?.message) message = axiosErr.response.data.message;
+       }
+       showError(message);
+    } finally { setIsSaving(false); }
   };
 
   const handleSetDefault = async (id: string) => {
-    try {
-      await setDefaultAddress(id);
-      const updated = await getMyAddresses();
-      dispatch(setAddresses(updated));
-      showSuccess('Default address changed successfully!');
-    } catch {
-      showError("Failed to set default address");
-    }
+    try { await setDefaultAddress(id); const updated = await getMyAddresses(); dispatch(setAddresses(updated)); showSuccess('Default address changed successfully!'); } 
+    catch { showError("Failed to set default address"); }
   };
 
-  const confirmDeleteAddress = (id: string) => {
-    setAddressToDelete(id);
-    setShowDeleteAddressModal(true);
-  };
+  const confirmDeleteAddress = (id: string) => { setAddressToDelete(id); setShowDeleteAddressModal(true); };
 
   const handleDeleteAddress = async () => {
     if (!addressToDelete) return;
-    try {
-      await deleteAddress(addressToDelete);
-      dispatch(setAddresses(addresses.filter((a) => a.id !== addressToDelete)));
-      showSuccess('Address deleted successfully!');
-      setShowDeleteAddressModal(false);
-      setAddressToDelete(null);
-    } catch {
-      showError("Failed to delete address");
-    }
+    try { await deleteAddress(addressToDelete); dispatch(setAddresses(addresses.filter((a) => a.id !== addressToDelete))); showSuccess('Address deleted successfully!'); setShowDeleteAddressModal(false); setAddressToDelete(null); } 
+    catch { showError("Failed to delete address"); }
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
-    dispatch(clearCustomerData());
-    localStorage.removeItem("accessToken");
-    navigate("/login");
-  };
-
-  const handleDeleteAccount = () => {
-  };
+  const handleLogout = () => { dispatch(logout()); dispatch(clearCustomerData()); localStorage.removeItem("accessToken"); navigate("/login"); };
+  const handleDeleteAccount = () => { };
 
   return (
     <>
       <Navbar />
       <div className="min-h-screen bg-[#F5F7FB] pb-32 relative">
-
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleAvatarChange}
-          accept="image/*"
-          className="hidden"
-        />
+        <input type="file" ref={fileInputRef} onChange={handleAvatarChange} accept="image/*" className="hidden" />
 
         {/* PROFILE CARD */}
         <div className="max-w-5xl mx-auto px-4 mt-6">
@@ -246,32 +194,16 @@ const ProfilePage: React.FC = () => {
               <div className="flex justify-center">
                 <div className="relative">
                   <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border-4 border-black overflow-hidden shadow-inner group">
-                    
-                    {/*   FIXED: Intelligent Image Fallback */}
                     {profile?.avatarUrl && !imgError ? (
-                      <img 
-                        src={profile.avatarUrl} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                        alt="Profile" 
-                        onError={() => setImgError(true)} // Falls back to User icon on error
-                      />
-                    ) : (
-                      <User size={56} className="text-gray-400" />
-                    )}
-
+                      <img src={profile.avatarUrl} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Profile" onError={() => setImgError(true)} />
+                    ) : ( <User size={56} className="text-gray-400" /> )}
                   </div>
-                  <button
-                    onClick={handleAvatarClick}
-                    className="absolute bottom-0 right-0 p-2 bg-black rounded-full text-white shadow-md hover:scale-110 active:scale-90 transition-all z-10"
-                    title="Change Photo"
-                  >
+                  <button onClick={handleAvatarClick} className="absolute bottom-0 right-0 p-2 bg-black rounded-full text-white shadow-md hover:scale-110 active:scale-90 transition-all z-10" title="Change Photo">
                     <Camera size={16} />
                   </button>
                 </div>
               </div>
             </div>
-
-            {/* USER INFO */}
             <div className="flex flex-col items-center text-center mt-6">
               <div className="grid grid-cols-2 gap-3 w-full max-w-xl">
                 <Pill icon={User} text={profile?.name} />
@@ -279,50 +211,32 @@ const ProfilePage: React.FC = () => {
                 <Pill icon={Phone} text={profile?.phone || "N/A"} />
                 <Pill icon={MapPin} text={currentLocationName} />
               </div>
-
               <div className="flex gap-4 mt-5">
-                <button
-                  onClick={() => setIsEditProfileOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md text-sm font-semibold transition-colors shadow-sm"
-                >
-                  Update details
-                </button>
-                <button onClick={() => setIsChangePasswordOpen(true)} className="text-blue-600 text-sm font-semibold hover:underline decoration-2 underline-offset-4">
-                  Change Password
-                </button>
+                <button onClick={() => setIsEditProfileOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md text-sm font-semibold transition-colors shadow-sm">Update details</button>
+                <button onClick={() => setIsChangePasswordOpen(true)} className="text-blue-600 text-sm font-semibold hover:underline decoration-2 underline-offset-4">Change Password</button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* CONTENT (Addresses) */}
         <div className="max-w-5xl mx-auto px-4 mt-8 space-y-10">
+          
+          {/* SECTION 1: ADDRESS (Moved Top) */}
           <section>
             <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-lg">Address</h3>
-              <button
-                onClick={() => setIsAddressModalOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-semibold shadow transition-colors"
-              >
-                Add address
-              </button>
+              <h3 className="font-bold text-lg text-gray-900">Address</h3>
+              <button onClick={() => setIsAddressModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-semibold shadow transition-colors">Add address</button>
             </div>
 
             {addressLoading ? (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map(i => <div key={i} className="h-44 bg-gray-200 rounded-2xl animate-pulse" />)}
-              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"> {[1, 2, 3].map(i => <div key={i} className="h-44 bg-gray-200 rounded-2xl animate-pulse" />)} </div>
             ) : addresses.length ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {addresses.map(addr => (
                   <div key={addr.id} className="bg-white rounded-2xl shadow-md p-5 relative transition hover:shadow-lg border border-transparent hover:border-gray-100">
                     <span className="inline-block text-xs font-semibold border border-black rounded-full px-3 py-0.5">{addr.tag || "Home"}</span>
                     <div className="absolute top-4 right-4">
-                      <button
-                        onClick={() => handleSetDefault(addr.id)}
-                        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${addr.isDefault ? "border-blue-600 bg-blue-600" : "border-gray-300 hover:border-blue-400"}`}
-                        title="Set as default"
-                      >
+                      <button onClick={() => handleSetDefault(addr.id)} className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${addr.isDefault ? "border-blue-600 bg-blue-600" : "border-gray-300 hover:border-blue-400"}`} title="Set as default">
                         {addr.isDefault && <div className="w-2 h-2 bg-white rounded-full" />}
                       </button>
                     </div>
@@ -333,21 +247,8 @@ const ProfilePage: React.FC = () => {
                       <div className="text-gray-500 text-xs mt-1">PIN: {addr.pincode}</div>
                     </div>
                     <div className="flex justify-end gap-2 mt-5">
-                      <button
-                        onClick={() => {
-                          setEditingAddress(addr as IAddress);
-                          setIsAddressModalOpen(true);
-                        }}
-                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                      >
-                        <Pencil size={18} />
-                      </button>
-                      <button
-                        onClick={() => confirmDeleteAddress(addr.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      <button onClick={() => { setEditingAddress(addr as IAddress); setIsAddressModalOpen(true); }} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"> <Pencil size={18} /> </button>
+                      <button onClick={() => confirmDeleteAddress(addr.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"> <Trash2 size={18} /> </button>
                     </div>
                   </div>
                 ))}
@@ -360,6 +261,37 @@ const ProfilePage: React.FC = () => {
             )}
           </section>
 
+          {/* SECTION 2: RECENT ACTIVITY (Moved Below) */}
+          <section>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
+                 <Clock size={20} className="text-gray-600"/> Recent Activity
+              </h3>
+              {recentBookings.length > 0 && (
+                  <Link to="/booking/history" className="text-blue-600 text-sm font-semibold hover:underline">
+                    View All
+                  </Link>
+              )}
+            </div>
+
+            {bookingsLoading ? (
+                 <div className="space-y-3">
+                   {[1,2].map(i => <div key={i} className="h-20 bg-gray-200 rounded-xl animate-pulse"/>)}
+                 </div>
+            ) : recentBookings.length > 0 ? (
+                <div className="space-y-3">
+                    {recentBookings.map(booking => (
+                        <BookingHistoryCard key={booking.id} booking={booking} compact={true} />
+                    ))}
+                </div>
+            ) : (
+                <div className="bg-white rounded-xl p-6 text-center text-gray-500 border border-dashed">
+                    <p className="text-sm">No recent bookings found.</p>
+                </div>
+            )}
+          </section>
+
+          {/* LOGOUT BUTTON */}
           <section className="space-y-3">
             <button onClick={() => setShowLogoutModal(true)} className="w-full bg-white p-4 rounded-xl flex justify-between items-center shadow-sm border hover:bg-gray-50 transition-colors group">
               <span className="font-semibold text-gray-700 group-hover:text-red-600 transition-colors">Logout</span>
@@ -369,68 +301,13 @@ const ProfilePage: React.FC = () => {
         </div>
 
         {/* MODALS */}
-        <ConfirmModal
-          isOpen={showLogoutModal}
-          onClose={() => setShowLogoutModal(false)}
-          onConfirm={handleLogout}
-          title="Logout Confirmation"
-          message="Are you sure you want to log out?"
-          confirmText="Yes, Logout"
-        />
-
-        <ConfirmModal
-          isOpen={showDeleteAccountModal}
-          onClose={() => setShowDeleteAccountModal(false)}
-          onConfirm={handleDeleteAccount}
-          title="Delete Account?"
-          message="Deleting your account will permanently remove all your data."
-          confirmText="Confirm Deletion"
-        />
-
-        <ConfirmModal
-          isOpen={showDeleteAddressModal}
-          onClose={() => { setShowDeleteAddressModal(false); setAddressToDelete(null); }}
-          onConfirm={handleDeleteAddress}
-          title="Delete Address?"
-          message="Are you sure you want to delete this address? This action cannot be undone."
-          confirmText="Yes, Delete"
-        />
-
-        {profile && (
-          <UpdateDetailsModal
-            isOpen={isEditProfileOpen}
-            onClose={() => setIsEditProfileOpen(false)}
-            initialData={{ name: profile.name, phone: profile.phone || '', email: profile.email }}
-            onUpdate={handleUpdateProfile}
-          />
-        )}
-
-        <ChangePasswordModal
-          isOpen={isChangePasswordOpen}
-          onClose={() => setIsChangePasswordOpen(false)}
-          onConfirm={handleChangePassword}
-        />
-
-        <AddressModal
-          isOpen={isAddressModalOpen}
-          onClose={() => { setIsAddressModalOpen(false); setEditingAddress(null); }}
-          onSubmit={handleAddAddress}
-          initialData={editingAddress}
-          isLoading={isSaving}
-        />
-
-        {isCropping && imageSrc && (
-           <ImageCropperModal 
-              imageSrc={imageSrc} 
-              onClose={() => { setIsCropping(false); setImageSrc(null); }}
-              onCropConfirm={handleCropConfirm}
-              isUploading={isUploadingAvatar}
-              circular={true}
-              aspect={1}
-              title="Update Profile Photo"
-           />
-        )}
-
+        <ConfirmModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} onConfirm={handleLogout} title="Logout Confirmation" message="Are you sure you want to log out?" confirmText="Yes, Logout" />
+        <ConfirmModal isOpen={showDeleteAccountModal} onClose={() => setShowDeleteAccountModal(false)} onConfirm={handleDeleteAccount} title="Delete Account?" message="Deleting your account will permanently remove all your data." confirmText="Confirm Deletion" />
+        <ConfirmModal isOpen={showDeleteAddressModal} onClose={() => { setShowDeleteAddressModal(false); setAddressToDelete(null); }} onConfirm={handleDeleteAddress} title="Delete Address?" message="Are you sure you want to delete this address? This action cannot be undone." confirmText="Yes, Delete" />
+        {profile && <UpdateDetailsModal isOpen={isEditProfileOpen} onClose={() => setIsEditProfileOpen(false)} initialData={{ name: profile.name, phone: profile.phone || '', email: profile.email }} onUpdate={handleUpdateProfile} />}
+        <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} onConfirm={handleChangePassword} />
+        <AddressModal isOpen={isAddressModalOpen} onClose={() => { setIsAddressModalOpen(false); setEditingAddress(null); }} onSubmit={handleAddAddress} initialData={editingAddress} isLoading={isSaving} />
+        {isCropping && imageSrc && <ImageCropperModal imageSrc={imageSrc} onClose={() => { setIsCropping(false); setImageSrc(null); }} onCropConfirm={handleCropConfirm} isUploading={isUploadingAvatar} circular={true} aspect={1} title="Update Profile Photo" />}
       </div>
       <BottomNav />
       <Footer />

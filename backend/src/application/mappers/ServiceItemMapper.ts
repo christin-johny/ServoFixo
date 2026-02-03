@@ -15,6 +15,7 @@ export class ServiceItemMapper {
       isActive: dto.isActive,
       rating: 0,
       reviewCount: 0,
+      bookingCount: 0,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -31,6 +32,7 @@ export class ServiceItemMapper {
     dto.specifications = entity.getSpecifications();
     dto.imageUrls = entity.getImageUrls();
     dto.isActive = entity.getIsActive();
+    dto.bookingCount = entity.getBookingCount();
     dto.rating = entity.getRating();
     dto.reviewCount = entity.getReviewCount();
     dto.createdAt = entity.getCreatedAt();

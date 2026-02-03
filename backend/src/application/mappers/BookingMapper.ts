@@ -23,7 +23,7 @@ export class BookingMapper {
       extraCharges: entity.getExtraCharges(),
       completionPhotos: entity.getCompletionPhotos(),
       timeline: entity.getTimeline(),
-      
+      isRated: entity.getIsRated(),
       chatId: entity.getChatId(),
        
       snapshots: entity.getSnapshots() || undefined,
@@ -79,7 +79,7 @@ export class BookingMapper {
         location: raw.location,
         pricing: raw.pricing,
         payment: raw.payment || { status: "PENDING" },
-        
+        isRated: raw.isRated || false,
         candidateIds: raw.candidateIds || [],
         assignedTechAttempts: attempts,
         assignmentExpiresAt: raw.assignmentExpiresAt ? new Date(raw.assignmentExpiresAt) : undefined,

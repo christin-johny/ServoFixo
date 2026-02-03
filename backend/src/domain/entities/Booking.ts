@@ -30,7 +30,7 @@ export interface BookingProps {
   completionPhotos?: string[];
   extraCharges: ExtraCharge[];
   timeline: BookingTimelineEvent[]; 
-  
+  isRated?: boolean;
   chatId?: string;
   meta?: BookingMeta;
   
@@ -62,6 +62,7 @@ export class Booking {
   private _meta: BookingMeta;
   private _timestamps: BookingTimestamps;
   private _snapshots: BookingSnapshots;
+  private _isRated: boolean;
 
   constructor(props: BookingProps) {
     this._id = props.id || "";
@@ -83,7 +84,7 @@ export class Booking {
     this._completionPhotos = props.completionPhotos || [];
     this._extraCharges = props.extraCharges || [];
     this._timeline = props.timeline || [];
-    
+    this._isRated = props.isRated || false;
     this._chatId = props.chatId;
     this._meta = props.meta || {};
     this._snapshots = props.snapshots || {
@@ -116,8 +117,14 @@ export class Booking {
   public getMeta(): BookingMeta { return this._meta; }
   public getTimestamps(): BookingTimestamps { return this._timestamps; }
   public getSnapshots(): BookingSnapshots { return this._snapshots; }
-  public getCompletionPhotos(): string[] { return this._completionPhotos; }
- 
+  public getCompletionPhotos(): string[] { return this._completionPhotos; } 
+  public getIsRated(): boolean { return this._isRated; }
+
+  
+  public markAsRated(): void {
+      this._isRated = true;
+      this._timestamps.updatedAt = new Date();
+  }
 
   public setCandidates(techIds: string[]): void {
      this._candidateIds = techIds;
@@ -348,6 +355,7 @@ export class Booking {
       completionPhotos: this._completionPhotos,
       meta: this._meta,
       timestamps: this._timestamps,
+      isRated: this._isRated,
       snapshots: this._snapshots,
     };
   }

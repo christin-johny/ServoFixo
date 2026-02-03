@@ -3,4 +3,5 @@ export class RateTechnicianDto {
     customerId!: string;
     rating!: number;
     comment?: string;
+    isDeleted?:boolean;
 }

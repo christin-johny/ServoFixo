@@ -43,4 +43,6 @@ export interface IServiceItemRepository extends IBaseRepository<ServiceItem> {
   toggleStatus(id: string, isActive: boolean): Promise<boolean>;
   findMostBooked(limit: number): Promise<ServiceItem[]>;
   findWithFilters(filters: ServiceFilters): Promise<ServiceItem[]>;
+  addRating(id: string, rating: number): Promise<void>;
+  incrementBookingCount(id: string): Promise<void>;
 }

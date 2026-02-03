@@ -31,7 +31,7 @@ export interface BookingDocument extends Document {
       categoryId: string;
     };
   };
-
+isRated: boolean;
   location: {
     address: string;
     coordinates: { lat: number; lng: number };
@@ -96,8 +96,7 @@ const BookingSchema: Schema<BookingDocument> = new Schema(
       index: true,
       default: "REQUESTED"
     },
-    
-    // --- NEW SNAPSHOTS STRUCTURE ---
+    isRated: { type: Boolean, default: false, index: true },
     snapshots: {
       technician: {
         name: String,
@@ -151,6 +150,7 @@ const BookingSchema: Schema<BookingDocument> = new Schema(
       adminForced: Boolean,
       rejectionReason: String
     }],
+    
     
     assignmentExpiresAt: { type: Date, index: true },
     completionPhotos: [{ type: String }],

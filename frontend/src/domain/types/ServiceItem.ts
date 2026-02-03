@@ -12,6 +12,7 @@ export interface ServiceItem {
   specifications: ServiceSpecification[];  
   imageUrls: string[];  
   isActive: boolean;
+  bookingCount:number;
   createdAt: string;
   updatedAt: string;
   rating?: number;

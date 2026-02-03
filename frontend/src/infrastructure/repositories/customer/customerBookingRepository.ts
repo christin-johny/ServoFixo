@@ -35,10 +35,18 @@ export interface CreateBookingPayload {
     instructions?: string;
   };
 }
+export interface ReviewResponse {
+  id: string;
+  customerName: string;
+  customerAvatar?: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
 
 export interface BookingResponse {
   id: string;
-  status: string;
+  status: string;  
   serviceId: string;
   customerId: string;
   technicianId?: string | null;
@@ -49,27 +57,40 @@ export interface BookingResponse {
       avatarUrl?: string;
       rating?: number;
     };
-    customer?: {
-      name: string;
-      phone: string;
-      avatarUrl?: string;
-    };
     service?: {
       name: string;
-      categoryId: string;
+      categoryId: string; 
+      imageUrls?: string[]; 
     };
+  }; 
+  pricing?: {
+      final?: number;
+      estimated?: number;
   };
-  meta?: {
-    instructions?: string;
-    otp?: string;
+  payment?: {
+      status: string;
+      amountPaid?: number;
+      razorpayPaymentId?:string;
+
   };
+  isRated?: boolean;
   timestamps?: {
     createdAt: string;
     updatedAt: string;
     scheduledAt?: string;
   };
 }
- 
+export interface GetBookingsParams {
+    page?: number;
+    limit?: number;
+    status?: string;  
+}
+
+export const getMyBookings = async (params: GetBookingsParams): Promise<PaginatedData<BookingResponse>> => {
+    const response = await api.get(BOOKING_ENDPOINTS.CREATE, { params });
+    const responseData = response.data as ApiResponse<PaginatedData<BookingResponse>>;
+    return responseData.data;
+};
 
 export const createBooking = async (
   data: CreateBookingPayload
@@ -118,4 +139,9 @@ export const respondToExtraCharge = async (
     await api.post(BOOKING_ENDPOINTS.EXTRA_CHARGES(bookingId,chargeId), { 
         response 
     });
+};
+
+export const getServiceReviews = async (serviceId: string): Promise<ReviewResponse[]> => { 
+  const response = await api.get(`customer/services/${serviceId}/reviews`); 
+  return response.data.data;
 };

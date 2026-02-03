@@ -9,7 +9,6 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
 
 export type UserRole = "CUSTOMER" | "TECHNICIAN" | "ADMIN";
 
-// --- Events Interfaces ---
 
 export interface BookingConfirmedEvent {
   bookingId: string;
@@ -117,7 +116,6 @@ class SocketService {
     });
 
     this.socket.on("connect", () => {
-      console.log(`[Socket] Connected as ${role}. ID: ${this.socket?.id}`);
     });
 
     // --- Direct Listeners ---
@@ -135,7 +133,6 @@ class SocketService {
 
     // --- Master Notification Listener ---
     this.socket.on("NOTIFICATION_RECEIVED", (data: Notification) => {
-      console.log(`[Socket] Notification Received: ${data.type}`);
       this.handleCoreNotificationLogic(data, role);
 
       if (this.uiNotificationCallback) {
@@ -201,7 +198,6 @@ class SocketService {
       this.approvalRequestCallback?.(extraEvent);
     }
 
-    // 6. Charge Update (Technician Side)
     if (data.type === NotificationType.CHARGE_UPDATE) {
       this.chargeUpdateCallback?.({
         bookingId: data.metadata.bookingId,
@@ -209,19 +205,13 @@ class SocketService {
         status: data.metadata.status as "APPROVED" | "REJECTED"
       });
     }
-
-    // ✅ 7. JOB COMPLETED (Handles Payment Request)
-    // Strictly typed check. Requires NotificationType.JOB_COMPLETED to exist.
     if (data.type === NotificationType.JOB_COMPLETED) {
-        console.log("✅ JOB_COMPLETED received. Triggering Payment Modal...");
 
-        // A. Update Status to 'COMPLETED'
         this.statusUpdateCallback?.({
             bookingId: data.metadata.bookingId,
             status: "COMPLETED"
         });
 
-        // B. Trigger Payment Modal if amount exists
         const total = data.metadata.totalAmount || data.metadata.amount;
         if (total) {
             this.paymentRequestCallback?.({
@@ -231,8 +221,6 @@ class SocketService {
         }
     }
     
-    // 8. PAYMENT_REQUEST (Keep as explicit type if needed, or remove if unused)
-    // Only if you added PAYMENT_REQUEST to your enum
     if (data.type === NotificationType.PAYMENT_REQUEST) {
         this.paymentRequestCallback?.({
             bookingId: data.metadata.bookingId,

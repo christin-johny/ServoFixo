@@ -109,6 +109,7 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
         isActive: doc.isActive,
         rating: doc.rating || 0,
         reviewCount: doc.reviewCount || 0,
+        bookingCount:doc.bookingCount||0,
         createdAt: doc.createdAt,
         updatedAt: doc.updatedAt
     });
@@ -172,6 +173,7 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
         isActive: doc.isActive,
         rating: doc.rating || 0,
         reviewCount: doc.reviewCount || 0,
+        bookingCount:doc.bookingCount||0,
         createdAt: doc.createdAt,
         updatedAt: doc.updatedAt
     }));
@@ -216,6 +218,35 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
     const validDocs = docs.filter((doc) => doc.categoryId !== null);
     return validDocs.map((doc) => this.toEntity(doc));
   }
+  // ... inside the class ...
+
+  async addRating(id: string, newRating: number): Promise<void> {
+    const service = await ServiceItemModel.findById(id);
+    if (!service) return;
+
+    // Calculate new Moving Average
+    const currentAvg = service.rating || 0;
+    const currentCount = service.reviewCount || 0;
+    
+    const newCount = currentCount + 1;
+    const newAvg = ((currentAvg * currentCount) + newRating) / newCount;
+    
+    // Round to 1 decimal (e.g., 4.5)
+    const roundedAvg = Math.round(newAvg * 10) / 10;
+
+    await ServiceItemModel.findByIdAndUpdate(id, {
+      $set: {
+        rating: roundedAvg,
+        reviewCount: newCount
+      }
+    }).exec();
+  }
+
+  async incrementBookingCount(id: string): Promise<void> {
+    await ServiceItemModel.findByIdAndUpdate(id, {
+        $inc: { bookingCount: 1 }
+    }).exec();
+  }
 
   private toEntity(doc: IServiceItemDocument): ServiceItem {
     return new ServiceItem({
@@ -229,6 +260,7 @@ export class ServiceItemMongoRepository implements IServiceItemRepository {
       isActive: doc.isActive,
       rating: doc.rating || 0,
       reviewCount: doc.reviewCount || 0,
+      bookingCount:doc.bookingCount||0,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt
     });

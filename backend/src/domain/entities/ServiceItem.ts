@@ -13,6 +13,7 @@ export interface ServiceItemProps {
   imageUrls: string[];
   isActive: boolean;
   rating: number;
+  bookingCount:number 
   reviewCount: number;
   createdAt: Date;
   updatedAt: Date;
@@ -33,6 +34,7 @@ export class ServiceItem {
   getReviewCount(): number { return this.props.reviewCount; }
   getCreatedAt(): Date { return this.props.createdAt; }
   getUpdatedAt(): Date { return this.props.updatedAt; }
+  getBookingCount(): number {return this.props.bookingCount;}
 
   toProps(): ServiceItemProps {
     return { ...this.props };

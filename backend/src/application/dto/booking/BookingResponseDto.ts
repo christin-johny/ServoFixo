@@ -30,7 +30,7 @@ export interface BookingResponseDto {
   timeline: BookingTimelineEvent[]; // Critical for history display
   
   chatId?: string;
-  // -----------------------------
+  isRated: boolean;
 snapshots: {
     technician?: {
         name: string;

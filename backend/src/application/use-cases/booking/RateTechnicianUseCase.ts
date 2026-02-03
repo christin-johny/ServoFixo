@@ -1,49 +1,63 @@
 import { IUseCase } from "../../interfaces/IUseCase";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
-import { IReviewRepository } from "../../../domain/repositories/IReviewRepository"; // <--- New
+import { IReviewRepository } from "../../../domain/repositories/IReviewRepository";
+import { IServiceItemRepository } from "../../../domain/repositories/IServiceItemRepository"; // ✅ NEW
 import { ILogger } from "../../interfaces/ILogger";
+import { RateTechnicianDto } from "../../dto/booking/RateTechnicianDto";
 import { Review } from "../../../domain/entities/Review";
-
-export class RateTechnicianDto {
-    bookingId!: string;
-    customerId!: string;
-    rating!: number;
-    comment?: string;
-}
+import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
 export class RateTechnicianUseCase implements IUseCase<void, [RateTechnicianDto]> {
-    constructor(
-        private readonly _bookingRepo: IBookingRepository,
-        private readonly _techRepo: ITechnicianRepository,
-        private readonly _reviewRepo: IReviewRepository, // <--- Inject this
-        private readonly _logger: ILogger
-    ) {}
+  constructor(
+    private readonly _bookingRepo: IBookingRepository,
+    private readonly _technicianRepo: ITechnicianRepository,
+    private readonly _reviewRepo: IReviewRepository,
+    private readonly _serviceRepo: IServiceItemRepository,  
+    private readonly _logger: ILogger
+  ) {}
 
-    async execute(input: RateTechnicianDto): Promise<void> {
-        const booking = await this._bookingRepo.findById(input.bookingId);
-        if (!booking) throw new Error("Booking not found");
+async execute(input: RateTechnicianDto): Promise<void> {
+    const booking = await this._bookingRepo.findById(input.bookingId);
+    if (!booking) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
 
-        if (booking.getCustomerId() !== input.customerId) throw new Error("Unauthorized");
-
-        // 1. Create Review Entity
-        const review = new Review({
-            bookingId: input.bookingId,
-            customerId: input.customerId,
-            technicianId: booking.getTechnicianId()!,
-            rating: input.rating,
-            comment: input.comment
-        });
-
-        // 2. Save Review
-        await this._reviewRepo.create(review);
-
-        // 3. Update Technician's Aggregate Score (Average)
-        const techId = booking.getTechnicianId();
-        if (techId) { 
-            await this._techRepo.addRating(techId, input.rating);
-        }
-
-        this._logger.info(`Review saved for booking ${input.bookingId}`);
+    if (booking.getCustomerId() !== input.customerId) {
+        throw new Error(ErrorMessages.UNAUTHORIZED);
     }
+
+    // const existingReview = await this._reviewRepo.findByBookingId(input.bookingId);
+    // console.log(existingReview)
+    // if (existingReview) {
+    //     throw new Error("You have already rated this technician.");
+    // }
+    
+    if (booking.getStatus() !== "PAID" && booking.getStatus() !== "COMPLETED") {
+        throw new Error("You can only rate completed jobs.");
+    }
+
+ 
+    const serviceId = booking.getServiceId();
+    if (!serviceId) throw new Error("Booking does not have a linked Service ID.");
+ 
+    const review = new Review({
+        bookingId: input.bookingId,
+        customerId: input.customerId,
+        technicianId: booking.getTechnicianId()!,
+        serviceId: serviceId, 
+        rating: input.rating,
+        comment: input.comment,
+        isDeleted:input.isDeleted || false
+    });
+ 
+    await this._reviewRepo.create(review);
+    await this._bookingRepo.markAsRated(booking.getId());
+ 
+    if (booking.getTechnicianId()) {
+        await this._technicianRepo.addRating(booking.getTechnicianId()!, input.rating);
+    }
+ 
+    await this._serviceRepo.addRating(serviceId, input.rating);
+
+    this._logger.info(`Rating submitted for Booking ${input.bookingId}`);
+  }
 }

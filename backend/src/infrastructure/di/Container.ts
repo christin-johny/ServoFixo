@@ -150,6 +150,7 @@ import { AdminUpdatePaymentUseCase } from "../../application/use-cases/booking/A
 import { GetTechnicianHistoryUseCase } from "../../application/use-cases/booking/GetTechnicianHistoryUseCase";
 import { GetCustomerBookingsUseCase } from "../../application/use-cases/booking/GetCustomerBookingsUseCase";
 import { VerifyPaymentUseCase } from "../../application/use-cases/booking/VerifyPaymentUseCase";
+import { GetServiceReviewsUseCase } from "../../application/use-cases/service-items/GetServiceReviewsUseCase";
 
 // INFRASTRUCTURE SERVICE INSTANTIATION
 
@@ -375,10 +376,15 @@ export const customerCategoryController = new CustomerCategoryController(
   logger
 );
 
+const reviewRepo = new ReviewMongoRepository();
+
+const getServiceReviewsUseCase = new GetServiceReviewsUseCase(reviewRepo, logger);
+
 export const customerServiceController = new CustomerServiceController(
   getMostBookedUseCase,
   getServiceListingUseCase,
   getServiceByIdUseCase,
+  getServiceReviewsUseCase,
   logger
 );
 
@@ -685,18 +691,20 @@ const completeJobUseCase = new CompleteJobUseCase(
   paymentGateway,  
   notificationService,
   imageService,
+  serviceItemRepo,
   logger  
 )
 
 const getBookingDetailsUseCase = new GetBookingDetailsUseCase(bookingRepo);
 const customerCancelUseCase = new CustomerCancelBookingUseCase(bookingRepo, technicianRepo, notificationService, logger);
 const technicianCancelUseCase = new TechnicianCancelBookingUseCase(bookingRepo,technicianRepo, notificationService, logger);
-const reviewRepo = new ReviewMongoRepository();
+
 
 const rateTechnicianUseCase = new RateTechnicianUseCase(
   bookingRepo,
   technicianRepo,
   reviewRepo, 
+  serviceItemRepo,
   logger
 );
 const getTechnicianHistoryUseCase = new GetTechnicianHistoryUseCase(bookingRepo,logger)
