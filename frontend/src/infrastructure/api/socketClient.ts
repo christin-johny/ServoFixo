@@ -69,6 +69,12 @@ export interface BookingFailedEvent {
   bookingId: string;
   reason: string;
 }
+export interface BookingStatusEvent {
+  bookingId: string;
+  status: string;
+  updatedBy?: string;  
+  reason?: string;
+}
 
 interface RawConfirmationPayload {
   bookingId?: string;
@@ -124,9 +130,10 @@ class SocketService {
     });
 
     this.socket.on("connect", () => {
-      console.log("✅ [SocketClient] Connected! ID:", this.socket?.id);  
+      console.log("✅ [SocketClient] Connected! ID:", this.socket?.id); // <--- LOG 2
     });
- 
+
+    // --- Direct Listeners ---
     this.socket.on("booking:confirmed", (data) => {
       this.handleBookingConfirmed(data, role);
     });
@@ -135,6 +142,9 @@ class SocketService {
       store.dispatch(setIncomingJob(data));
     });
 
+    this.socket.on("booking:status_update", (data: BookingStatusEvent) => {
+      this.statusUpdateCallback?.(data);
+    });
     this.socket.on("booking:status_update", (data: BookingStatusEvent) => {
       this.statusUpdateCallback?.(data);
     });

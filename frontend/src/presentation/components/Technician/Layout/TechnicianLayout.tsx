@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -6,7 +6,7 @@ import {
   User,
   LogOut,
   ChevronRight, 
-  CreditCard // ✅ Added Icon
+  CreditCard 
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../../../store/store";
@@ -28,7 +28,13 @@ import { getTechnicianJobs } from "../../../../infrastructure/repositories/techn
 import NotificationBell from "../../Shared/Notification/NotificationBell";
 import { useTechnicianNotifications } from "../../../hooks/useTechnicianNotifications";
  
-import { socketService } from "../../../../infrastructure/api/socketClient"; 
+// ✅ Updated Imports: Specific Event Types
+import { 
+  socketService, 
+  type BookingConfirmedEvent,
+  type BookingStatusEvent,
+  type BookingCancelledEvent
+} from "../../../../infrastructure/api/socketClient"; 
 import IncomingJobModal from "../Job/IncomingJobModal";
 
 // --- Types ---
@@ -42,6 +48,12 @@ interface JobStatusSummary {
   id: string;
   status: string;
 }
+
+// ✅ Union Type for Global Socket Events
+type GlobalJobEvent = 
+  | BookingConfirmedEvent 
+  | BookingStatusEvent 
+  | BookingCancelledEvent;
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", path: "/technician", icon: LayoutDashboard },
@@ -143,13 +155,13 @@ const TechnicianLayout: React.FC = () => {
   const location = useLocation();
 
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
-  // ✅ NEW: Store status to change UI dynamically
   const [activeJobStatus, setActiveJobStatus] = useState<string | null>(null);
 
   const { profile, loading } = useSelector((state: RootState) => state.technician);
   const { accessToken, user } = useSelector((state: RootState) => state.auth);
   const { fetchNotifications } = useTechnicianNotifications();
 
+  // --- 1. INITIALIZE & LISTEN ---
   useEffect(() => {
     if (accessToken && user?.id) {
         socketService.connect(user.id, "TECHNICIAN");
@@ -157,6 +169,61 @@ const TechnicianLayout: React.FC = () => {
     }
   }, [accessToken, user?.id, fetchNotifications]);
 
+  // --- 2. GLOBAL REAL-TIME JOB LISTENER ---
+  const checkActiveJob = useCallback(async () => {
+    if (!accessToken) return;
+    try {
+      const response = await getTechnicianJobs(); 
+      // Safe casting since we know the shape from repository
+      const jobs = response.data as unknown as JobStatusSummary[];
+
+      const runningJob = jobs.find((j) => 
+          ['ACCEPTED', 'EN_ROUTE', 'REACHED', 'IN_PROGRESS', 'EXTRAS_PENDING', 'COMPLETED'].includes(j.status)
+      );
+      
+      if (runningJob) {
+          console.log("⚡ [Layout] Active Job Detected:", runningJob.id);
+          setActiveJobId(runningJob.id);
+          setActiveJobStatus(runningJob.status); 
+      } else {
+          setActiveJobId(null);
+          setActiveJobStatus(null);
+      }
+    } catch (error) {
+      console.error("Failed to check active job", error);
+    }
+  }, [accessToken]);
+
+  // Initial Check on Mount & Route Change
+  useEffect(() => {
+    checkActiveJob();
+  }, [checkActiveJob, location.pathname]); 
+
+  // ✅ LISTEN FOR SOCKET EVENTS (Strictly Typed)
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // Handler accepts specific Union Type instead of 'any'
+    const handleGlobalUpdate = (data: GlobalJobEvent) => {
+        console.log("⚡ [Layout] Global Update Received:", data);
+        
+        // Re-check the API to see if we have a new active job
+        checkActiveJob();
+    };
+
+    // Bind Listeners
+    socketService.onBookingConfirmed(handleGlobalUpdate); // Force Assign
+    socketService.onBookingStatusUpdate(handleGlobalUpdate); // Status Change
+    socketService.onBookingCancelled(handleGlobalUpdate); // Cancelled
+
+    return () => {
+        // Cleanup listeners if necessary
+        // socketService.offTrackingListeners(); 
+    };
+  }, [user?.id, checkActiveJob]);
+
+
+  // --- 3. PROFILE DATA ---
   useEffect(() => {
     if (accessToken && !profile) {
       const loadProfile = async () => {
@@ -172,33 +239,6 @@ const TechnicianLayout: React.FC = () => {
     }
   }, [accessToken, profile, dispatch]);
 
-  // --- Active Job Check ---
-  useEffect(() => {
-    const checkActiveJob = async () => {
-      if (!accessToken) return;
-      try {
-        const response = await getTechnicianJobs(); 
-        const jobs = response.data;
-
-        // ✅ INCLUDES 'COMPLETED'
-        const runningJob = (jobs as JobStatusSummary[]).find((j) => 
-            ['ACCEPTED', 'EN_ROUTE', 'REACHED', 'IN_PROGRESS', 'EXTRAS_PENDING', 'COMPLETED'].includes(j.status)
-        );
-        
-        if (runningJob) {
-            setActiveJobId(runningJob.id);
-            setActiveJobStatus(runningJob.status); // ✅ Set Status
-        } else {
-            setActiveJobId(null);
-            setActiveJobStatus(null);
-        }
-      } catch (error) {
-        console.error("Failed to check active job", error);
-      }
-    };
-
-    checkActiveJob();
-  }, [accessToken, location.pathname]); 
 
   const isActive = (path: string) => {
     if (path === "/technician" && location.pathname !== "/technician") return false;
@@ -221,12 +261,8 @@ const TechnicianLayout: React.FC = () => {
     }
   };
 
-  // ✅ Helper to navigate correctly
   const handleFooterClick = () => {
     if (!activeJobId) return;
-    
-    // If completed, maybe go to the specific invoice/complete page?
-    // Adjust this path if your completion page is different (e.g., /complete)
     if (activeJobStatus === 'COMPLETED') {
         navigate(`/technician/jobs/${activeJobId}/complete`); 
     } else {
@@ -236,7 +272,6 @@ const TechnicianLayout: React.FC = () => {
 
   if (loading && !profile) return <LoaderFallback />;
 
-  // Hide footer if we are ALREADY on the job page (to prevent double headers)
   const isOnActiveJobPage = activeJobId && (
     location.pathname.includes(`/jobs/${activeJobId}`)
   );
@@ -247,7 +282,7 @@ const TechnicianLayout: React.FC = () => {
         <SidebarContent onLogoutClick={() => setIsLogoutModalOpen(true)} />
       </aside>
 
-      {/* ... Mobile Header Code ... */}
+      {/* Mobile Header */}
       <div className="md:hidden bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 h-16 flex items-center justify-between sticky top-0 z-40 shadow-sm transition-all">
         <div className="flex items-center gap-3">
           <img src="/assets/logo.png" alt="Logo" className="h-8 w-8 object-contain" />
@@ -290,12 +325,10 @@ const TechnicianLayout: React.FC = () => {
         >
            <div className="flex items-center gap-3">
               {activeJobStatus === 'COMPLETED' ? (
-                  // Waiting for Payment UI
                   <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-bounce">
                      <CreditCard className="w-4 h-4 text-white" />
                   </div>
               ) : (
-                  // Job in Progress UI
                   <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping ml-2"></div>
               )}
               
@@ -304,7 +337,7 @@ const TechnicianLayout: React.FC = () => {
                      {activeJobStatus === 'COMPLETED' ? 'Waiting for Payment' : 'Job in Progress'}
                  </p>
                  <p className="text-[10px] text-gray-300">
-                     {activeJobStatus === 'COMPLETED' ? 'Tap to view invoice status' : 'Tap to return to active job'}
+                     {activeJobStatus === 'COMPLETED' ? 'Tap to view invoice status' : 'New update available. Tap to view.'}
                  </p>
               </div>
            </div>
@@ -314,7 +347,7 @@ const TechnicianLayout: React.FC = () => {
         </div>
       )}
 
-      {/* ... Mobile Bottom Nav & Modals ... */}
+      {/* Mobile Bottom Nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)]">
         <div className="flex justify-around items-center px-2">
           {NAV_ITEMS.map((item) => {

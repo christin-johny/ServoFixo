@@ -379,11 +379,17 @@ const AdminBookingDetails: React.FC = () => {
       </div>
 
       {/* ✅ Render Modals */}
-      <ForceAssignModal 
-        isOpen={isAssignOpen} 
-        onClose={() => setAssignOpen(false)} 
-        onAssign={handleForceAssign} 
-      />
+      {booking && (
+        <ForceAssignModal 
+            isOpen={isAssignOpen} 
+            onClose={() => setAssignOpen(false)} 
+            onAssign={handleForceAssign}  
+            context={{
+                zoneId: booking.zoneId,
+                serviceId: booking.serviceId
+            }}
+        />
+      )}
       <ForceCancelModal 
         isOpen={isCancelOpen} 
         onClose={() => setCancelOpen(false)} 

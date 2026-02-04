@@ -20,6 +20,7 @@ import { SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
 import { RequestAction, PartnerRequestType } from "../../../../../shared/types/enums/RequestResolutionEnums";
+import { GetRecommendedTechniciansDto } from "../../../application/use-cases/booking/GetRecommendedTechniciansUseCase";  
 
 export class AdminTechnicianController extends BaseController {
   constructor(
@@ -33,6 +34,7 @@ export class AdminTechnicianController extends BaseController {
     private readonly _resolveServiceRequestUseCase: IUseCase<void, [string, ResolvePartnerRequestDto]>,
     private readonly _resolveZoneRequestUseCase: IUseCase<void, [string, ResolvePartnerRequestDto]>,
     private readonly _resolveBankRequestUseCase: IUseCase<void, [string, ResolvePartnerRequestDto]>,
+    private readonly _getRecommendedTechniciansUseCase: IUseCase<any[], [GetRecommendedTechniciansDto]>,
     _logger: ILogger 
   ) {
     super(_logger);
@@ -84,20 +86,47 @@ export class AdminTechnicianController extends BaseController {
   getAllTechnicians = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { page, limit, search } = RequestMapper.toPagination(req.query);
+      const zoneId = req.query.zoneId as string;
+      const serviceId = req.query.serviceId as string;
+
+      // ✅ SMART MODE: Use the Use Case
+      if (zoneId && serviceId) {
+           const techs = await this._getRecommendedTechniciansUseCase.execute({
+               zoneId,
+               serviceId,
+               search
+           });
+
+           // Map to simple list for Modal
+           const data = techs.map((tech: any) => ({
+                id: tech.getId(),
+                name: tech.getName(),
+                phone: tech.getPhone(),
+                avatarUrl: tech.getAvatarUrl(),
+                isOnline: tech.getIsOnline(),
+                availabilityStatus: tech.getAvailability().isOnJob ? "BUSY" : "AVAILABLE",
+                rating: tech.getRatings().averageRating
+           }));
+
+           return this.ok(res, { data, total: data.length });
+      } 
+
+      // ❌ NORMAL MODE: Browse All
       const filters = {
         page,
         limit,
         search,
-        status: req.query.status as TechnicianFilterParams['status'],
+        status: req.query.status as any,
         zoneId: req.query.zoneId as string | undefined,
       };
 
       const result = await this._getAllTechniciansUseCase.execute(filters);
       return this.ok(res, result);
     } catch (err) {
-      return this.handleError(res, err, LogEvents.ADMIN_GET_ALL_TECHS_FAILED);
+      return this.handleError(res, err, "GET_ALL_TECHS_FAILED");
     }
   };
+
 
   updateTechnician = async (req: Request, res: Response): Promise<Response> => {
     try {

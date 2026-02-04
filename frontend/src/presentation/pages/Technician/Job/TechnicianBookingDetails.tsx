@@ -4,6 +4,13 @@ import { ArrowLeft, MapPin, Calendar, Receipt, CheckCircle2, XCircle, Clock } fr
 import { getTechnicianBookingById } from "../../../../infrastructure/repositories/technician/technicianBookingRepository";
 import LoaderFallback from "../../../components/LoaderFallback";
 import { type JobDetails } from "../Job/ActiveJobPage";  
+import { 
+  socketService, 
+  type BookingStatusEvent, 
+  type BookingConfirmedEvent // ✅ Import Type
+} from "../../../../infrastructure/api/socketClient"; 
+import { useSelector } from "react-redux";
+import { type RootState } from "../../../../store/store";
 
 const TechnicianBookingDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -11,20 +18,52 @@ const TechnicianBookingDetails: React.FC = () => {
   const [job, setJob] = useState<JobDetails | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const { user } = useSelector((state: RootState) => state.auth);
+ 
+  const fetch = async () => {
+    try {
+      if (!id) return;
+      const data = await getTechnicianBookingById(id) as JobDetails;
+      setJob(data);
+    } catch   {
+      navigate("/technician/jobs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial Load
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        if (!id) return;
-        const data = await getTechnicianBookingById(id) as JobDetails;
-        setJob(data);
-      } catch   {
-        navigate("/technician/jobs");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetch();
   }, [id, navigate]);
+
+  useEffect(() => {
+    if (!id || !user?.id) return;
+
+    socketService.connect(user.id, "TECHNICIAN");
+
+    // ✅ Typed Handlers for Socket Events
+    const handleStatusUpdate = (data: BookingStatusEvent) => {
+        if (data.bookingId === id) {
+            console.log("⚡ Job details updated via socket (Status)");
+            fetch();
+        }
+    };
+
+    const handleConfirm = (data: BookingConfirmedEvent) => {
+        if (data.bookingId === id) {
+            console.log("⚡ Job details updated via socket (Confirm)");
+            fetch();
+        }
+    };
+
+    socketService.onBookingStatusUpdate(handleStatusUpdate);
+    socketService.onBookingConfirmed(handleConfirm);
+    
+    return () => {
+        socketService.offTrackingListeners();
+    };
+  }, [id, user?.id]);
 
   if (loading) return <LoaderFallback />;
   if (!job) return null;
@@ -35,11 +74,11 @@ const TechnicianBookingDetails: React.FC = () => {
   return (
     <div className="w-full min-h-screen space-y-6 animate-fade-in pb-24 md:pb-12 font-sans bg-[#F5F7FB]">
       
-      {/* --- 1. MATCHING HEADER (Same as MyJobsPage) --- */}
+      {/* --- 1. MATCHING HEADER --- */}
       <div className="space-y-4 pt-4 px-4">
         <div>
             <button
-                onClick={() => navigate("/technician/jobs")} // Back to History
+                onClick={() => navigate("/technician/jobs")}
                 className="group flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors px-1"
             >
                 <div className="p-1 rounded-full bg-white border border-gray-200 group-hover:border-gray-300 shadow-sm transition-all">
@@ -59,7 +98,6 @@ const TechnicianBookingDetails: React.FC = () => {
                 </p>
             </div>
             
-            {/* Status Badge */}
             <div className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 border ${
                 isCancelled 
                   ? "bg-red-50 text-red-700 border-red-100" 
@@ -73,7 +111,7 @@ const TechnicianBookingDetails: React.FC = () => {
 
       <div className="max-w-3xl mx-auto px-4 mt-6 space-y-6">
         
-        {/* --- 2. FINANCIAL SUMMARY (Invoice) --- */}
+        {/* --- 2. FINANCIAL SUMMARY --- */}
         {!isCancelled && (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
@@ -85,7 +123,6 @@ const TechnicianBookingDetails: React.FC = () => {
                         <span>Base Price</span>
                         <span>₹{job.pricing.estimated}</span>
                     </div>
-                    {/* Placeholder for extras if you add them to JobDetails type later */}
                     
                     <div className="border-t border-dashed border-gray-200 my-2 pt-2 flex justify-between items-center">
                         <span className="font-bold text-gray-900">Total Earnings</span>
@@ -130,7 +167,7 @@ const TechnicianBookingDetails: React.FC = () => {
             </div>
         </div>
 
-        {/* --- 4. CUSTOMER INFO (Read Only) --- */}
+        {/* --- 4. CUSTOMER INFO --- */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 opacity-75">
             <h3 className="font-bold text-gray-900 mb-4">Customer</h3>
             <div className="flex items-center gap-4">

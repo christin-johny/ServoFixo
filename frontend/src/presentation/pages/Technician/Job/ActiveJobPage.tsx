@@ -21,10 +21,17 @@ import {
   OtpCard, 
   TimerCard 
 } from "../../../components/Technician/Job/JobCards";
+import { 
+  socketService, 
+  type BookingStatusEvent, 
+  type BookingConfirmedEvent, // ✅ Import Type
+  type BookingCancelledEvent  // ✅ Import Type
+} from "../../../../infrastructure/api/socketClient"; 
+import { useSelector } from "react-redux";
+import { type RootState } from "../../../../store/store";   
 
 // --- Strict Types ---
 
-// Define the shape of the API Error response
 interface ApiError {
   response?: {
     data?: {
@@ -33,7 +40,6 @@ interface ApiError {
   };
 }
 
-// Define JobDetails locally or import from domain types
 export interface JobDetails {
   id: string;
   status: string;
@@ -73,6 +79,8 @@ const ActiveJobPage: React.FC = () => {
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
     isOpen: false, title: "", message: "", confirmText: "Confirm", variant: "primary", action: () => { }
   });
+
+  const { user } = useSelector((state: RootState) => state.auth);
  
   const fetchJob = async () => {
     try {
@@ -90,7 +98,6 @@ const ActiveJobPage: React.FC = () => {
          navigate(`/technician/jobs/${id}/details`, { replace: true });
          return;
       }
- 
       
     } catch { 
       showError("Failed to load job details."); 
@@ -101,6 +108,37 @@ const ActiveJobPage: React.FC = () => {
   };
 
   useEffect(() => { fetchJob(); }, [id]);
+
+  useEffect(() => {
+    if (!id || !user?.id) return;
+
+    socketService.connect(user.id, "TECHNICIAN");
+
+    // ✅ Typed Handlers
+    const handleStatusUpdate = (data: BookingStatusEvent) => { 
+        if (data.bookingId === id) {
+            console.log("⚡ Admin updated job status. Refreshing...", data.status);
+            fetchJob();
+        }
+    };
+
+    const handleConfirm = (data: BookingConfirmedEvent) => {
+        if (data.bookingId === id) fetchJob();
+    };
+
+    const handleCancel = (data: BookingCancelledEvent) => {
+        if (data.bookingId === id) fetchJob();
+    };
+
+    // Listeners
+    socketService.onBookingStatusUpdate(handleStatusUpdate);
+    socketService.onBookingConfirmed(handleConfirm);
+    socketService.onBookingCancelled(handleCancel);
+
+    return () => {
+        socketService.offTrackingListeners();
+    };
+  }, [id, user?.id]);
 
   // --- Actions ---
   const executeStatusUpdate = async (status: string) => {
@@ -207,13 +245,11 @@ const ActiveJobPage: React.FC = () => {
           
           {/* MAIN COLUMN (8 cols) */}
           <div className="md:col-span-8 space-y-6">
-             {/* Status Header Card */}
              <JobHeader 
                 job={job} 
                 onCancel={() => setIsCancelModalOpen(true)} 
              />
 
-             {/* Action Cards (OTP / Timer) */}
              {(job.status === "REACHED" || isWorking) && (
                <div className="animate-fade-in-up">
                   {job.status === "REACHED" && <OtpCard otp={otp} setOtp={setOtp} />}
@@ -221,7 +257,6 @@ const ActiveJobPage: React.FC = () => {
                </div>
              )}
              
-             {/* Customer & Location Details */}
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <CustomerCard job={job} />
                 <LocationCard job={job} isWorking={isWorking} />

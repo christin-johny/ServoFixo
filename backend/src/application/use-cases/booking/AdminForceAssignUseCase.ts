@@ -4,6 +4,8 @@ import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianR
 import { INotificationService } from "../../services/INotificationService";
 import { ILogger } from "../../interfaces/ILogger";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+// ✅ 1. Import SocketServer
+import { SocketServer } from "../../../infrastructure/socket/SocketServer"; 
 
 export interface AdminForceAssignDto {
   bookingId: string;
@@ -26,7 +28,6 @@ export class AdminForceAssignUseCase implements IUseCase<void, [AdminForceAssign
     const tech = await this._techRepo.findById(input.technicianId);
     if (!tech) throw new Error("Technician not found");
 
-    // 1. Prepare Snapshot Data
     const techSnapshot = {
         name: tech.getName ? tech.getName() : (tech as any).name,
         phone: tech.getPhone ? tech.getPhone() : (tech as any).phone,
@@ -34,22 +35,38 @@ export class AdminForceAssignUseCase implements IUseCase<void, [AdminForceAssign
         rating: tech.getRatings().averageRating || 0
     };
 
-    // 2. Execute Domain Logic (Force Assign)
+    // Execute Logic
     booking.adminForceAssign(
         input.technicianId, 
         { tech: techSnapshot, adminName: input.adminId }
     );
 
-    // 3. Persist (We reuse assignTechnician or use generic update)
-    // Since existing assignTechnician checks for "ASSIGNED_PENDING" status in the Query,
-    // we must use the generic .update() method for Admin Overrides to bypass DB locks.
+    // Persist
     await this._bookingRepo.update(booking);
 
-    // 4. Notify Parties
+    // --- ✅ 2. REAL-TIME SOCKET EMISSION (THE FIX) ---
+    const io = SocketServer.getInstance();
+    const payload = {
+        bookingId: booking.getId(),
+        status: "ACCEPTED",
+        updatedBy: "Admin"
+    };
+
+    // A. Force refresh on Technician App
+    io.to(input.technicianId).emit("booking:status_update", payload);
+    // Also emit 'booking:confirmed' to trigger the "Active Job" redirection if they are on dashboard
+    io.to(input.technicianId).emit("booking:confirmed", {
+        bookingId: booking.getId(),
+        status: "ACCEPTED",
+        techName: techSnapshot.name // Payload matches what frontend expects
+    });
+ 
+    io.to(booking.getCustomerId()).emit("booking:status_update", payload);
+     
     await this._notificationService.send({
         recipientId: input.technicianId,
         recipientType: "TECHNICIAN",
-        type: "BOOKING_CONFIRMED" as any,
+        type: "BOOKING_CONFIRMED" as any, 
         title: "New Job Assigned (Admin) ⚡",
         body: "Admin has manually assigned a job to you.",
         metadata: { bookingId: booking.getId() }

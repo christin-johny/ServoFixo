@@ -152,6 +152,7 @@ import { GetCustomerBookingsUseCase } from "../../application/use-cases/booking/
 import { VerifyPaymentUseCase } from "../../application/use-cases/booking/VerifyPaymentUseCase";
 import { GetServiceReviewsUseCase } from "../../application/use-cases/service-items/GetServiceReviewsUseCase";
 import { GetAllBookingsUseCase } from "../../application/use-cases/booking/GetAllBookingsUseCase";
+import { GetRecommendedTechniciansUseCase } from "../../application/use-cases/booking/GetRecommendedTechniciansUseCase";
 
 // INFRASTRUCTURE SERVICE INSTANTIATION
 
@@ -637,6 +638,7 @@ const resolveBankRequestUseCase = new ResolveBankRequestUseCase(
   notificationService,
   logger
 );
+const getRecommendedTechniciansUseCase = new GetRecommendedTechniciansUseCase(technicianRepo)
 
 export const adminTechnicianController = new AdminTechnicianController(
   getVerificationQueueUseCase,
@@ -649,6 +651,7 @@ export const adminTechnicianController = new AdminTechnicianController(
   resolveServiceRequestUseCase,
   resolveZoneRequestUseCase,
   resolveBankRequestUseCase,
+  getRecommendedTechniciansUseCase,
   logger
 );
  

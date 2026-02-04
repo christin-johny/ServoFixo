@@ -32,6 +32,8 @@ export interface ExtraChargeDto {
 export interface AdminBookingListDto {
   id: string;
   status: BookingStatus;
+  zoneId: string;       
+  serviceId: string;
   pricing: {
     estimated: number;
     final?: number;
@@ -76,6 +78,10 @@ export interface PaginatedAdminBookingResult {
   page: number;
   limit: number;
   totalPages: number;
+}
+export interface SmartFilters {
+    zoneId?: string;
+    serviceId?: string;
 }
 
 export interface TechnicianSearchResult {
@@ -131,13 +137,24 @@ export const forceStatusUpdate = async (
   });
 };
 
-export const searchTechnicians = async (query: string): Promise<TechnicianSearchResult[]> => {
+export const searchTechnicians = async (
+    query: string, 
+    filters?: SmartFilters 
+): Promise<TechnicianSearchResult[]> => {
+  
   const response = await api.get("/admin/technicians", { 
       params: { 
         search: query, 
-        status: "APPROVED", 
-        limit: 10
+        limit: 10, 
+        zoneId: filters?.zoneId,     
+        serviceId: filters?.serviceId, 
+        status: (!filters?.zoneId) ? "VERIFIED" : undefined 
       } 
   });
-  return response.data.data; 
+ 
+  const result = response.data.data; 
+  if (result && Array.isArray(result.data)) {
+      return result.data;
+  }
+  return Array.isArray(result) ? result : [];
 };
