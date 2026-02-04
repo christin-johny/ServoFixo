@@ -119,7 +119,6 @@ const BookingTrackingPage: React.FC = () => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [isProcessingExtra, setIsProcessingExtra] = useState(false);
  
-  // ✅ SMART SYNC: Retries if price is missing for completed jobs
   const syncBookingData = async (retryCount = 0) => {
       if (!id) return;
       try {
@@ -128,19 +127,15 @@ const BookingTrackingPage: React.FC = () => {
           setBookingData(data);
           setStatus(data.status);
           dispatch(setActiveBooking({ id: data.id, status: data.status }));
- 
-          // --- LOGIC FOR BILL TOTAL ---
+
           if (data.status === 'COMPLETED') {
-             // Case A: Price is ready -> Show Modal
              if (data.pricing?.final) {
                  setBillTotal(data.pricing.final);
              } 
-             // Case B: Job is done, but Price is missing -> RETRY AUTOMATICALLY
              else if (retryCount < 5) {
                  setTimeout(() => syncBookingData(retryCount + 1), 1000);
              }
           } else {
-             // Hide modal if status is IN_PROGRESS or EXTRAS_PENDING
              setBillTotal(null); 
           }
 
@@ -168,9 +163,6 @@ const BookingTrackingPage: React.FC = () => {
     syncBookingData();
     socketService.connect(user.id, "CUSTOMER");
 
-    // --- SOCKET LISTENERS ---
-
-    // 1. Status Update Listener
     socketService.onBookingStatusUpdate((data) => {
         if (data.status === 'COMPLETED') {
             setStatus('COMPLETED');
@@ -180,7 +172,6 @@ const BookingTrackingPage: React.FC = () => {
         }
     });
 
-    // 2. Extra Charge Listener
     socketService.onApprovalRequest((data) => {
         setExtraRequest({
             itemId: data.extraItem.id,
@@ -190,7 +181,6 @@ const BookingTrackingPage: React.FC = () => {
         });
     });
 
-    // 3. Payment Request Listener (Direct Trigger)
     socketService.onPaymentRequest((data) => {
         setStatus('COMPLETED');
         setBillTotal(data.totalAmount); 

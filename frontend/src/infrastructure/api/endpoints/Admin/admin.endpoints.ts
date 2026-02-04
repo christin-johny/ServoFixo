@@ -39,3 +39,8 @@ export const ADMIN_TECHNICIAN_ENDPOINTS = {
   BLOCK: (id: string) => `/admin/technicians/${id}/block`,
   RESOLVE_REQUEST: (id: string) => `/admin/technicians/${id}/requests/resolve`,
 };
+
+export const ADMIN_BOOKING_ENDPOINTS={
+  BOOKINGS:"/admin/bookings",
+  
+}

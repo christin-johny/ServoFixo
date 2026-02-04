@@ -6,6 +6,9 @@ import { AdminForceAssignDto } from "../../../application/dto/admin/AdminForceAs
 import { AdminForceStatusDto } from "../../../application/dto/admin/AdminForceStatusDto"; 
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { AdminUpdatePaymentDto } from "../../../application/dto/admin/AdminUpdatePaymentDto";
+import { GetAllBookingsDto } from "../../../application/use-cases/booking/GetAllBookingsUseCase";
+import { BookingMapper } from "../../../application/mappers/BookingMapper";
+import { PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
 
 interface AuthenticatedRequest extends Request {
   userId?: string; // Admin ID
@@ -18,6 +21,7 @@ export class AdminBookingController extends BaseController {
     private readonly _adminForceAssignUseCase: IUseCase<void, [AdminForceAssignDto]>,
     private readonly _adminForceStatusUseCase: IUseCase<void, [AdminForceStatusDto]>, // <--- Injected
     private readonly _adminUpdatePaymentUseCase: IUseCase<void, [AdminUpdatePaymentDto]>,
+    private readonly _getAllBookingsUseCase: IUseCase<PaginatedBookingResult, [GetAllBookingsDto]>,
     _logger: ILogger
   ) {
     super(_logger);
@@ -30,7 +34,7 @@ export class AdminBookingController extends BaseController {
   forceAssign = async (req: Request, res: Response): Promise<Response> => {
     try {
       const adminId = (req as AuthenticatedRequest).userId;
-      if ((req as AuthenticatedRequest).role !== "ADMIN") throw new Error(ErrorMessages.UNAUTHORIZED);
+      if ((req as AuthenticatedRequest).role !== "admin") throw new Error(ErrorMessages.UNAUTHORIZED);
 
       const input: AdminForceAssignDto = {
         bookingId: req.params.id,
@@ -54,8 +58,9 @@ export class AdminBookingController extends BaseController {
   forceStatus = async (req: Request, res: Response): Promise<Response> => {
     try {
       const adminId = (req as AuthenticatedRequest).userId;
-      if ((req as AuthenticatedRequest).role !== "ADMIN") throw new Error(ErrorMessages.UNAUTHORIZED);
-
+       
+      if ((req as AuthenticatedRequest).role !== "admin") throw new Error(ErrorMessages.UNAUTHORIZED);
+      
       const input: AdminForceStatusDto = {
         bookingId: req.params.id,
         adminId: adminId!,
@@ -74,7 +79,8 @@ export class AdminBookingController extends BaseController {
   updatePayment = async (req: Request, res: Response): Promise<Response> => {
     try {
       const adminId = (req as AuthenticatedRequest).userId;
-      if ((req as AuthenticatedRequest).role !== "ADMIN") {
+
+      if ((req as AuthenticatedRequest).role !== "admin") {
          return this.unauthorized(res, "Admins only.");
       }
 
@@ -93,4 +99,45 @@ export class AdminBookingController extends BaseController {
       return this.handleError(res, err, "ADMIN_UPDATE_PAYMENT_FAILED");
     }
   };
+  /**
+   * @route GET /api/admin/bookings
+   * @desc Global "God Mode" List - View ALL bookings with filters
+   */
+getAll = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const adminId = (req as AuthenticatedRequest).userId;
+    if ((req as AuthenticatedRequest).role !== "admin") {
+        return this.unauthorized(res, "Admins only.");
+    }
+
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    
+    // Map Query Params to DTO
+    const input: GetAllBookingsDto = {
+      page,
+      limit,
+      search: req.query.search as string,
+      status: req.query.status as any, 
+      zoneId: req.query.zoneId as string,
+      categoryId: req.query.categoryId as string, // ✅ The new filter
+      startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
+      endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
+      sortBy: req.query.sortBy as any
+    };
+
+    const result = await this._getAllBookingsUseCase.execute(input);
+
+    return this.ok(res, {
+      data: result.data.map(b => BookingMapper.toResponse(b)),
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: Math.ceil(result.total / limit)
+    }, "All bookings fetched successfully");
+
+  } catch (err) {
+    return this.handleError(res, err, "ADMIN_GET_ALL_FAILED");
+  }
+};
 }

@@ -371,8 +371,7 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
     try {
       const authReq = req as AuthenticatedRequest;
       const userId = authReq.userId;
-      const role = authReq.role; 
-      
+      const role = authReq.role;  
 
       if (!userId || !role) throw new Error(ErrorMessages.UNAUTHORIZED);
 

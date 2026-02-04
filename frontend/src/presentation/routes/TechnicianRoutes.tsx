@@ -18,8 +18,10 @@ const OnboardingWizard =React.lazy(() => import("../components/Technician/Onboar
 const TechnicianProfile=React.lazy(() => import("../pages/Technician/Profile/TechnicianProfile"));
 const ActiveJobPage=React.lazy(() => import("../pages/Technician/Job/ActiveJobPage"));
 const AddExtrasPage = React.lazy(() => import("../pages/Technician/Job/AddExtrasPage"));
- const CompleteJobPage = React.lazy(() => import("../pages/Technician/Job/CompleteJobPage"));
- const MyJobsPage = React.lazy(() => import("../pages/Technician/Job/MyJobsPage"));
+const CompleteJobPage = React.lazy(() => import("../pages/Technician/Job/CompleteJobPage"));
+const MyJobsPage = React.lazy(() => import("../pages/Technician/Job/MyJobsPage"));
+const TechnicianBookingDetails = React.lazy(() => import("../pages/Technician/Job/TechnicianBookingDetails"));
+
 const TechnicianRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
     <Routes>
@@ -53,6 +55,7 @@ const TechnicianRoutes: React.FC = () => (
         <Route path="jobs/:id" element={<ActiveJobPage />} />
         <Route path="jobs/:id/extras" element={<AddExtrasPage />} />
         <Route path="jobs/:id/complete" element={<CompleteJobPage />} />
+        <Route path="jobs/:id/details" element={<TechnicianBookingDetails />} />
       </Route>
 
       {/* Fallback */}

@@ -12,7 +12,7 @@ import { useDebounce } from "../../../hooks/useDebounce";
 import { DataTable, type TableColumn } from "../../../components/Shared/Table/DataTable";
 import { SearchFilterBar, PaginationBar } from "../../../components/Shared/Table/DataTableControls";
 
-// --- Types (Matching Backend Response) ---
+// --- Types ---
 interface JobData {
   id: string;
   status: string;
@@ -59,12 +59,24 @@ const MyJobsPage: React.FC = () => {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      // Logic: "HISTORY" = Completed/Cancelled. "ACTIVE" = Everything else.
-      const statuses = statusFilter === "HISTORY" 
-          ? "COMPLETED" 
-          : undefined; 
+      // ✅ LOGIC FIX: Explicitly define status arrays
+      let statuses: string | string[] | undefined;
 
-      // Cast the response to our strict interface
+      if (statusFilter === "ACTIVE") {
+         // Backend handles the string 'active' specially to include [ACCEPTED...COMPLETED]
+         statuses = "active"; 
+      } else {
+         // For History, we explicitly ask for these statuses
+         statuses = [
+             "PAID", 
+             "CANCELLED", 
+             "REJECTED", 
+             "FAILED_ASSIGNMENT", 
+             "TIMEOUT", 
+             "CANCELLED_BY_TECH"
+         ];
+      }
+
       const response = await getTechnicianJobs({
         page,
         limit: 10,
@@ -84,28 +96,24 @@ const MyJobsPage: React.FC = () => {
     }
   };
 
-  // --- Helpers ---
+  // --- Helpers & Columns (Keep existing) ---
   const renderStatus = (status: string) => {
-    const s = status.replace("_", " ");
+    const s = status.replace(/_/g, " "); // Fix: Replace ALL underscores
     switch (status) {
-      case "COMPLETED": 
       case "PAID": 
         return <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3"/> {s}</span>;
+      case "COMPLETED": 
+        return <span className="bg-green-50 text-green-600 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3"/> Payment Pending</span>;
       case "CANCELLED": 
       case "REJECTED":
+      case "TIMEOUT":
+      case "CANCELLED_BY_TECH":
         return <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5"><XCircle className="w-3 h-3"/> {s}</span>;
-      case "IN_PROGRESS": 
-      case "ACCEPTED":
-      case "EN_ROUTE":
-      case "REACHED":
-      case "EXTRAS_PENDING":
-        return <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 animate-pulse"><Clock className="w-3 h-3"/> {s}</span>;
       default: 
-        return <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2.5 py-1 rounded-full">{s}</span>;
+        return <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 animate-pulse"><Clock className="w-3 h-3"/> {s}</span>;
     }
   };
 
-  // --- Desktop Columns ---
   const columns: TableColumn<JobData>[] = [
     {
       header: "Service Info",
@@ -171,13 +179,11 @@ const MyJobsPage: React.FC = () => {
     }
   ];
 
-  // --- Mobile Card Design (Matches PayoutSettings/ActiveJob style) ---
   const renderMobileCard = (item: JobData) => (
     <div 
         onClick={() => navigate(`/technician/jobs/${item.id}`)}
         className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4 active:scale-[0.98] transition-all"
     >
-       {/* Top Row: ID & Status */}
        <div className="flex justify-between items-start">
           <div className="flex flex-col gap-1">
             <span className="text-[10px] font-bold text-gray-400 font-mono tracking-wider">#{item.id.slice(-6).toUpperCase()}</span>
@@ -186,7 +192,6 @@ const MyJobsPage: React.FC = () => {
           {renderStatus(item.status)}
        </div>
 
-       {/* Middle Row: Location */}
        <div className="flex items-start gap-3 bg-gray-50/50 p-3 rounded-xl border border-gray-50">
           <div className="p-1.5 bg-white rounded-lg shadow-sm text-gray-400">
             <MapPin className="w-4 h-4" />
@@ -197,7 +202,6 @@ const MyJobsPage: React.FC = () => {
           </div>
        </div>
 
-       {/* Bottom Row: Date & Price */}
        <div className="flex justify-between items-center pt-2 border-t border-gray-100 mt-1">
           <div className="flex items-center gap-2 text-xs text-gray-400 font-medium">
              <Calendar className="w-3.5 h-3.5" /> 
@@ -215,7 +219,7 @@ const MyJobsPage: React.FC = () => {
   );
 
   return (
-    <div className="w-full min-h-screen   space-y-6 animate-fade-in pb-24 md:pb-12 font-sans">
+    <div className="w-full min-h-screen space-y-6 animate-fade-in pb-24 md:pb-12 font-sans">
       
       {/* --- 1. NAVIGATION & HEADER --- */}
       <div className="space-y-4 pt-2">
@@ -241,10 +245,9 @@ const MyJobsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* --- 2. TABS & SEARCH (Unified Control Bar) --- */}
+      {/* --- 2. TABS & SEARCH --- */}
       <div className="bg-white p-2 rounded-2xl shadow-sm border border-gray-200">
          
-         {/* Custom Tab Switcher */}
          <div className="flex p-1 bg-gray-100/80 rounded-xl mb-4">
             <button 
               onClick={() => { setStatusFilter("ACTIVE"); setPage(1); }}
@@ -260,7 +263,6 @@ const MyJobsPage: React.FC = () => {
             </button>
          </div>
 
-         {/* Search Filter Bar */}
          <SearchFilterBar 
             search={search}
             onSearchChange={setSearch}
@@ -273,14 +275,12 @@ const MyJobsPage: React.FC = () => {
 
       {/* --- 3. DATA CONTENT --- */}
       <div className="flex-1">
-         {/* Table Wrapper */}
          <div className="bg-white md:rounded-2xl md:shadow-sm md:border md:border-gray-200 overflow-hidden min-h-[400px] flex flex-col rounded-xl border border-gray-200 shadow-sm">
             <DataTable 
                data={data}
                columns={columns}
                keyField="id"
                isLoading={loading}
-               // This custom JSX will now work because of Step 1
                emptyMessage={
                  <div className="text-center py-12">
                     <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">

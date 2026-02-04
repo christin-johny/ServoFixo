@@ -85,6 +85,17 @@ export class RespondToExtraChargeUseCase implements IUseCase<void, [RespondToExt
         },
         clickAction: `/technician/bookings/${booking.getId()}`
     });
+    await this._notificationService.send({
+    recipientId: "ADMIN_BROADCAST_CHANNEL",
+    recipientType: "ADMIN",
+    type: "ADMIN_STATUS_UPDATE" as any,
+    title: "Extra Charge Decision ⚡",
+    body: `Charge ${input.response} for booking #${booking.getId().slice(-6)}`,
+    metadata: { 
+        bookingId: booking.getId(), 
+        status: newStatus // Takes the booking back to IN_PROGRESS usually
+    }
+});
 
     this._logger.info(`Charge ${input.chargeId} ${input.response} for booking ${booking.getId()}`);
   }

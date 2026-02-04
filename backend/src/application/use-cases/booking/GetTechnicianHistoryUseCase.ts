@@ -30,10 +30,9 @@ export class GetTechnicianHistoryUseCase implements IUseCase<PaginatedBookingRes
             "REACHED", 
             "IN_PROGRESS", 
             "EXTRAS_PENDING",
-            "COMPLETED" // <--- 🔴 CRITICAL: Keep job visible during payment
+            "COMPLETED"  
         ];
-    } else {
-        // Pass through other statuses (e.g. 'CANCELLED' or specific filters)
+    } else { 
         statusFilter = input.status as BookingStatus | BookingStatus[];
     }
 

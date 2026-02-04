@@ -14,13 +14,11 @@ export class GetBookingDetailsUseCase implements IUseCase<Booking, [GetBookingDe
     const booking = await this._bookingRepo.findById(input.bookingId);
     if (!booking) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
 
-    // --- GOD MODE CHECK ---
     if (input.role === UserRole.ADMIN) {
         return booking; 
     } 
 
 
-    // --- Customer Check ---
     if (input.role === UserRole.CUSTOMER) {
         // Convert both to strings to be safe
         const bookingCustomerId = String(booking.getCustomerId());

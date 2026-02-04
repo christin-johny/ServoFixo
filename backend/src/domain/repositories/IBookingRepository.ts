@@ -9,6 +9,8 @@ export interface BookingFilterParams {
   search?:string;
   status?: BookingStatus | BookingStatus[];
   startDate?: Date;
+  categoryId?:string;
+  sortBy?:string;
   endDate?: Date;
 }
 

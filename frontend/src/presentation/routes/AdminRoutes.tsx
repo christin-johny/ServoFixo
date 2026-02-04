@@ -16,7 +16,8 @@ import TechnicianVerificationDetails from "../pages/Admin/Technicians/Technician
 import TechnicianList from "../pages/Admin/Technicians/TechnicianList";
 import AdminTechnicianProfilePage from "../pages/Admin/Technicians/AdminTechnicianProfilePage";
 import PartnerRequestQueue from "../pages/Admin/Technicians/TechnicainRequestQueue";
-
+const AdminBookingsPage = React.lazy(() => import("../pages/Admin/Bookings/AdminBookingsPage")); 
+const AdminBookingDetails = React.lazy(() => import("../pages/Admin/Bookings/AdminBookingDetails"));
 const AdminRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
     <Routes>
@@ -43,6 +44,14 @@ const AdminRoutes: React.FC = () => (
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="zones" element={<Zones />} />
         <Route path="services" element={<Services />} />
+        <Route path="bookings"> 
+            <Route path="live" element={<AdminBookingsPage />} />
+            <Route path="history" element={<AdminBookingsPage />} />
+             
+           <Route path=":id" element={<AdminBookingDetails />} /> 
+             
+            <Route index element={<Navigate to="live" replace />} />
+        </Route>
 
         <Route path="customers">
           <Route index element={<Customers />} />

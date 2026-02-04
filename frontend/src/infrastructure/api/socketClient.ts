@@ -18,6 +18,12 @@ export interface BookingConfirmedEvent {
   otp?: string;
   status: string;
 }
+export interface AdminUpdateEvent {
+  type: string;  
+  bookingId: string;
+  status?: string;
+  technicianId?: string;
+}
 
 export interface JobRequestEvent {
   bookingId: string;
@@ -90,9 +96,11 @@ class SocketService {
   private approvalRequestCallback: ((data: ApprovalRequestEvent) => void) | null = null;
   private chargeUpdateCallback: ((data: ChargeUpdateEvent) => void) | null = null; 
   private paymentRequestCallback: ((data: PaymentRequestEvent) => void) | null = null;
+  private adminListeners: ((data: AdminUpdateEvent) => void)[] = [];
 
   connect(userId: string, role: UserRole): void {
-    if (this.socket?.connected && this.currentUserId === userId) {
+    console.log(`🔌 [SocketClient] Attempting to connect... User: ${userId}, Role: ${role}`);  
+    if (this.socket?.connected && this.currentUserId === userId) {console.log("⚡ [SocketClient] Already connected. Skipping.");
       return;
     }
 
@@ -116,9 +124,9 @@ class SocketService {
     });
 
     this.socket.on("connect", () => {
+      console.log("✅ [SocketClient] Connected! ID:", this.socket?.id);  
     });
-
-    // --- Direct Listeners ---
+ 
     this.socket.on("booking:confirmed", (data) => {
       this.handleBookingConfirmed(data, role);
     });
@@ -133,12 +141,29 @@ class SocketService {
 
     // --- Master Notification Listener ---
     this.socket.on("NOTIFICATION_RECEIVED", (data: Notification) => {
+      if (role === "ADMIN") {
+        console.log("👑 [SocketClient] Processing as Admin Event");  
+             this.handleAdminEvent(data);
+             return;  
+          }
       this.handleCoreNotificationLogic(data, role);
 
       if (this.uiNotificationCallback) {
         this.uiNotificationCallback(data);
       }
     });
+    
+  }
+  private handleAdminEvent(data: Notification) {
+      // ✅ Notify ALL listeners instead of just one
+      const event: AdminUpdateEvent = {
+          type: data.type,
+          bookingId: data.metadata?.bookingId || "",
+          status: data.metadata?.status,
+          technicianId: data.metadata?.technicianId
+      };
+      
+      this.adminListeners.forEach(listener => listener(event));
   }
 
   private handleCoreNotificationLogic(data: Notification, role: UserRole) {
@@ -269,6 +294,22 @@ class SocketService {
       this.currentUserId = null;
     }
   }
+
+  onAdminDataUpdate(callback: (data: AdminUpdateEvent) => void): void {
+    this.adminListeners.push(callback);
+  }
+  
+  // ✅ Update Cleanup Method
+  offAdminDataUpdate(callback?: (data: AdminUpdateEvent) => void): void {
+    if (callback) {
+        // Remove specific listener
+        this.adminListeners = this.adminListeners.filter(l => l !== callback);
+    } else {
+        // Fallback: Clear all (only if really needed, try to avoid using this without args)
+        this.adminListeners = [];
+    }
+  }
+
 
   onNotification(callback: (notification: Notification) => void): void {
     this.uiNotificationCallback = callback;

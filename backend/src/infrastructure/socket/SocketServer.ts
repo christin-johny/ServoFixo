@@ -13,14 +13,23 @@ export class SocketServer {
       },
     });
 
-    this._io.on("connection", (socket) => { 
-  const techId = socket.handshake.query.techId as string;
-  const userId = socket.handshake.query.userId as string; // Add this line
+// ... inside connection event ...
 
-  if (techId) { 
+this._io.on("connection", (socket) => { 
+  const techId = socket.handshake.query.techId as string;
+  const userId = socket.handshake.query.userId as string;
+  const role = socket.handshake.query.role as string;
+ 
+  if (role === "ADMIN") { 
+      socket.join("ADMIN_BROADCAST_CHANNEL");  
+      if (userId) socket.join(userId);
+      logger.info(`Admin Connected to Broadcast Channel: ${userId}`); 
+  } 
+  else if (techId) { 
     socket.join(techId);
     logger.info(`Technician Connected: ${techId}`);
-  } else if (userId) { // Add this block for Customers
+  } 
+  else if (userId) { 
     socket.join(userId);
     logger.info(`Customer Connected: ${userId}`);
   }

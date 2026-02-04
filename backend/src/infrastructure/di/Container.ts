@@ -151,6 +151,7 @@ import { GetTechnicianHistoryUseCase } from "../../application/use-cases/booking
 import { GetCustomerBookingsUseCase } from "../../application/use-cases/booking/GetCustomerBookingsUseCase";
 import { VerifyPaymentUseCase } from "../../application/use-cases/booking/VerifyPaymentUseCase";
 import { GetServiceReviewsUseCase } from "../../application/use-cases/service-items/GetServiceReviewsUseCase";
+import { GetAllBookingsUseCase } from "../../application/use-cases/booking/GetAllBookingsUseCase";
 
 // INFRASTRUCTURE SERVICE INSTANTIATION
 
@@ -744,17 +745,19 @@ const adminForceAssignUseCase = new AdminForceAssignUseCase(
 );
 const adminForceStatusUseCase = new AdminForceStatusUseCase(
     bookingRepo,
-    technicianRepo, // <--- Don't forget this!
+    technicianRepo, 
+    notificationService,
     logger
 );
 // 2. Initialize Controller
  
 const adminUpdatePaymentUseCase = new AdminUpdatePaymentUseCase(bookingRepo, logger);
-
+const getAllBookingsUseCase = new GetAllBookingsUseCase(bookingRepo)
 export const adminBookingController = new AdminBookingController(
     adminForceAssignUseCase,
     adminForceStatusUseCase, 
     adminUpdatePaymentUseCase,
+    getAllBookingsUseCase,
     logger
 );
 const processPaymentUseCase = new ProcessPaymentUseCase(

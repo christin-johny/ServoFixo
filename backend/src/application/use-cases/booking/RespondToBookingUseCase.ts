@@ -134,6 +134,21 @@ export class RespondToBookingUseCase {
         clickAction: `/technician/bookings/${booking.getId()}`
     });
 
+    await this._notificationService.send({
+    recipientId: "ADMIN_BROADCAST_CHANNEL",
+    recipientType: "ADMIN",
+    type: "ADMIN_STATUS_UPDATE" as any,  
+    title: "Technician Assigned ✅",
+    body: `${techSnapshot.name} accepted booking #${booking.getId().slice(-6)}`,
+    metadata: { 
+        bookingId: booking.getId(), 
+        status: "ACCEPTED",
+        technicianId: techId,
+        techName: techSnapshot.name,
+        techPhoto: techSnapshot.avatarUrl || ""
+    }
+});
+
     this._logger.info(`Booking ${booking.getId()} ACCEPTED by ${techId}`);
   }
 

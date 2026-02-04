@@ -51,8 +51,7 @@ export class CompleteJobUseCase implements IUseCase<void, [CompleteJobDto, IFile
              proofFile.buffer,
              proofFile.originalName, 
              proofFile.mimeType
-         );
-         console.log(photoUrl) 
+         ); 
          booking.addCompletionPhoto(photoUrl);
     }  
     else if (booking.getCompletionPhotos().length === 0) {

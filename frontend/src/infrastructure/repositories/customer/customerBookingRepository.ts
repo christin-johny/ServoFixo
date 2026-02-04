@@ -142,6 +142,6 @@ export const respondToExtraCharge = async (
 };
 
 export const getServiceReviews = async (serviceId: string): Promise<ReviewResponse[]> => { 
-  const response = await api.get(`customer/services/${serviceId}/reviews`); 
+  const response = await api.get(BOOKING_ENDPOINTS.GET_REVIEWS(serviceId)); 
   return response.data.data;
 };

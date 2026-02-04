@@ -77,6 +77,18 @@ export class TechnicianCancelBookingUseCase implements IUseCase<void, [CancelBoo
             body: "Technician cancelled and no other partners are available.",
             metadata: { bookingId: booking.getId() }
         });
+        await this._notificationService.send({
+    recipientId: "ADMIN_BROADCAST_CHANNEL",
+    recipientType: "ADMIN",
+    type: "ADMIN_STATUS_UPDATE" as any,
+    title: "Technician Cancelled ⚠️",
+    body: `Tech ${input.userId} cancelled. Re-assigning...`,
+    metadata: { 
+        bookingId: booking.getId(), 
+        // Note: Status might still be 'REQUESTED' or 'ASSIGNED_PENDING' if reassigning
+        status: booking.getStatus() 
+    }
+});
 
         this._logger.warn(`[Cancel] No candidates left for booking ${booking.getId()}`);
     }

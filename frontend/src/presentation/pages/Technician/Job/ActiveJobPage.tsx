@@ -40,7 +40,9 @@ export interface JobDetails {
   service: { name: string; categoryId: string };
   customer: { name: string; phone: string; avatarUrl?: string };
   location: { address: string; coordinates: { lat: number; lng: number } };
-  pricing: { estimated: number };
+  pricing: {
+      final: number; estimated: number 
+};
   snapshots: { 
     customer: { name: string; phone: string }; 
     service: { name: string }; 
@@ -66,32 +68,30 @@ const ActiveJobPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [otp, setOtp] = useState<string[]>(["", "", "", ""]);
-  
-  // Modals
+   
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
     isOpen: false, title: "", message: "", confirmText: "Confirm", variant: "primary", action: () => { }
   });
-
-  // --- Load Job ---
+ 
   const fetchJob = async () => {
     try {
       if (!id) return;
-      const data = await getTechnicianBookingById(id);
-      
-      // Ensure the data matches our JobDetails interface
-      const jobData = data as JobDetails;
-      setJob(jobData);
-
-      // --- LOGIC: AUTO-REDIRECT TO PAYMENT SCREEN ---
-      // If job is COMPLETED, it means we are waiting for payment.
-      // Redirect to CompleteJobPage which handles the "Waiting" UI.
-      if (jobData.status === 'COMPLETED') {
+      const data = await getTechnicianBookingById(id) as JobDetails;
+      setJob(data);
+ 
+      if (data.status === 'COMPLETED') {
         navigate(`/technician/jobs/${id}/complete`, { replace: true });
         return;
       }
-      // ------------------------------------------------
-
+ 
+      const historyStatuses = ["PAID", "CANCELLED", "REJECTED", "FAILED_ASSIGNMENT", "TIMEOUT", "CANCELLED_BY_TECH"];
+      if (historyStatuses.includes(data.status)) {
+         navigate(`/technician/jobs/${id}/details`, { replace: true });
+         return;
+      }
+ 
+      
     } catch { 
       showError("Failed to load job details."); 
       navigate("/technician/dashboard");

@@ -64,6 +64,17 @@ export class VerifyPaymentUseCase implements IUseCase<void, [VerifyPaymentDto]> 
             }
         });
     }
+    await this._notificationService.send({
+    recipientId: "ADMIN_BROADCAST_CHANNEL",
+    recipientType: "ADMIN",
+    type: "ADMIN_STATUS_UPDATE" as any,
+    title: "Payment Received 💰",
+    body: `Booking #${booking.getId().slice(-6)} marked as PAID.`,
+    metadata: { 
+        bookingId: booking.getId(), 
+        status: "PAID" 
+    }
+});
 
     this._logger.info(`Payment verified for Booking ${booking.getId()}`);
   }

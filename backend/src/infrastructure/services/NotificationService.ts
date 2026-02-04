@@ -15,6 +15,43 @@ export class NotificationService implements INotificationService {
   ) {}
 
   async send(dto: CreateNotificationDto): Promise<NotificationResponseDto> {
+    
+    // ✅ FIX: Intercept Admin Broadcasts immediately
+    // We skip the database because "ADMIN_BROADCAST_CHANNEL" is not a valid User ID
+    if (dto.recipientId === "ADMIN_BROADCAST_CHANNEL" || dto.recipientType === "ADMIN") {
+        try {
+            const io = SocketServer.getInstance();
+            
+            // Create a temporary object to match the DTO structure 
+            // (Since we aren't saving to DB, we mock the ID and Date)
+            const virtualNotification = {
+                id: `temp_admin_${Date.now()}`,
+                recipientId: dto.recipientId,
+                recipientType: dto.recipientType,
+                type: dto.type,
+                title: dto.title,
+                body: dto.body,
+                metadata: dto.metadata,
+                createdAt: new Date(),
+                isRead: false,
+                icon: dto.icon || "admin_badge",
+                priority: dto.priority || "MEDIUM"
+            } as any; 
+
+            // Emit directly to the Admin Room
+            io.to("ADMIN_BROADCAST_CHANNEL").emit("NOTIFICATION_RECEIVED", virtualNotification);
+            
+            this._logger.info(`Broadcast sent to ADMIN_BROADCAST_CHANNEL: ${dto.title}`);
+            return virtualNotification; 
+
+        } catch (error) {
+            this._logger.error("Failed to emit Admin Broadcast", error);
+            // Return a dummy object so the caller doesn't crash
+            return {} as NotificationResponseDto;
+        }
+    }
+
+    // --- Standard Logic for Users/Technicians (Saved to DB) ---
     this._logger.info(LogEvents.NOTIFICATION_CREATE_INIT, { recipientId: dto.recipientId });
 
     const notification = new Notification({
@@ -30,6 +67,7 @@ export class NotificationService implements INotificationService {
       status: "UNREAD",
     });
 
+    // This now only runs for real users, so it won't crash!
     const savedNotification = await this._notificationRepo.create(notification);
     const responseDto = NotificationMapper.toResponse(savedNotification);
 

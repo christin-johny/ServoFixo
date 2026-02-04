@@ -74,6 +74,17 @@ export class CustomerCancelBookingUseCase implements IUseCase<void, [CancelBooki
             metadata: { bookingId: booking.getId() }
         });
     }
+    await this._notificationService.send({
+    recipientId: "ADMIN_BROADCAST_CHANNEL",
+    recipientType: "ADMIN",
+    type: "ADMIN_STATUS_UPDATE" as any,
+    title: "Booking Cancelled ❌",
+    body: `Customer cancelled booking #${booking.getId().slice(-6)}`,
+    metadata: { 
+        bookingId: booking.getId(), 
+        status: "CANCELLED" 
+    }
+});
 
     this._logger.info(`Booking ${booking.getId()} cancelled by customer.`);
   }

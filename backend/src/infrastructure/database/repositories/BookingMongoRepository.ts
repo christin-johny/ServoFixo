@@ -75,10 +75,12 @@ export class BookingMongoRepository implements IBookingRepository {
   ): Promise<PaginatedBookingResult> {
     const query: FilterQuery<BookingDocument> = { isDeleted: { $ne: true } };
 
+    // 1. Existing Filters (Preserved)
     if (filters.customerId) query.customerId = filters.customerId;
     if (filters.technicianId) query.technicianId = filters.technicianId;
     if (filters.zoneId) query.zoneId = filters.zoneId;
     
+    // 2. Status Filter
     if (filters.status) {
       if (Array.isArray(filters.status)) {
         query.status = { $in: filters.status };
@@ -87,21 +89,40 @@ export class BookingMongoRepository implements IBookingRepository {
       }
     }
 
+    // 3. Date Range Filter
     if (filters.startDate || filters.endDate) {
       query["timestamps.createdAt"] = {};
       if (filters.startDate) query["timestamps.createdAt"].$gte = filters.startDate;
       if (filters.endDate) query["timestamps.createdAt"].$lte = filters.endDate;
     }
 
+    // 4. ✅ NEW: Category Filter (Using Snapshots)
+    if (filters.categoryId) {
+        query["snapshots.service.categoryId"] = filters.categoryId;
+    }
+
+    // 5. ✅ ENHANCED: Search Logic (Service, Customer, or Technician Name)
     if (filters.search) {
       const searchRegex = new RegExp(filters.search, 'i');
       const orConditions: any[] = [
-        { "snapshots.service.name": searchRegex }
+        { "snapshots.service.name": searchRegex },
+        { "snapshots.customer.name": searchRegex },    // New: Search by Customer
+        { "snapshots.technician.name": searchRegex }   // New: Search by Tech
       ];
+      
       if (isValidObjectId(filters.search)) {
         orConditions.push({ _id: filters.search });
       }
       query.$or = orConditions;
+    }
+
+    // 6. ✅ NEW: Dynamic Sorting Logic
+    let sort: any = { "timestamps.createdAt": -1 }; // Default: Newest first
+
+    if (filters.sortBy === "oldest") {
+        sort = { "timestamps.createdAt": 1 };
+    } else if (filters.sortBy === "updated") {
+        sort = { "timestamps.updatedAt": -1 };
     }
 
     const skip = (page - 1) * limit;
@@ -110,7 +131,7 @@ export class BookingMongoRepository implements IBookingRepository {
       BookingModel.find(query)
         .skip(skip)
         .limit(limit)
-        .sort({ "timestamps.createdAt": -1 }) 
+        .sort(sort) 
         .exec(),
       BookingModel.countDocuments(query)
     ]);
