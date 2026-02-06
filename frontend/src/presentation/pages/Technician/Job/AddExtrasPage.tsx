@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux"; // ✅ Needed for user ID
+import { useSelector } from "react-redux";  
 import { 
   ArrowLeft, Plus, Tag, IndianRupee, Camera, X, 
   FileText, CheckCircle2, AlertTriangle, Clock, Ban 
 } from "lucide-react"; 
 import { useNotification } from "../../../hooks/useNotification";
 import { getTechnicianBookingById, addExtraCharge } from "../../../../infrastructure/repositories/technician/technicianBookingRepository";
-import { socketService } from "../../../../infrastructure/api/socketClient"; // ✅ Import Socket
-import {type  RootState } from "../../../../store/store"; // ✅ Import RootState
+import { socketService } from "../../../../infrastructure/api/socketClient";  
+import {type  RootState } from "../../../../store/store";  
 import LoaderFallback from "../../../components/LoaderFallback";
 import type { JobDetails } from "../../../../domain/types/JobDetails";
 
@@ -40,7 +40,7 @@ const AddExtrasPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showSuccess, showError } = useNotification();
-  const { user } = useSelector((state: RootState) => state.auth); // ✅ Get Tech ID
+  const { user } = useSelector((state: RootState) => state.auth); //   Get Tech ID
 
   const [job, setJob] = useState<ExtendedJobDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,7 +65,7 @@ const AddExtrasPage: React.FC = () => {
     }
   };
 
-  // ✅ Socket Logic
+  //   Socket Logic
   useEffect(() => {
     if (!id || !user?.id) return;
 

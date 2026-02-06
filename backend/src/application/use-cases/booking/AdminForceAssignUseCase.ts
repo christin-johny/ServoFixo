@@ -3,8 +3,7 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
 import { INotificationService } from "../../services/INotificationService";
 import { ILogger } from "../../interfaces/ILogger";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
-// ✅ 1. Import SocketServer
+import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
 import { SocketServer } from "../../../infrastructure/socket/SocketServer"; 
 
 export interface AdminForceAssignDto {
@@ -26,7 +25,7 @@ export class AdminForceAssignUseCase implements IUseCase<void, [AdminForceAssign
     if (!booking) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
 
     const tech = await this._techRepo.findById(input.technicianId);
-    if (!tech) throw new Error("Technician not found");
+    if (!tech) throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
 
     const techSnapshot = {
         name: tech.getName ? tech.getName() : (tech as any).name,
@@ -34,31 +33,26 @@ export class AdminForceAssignUseCase implements IUseCase<void, [AdminForceAssign
         avatarUrl: tech.getAvatarUrl ? tech.getAvatarUrl() : (tech as any).avatarUrl,
         rating: tech.getRatings().averageRating || 0
     };
-
-    // Execute Logic
+ 
     booking.adminForceAssign(
         input.technicianId, 
         { tech: techSnapshot, adminName: input.adminId }
     );
-
-    // Persist
+ 
     await this._bookingRepo.update(booking);
-
-    // --- ✅ 2. REAL-TIME SOCKET EMISSION (THE FIX) ---
+ 
     const io = SocketServer.getInstance();
     const payload = {
         bookingId: booking.getId(),
         status: "ACCEPTED",
         updatedBy: "Admin"
     };
-
-    // A. Force refresh on Technician App
-    io.to(input.technicianId).emit("booking:status_update", payload);
-    // Also emit 'booking:confirmed' to trigger the "Active Job" redirection if they are on dashboard
+ 
+    io.to(input.technicianId).emit("booking:status_update", payload); 
     io.to(input.technicianId).emit("booking:confirmed", {
         bookingId: booking.getId(),
         status: "ACCEPTED",
-        techName: techSnapshot.name // Payload matches what frontend expects
+        techName: techSnapshot.name  
     });
  
     io.to(booking.getCustomerId()).emit("booking:status_update", payload);
@@ -67,8 +61,8 @@ export class AdminForceAssignUseCase implements IUseCase<void, [AdminForceAssign
         recipientId: input.technicianId,
         recipientType: "TECHNICIAN",
         type: "BOOKING_CONFIRMED" as any, 
-        title: "New Job Assigned (Admin) ⚡",
-        body: "Admin has manually assigned a job to you.",
+        title: NotificationMessages.TITLE_ADMIN_ASSIGNED,
+        body: NotificationMessages.BODY_ADMIN_ASSIGNED,
         metadata: { bookingId: booking.getId() }
     });
 
@@ -76,8 +70,8 @@ export class AdminForceAssignUseCase implements IUseCase<void, [AdminForceAssign
         recipientId: booking.getCustomerId(),
         recipientType: "CUSTOMER",
         type: "BOOKING_CONFIRMED" as any,
-        title: "Technician Assigned",
-        body: `${techSnapshot.name} has been assigned to your request.`,
+        title: NotificationMessages.TITLE_TECH_ASSIGNED,
+        body: `${techSnapshot.name}${NotificationMessages.BODY_TECH_ASSIGNED_SUFFIX}`,
         metadata: { bookingId: booking.getId() }
     });
 

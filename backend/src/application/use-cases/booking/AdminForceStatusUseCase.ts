@@ -6,7 +6,7 @@ import { ILogger } from "../../interfaces/ILogger";
 import { BookingStatus } from "../../../../../shared/types/value-objects/BookingTypes";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
-import { SocketServer } from "../../../infrastructure/socket/SocketServer"; // ✅ Import Socket Server
+import { SocketServer } from "../../../infrastructure/socket/SocketServer";  
 
 export class AdminForceStatusDto {
     bookingId!: string;
@@ -30,21 +30,15 @@ export class AdminForceStatusUseCase implements IUseCase<void, [AdminForceStatus
         const previousStatus = booking.getStatus();
         const techId = booking.getTechnicianId();
         const customerId = booking.getCustomerId();
-
-        // 1. Force the Status Update (Domain Logic)
+ 
         booking.adminForceStatus(input.status, input.adminId, input.reason);
-
-        // 2. Persist Booking Changes
+ 
         await this._bookingRepo.update(booking);
-
-        // 3. Sync Technician Availability (Lock/Unlock)
+ 
         if (techId) {
            await this.syncTechnicianAvailability(techId, input.status);
         }
-
-        // ---------------------------------------------------------
-        // ✅ 4. REAL-TIME SOCKET EVENTS (Instant UI Updates)
-        // ---------------------------------------------------------
+ 
         const io = SocketServer.getInstance();
         const payload = {
             bookingId: booking.getId(),
@@ -52,16 +46,13 @@ export class AdminForceStatusUseCase implements IUseCase<void, [AdminForceStatus
             updatedBy: "Admin",
             reason: input.reason
         };
-
-        // A. Notify Customer (Standard Status Update)
+ 
         io.to(customerId).emit("booking:status_update", payload);
-
-        // B. Notify Technician (Standard Status Update)
+ 
         if (techId) {
             io.to(techId).emit("booking:status_update", payload);
         }
-
-        // C. Handle Specific Terminal States (Cancel/Complete triggers different UI flows)
+ 
         if (input.status === "CANCELLED") {
              io.to(customerId).emit("booking:cancelled", payload);
              if (techId) io.to(techId).emit("booking:cancelled", payload);
@@ -70,10 +61,7 @@ export class AdminForceStatusUseCase implements IUseCase<void, [AdminForceStatus
              io.to(customerId).emit("booking:completed", payload);
              if (techId) io.to(techId).emit("booking:completed", payload);
         }
-
-        // ---------------------------------------------------------
-
-        // 5. Send Persistent Notifications (History/Push)
+ 
         await this.sendPushNotifications(input, customerId, techId, booking.getId());
 
         this._logger.info(
@@ -86,10 +74,8 @@ export class AdminForceStatusUseCase implements IUseCase<void, [AdminForceStatus
         customerId: string, 
         techId: string | null,
         bookingId: string
-    ) {
-        // A. If Admin CANCELS the job
-        if (input.status === "CANCELLED") {
-            // Notify Customer
+    ) { 
+        if (input.status === "CANCELLED") { 
             await this._notificationService.send({
                 recipientId: customerId,
                 recipientType: "CUSTOMER",
@@ -98,8 +84,7 @@ export class AdminForceStatusUseCase implements IUseCase<void, [AdminForceStatus
                 body: `Admin cancelled booking #${bookingId.slice(-6)}. Reason: ${input.reason}`,
                 metadata: { bookingId, status: "CANCELLED" }
             });
-
-            // Notify Technician
+ 
             if (techId) {
                 await this._notificationService.send({
                     recipientId: techId,
@@ -111,21 +96,18 @@ export class AdminForceStatusUseCase implements IUseCase<void, [AdminForceStatus
                 });
             }
         }
-
-        // B. If Admin COMPLETES the job
-        else if (input.status === "COMPLETED") {
-            // Notify Customer to Pay
+ 
+        else if (input.status === "COMPLETED") { 
             await this._notificationService.send({
                 recipientId: customerId,
                 recipientType: "CUSTOMER",
                 type: NotificationType.BOOKING_COMPLETED,
-                title: "Job Marked Completed ✅",
+                title: "Job Marked Completed  ",
                 body: "Technician has completed the work. Please check the invoice.",
                 metadata: { bookingId, status: "COMPLETED" },
                 clickAction: `/bookings/${bookingId}/payment`
             });
-            
-             // Notify Technician
+             
             if (techId) {
                 await this._notificationService.send({
                      recipientId: techId,
@@ -137,8 +119,7 @@ export class AdminForceStatusUseCase implements IUseCase<void, [AdminForceStatus
                 });
             }
         }
-
-        // C. Generic Status Change (e.g. Back to In Progress)
+ 
         else {
              if (techId) {
                 await this._notificationService.send({

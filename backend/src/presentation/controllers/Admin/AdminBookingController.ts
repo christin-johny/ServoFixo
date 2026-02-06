@@ -120,7 +120,7 @@ getAll = async (req: Request, res: Response): Promise<Response> => {
       search: req.query.search as string,
       status: req.query.status as any, 
       zoneId: req.query.zoneId as string,
-      categoryId: req.query.categoryId as string, // ✅ The new filter
+      categoryId: req.query.categoryId as string, //   The new filter
       startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
       endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
       sortBy: req.query.sortBy as any

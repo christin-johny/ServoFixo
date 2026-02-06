@@ -228,7 +228,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
   }
 
   /**
-   * ✅ NEW: Used by Admin Force Assign (God Mode)
+   *   NEW: Used by Admin Force Assign (God Mode)
    * Shows a smart list: Verified + Correct Zone + Correct Service.
    * Sorts by availability score.
    */

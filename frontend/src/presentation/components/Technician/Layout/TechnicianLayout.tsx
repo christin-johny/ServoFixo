@@ -28,7 +28,7 @@ import { getTechnicianJobs } from "../../../../infrastructure/repositories/techn
 import NotificationBell from "../../Shared/Notification/NotificationBell";
 import { useTechnicianNotifications } from "../../../hooks/useTechnicianNotifications";
  
-// ✅ Updated Imports: Specific Event Types
+//   Updated Imports: Specific Event Types
 import { 
   socketService, 
   type BookingConfirmedEvent,
@@ -49,7 +49,7 @@ interface JobStatusSummary {
   status: string;
 }
 
-// ✅ Union Type for Global Socket Events
+//   Union Type for Global Socket Events
 type GlobalJobEvent = 
   | BookingConfirmedEvent 
   | BookingStatusEvent 
@@ -199,7 +199,7 @@ const TechnicianLayout: React.FC = () => {
     checkActiveJob();
   }, [checkActiveJob, location.pathname]); 
 
-  // ✅ LISTEN FOR SOCKET EVENTS (Strictly Typed)
+  //   LISTEN FOR SOCKET EVENTS (Strictly Typed)
   useEffect(() => {
     if (!user?.id) return;
 
@@ -315,7 +315,7 @@ const TechnicianLayout: React.FC = () => {
         </div>
       </main>
 
-      {/* ✅ DYNAMIC FLOATING STATUS BAR */}
+      {/*   DYNAMIC FLOATING STATUS BAR */}
       {activeJobId && !isOnActiveJobPage && (
         <div 
           onClick={handleFooterClick}

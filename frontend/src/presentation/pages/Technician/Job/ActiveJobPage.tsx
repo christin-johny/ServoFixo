@@ -24,8 +24,8 @@ import {
 import { 
   socketService, 
   type BookingStatusEvent, 
-  type BookingConfirmedEvent, // ✅ Import Type
-  type BookingCancelledEvent  // ✅ Import Type
+  type BookingConfirmedEvent,  
+  type BookingCancelledEvent   
 } from "../../../../infrastructure/api/socketClient"; 
 import { useSelector } from "react-redux";
 import { type RootState } from "../../../../store/store";   
@@ -114,7 +114,7 @@ const ActiveJobPage: React.FC = () => {
 
     socketService.connect(user.id, "TECHNICIAN");
 
-    // ✅ Typed Handlers
+    //   Typed Handlers
     const handleStatusUpdate = (data: BookingStatusEvent) => { 
         if (data.bookingId === id) {
             console.log("⚡ Admin updated job status. Refreshing...", data.status);

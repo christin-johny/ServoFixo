@@ -6,7 +6,7 @@ export interface GetCustomerBookingsDto {
   customerId: string;
   page: number;
   limit: number;
-  status?: string; // e.g., 'active', 'completed', 'cancelled'
+  status?: string;  
 }
 
 export class GetCustomerBookingsUseCase implements IUseCase<PaginatedBookingResult, [GetCustomerBookingsDto]> {

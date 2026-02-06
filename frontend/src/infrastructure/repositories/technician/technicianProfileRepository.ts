@@ -2,7 +2,7 @@ import api from "../../api/axiosClient";
 import { TECHNICIAN_PROFILE_ENDPOINTS } from "../../api/endpoints/Technician/technician.endpoints";
 import { type VerificationStatus } from "../../../store/technicianSlice";
 
-//   Import Shared Request Types
+ 
 import type { 
   ServiceRequest, 
   ZoneRequest, 

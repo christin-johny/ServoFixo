@@ -49,7 +49,7 @@ useEffect(() => {
             const services = await serviceRepo.getServices({categoryId: data.categoryId});
             setSimilarServices(services.filter(s=>s.id !== id));
             
-            // 3. ✅ FETCH REAL REVIEWS
+            // 3.   FETCH REAL REVIEWS
             const reviewsData = await getServiceReviews(id);
             setReviews(reviewsData); // This updates the 'reviews' state
 

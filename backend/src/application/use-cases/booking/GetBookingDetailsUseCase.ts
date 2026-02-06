@@ -19,8 +19,7 @@ export class GetBookingDetailsUseCase implements IUseCase<Booking, [GetBookingDe
     } 
 
 
-    if (input.role === UserRole.CUSTOMER) {
-        // Convert both to strings to be safe
+    if (input.role === UserRole.CUSTOMER) { 
         const bookingCustomerId = String(booking.getCustomerId());
         if (bookingCustomerId !== input.userId) {
             throw new Error(ErrorMessages.UNAUTHORIZED);
@@ -28,15 +27,13 @@ export class GetBookingDetailsUseCase implements IUseCase<Booking, [GetBookingDe
         return booking;
     }
 
-    // --- Technician Check ---
+    //  Technician Check 
     if (input.role === UserRole.TECHNICIAN) { 
-        const reqUserId = input.userId; // Token ID is always string
+        const reqUserId = input.userId; 
         const assignedTechId = booking.getTechnicianId() ? String(booking.getTechnicianId()) : null;
-        
-        // 1. Check Assignment (String vs String)
+         
         const isAssigned = assignedTechId === reqUserId;
-
-        // 2. Check Candidate List (Map ObjectIds to Strings first)
+ 
         const candidateIds = booking.getCandidateIds().map(id => String(id));
         const isCandidate = candidateIds.includes(reqUserId);
  

@@ -113,8 +113,7 @@ const BookingSchema: Schema<BookingDocument> = new Schema(
         name: { type: String, required: true },
         categoryId: String
       }
-    },
-    // -------------------------------
+    }, 
 
     location: {
       address: { type: String, required: true },

@@ -3,8 +3,10 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { CancelBookingDto } from "../../dto/booking/CancelBookingDto";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
 
 export class TechnicianCancelBookingUseCase implements IUseCase<void, [CancelBookingDto]> {
   constructor(
@@ -21,14 +23,14 @@ export class TechnicianCancelBookingUseCase implements IUseCase<void, [CancelBoo
         throw new Error(ErrorMessages.UNAUTHORIZED);
     }
 
-    this._logger.info(`[Cancel] Tech ${input.userId} cancelling active booking ${booking.getId()}`);
+    this._logger.info(`${LogEvents.TECH_CANCEL_INIT}: Tech ${input.userId} -> Booking ${booking.getId()}`);
 
     await this._technicianRepo.updateAvailabilityStatus(input.userId, false);   
     try {
-        booking.rejectAssignment(input.userId, "CANCELLED_BY_TECH: " + input.reason);
+        booking.rejectAssignment(input.userId, ErrorMessages.PREFIX_CANCELLED_BY_TECH + input.reason);
     } catch (e) { 
-        this._logger.error(`[Cancel] Reject failed, possibly due to status mismatch: ${e}`);
-        booking.setTechnicianId(null); // Force clear 
+        this._logger.error(`${LogEvents.TECH_CANCEL_REJECT_FAILED}: ${e}`);
+        booking.setTechnicianId(null); 
     }
  
     const candidates = booking.getCandidateIds() || [];  
@@ -37,9 +39,9 @@ export class TechnicianCancelBookingUseCase implements IUseCase<void, [CancelBoo
 
     if (nextCandidateId) { 
         const newExpiresAt = new Date(Date.now() + 45000);
-         
+          
         booking.addAssignmentAttempt(nextCandidateId); 
-         
+          
         await this._bookingRepo.update(booking);
 
         const pricing = booking.getPricing();
@@ -58,39 +60,38 @@ export class TechnicianCancelBookingUseCase implements IUseCase<void, [CancelBoo
             recipientId: booking.getCustomerId(),
             recipientType: "CUSTOMER",
             type: "BOOKING_UPDATE" as any,
-            title: "Technician Changed ⚠️",
-            body: "Previous technician had an emergency. Searching for a new one...",
+            title: NotificationMessages.TITLE_TECH_CHANGED,
+            body: NotificationMessages.BODY_TECH_EMERGENCY_REASSIGN,
             metadata: { bookingId: booking.getId() }
         });
 
-        this._logger.info(`[Cancel] Re-assigned to next candidate: ${nextCandidateId}`);
+        this._logger.info(`${LogEvents.TECH_CANCEL_REASSIGNED}: ${nextCandidateId}`);
 
     } else { 
-        booking.updateStatus("FAILED_ASSIGNMENT", "system", "Tech cancelled & no replacements");
+        booking.updateStatus("FAILED_ASSIGNMENT", "system", ErrorMessages.REASON_TECH_CANCELLED_NO_REPLACEMENT);
         await this._bookingRepo.update(booking);
 
         await this._notificationService.send({
             recipientId: booking.getCustomerId(),
             recipientType: "CUSTOMER",
-            type: "BOOKING_FAILED" as any,
-            title: "Booking Failed",
-            body: "Technician cancelled and no other partners are available.",
+            type: NotificationType.BOOKING_FAILED,
+            title: NotificationMessages.TITLE_BOOKING_FAILED,
+            body: NotificationMessages.BODY_TECH_CANCEL_NO_CANDIDATES,
             metadata: { bookingId: booking.getId() }
         });
         await this._notificationService.send({
-    recipientId: "ADMIN_BROADCAST_CHANNEL",
-    recipientType: "ADMIN",
-    type: "ADMIN_STATUS_UPDATE" as any,
-    title: "Technician Cancelled ⚠️",
-    body: `Tech ${input.userId} cancelled. Re-assigning...`,
-    metadata: { 
-        bookingId: booking.getId(), 
-        // Note: Status might still be 'REQUESTED' or 'ASSIGNED_PENDING' if reassigning
-        status: booking.getStatus() 
-    }
-});
+            recipientId: "ADMIN_BROADCAST_CHANNEL",
+            recipientType: "ADMIN",
+            type: "ADMIN_STATUS_UPDATE" as any,
+            title: NotificationMessages.TITLE_TECH_CANCELLED_ADMIN,
+            body: `${NotificationMessages.BODY_TECH_CANCELLED_ADMIN_PREFIX}${input.userId}${NotificationMessages.BODY_TECH_CANCELLED_ADMIN_SUFFIX}`,
+            metadata: { 
+                bookingId: booking.getId(), 
+                status: booking.getStatus() 
+            }
+        });
 
-        this._logger.warn(`[Cancel] No candidates left for booking ${booking.getId()}`);
+        this._logger.warn(`${LogEvents.TECH_CANCEL_NO_CANDIDATES} ${booking.getId()}`);
     }
   }
 }

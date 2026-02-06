@@ -266,7 +266,7 @@ export class Booking {
     this.addTimelineEvent(newStatus, changedBy, reason);
   }
 
-  // ✅ CRITICAL FIX: Allow adding charges in other active statuses
+  //   CRITICAL FIX: Allow adding charges in other active statuses
   public addExtraCharge(charge: ExtraCharge): void { 
     const allowedStatuses = ["ACCEPTED", "EN_ROUTE", "REACHED", "IN_PROGRESS", "EXTRAS_PENDING"];
     
@@ -278,7 +278,7 @@ export class Booking {
     this.updateStatus("EXTRAS_PENDING", `tech:${charge.addedByTechId}`, `Added charge: ${charge.title}`);
   }
 
-  // ✅ Logic to update status and auto-resume to IN_PROGRESS
+  //   Logic to update status and auto-resume to IN_PROGRESS
   public updateExtraChargeStatus(chargeId: string, status: "APPROVED" | "REJECTED", changedBy: string): void {
     const charge = this._extraCharges.find(c => c.id === chargeId);
     if (!charge) throw new Error("Charge not found");

@@ -11,7 +11,7 @@ import { addServiceRequest } from "../../../../store/technicianSlice";
 import { 
   requestServiceAddition, 
   uploadDocument,
-  type RequestServicePayload //   Imported from repository
+  type RequestServicePayload  
 } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
 import { technicianOnboardingRepository, type CategoryOption, type ServiceOption } from "../../../../infrastructure/repositories/technician/technicianOnboardingRepository";
 import { type ServiceRequest } from "../../../../domain/types/TechnicianRequestTypes";

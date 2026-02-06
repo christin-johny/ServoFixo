@@ -59,7 +59,7 @@ const MyJobsPage: React.FC = () => {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      // ✅ LOGIC FIX: Explicitly define status arrays
+      //   LOGIC FIX: Explicitly define status arrays
       let statuses: string | string[] | undefined;
 
       if (statusFilter === "ACTIVE") {

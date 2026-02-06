@@ -39,7 +39,6 @@ const useCurrentUser = () => {
 };
 
 const Navbar: React.FC = () => {
-    //  ACTIVATE GLOBAL NOTIFICATION LISTENER
     useCustomerNotifications();
 
     const navigate = useNavigate();
@@ -119,18 +118,12 @@ const Navbar: React.FC = () => {
     }, [isLoggedIn, profile, dispatch]);
   
     useEffect(() => {
-        // Only fetch if logged in AND we don't have an ID yet (e.g. after refresh)
         if (isLoggedIn && !activeBookingId) {
             const fetchActiveJob = async () => {
                 try { 
                     const booking = await getActiveBooking();
-                    
                     if (booking) { 
-                        
-                        // 1. Set Booking ID & Status
                         dispatch(setActiveBooking({ id: booking.id, status: booking.status }));
-                        
-                        // 2. Set Technician Details (Critical for Tracking Page)
                         if (booking.snapshots?.technician) {
                             dispatch(setActiveTechnician({
                                 name: booking.snapshots.technician.name,
@@ -191,6 +184,16 @@ const Navbar: React.FC = () => {
         setDrawerOpen(false);
     };
 
+    //   NEW: Handles clearing the input AND resetting the search results
+    const handleClearSearch = () => {
+        setQuery(""); // Clear the text input
+        
+        // If we are currently on the services page with an active search, reset to show all services
+        if (location.pathname === '/services' && searchParams.get('search')) {
+            navigate('/services');
+        }
+    };
+
     const confirmLogout = async () => {
         setIsLoggingOut(true);
         try {
@@ -208,8 +211,6 @@ const Navbar: React.FC = () => {
     };
 
     const isActive = (path: string) => path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
-    
-    // Hide footer on specific pages to avoid double headers
     const shouldShowFooter = !location.pathname.includes('/track') && !location.pathname.includes('/booking/');
 
     return (
@@ -240,7 +241,8 @@ const Navbar: React.FC = () => {
                                 )}
                             </div>
                         </div>
-                        <SearchBar query={query} setQuery={setQuery} onSubmit={handleSearch} className="w-full" />
+                        {/*   Passed handleClearSearch */}
+                        <SearchBar query={query} setQuery={setQuery} onSubmit={handleSearch} onClear={handleClearSearch} className="w-full" />
                     </div>
 
                     {/* --- DESKTOP LAYOUT --- */}
@@ -264,7 +266,8 @@ const Navbar: React.FC = () => {
                             </button>
 
                             <div className="flex-1 max-w-md hidden md:block">
-                                <SearchBar query={query} setQuery={setQuery} onSubmit={handleSearch} />
+                                {/*   Passed handleClearSearch */}
+                                <SearchBar query={query} setQuery={setQuery} onSubmit={handleSearch} onClear={handleClearSearch} />
                             </div>
 
                             <div className="flex items-center gap-3 pl-2 border-l border-gray-200">
@@ -352,18 +355,46 @@ const Navbar: React.FC = () => {
                 <ConfirmModal isOpen={logoutModalOpen} onClose={() => setLogoutModalOpen(false)} onConfirm={confirmLogout} title="Confirm Logout" message="Are you sure you want to log out?" confirmText="Yes, Logout" isLoading={isLoggingOut} />
             </header>
             
-            {/* ✅ GLOBAL FOOTER INJECTION */}
             {shouldShowFooter && <ActiveBookingFooter />}
         </>
     );
 };
 
+//   UPDATED SearchBar: Accepts onClear prop
+interface SearchBarProps { 
+    query: string; 
+    setQuery: (query: string) => void; 
+    onSubmit: (e?: React.FormEvent) => void; 
+    onClear?: () => void; // New optional prop
+    className?: string; 
+}
 
-interface SearchBarProps { query: string; setQuery: (query: string) => void; onSubmit: (e?: React.FormEvent) => void; className?: string; }
-const SearchBar: React.FC<SearchBarProps> = ({ query, setQuery, onSubmit, className = "" }) => (
+const SearchBar: React.FC<SearchBarProps> = ({ query, setQuery, onSubmit, onClear, className = "" }) => (
     <form onSubmit={onSubmit} className={`flex items-center gap-3 bg-[#F3F4F6] rounded-full px-4 py-2.5 transition-all focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:bg-white focus-within:shadow-md ${className}`}>
         <Search size={18} className="text-gray-400 flex-shrink-0" />
-        <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search services..." className="bg-transparent border-none outline-none text-sm font-medium text-gray-700 w-full" />
+        <input 
+            type="text" 
+            value={query} 
+            onChange={(e) => setQuery(e.target.value)} 
+            placeholder="Search services..." 
+            className="bg-transparent border-none outline-none text-sm font-medium text-gray-700 w-full" 
+        />
+        {query && (
+            <button 
+                type="button"
+                //   Logic: Call onClear if provided, otherwise default to just clearing text
+                onClick={() => {
+                    if (onClear) {
+                        onClear();
+                    } else {
+                        setQuery("");
+                    }
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-0.5 rounded-full hover:bg-gray-200"
+            >
+                <X size={16} />
+            </button>
+        )}
     </form>
 );
 

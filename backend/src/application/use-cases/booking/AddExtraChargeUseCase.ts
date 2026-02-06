@@ -2,19 +2,18 @@ import { IUseCase } from "../../interfaces/IUseCase";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/ILogger";
-import { AddExtraChargeDto } from "../../dto/booking/AddExtraChargeDto";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { AddExtraChargeDto } from "../../dto/booking/AddExtraChargeDto"; 
+import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 import { ExtraCharge } from "../../../../../shared/types/value-objects/BookingTypes";
 import { IImageService } from "../../interfaces/IImageService"; 
-import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes"; // ✅ Import Enum
+import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";  
 
 export interface IFile {
     buffer: Buffer;
     originalName: string;
     mimeType: string;
 }
-
-// ... imports (NO mongoose import needed!)
 
 export class AddExtraChargeUseCase implements IUseCase<void, [AddExtraChargeDto, IFile?]> {
   constructor(
@@ -31,21 +30,18 @@ export class AddExtraChargeUseCase implements IUseCase<void, [AddExtraChargeDto,
     if (booking.getTechnicianId() !== input.technicianId) {
         throw new Error(ErrorMessages.UNAUTHORIZED);
     } 
-    
-    // 1. Handle Image Upload (Same as before)
+     
     let uploadedProofUrl = input.proofUrl || "";
     if (proofFile) {
         try {
             uploadedProofUrl = await this._imageService.uploadImage(
                 proofFile.buffer, proofFile.originalName, proofFile.mimeType
             );
-        } catch (error) {
-             throw new Error("Failed to upload proof image");
+        } catch (error) { 
+             throw new Error(ErrorMessages.PROOF_UPLOAD_FAILED);
         }
     }
-
-    // 2. Create Temporary Charge Object
-    // The ID here is temporary. MongoDB will replace it.
+  
     const tempCharge: ExtraCharge = {
         id: "TEMP_ID", 
         title: input.title,
@@ -56,31 +52,29 @@ export class AddExtraChargeUseCase implements IUseCase<void, [AddExtraChargeDto,
         addedByTechId: input.technicianId,
         addedAt: new Date()
     }; 
-
-    // 3. Update Domain & Persist
-    // ✅ FIX: Await the REAL saved object from the Repo
+ 
     const savedCharge = await this._bookingRepo.addExtraCharge(booking.getId(), tempCharge);
-
-    // Update in-memory domain with the REAL ID
+ 
     booking.addExtraCharge(savedCharge); 
+  
+    const body = `${NotificationMessages.BODY_EXTRA_CHARGE_PART_1}${input.title}${NotificationMessages.BODY_EXTRA_CHARGE_PART_2}${input.amount}${NotificationMessages.BODY_EXTRA_CHARGE_PART_3}`;
 
-    // 4. Notify Customer with the REAL ID
     await this._notificationService.send({
         recipientId: booking.getCustomerId(),
         recipientType: "CUSTOMER",
-        type: NotificationType.BOOKING_APPROVAL_REQUEST, 
-        title: "Additional Part Required ⚠️",
-        body: `Technician added ${input.title} for ₹${input.amount}. Please approve.`,
+        type: NotificationType.BOOKING_APPROVAL_REQUEST,  
+        title: NotificationMessages.TITLE_EXTRA_CHARGE,
+        body: body,
         metadata: { 
             bookingId: booking.getId(), 
-            chargeId: savedCharge.id, // <--- Socket now sends the exact ID that exists in DB
+            chargeId: savedCharge.id,  
             title: input.title,
             amount: input.amount.toString(),
             proofUrl: uploadedProofUrl
         },
         clickAction: `/customer/bookings/${booking.getId()}?action=approve_charge`
     });
-
-    this._logger.info(`Extra charge added to booking ${booking.getId()}: ${input.title}`);
+ 
+    this._logger.info(`${LogEvents.EXTRA_CHARGE_ADDED_LOG} ${booking.getId()}: ${input.title}`);
   }
 }

@@ -1,4 +1,5 @@
 export enum ErrorMessages {
+  // ... (Keep your existing Auth/Tech/General errors) ...
   INVALID_CREDENTIALS = "Invalid email or password",
   ADMIN_NOT_FOUND = "Admin not found",
   CUSTOMER_NOT_FOUND = "Customer not found",
@@ -54,7 +55,7 @@ export enum ErrorMessages {
   PENDING_ZONE_REQUEST = "You already have a pending zone transfer request.",
   PENDING_SERVICE_REQUEST = "A request for this service is already pending approval.",
   DUPLICATE_SERVICE = "This service is already active in your profile.",
-  MISSING_FIELDS="all fields are required",
+  
   REQUEST_NOT_FOUND = "The specific change request was not found or already resolved",
   INVALID_RESOLUTION_ACTION = "Invalid resolution action. Must be APPROVE or REJECT",
 
@@ -70,6 +71,25 @@ export enum ErrorMessages {
   // Payment/Financial
   PAYMENT_REQUIRED = "Payment is required to proceed.",
   PAYMENT_FAILED = "Payment processing failed.",
+ 
+  LOCATION_NOT_SERVED = "Sorry, we do not serve this location yet.",
+  PHONE_REQUIRED = "A phone number is required to book. Please update your address with a contact number.",
+  OTP_MISSING = "OTP is required to start the job.",
+  ADMIN_CUSTOMER_ID_MISSING = "Admin must provide customerId",
+  RATING_RANGE_ERROR = "Rating must be between 1 and 5.", 
+  ONLY_CUSTOMERS_RATE = "Only customers can rate technicians.",
+  PROOF_UPLOAD_FAILED = "Failed to upload proof image",
+  ADMINS_ONLY = "Admins only.",
+  CANCELLATION_NOT_ALLOWED = "Cancellation is not allowed at this stage.",
+  NOT_ACTIVE_CANDIDATE = "You are not the active candidate for this booking.",
+
+  PREFIX_CANCELLED_BY_TECH = "CANCELLED_BY_TECH: ",
+  REASON_TECH_CANCELLED_NO_REPLACEMENT = "Tech cancelled & no replacements",
+  OTP_INVALID_INPUT = "Invalid OTP. Please ask the customer for the correct 4-digit code.",
+  INVALID_TRANSITION_EN_ROUTE = "Cannot mark En Route. Booking must be ACCEPTED first.",
+  INVALID_TRANSITION_REACHED = "Cannot mark Reached. Technician must be EN_ROUTE first.",
+  INVALID_TRANSITION_START = "Cannot start job. Technician must be at location (REACHED) first.",
+  PAYMENT_SIGNATURE_INVALID = "Payment verification failed. Invalid signature.",
 }
 
 export enum SuccessMessages {
@@ -119,4 +139,102 @@ export enum SuccessMessages {
   BOOKING_ACCEPTED = "Booking confirmed successfully.",
   BOOKING_UPDATED = "Booking status updated.",
   BOOKING_CANCELLED = "Booking cancelled successfully.",
+ 
+  TECH_ASSIGNED_SUCCESS = "Technician assigned successfully.",
+  FORCE_STATUS_UPDATED = "Booking status updated successfully.",
+  PAYMENT_STATUS_UPDATED = "Payment status updated successfully.",
+  ALL_BOOKINGS_FETCHED = "All bookings fetched successfully",
+  BOOKINGS_FETCHED = "Bookings fetched successfully",
+  HISTORY_FETCHED = "History fetched successfully",
+  DETAILS_FETCHED = "Booking details fetched successfully.",
+  
+  
+  
+  OTP_VERIFIED_JOB_STARTED = "OTP Verified. Job Started! 🚀",
+  BOOKING_REJECTED_NEXT = "Booking rejected. Searching for next candidate...",
+  EXTRA_CHARGE_ADDED = "Extra charge added. Waiting for customer approval.",
+  CHARGE_RESPONSE_SUCCESS = "Charge response recorded successfully.",
+  JOB_COMPLETED_INVOICE = "Job completed. Invoice sent to customer.",
+  PAYMENT_VERIFIED = "Payment verified successfully.",
+  RATING_SUBMITTED = "Rating submitted successfully.",
+  JOB_STATUS_UPDATED = "Job status updated successfully", 
+  
+}
+ 
+export enum NotificationMessages {
+  // Titles
+  TITLE_ADMIN_ASSIGNED = "New Job Assigned (Admin) ⚡",
+  TITLE_TECH_ASSIGNED = "Technician Assigned",
+  TITLE_BOOKING_FAILED = "Booking Failed 😔",
+  TITLE_NEW_BOOKING_ADMIN = "New Booking Received 🚨",
+
+  // Bodies
+  BODY_ADMIN_ASSIGNED = "Admin has manually assigned a job to you.",
+  BODY_TECH_ASSIGNED_SUFFIX = " has been assigned to your request.", // Prepend name
+  BODY_NO_TECHS = "Sorry, no technicians are available in your area right now.",
+  BODY_NEW_BOOKING_PREFIX = "New request for ", 
+  TITLE_EXTRA_CHARGE = "Additional Part Required ⚠️", 
+  BODY_EXTRA_CHARGE_PART_1 = "Technician added ",
+  BODY_EXTRA_CHARGE_PART_2 = " for ₹",
+  BODY_EXTRA_CHARGE_PART_3 = ". Please approve.",
+
+  TITLE_REQUEST_WITHDRAWN = "Request Withdrawn",
+  BODY_REQUEST_WITHDRAWN = "Customer cancelled the request.",
+  
+  TITLE_JOB_CANCELLED = "Job Cancelled",
+  BODY_JOB_CANCELLED_TECH = "Customer cancelled the booking. You are now free.",
+  
+  TITLE_BOOKING_CANCELLED_ADMIN = "Booking Cancelled ❌",
+  BODY_BOOKING_CANCELLED_ADMIN_PREFIX = "Customer cancelled booking #",
+  TITLE_TECH_ASSIGNED_CUSTOMER = "Technician Assigned! 🎉",
+  BODY_TECH_ON_THE_WAY = " is on the way. OTP: ",
+  
+  TITLE_BOOKING_CONFIRMED_TECH = "Booking Confirmed  ",
+  BODY_PROCEED_TO_LOCATION = "Please proceed to the location.",
+  
+  TITLE_TECH_ASSIGNED_ADMIN = "Technician Assigned  ",
+  BODY_TECH_ACCEPTED_BOOKING = " accepted booking #",
+  
+  BODY_ALL_TECHS_BUSY = "Sorry, all technicians are currently busy. Please try again later.",
+  TITLE_JOB_RESUMED = "Job Resumed 🚀",
+  BODY_JOB_RESUMED = "Customer responded. Status is now ",
+  
+  TITLE_STATUS_UPDATED = "Status Updated",
+  BODY_STATUS_UPDATED = "Booking status is now ",
+  
+  TITLE_CHARGE_APPROVED = "Charge Approved  ",
+  TITLE_CHARGE_REJECTED = "Charge Rejected ❌",
+  
+  BODY_CHARGE_APPROVED_PREFIX = "Customer approved ",
+  BODY_CHARGE_APPROVED_SUFFIX = ". You can continue.",
+  
+  BODY_CHARGE_REJECTED_PREFIX = "Customer rejected ",
+  BODY_CHARGE_REJECTED_SUFFIX = ". Discuss or skip.",
+  
+  TITLE_CHARGE_DECISION_ADMIN = "Extra Charge Decision ⚡",
+  BODY_CHARGE_DECISION_ADMIN_PREFIX = "Charge ",
+  BODY_CHARGE_DECISION_ADMIN_MIDDLE = " for booking #",
+  TITLE_TECH_CHANGED = "Technician Changed ⚠️",
+  BODY_TECH_EMERGENCY_REASSIGN = "Previous technician had an emergency. Searching for a new one...",
+  
+  BODY_TECH_CANCEL_NO_CANDIDATES = "Technician cancelled and no other partners are available.",
+  
+  TITLE_TECH_CANCELLED_ADMIN = "Technician Cancelled ⚠️",
+  BODY_TECH_CANCELLED_ADMIN_PREFIX = "Tech ",
+  BODY_TECH_CANCELLED_ADMIN_SUFFIX = " cancelled. Re-assigning...",
+  TITLE_STATUS_EN_ROUTE = "Technician is on the way! 🚚",
+  BODY_STATUS_EN_ROUTE = "Track their live location in the app.",
+  
+  TITLE_STATUS_REACHED = "Technician has arrived! 📍",
+  BODY_STATUS_REACHED = "Please meet the technician at your doorstep.",
+  
+  TITLE_STATUS_STARTED = "Job Started 🛠️",
+  BODY_STATUS_STARTED = "Work has begun. Please keep the OTP handy if requested.",
+  
+  TITLE_ADMIN_UPDATE = "Booking Update: ",
+  TITLE_PAYMENT_RECEIVED = "Payment Received! 💰",
+  BODY_PAYMENT_RECEIVED_TECH_SUFFIX = " is fully paid. Great work!",
+  
+  TITLE_PAYMENT_RECEIVED_ADMIN = "Payment Received 💰",
+  BODY_PAYMENT_RECEIVED_ADMIN_SUFFIX = " marked as PAID.",
 }

@@ -13,8 +13,7 @@ import type { UpdateTechnicianPayload } from '../../../../infrastructure/reposit
 import ConfirmModal from '../../../components/Shared/ConfirmModal/ConfirmModal';
 import TechnicianEditModal from '../../../components/Admin/technician/TechnicianEditModal';
 import TechnicianProfileSummary from '../../../components/Admin/technician/TechnicianProfileSummary';
-
-//   IMPORT SHARED COMPONENT
+ 
 import { FileLightbox } from '../../../components/Shared/FileLightbox/FileLightbox';
 
 const TABS = [

@@ -64,7 +64,7 @@ createBooking = async (req: Request, res: Response): Promise<Response> => {
       let targetCustomerId = userId;
       
       if (role === "ADMIN") {
-          if (!req.body.customerId) throw new Error("Admin must provide customerId");
+          if (!req.body.customerId) throw new Error(ErrorMessages.ADMIN_CUSTOMER_ID_MISSING);
           targetCustomerId = req.body.customerId;
       }
 
@@ -102,7 +102,7 @@ startJob = async (req: Request, res: Response): Promise<Response> => {
       const { otp } = req.body; // Frontend sends { otp: "1234" }
 
       if (!otp) {
-        return this.clientError(res, "OTP is required to start the job.");
+        return this.clientError(res, ErrorMessages.OTP_MISSING);
       }
 
       // Reuse the existing Use Case logic, but force the status to IN_PROGRESS
@@ -115,10 +115,10 @@ startJob = async (req: Request, res: Response): Promise<Response> => {
 
       await this._updateJobStatusUseCase.execute(input);
 
-      return this.ok(res, null, "OTP Verified. Job Started! 🚀");
+      return this.ok(res, null, SuccessMessages.OTP_VERIFIED_JOB_STARTED);
 
     } catch (err) {
-      return this.handleError(res, err, "START_JOB_FAILED");
+      return this.handleError(res, err, LogEvents.START_JOB_FAILED);
     }
   };
 
@@ -146,13 +146,13 @@ startJob = async (req: Request, res: Response): Promise<Response> => {
 
       const message = response === "ACCEPT" 
         ? SuccessMessages.BOOKING_ACCEPTED 
-        : "Booking rejected. Searching for next candidate...";
+        : SuccessMessages.BOOKING_REJECTED_NEXT;
 
       // EFFECTIVE USE: this.ok handles 200 + structure
       return this.ok(res, null, message);
 
     } catch (err) {
-      return this.handleError(res, err, "BOOKING_RESPONSE_FAILED");
+      return this.handleError(res, err, LogEvents.BOOKING_RESPONSE_FAILED);
     }
   };
 
@@ -186,10 +186,10 @@ startJob = async (req: Request, res: Response): Promise<Response> => {
         page: result.page,
         limit: result.limit,
         totalPages: Math.ceil(result.total / limit)
-      }, "Bookings fetched successfully");
+      }, SuccessMessages.ALL_BOOKINGS_FETCHED);
 
     } catch (err) {
-      return this.handleError(res, err, "GET_CUSTOMER_BOOKINGS_FAILED");
+      return this.handleError(res, err, LogEvents.GET_CUSTOMER_BOOKINGS_FAILED);
     }
   };
 
@@ -218,7 +218,7 @@ startJob = async (req: Request, res: Response): Promise<Response> => {
       return this.ok(res, null, `Job status updated to ${input.status}`);
 
     } catch (err) {
-      return this.handleError(res, err, "JOB_STATUS_UPDATE_FAILED");
+      return this.handleError(res, err, LogEvents.JOB_STATUS_UPDATE_FAILED);
     }
   };
 
@@ -254,10 +254,10 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
       // Pass file as second argument
       await this._addExtraChargeUseCase.execute(input, proofFile);
 
-      return this.created(res, null, "Extra charge added. Waiting for customer approval.");
+      return this.created(res, null, SuccessMessages.EXTRA_CHARGE_ADDED);
 
     } catch (err) {
-      return this.handleError(res, err, "ADD_EXTRA_CHARGE_FAILED");
+      return this.handleError(res, err, LogEvents.ADD_EXTRA_CHARGE_FAILED);
     }
   };
 
@@ -287,7 +287,7 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
       return this.ok(res, null, `Charge ${response.toLowerCase()}d successfully.`);
 
     } catch (err) {
-      return this.handleError(res, err, "RESPOND_EXTRA_CHARGE_FAILED");
+      return this.handleError(res, err, LogEvents.RESPOND_EXTRA_CHARGE_FAILED);
     }
   };
 
@@ -321,10 +321,10 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
         page: result.page,
         limit: result.limit,
         totalPages: Math.ceil(result.total / limit)
-      }, "History fetched successfully");
+      }, SuccessMessages.HISTORY_FETCHED);
 
     } catch (err) {
-      return this.handleError(res, err, "GET_TECH_HISTORY_FAILED");
+      return this.handleError(res, err, LogEvents.GET_TECH_HISTORY_FAILED);
     }
   };
 
@@ -352,13 +352,13 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
           };
       }
 
-      // ✅ PASS FILE TO USE CASE
+      //   PASS FILE TO USE CASE
       await this._completeJobUseCase.execute(input, proofFile);
 
-      return this.ok(res, null, "Job completed. Invoice sent to customer.");
+      return this.ok(res, null, SuccessMessages.JOB_COMPLETED_INVOICE);
 
     } catch (err) {
-      return this.handleError(res, err, "JOB_COMPLETION_FAILED");
+      return this.handleError(res, err, LogEvents.JOB_COMPLETION_FAILED);
     }
   };
 
@@ -385,10 +385,10 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
       const responseDto = BookingMapper.toResponse(booking);
 
       // EFFECTIVE USE: this.ok()
-      return this.ok(res, responseDto, "Booking details fetched successfully.");
+      return this.ok(res, responseDto, SuccessMessages.BOOKINGS_FETCHED);
 
     } catch (err) {
-      return this.handleError(res, err, "GET_BOOKING_DETAILS_FAILED");
+      return this.handleError(res, err, LogEvents.GET_BOOKING_DETAILS_FAILED);
     }
   };
   /**
@@ -415,10 +415,10 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
           await this._customerCancelUseCase.execute(input); 
       }
 
-      return this.ok(res, null, "Booking cancelled successfully.");
+      return this.ok(res, null, SuccessMessages.BOOKING_ACCEPTED);
 
     } catch (err) {
-      return this.handleError(res, err, "BOOKING_CANCELLATION_FAILED");
+      return this.handleError(res, err, LogEvents.BOOKING_CANCELLATION_FAILED);
     }
   };
 
@@ -435,10 +435,10 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
 
       await this._verifyPaymentUseCase.execute(input);
 
-      return this.ok(res, null, "Payment verified successfully.");
+      return this.ok(res, null, SuccessMessages.PAYMENT_VERIFIED);
 
     } catch (err) {
-      return this.handleError(res, err, "PAYMENT_VERIFICATION_FAILED");
+      return this.handleError(res, err, LogEvents.PAYMENT_VERIFICATION_FAILED);
     }
   };
 
@@ -447,7 +447,7 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { userId, role } = req as AuthenticatedRequest;  
       if (!userId || role !== "customer") {
-        return this.forbidden(res, "Only customers can rate technicians.");
+        return this.forbidden(res, ErrorMessages.ONLY_CUSTOMERS_RATE);
       }
 
       const input: RateTechnicianDto = {
@@ -459,15 +459,15 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
 
       // Validate basic input
       if (!input.rating || input.rating < 1 || input.rating > 5) {
-        return this.clientError(res, "Rating must be between 1 and 5.");
+        return this.clientError(res, ErrorMessages.RATING_RANGE_ERROR);
       }
 
       await this._rateTechnicianUseCase.execute(input);
 
-      return this.ok(res, null, "Rating submitted successfully.");
+      return this.ok(res, null, SuccessMessages.RATING_SUBMITTED);
 
     } catch (err) {
-      return this.handleError(res, err, "RATING_FAILED");
+      return this.handleError(res, err, LogEvents.RATING_FAILED);
     }
   };
 }

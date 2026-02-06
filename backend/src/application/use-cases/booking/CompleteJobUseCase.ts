@@ -7,15 +7,13 @@ import { IServiceItemRepository } from "../../../domain/repositories/IServiceIte
 import { ILogger } from "../../interfaces/ILogger";
 import { CompleteJobDto } from "../../dto/booking/CompleteJobDto";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
-
-// ✅ Define IFile locally or import it if you have a shared type
+ 
 export interface IFile {
     buffer: Buffer;
     originalName: string;
     mimeType: string;
 }
-
-// ✅ FIX 1: Update the Tuple type to accept [Dto, File?]
+ 
 export class CompleteJobUseCase implements IUseCase<void, [CompleteJobDto, IFile?]> {
   constructor(
     private readonly _bookingRepo: IBookingRepository,
@@ -25,23 +23,19 @@ export class CompleteJobUseCase implements IUseCase<void, [CompleteJobDto, IFile
     private readonly _serviceRepo: IServiceItemRepository, 
     private readonly _logger: ILogger
   ) {}
-
-  // ✅ FIX 2: Update execute signature
+ 
   async execute(input: CompleteJobDto, proofFile?: IFile): Promise<void> {
     const booking = await this._bookingRepo.findById(input.bookingId);
     if (!booking) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
-
-    // 1. Authorization
+ 
     if (booking.getTechnicianId() !== input.technicianId) {
         throw new Error(ErrorMessages.UNAUTHORIZED);
     }
- 
-    // 2. Validate State
+  
     if (booking.getStatus() !== "IN_PROGRESS") {
         throw new Error("Job must be IN_PROGRESS to complete it.");
     }
- 
-    // 3. Validate Extra Charges
+  
     const hasPendingCharges = booking.getExtraCharges().some(c => c.status === "PENDING");
     if (hasPendingCharges) {
         throw new Error("Cannot complete job. There are pending extra charges.");
@@ -65,8 +59,7 @@ export class CompleteJobUseCase implements IUseCase<void, [CompleteJobDto, IFile
         "INR", 
         booking.getId()
     );
- 
-    // 6. Update Booking State
+  
     booking.updateStatus("COMPLETED", `tech:${input.technicianId}`, "Job finished by technician");
 
     const serviceId = booking.getServiceId();
@@ -77,16 +70,14 @@ export class CompleteJobUseCase implements IUseCase<void, [CompleteJobDto, IFile
     const payment = booking.getPayment();
     payment.razorpayOrderId = orderId;
     payment.status = "PENDING";
-
-    // 7. Persist
+ 
     await this._bookingRepo.update(booking);
-
-    // 8. Notify Customer
+ 
     await this._notificationService.send({
         recipientId: booking.getCustomerId(),
         recipientType: "CUSTOMER",
         type: "JOB_COMPLETED" as any, 
-        title: "Job Completed! ✅",
+        title: "Job Completed!  ",
         body: `Total Bill: ₹${finalAmount}. Please pay now.`,
         metadata: { 
             bookingId: booking.getId(), 

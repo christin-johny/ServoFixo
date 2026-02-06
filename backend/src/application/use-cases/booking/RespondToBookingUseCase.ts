@@ -3,9 +3,10 @@ import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianR
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { RespondToBookingDto } from "../../dto/booking/RespondToBookingDto";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { Booking } from "../../../domain/entities/Booking";
 import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class RespondToBookingUseCase {
   constructor(
@@ -20,13 +21,13 @@ export class RespondToBookingUseCase {
     if (!booking) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
  
     if (booking.getStatus() !== "ASSIGNED_PENDING") {
-        this._logger.warn(`Late response attempt for booking ${input.bookingId}`);
+        this._logger.warn(`${LogEvents.BOOKING_LATE_RESPONSE} ${input.bookingId}`);
         throw new Error(ErrorMessages.BOOKING_ALREADY_ASSIGNED);
     }
  
     const currentAttempt = booking.getAttempts().find(a => a.status === "PENDING");
     if (!currentAttempt || currentAttempt.techId !== input.technicianId) {
-        throw new Error("You are not the active candidate for this booking.");
+        throw new Error(ErrorMessages.NOT_ACTIVE_CANDIDATE);
     }
 
     if (input.response === "ACCEPT") {
@@ -36,13 +37,10 @@ export class RespondToBookingUseCase {
     }
   }
 
-  // --- SCENARIO 2A: TECHNICIAN ACCEPTS (Flow A) ---
   private async handleAcceptance(booking: Booking, techId: string) {
-    // 1. Fetch Tech Data for Snapshot
     const tech = await this._technicianRepo.findById(techId);
-    if (!tech) throw new Error("Technician not found");
+    if (!tech) throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
 
-    // 2. Prepare Snapshot Data
     const techName = tech.getName ? tech.getName() : (tech as any).name;
     const techPhone = tech.getPhone ? tech.getPhone() : (tech as any).phone;
     
@@ -62,8 +60,6 @@ export class RespondToBookingUseCase {
       rating: tech.getRatings().averageRating || 0
     }; 
 
-    // 3. Save Snapshot to DB (Direct Write)
-    // We do this first to ensure the data is definitely in the DB.
     const success = await this._bookingRepo.assignTechnician(
       booking.getId(), 
       techId, 
@@ -76,23 +72,16 @@ export class RespondToBookingUseCase {
  
     await this._technicianRepo.updateAvailabilityStatus(techId, true);
 
-    //  CRITICAL FIX: Patch the In-Memory Booking Object
-    // We manually inject the snapshot into the booking object.
-    // This prevents the next step (.update) from overwriting the DB with empty snapshots.
     const currentSnapshots = booking.getSnapshots();
     if (currentSnapshots) {
-        // If it's a reference, this updates it in place
         Object.assign(currentSnapshots, { technician: techSnapshot });
     } else {
-        // Fallback: If snapshots property is missing/null, try to force set it (depending on Entity structure)
-        // This handles cases where _snapshots might be private/protected
         (booking as any)._snapshots = { 
              ...((booking as any)._snapshots || {}),
              technician: techSnapshot 
         };
     }
 
-    // 4. Update Status & Generate OTP
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     
     booking.acceptAssignment(techId); 
@@ -102,17 +91,14 @@ export class RespondToBookingUseCase {
         booking.getMeta().otp = otp;
     }
 
-    // 5. Persist Status & OTP (And Snapshot!)
-    // Now that 'booking' has the snapshot in memory, this save is safe.
     await this._bookingRepo.update(booking);
 
-    // 6. Notify Customer
     await this._notificationService.send({
         recipientId: booking.getCustomerId(),
         recipientType: "CUSTOMER",
         type: NotificationType.BOOKING_CONFIRMED, 
-        title: "Technician Assigned! 🎉",
-        body: `${techSnapshot.name} is on the way. OTP: ${otp}`,
+        title: NotificationMessages.TITLE_TECH_ASSIGNED_CUSTOMER,
+        body: `${techSnapshot.name}${NotificationMessages.BODY_TECH_ON_THE_WAY}${otp}`,
         metadata: { 
             bookingId: booking.getId(), 
             techId: techId,
@@ -123,36 +109,34 @@ export class RespondToBookingUseCase {
         clickAction: `/customer/bookings/${booking.getId()}`
     });
 
-    // 7. Notify Technician
     await this._notificationService.send({
         recipientId: techId,
         recipientType: "TECHNICIAN",
         type: NotificationType.BOOKING_CONFIRMED,
-        title: "Booking Confirmed ✅",
-        body: "Please proceed to the location.",
+        title: NotificationMessages.TITLE_BOOKING_CONFIRMED_TECH,
+        body: NotificationMessages.BODY_PROCEED_TO_LOCATION,
         metadata: { bookingId: booking.getId() },
         clickAction: `/technician/bookings/${booking.getId()}`
     });
 
     await this._notificationService.send({
-    recipientId: "ADMIN_BROADCAST_CHANNEL",
-    recipientType: "ADMIN",
-    type: "ADMIN_STATUS_UPDATE" as any,  
-    title: "Technician Assigned ✅",
-    body: `${techSnapshot.name} accepted booking #${booking.getId().slice(-6)}`,
-    metadata: { 
-        bookingId: booking.getId(), 
-        status: "ACCEPTED",
-        technicianId: techId,
-        techName: techSnapshot.name,
-        techPhoto: techSnapshot.avatarUrl || ""
-    }
-});
+        recipientId: "ADMIN_BROADCAST_CHANNEL",
+        recipientType: "ADMIN",
+        type: "ADMIN_STATUS_UPDATE" as any,  
+        title: NotificationMessages.TITLE_TECH_ASSIGNED_ADMIN,
+        body: `${techSnapshot.name}${NotificationMessages.BODY_TECH_ACCEPTED_BOOKING}${booking.getId().slice(-6)}`,
+        metadata: { 
+            bookingId: booking.getId(), 
+            status: "ACCEPTED",
+            technicianId: techId,
+            techName: techSnapshot.name,
+            techPhoto: techSnapshot.avatarUrl || ""
+        }
+    });
 
-    this._logger.info(`Booking ${booking.getId()} ACCEPTED by ${techId}`);
+    this._logger.info(`${LogEvents.BOOKING_ACCEPTED_LOG} ${booking.getId()} by ${techId}`);
   }
 
-  // --- SCENARIO 2B: TECHNICIAN REJECTS  
   private async handleRejection(booking: Booking, techId: string, reason?: string) {
     booking.rejectAssignment(techId, reason || "Declined by Technician");
 
@@ -176,7 +160,7 @@ export class RespondToBookingUseCase {
             address: booking.getLocation().address,
             expiresAt: booking.getAssignmentExpiresAt()!
         });
-        this._logger.info(`Booking ${booking.getId()} REJECTED by ${techId}. Next -> ${nextCandidateId}`);
+        this._logger.info(`${LogEvents.BOOKING_REJECTED_LOG} ${booking.getId()} by ${techId}. Next -> ${nextCandidateId}`);
     } else {
         booking.updateStatus("FAILED_ASSIGNMENT", "system", "All candidates rejected");
         await this._bookingRepo.update(booking);
@@ -184,12 +168,12 @@ export class RespondToBookingUseCase {
         await this._notificationService.send({
             recipientId: booking.getCustomerId(),
             recipientType: "CUSTOMER",
-            type: "BOOKING_FAILED" as any, 
-            title: "Booking Failed 😔",
-            body: "Sorry, all technicians are currently busy. Please try again later.",
+            type: NotificationType.BOOKING_FAILED, 
+            title: NotificationMessages.TITLE_BOOKING_FAILED,
+            body: NotificationMessages.BODY_ALL_TECHS_BUSY,
             metadata: { bookingId: booking.getId() }
         });
-        this._logger.warn(`Booking ${booking.getId()} FAILED. Candidates exhausted.`);
+        this._logger.warn(`${LogEvents.BOOKING_FAILED_NO_CANDIDATES} ID: ${booking.getId()}`);
     }
   }
 }

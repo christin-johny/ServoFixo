@@ -8,8 +8,9 @@ import { INotificationService } from "../../services/INotificationService";
 import { CreateBookingRequestDto } from "../../dto/booking/CreateBookingRequestDto";
 import { Booking } from "../../../domain/entities/Booking";
 import { Technician } from "../../../domain/entities/Technician";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class CreateBookingUseCase {
   constructor(
@@ -23,7 +24,7 @@ export class CreateBookingUseCase {
   ) {}
 
   async execute(input: CreateBookingRequestDto): Promise<Booking> {
-     
+      
     // 1. Validation: Customer
     const customer = await this._customerRepo.findById(input.customerId);
     if (!customer) {
@@ -34,21 +35,22 @@ export class CreateBookingUseCase {
     if (!service) {
       throw new Error(ErrorMessages.SERVICE_NOT_FOUND);
     } 
-    // 3. Validation: Zone Integrity (Server Side Calculation)
+    // 3. Validation: Zone Integrity 
     const { lat, lng } = input.location.coordinates;
     const zoneResult = await this._zoneService.checkServiceability(lat, lng);
 
     if (!zoneResult.isServiceable || !zoneResult.zoneId) {
-       throw new Error("Sorry, we do not serve this location yet.");
+       throw new Error(ErrorMessages.LOCATION_NOT_SERVED);
     }
     
     const resolvedZoneId = zoneResult.zoneId;
+    
     // 4. Calculate Estimates
     const rawPrice = service.getBasePrice ? service.getBasePrice() : (service as any).price || 0;
     const estimatedPrice = Math.round(rawPrice * 100) / 100; 
     const deliveryFee = 0; 
 
-    // 5. Matchmaking: Find Candidates
+    // 5. Matchmaking
     const availableTechs = await this._technicianRepo.findAvailableInZone(
       resolvedZoneId, 
       input.serviceId 
@@ -62,19 +64,17 @@ export class CreateBookingUseCase {
 
     const candidateIds = sortedCandidates.map(t => t.getId());
  
-    // 7. Initialize Booking Entity
+    // 7. Initialize Booking
     const booking = new Booking({
       customerId: input.customerId,
       serviceId: input.serviceId,
       zoneId: resolvedZoneId,
       status: "REQUESTED",
-      
       location: {
         address: input.location.address,
         coordinates: input.location.coordinates,
         mapLink: input.location.mapLink
       },
-      
       pricing: {
         estimated: estimatedPrice,
         final: undefined,
@@ -82,20 +82,12 @@ export class CreateBookingUseCase {
         discount: 0,
         tax: 0
       },
-      
-      payment: {
-        status: "PENDING"
-      },
-      
+      payment: { status: "PENDING" },
       candidateIds: candidateIds,
       assignedTechAttempts: [],
       extraCharges: [],
       timeline: [],
-      
-      meta: {
-        instructions: input.meta?.instructions
-      },
-      
+      meta: { instructions: input.meta?.instructions },
       timestamps: {
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -103,27 +95,19 @@ export class CreateBookingUseCase {
       }
     }); 
  
-    // Priority: 1. Address Contact info, 2. Customer Profile info
     const snapshotName = input.contact?.name || (customer.getName ? customer.getName() : (customer as any).name);
     const snapshotPhone = input.contact?.phone || (customer.getPhone ? customer.getPhone() : (customer as any).phone);
 
-    // Final Validation: We need at least one phone number to proceed
     if (!snapshotPhone) {
-        throw new Error("A phone number is required to book. Please update your address with a contact number.");
+        throw new Error(ErrorMessages.PHONE_REQUIRED);
     }
 
     booking.setInitialSnapshots(
-        { 
-            name: snapshotName, 
-            phone: snapshotPhone, 
-            avatarUrl: customer.getAvatarUrl()
-        },
-        { 
-            name: service.getName ? service.getName() : (service as any).name, 
-            categoryId: service.getCategoryId()
-        }
+        { name: snapshotName, phone: snapshotPhone, avatarUrl: customer.getAvatarUrl() },
+        { name: service.getName ? service.getName() : (service as any).name, categoryId: service.getCategoryId() }
     );
-    // 9. Prepare Assignment (Flow A)
+
+    // 9. Prepare Assignment 
     if (candidateIds.length > 0) {
       const firstCandidateId = candidateIds[0];
       booking.addAssignmentAttempt(firstCandidateId);
@@ -134,19 +118,20 @@ export class CreateBookingUseCase {
           recipientId: booking.getCustomerId(),
           recipientType: "CUSTOMER",
           type: NotificationType.BOOKING_FAILED,
-          title: "Booking Failed 😔",
-          body: "Sorry, no technicians are available in your area right now.",
+          title: NotificationMessages.TITLE_BOOKING_FAILED,
+          body: NotificationMessages.BODY_NO_TECHS,
           metadata: { bookingId: booking.getId() }
       });
     } 
-    // 10. Persist to Database
+
+    // 10. Persist
     const createdBooking = await this._bookingRepo.create(booking);
 
     this._logger.info(
-      `Booking created: ${createdBooking.getId()} | Zone: ${resolvedZoneId} | Candidates: ${candidateIds.length}`
+      `${LogEvents.BOOKING_CREATED_LOG}: ${createdBooking.getId()} | Zone: ${resolvedZoneId} | Candidates: ${candidateIds.length}`
     );
 
-    // 11. Trigger Real-Time Notification (Socket)
+    // 11. Trigger Real-Time Notification 
     if (candidateIds.length > 0) {
         const firstCandidateId = candidateIds[0];
         const tech = sortedCandidates[0]; 
@@ -163,10 +148,11 @@ export class CreateBookingUseCase {
         }
 
         const earnings = Math.round((estimatedPrice * 0.9) * 100) / 100;
+        const serviceName = service.getName ? service.getName() : "Service Request";
 
         await this._notificationService.sendBookingRequest(firstCandidateId, {
             bookingId: createdBooking.getId(),
-            serviceName: service.getName ? service.getName() : "Service Request",
+            serviceName: serviceName,
             earnings: earnings, 
             distance: `${distKm} km`,
             address: input.location.address,
@@ -177,8 +163,8 @@ export class CreateBookingUseCase {
             recipientId: "ADMIN_BROADCAST_CHANNEL", 
             recipientType: "ADMIN",
             type: NotificationType.ADMIN_NEW_BOOKING, 
-            title: "New Booking Received 🚨",
-            body: `New request for ${service.getName ? service.getName() : "Service"} in Zone ${resolvedZoneId}`,
+            title: NotificationMessages.TITLE_NEW_BOOKING_ADMIN,
+            body: `${NotificationMessages.BODY_NEW_BOOKING_PREFIX}${serviceName} in Zone ${resolvedZoneId}`,
             metadata: { 
                 bookingId: booking.getId(),
                 customerId: booking.getCustomerId(),

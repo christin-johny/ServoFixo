@@ -4,7 +4,7 @@ import { RequestMapper } from "../../utils/RequestMapper";
 import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { Review } from "../../../domain/entities/Review"; // ✅ Import Entity, not UseCase implementation
+import { Review } from "../../../domain/entities/Review";  
  
 interface ServiceFilters {
   searchTerm: string;

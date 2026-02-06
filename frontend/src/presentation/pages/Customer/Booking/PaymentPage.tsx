@@ -46,7 +46,7 @@ interface RazorpayOptions {
   theme?: {
     color?: string;
   };
-  // ✅ STRICTLY TYPED MODAL HANDLER
+  //   STRICTLY TYPED MODAL HANDLER
   modal?: {
     ondismiss?: () => void;
   };
@@ -157,7 +157,7 @@ const PaymentPage: React.FC = () => {
       return;
     }
 
-    // ✅ STRICTLY TYPED OPTIONS (No 'any')
+    //   STRICTLY TYPED OPTIONS (No 'any')
     const options: RazorpayOptions = {
       key: import.meta.env.VITE_RAZORPAY_KEY_ID as string,
       amount: booking.payment.amount * 100, 
@@ -166,7 +166,7 @@ const PaymentPage: React.FC = () => {
       description: `Payment for Service #${id?.slice(-6)}`,
       order_id: booking.payment.razorpayOrderId, 
       
-      // ✅ SUCCESS HANDLER
+      //   SUCCESS HANDLER
       handler: async function (response: RazorpayResponse) {
         try {
            if (!id) return;
@@ -192,7 +192,7 @@ const PaymentPage: React.FC = () => {
         }
       },
       
-      // ✅ USER CANCELLATION HANDLER (Correctly Typed)
+      //   USER CANCELLATION HANDLER (Correctly Typed)
       modal: {
         ondismiss: function () {
             showError("Payment Cancelled");
@@ -212,7 +212,7 @@ const PaymentPage: React.FC = () => {
 
     const rzp = new window.Razorpay(options);
     
-    // ✅ BANK FAILURE HANDLER (Strictly Typed)
+    //   BANK FAILURE HANDLER (Strictly Typed)
     rzp.on('payment.failed', function (response: RazorpayErrorResponse) {
         console.error("Payment Failed:", response.error);
         showError(response.error.description || "Transaction Declined");
@@ -226,7 +226,7 @@ const PaymentPage: React.FC = () => {
 
   const pricing = booking?.pricing || { estimated: 0, deliveryFee: 0 };
   
-  // ✅ Removed implicit 'any' on map
+  //   Removed implicit 'any' on map
   const extras = booking?.extraCharges?.filter((c: ExtraChargeItem) => c.status === 'APPROVED') || [];
   const finalAmount = pricing.final || 0;
 
@@ -268,7 +268,7 @@ const PaymentPage: React.FC = () => {
                     <div className="py-4 border-t border-dashed border-gray-200">
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Additional Items</p>
                         <div className="space-y-3">
-                            {/* ✅ 'extra' is now inferred correctly as ExtraChargeItem */}
+                            {/*   'extra' is now inferred correctly as ExtraChargeItem */}
                             {extras.map((extra) => (
                                 <div key={extra.id} className="flex justify-between text-gray-600 text-sm">
                                     <div className="flex items-center gap-2">

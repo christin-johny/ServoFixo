@@ -16,7 +16,6 @@ export class PaymentWebhookController {
       const signature = req.headers["x-razorpay-signature"] as string;
       const body = JSON.stringify(req.body);
 
-      // 1. HTTP/Security Logic (Does not belong in Use Case)
       const expectedSignature = crypto
         .createHmac("sha256", secret)
         .update(body)
@@ -25,8 +24,7 @@ export class PaymentWebhookController {
       if (expectedSignature !== signature) {
         return res.status(400).json({ status: "invalid_signature" });
       }
-
-      // 2. Extract Data
+ 
       const event = req.body.event;
       const payload = req.body.payload;
 

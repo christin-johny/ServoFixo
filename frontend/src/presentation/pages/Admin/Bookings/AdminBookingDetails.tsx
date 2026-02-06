@@ -36,7 +36,7 @@ const AdminBookingDetails: React.FC = () => {
   const [booking, setBooking] = useState<AdminBookingDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Modal States
+  //   Modal States
   const [isAssignOpen, setAssignOpen] = useState(false);
   const [isCancelOpen, setCancelOpen] = useState(false);
   const [isStatusOpen, setStatusOpen] = useState(false);
@@ -107,7 +107,7 @@ const AdminBookingDetails: React.FC = () => {
   const handleForceStatusChange = async (newStatus: string, reason: string) => {
     if (!booking) return;
     try {
-        // ✅ Calls the generic endpoint
+        //   Calls the generic endpoint
         await forceStatusUpdate(booking.id, newStatus, reason);
         showSuccess(`Status updated to ${newStatus}`);
         setStatusOpen(false);
@@ -180,7 +180,7 @@ const AdminBookingDetails: React.FC = () => {
             </div>
          </div>
 
-         {/* ✅ God Mode Actions */}
+         {/*   God Mode Actions */}
          <div className="flex flex-wrap items-center gap-3 self-start sm:self-center">
              
              {/* 1. FORCE ASSIGN (Rescue Mode) */}
@@ -378,7 +378,7 @@ const AdminBookingDetails: React.FC = () => {
          </div>
       </div>
 
-      {/* ✅ Render Modals */}
+      {/*   Render Modals */}
       {booking && (
         <ForceAssignModal 
             isOpen={isAssignOpen} 

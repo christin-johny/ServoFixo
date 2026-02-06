@@ -2,8 +2,10 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { UpdateJobStatusDto } from "../../dto/booking/UpdateJobStatusDto";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { BookingStatus } from "../../../../../shared/types/value-objects/BookingTypes";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
 
 export class UpdateJobStatusUseCase {
   constructor(
@@ -16,43 +18,33 @@ export class UpdateJobStatusUseCase {
     const booking = await this._bookingRepo.findById(input.bookingId);
     if (!booking) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
 
-    // 1. Validation: Authorization
     if (booking.getTechnicianId() !== input.technicianId) {
         throw new Error(ErrorMessages.UNAUTHORIZED);
     }
 
-    // 2. Validation: Strict State Machine
     const currentStatus = booking.getStatus();
     this.validateTransition(currentStatus, input.status);
 
-    // --- NEW: OTP Verification Logic (Security Check) ---
-    // [Ref: Master Booking Logic, Page 8, Flow C.4]
     if (input.status === "IN_PROGRESS") {
-        // Retrieve the OTP stored in the booking metadata
         const requiredOtp = booking.getMeta().otp;
         
-        // If an OTP exists, we MUST verify it matches the input
         if (requiredOtp && requiredOtp !== input.otp) {
-            this._logger.warn(`OTP Mismatch for Booking ${booking.getId()}. Expected: ${requiredOtp}, Got: ${input.otp}`);
-            throw new Error("Invalid OTP. Please ask the customer for the correct 4-digit code.");
+            this._logger.warn(`${LogEvents.OTP_MISMATCH} for Booking ${booking.getId()}. Expected: ${requiredOtp}, Got: ${input.otp}`);
+            throw new Error(ErrorMessages.OTP_INVALID_INPUT);
         }
     }
 
-    // 3. Update Status
     booking.updateStatus(input.status, `tech:${input.technicianId}`, "Status update by technician");
 
-    // 4. Persist
     await this._bookingRepo.updateStatus(booking.getId(), input.status);
 
-    // 5. Notify Customer
     await this.sendCustomerNotification(booking.getCustomerId(), input.status, booking.getId());
 
-    // 6. Notify Admin (Dashboard Sync)
     await this._notificationService.send({
         recipientId: "ADMIN_BROADCAST_CHANNEL",
         recipientType: "ADMIN",
         type: "ADMIN_STATUS_UPDATE" as any,
-        title: `Booking Update: ${input.status}`,
+        title: `${NotificationMessages.TITLE_ADMIN_UPDATE}${input.status}`,
         body: `Tech ${input.technicianId} is now ${input.status}`,
         metadata: { 
             bookingId: booking.getId(), 
@@ -61,18 +53,18 @@ export class UpdateJobStatusUseCase {
         }
     });
 
-    this._logger.info(`Booking ${booking.getId()} moved to ${input.status}`);
+    this._logger.info(`${LogEvents.BOOKING_STATUS_CHANGED}: ${booking.getId()} moved to ${input.status}`);
   }
 
   private validateTransition(current: BookingStatus, target: BookingStatus) {
       if (target === "EN_ROUTE" && current !== "ACCEPTED") {
-          throw new Error("Cannot mark En Route. Booking must be ACCEPTED first.");
+          throw new Error(ErrorMessages.INVALID_TRANSITION_EN_ROUTE);
       }
       if (target === "REACHED" && current !== "EN_ROUTE") {
-          throw new Error("Cannot mark Reached. Technician must be EN_ROUTE first.");
+          throw new Error(ErrorMessages.INVALID_TRANSITION_REACHED);
       }
       if (target === "IN_PROGRESS" && current !== "REACHED") {
-          throw new Error("Cannot start job. Technician must be at location (REACHED) first.");
+          throw new Error(ErrorMessages.INVALID_TRANSITION_START);
       }
   }
 
@@ -83,20 +75,19 @@ export class UpdateJobStatusUseCase {
   ) {
       let title = "";
       let body = "";
-      const notifType = "BOOKING_STATUS_UPDATE" as any; 
-
+      
       switch(status) {
           case "EN_ROUTE":
-              title = "Technician is on the way! 🚚";
-              body = "Track their live location in the app.";
+              title = NotificationMessages.TITLE_STATUS_EN_ROUTE;
+              body = NotificationMessages.BODY_STATUS_EN_ROUTE;
               break;
           case "REACHED":
-              title = "Technician has arrived! 📍";
-              body = "Please meet the technician at your doorstep.";
+              title = NotificationMessages.TITLE_STATUS_REACHED;
+              body = NotificationMessages.BODY_STATUS_REACHED;
               break;
           case "IN_PROGRESS":
-              title = "Job Started 🛠️";
-              body = "Work has begun. Please keep the OTP handy if requested.";
+              title = NotificationMessages.TITLE_STATUS_STARTED;
+              body = NotificationMessages.BODY_STATUS_STARTED;
               break;
       }
 
@@ -104,7 +95,7 @@ export class UpdateJobStatusUseCase {
           await this._notificationService.send({
               recipientId: customerId,
               recipientType: "CUSTOMER",
-              type: notifType,
+              type: NotificationType.BOOKING_STATUS_UPDATE,
               title,
               body,
               metadata: { bookingId, status },

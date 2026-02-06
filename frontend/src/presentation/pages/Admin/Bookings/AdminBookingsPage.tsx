@@ -15,7 +15,7 @@ import {
   type BookingStatus 
 } from "../../../../infrastructure/repositories/admin/adminBookingRepository";
 
-// ✅ Reuse your existing components
+//   Reuse your existing components
 import { SearchFilterBar, PaginationBar } from "../../../components/Shared/Table/DataTableControls";
 import LoaderFallback from "../../../components/LoaderFallback";
 import { getCategories } from "../../../../infrastructure/repositories/admin/serviceCategoryRepository"; // Update path if needed
@@ -47,7 +47,7 @@ const AdminBookingsPage: React.FC = () => {
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   
-  // ✅ ADDED: All 4 Required Filters
+  //   ADDED: All 4 Required Filters
   const [filterStatus, setFilterStatus] = useState<string>(""); 
   const [filterCategory, setFilterCategory] = useState<string>(""); 
   const [startDate, setStartDate] = useState<string>("");
@@ -274,7 +274,7 @@ const AdminBookingsPage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* 2. Category Filter (✅ ADDED) */}
+                {/* 2. Category Filter (  ADDED) */}
                 <div>
         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Category</label>
         <div className="relative">

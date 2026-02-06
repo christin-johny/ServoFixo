@@ -3,9 +3,9 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { RespondToExtraChargeDto } from "../../dto/booking/RespondToExtraChargeDto";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
+import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
 import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
-import { console } from "inspector";
+import { LogEvents } from "../../../../../shared/constants/LogEvents";
 
 export class RespondToExtraChargeUseCase implements IUseCase<void, [RespondToExtraChargeDto]> {
   constructor(
@@ -21,10 +21,9 @@ export class RespondToExtraChargeUseCase implements IUseCase<void, [RespondToExt
     if (booking.getCustomerId() !== input.customerId) {
         throw new Error(ErrorMessages.UNAUTHORIZED);
     }
-    // 1. Capture status BEFORE update
+    
     const previousStatus = booking.getStatus();
  
-    // 2. Update Domain State (Approve/Reject & Recalculate)
     booking.updateExtraChargeStatus(
         input.chargeId, 
         input.response === "APPROVE" ? "APPROVED" : "REJECTED",
@@ -32,34 +31,29 @@ export class RespondToExtraChargeUseCase implements IUseCase<void, [RespondToExt
     );
     booking.calculateFinalPrice(); 
     
-    // 3. Persist Changes
     await this._bookingRepo.update(booking); 
  
-    // 4. Capture status AFTER update (Did it go back to IN_PROGRESS?)
     const newStatus = booking.getStatus();
 
-    // 5. ✅ REALTIME SYNC: Broadcast Status Change
     if (previousStatus !== newStatus) {
-        // Notify Technician (e.g. unlocks the "Waiting for Customer" screen)
         await this._notificationService.send({
             recipientId: booking.getTechnicianId()!,
             recipientType: "TECHNICIAN",
             type: NotificationType.BOOKING_STATUS_UPDATE,
-            title: "Job Resumed 🚀",
-            body: `Customer responded. Status is now ${newStatus}.`,
+            title: NotificationMessages.TITLE_JOB_RESUMED,
+            body: `${NotificationMessages.BODY_JOB_RESUMED}${newStatus}.`,
             metadata: { 
                 bookingId: booking.getId(), 
                 status: newStatus 
             }
         });
 
-        // Notify Customer (Syncs stepper if they have multiple tabs open)
         await this._notificationService.send({
             recipientId: booking.getCustomerId(),
             recipientType: "CUSTOMER",
             type: NotificationType.BOOKING_STATUS_UPDATE,
-            title: "Status Updated",
-            body: `Booking status is now ${newStatus}`,
+            title: NotificationMessages.TITLE_STATUS_UPDATED,
+            body: `${NotificationMessages.BODY_STATUS_UPDATED}${newStatus}`,
             metadata: { 
                 bookingId: booking.getId(), 
                 status: newStatus 
@@ -67,17 +61,16 @@ export class RespondToExtraChargeUseCase implements IUseCase<void, [RespondToExt
         });
     }
 
-    // 6. ✅ NOTIFY RESULT: Tell Technician explicitly about the charge decision
     const charge = booking.getExtraCharges().find(c => c.id === input.chargeId);
     
     await this._notificationService.send({
         recipientId: booking.getTechnicianId()!,
         recipientType: "TECHNICIAN",
         type: NotificationType.CHARGE_UPDATE,
-        title: input.response === "APPROVE" ? "Charge Approved ✅" : "Charge Rejected ❌",
+        title: input.response === "APPROVE" ? NotificationMessages.TITLE_CHARGE_APPROVED : NotificationMessages.TITLE_CHARGE_REJECTED,
         body: input.response === "APPROVE" 
-            ? `Customer approved ${charge?.title}. You can continue.` 
-            : `Customer rejected ${charge?.title}. Discuss or skip.`,
+            ? `${NotificationMessages.BODY_CHARGE_APPROVED_PREFIX}${charge?.title}${NotificationMessages.BODY_CHARGE_APPROVED_SUFFIX}` 
+            : `${NotificationMessages.BODY_CHARGE_REJECTED_PREFIX}${charge?.title}${NotificationMessages.BODY_CHARGE_REJECTED_SUFFIX}`,
         metadata: { 
             bookingId: booking.getId(), 
             chargeId: input.chargeId,
@@ -85,18 +78,19 @@ export class RespondToExtraChargeUseCase implements IUseCase<void, [RespondToExt
         },
         clickAction: `/technician/bookings/${booking.getId()}`
     });
-    await this._notificationService.send({
-    recipientId: "ADMIN_BROADCAST_CHANNEL",
-    recipientType: "ADMIN",
-    type: "ADMIN_STATUS_UPDATE" as any,
-    title: "Extra Charge Decision ⚡",
-    body: `Charge ${input.response} for booking #${booking.getId().slice(-6)}`,
-    metadata: { 
-        bookingId: booking.getId(), 
-        status: newStatus // Takes the booking back to IN_PROGRESS usually
-    }
-});
 
-    this._logger.info(`Charge ${input.chargeId} ${input.response} for booking ${booking.getId()}`);
+    await this._notificationService.send({
+        recipientId: "ADMIN_BROADCAST_CHANNEL",
+        recipientType: "ADMIN",
+        type: "ADMIN_STATUS_UPDATE" as any,
+        title: NotificationMessages.TITLE_CHARGE_DECISION_ADMIN,
+        body: `${NotificationMessages.BODY_CHARGE_DECISION_ADMIN_PREFIX}${input.response}${NotificationMessages.BODY_CHARGE_DECISION_ADMIN_MIDDLE}${booking.getId().slice(-6)}`,
+        metadata: { 
+            bookingId: booking.getId(), 
+            status: newStatus 
+        }
+    });
+
+    this._logger.info(`${LogEvents.CHARGE_RESPONSE_LOG}: ${input.chargeId} ${input.response} for booking ${booking.getId()}`);
   }
 }

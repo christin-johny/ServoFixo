@@ -130,7 +130,7 @@ class SocketService {
     });
 
     this.socket.on("connect", () => {
-      console.log("✅ [SocketClient] Connected! ID:", this.socket?.id); // <--- LOG 2
+      console.log("  [SocketClient] Connected! ID:", this.socket?.id); // <--- LOG 2
     });
 
     // --- Direct Listeners ---
@@ -165,7 +165,7 @@ class SocketService {
     
   }
   private handleAdminEvent(data: Notification) {
-      // ✅ Notify ALL listeners instead of just one
+      //   Notify ALL listeners instead of just one
       const event: AdminUpdateEvent = {
           type: data.type,
           bookingId: data.metadata?.bookingId || "",
@@ -309,7 +309,7 @@ class SocketService {
     this.adminListeners.push(callback);
   }
   
-  // ✅ Update Cleanup Method
+  //   Update Cleanup Method
   offAdminDataUpdate(callback?: (data: AdminUpdateEvent) => void): void {
     if (callback) {
         // Remove specific listener

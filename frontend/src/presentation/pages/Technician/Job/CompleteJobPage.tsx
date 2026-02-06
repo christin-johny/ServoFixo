@@ -38,12 +38,12 @@ const CompleteJobPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showSuccess, showError } = useNotification();
-  const { user } = useSelector((state: RootState) => state.auth); // ✅ Get Tech ID
+  const { user } = useSelector((state: RootState) => state.auth); //   Get Tech ID
 
   const [job, setJob] = useState<ExtendedJob | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-const [proofFile, setProofFile] = useState<File | null>(null); // ✅ State for File
+const [proofFile, setProofFile] = useState<File | null>(null); //   State for File
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   // State to track view mode
   const [paymentStatus, setPaymentStatus] = useState<"IDLE" | "WAITING_FOR_PAYMENT" | "PAID">("IDLE");
@@ -70,7 +70,7 @@ const [proofFile, setProofFile] = useState<File | null>(null); // ✅ State for 
     }
   };
 
-  // ✅ Socket Logic: Real-Time Sync
+  //   Socket Logic: Real-Time Sync
   useEffect(() => {
     if (!id || !user?.id) return;
 
@@ -114,11 +114,11 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
   const handleSendBill = async () => {
     if (!id) return;
-    if (!proofFile) return showError("Work proof photo is required."); // ✅ Validation
+    if (!proofFile) return showError("Work proof photo is required."); //   Validation
 
     setIsSubmitting(true);
     try {
-      // ✅ Use completeJob with File (You need to update your repo function to accept file)
+      //   Use completeJob with File (You need to update your repo function to accept file)
       await completeJob(id, proofFile); 
       setPaymentStatus("WAITING_FOR_PAYMENT");
       showSuccess("Bill sent to customer.");

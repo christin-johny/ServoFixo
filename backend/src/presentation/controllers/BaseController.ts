@@ -6,7 +6,7 @@ import { ILogger } from "../../application/interfaces/ILogger";
 export abstract class BaseController {
   constructor(protected readonly _logger: ILogger) {}
 
-  // --- SUCCESS RESPONSES ---
+  // SUCCESS RESPONSES  
 
   protected ok<T>(res: Response, data: T, message?: string) {
     return res.status(StatusCodes.OK).json({
@@ -23,8 +23,7 @@ export abstract class BaseController {
       data,
     });
   }
-
-  // --- CLIENT ERROR RESPONSES (Added These) ---
+ 
 
   protected clientError(res: Response, message?: string) {
     return res.status(StatusCodes.BAD_REQUEST).json({
@@ -54,7 +53,7 @@ export abstract class BaseController {
     });
   }
 
-  // --- SERVER ERROR RESPONSES ---
+  //  SERVER ERROR RESPONSES 
 
   protected fail(res: Response, error: Error | string) {
     const message = error instanceof Error ? error.message : error;
@@ -66,19 +65,17 @@ export abstract class BaseController {
     });
   }
 
-  // --- HANDLING CAUGHT ERRORS ---
+  //  HANDLING CAUGHT ERRORS 
 
   protected handleError(res: Response, err: unknown, eventLog: string) {
     const message = err instanceof Error ? err.message : String(err);
     this._logger.error(`${eventLog}: ${message}`);
-
-    // Check if the error message maps to a known status code
+ 
     if (Object.values(ErrorMessages).includes(message as ErrorMessages)) {
       const status = this.getErrorCode(message);
       return res.status(status).json({ success: false, error: message });
     }
-
-    // Default to Internal Server Error
+ 
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       error: ErrorMessages.INTERNAL_ERROR,

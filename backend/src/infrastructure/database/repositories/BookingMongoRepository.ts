@@ -96,12 +96,12 @@ export class BookingMongoRepository implements IBookingRepository {
       if (filters.endDate) query["timestamps.createdAt"].$lte = filters.endDate;
     }
 
-    // 4. ✅ NEW: Category Filter (Using Snapshots)
+    // 4.   NEW: Category Filter (Using Snapshots)
     if (filters.categoryId) {
         query["snapshots.service.categoryId"] = filters.categoryId;
     }
 
-    // 5. ✅ ENHANCED: Search Logic (Service, Customer, or Technician Name)
+    // 5.   ENHANCED: Search Logic (Service, Customer, or Technician Name)
     if (filters.search) {
       const searchRegex = new RegExp(filters.search, 'i');
       const orConditions: any[] = [
@@ -116,7 +116,7 @@ export class BookingMongoRepository implements IBookingRepository {
       query.$or = orConditions;
     }
 
-    // 6. ✅ NEW: Dynamic Sorting Logic
+    // 6.   NEW: Dynamic Sorting Logic
     let sort: any = { "timestamps.createdAt": -1 }; // Default: Newest first
 
     if (filters.sortBy === "oldest") {

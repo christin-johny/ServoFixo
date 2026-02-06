@@ -45,6 +45,7 @@ export interface ReviewResponse {
 }
 
 export interface BookingResponse {
+  meta: any;
   id: string;
   status: string;  
   serviceId: string;
