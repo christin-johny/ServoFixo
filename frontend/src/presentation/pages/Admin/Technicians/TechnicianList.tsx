@@ -7,10 +7,10 @@ import { useNotification } from "../../../hooks/useNotification";
 import * as techRepo from "../../../../infrastructure/repositories/admin/technicianRepository";
 import type { TechnicianListItem, UpdateTechnicianPayload } from "../../../../infrastructure/repositories/admin/technicianRepository";
 
-import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
-import { DataTable, type TableColumn } from "../../../components/Admin/Shared/DataTable";
+import { SearchFilterBar, PaginationBar } from "../../../components/Shared/Table/DataTableControls";
+import { DataTable, type TableColumn } from "../../../components/Shared/Table/DataTable";
 import TechnicianEditModal from "../../../components/Admin/technician/TechnicianEditModal";
-import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
+import ConfirmModal from "../../../components/Shared/ConfirmModal/ConfirmModal";
 
 const TechnicianList: React.FC = () => {
   const { showSuccess, showError } = useNotification();

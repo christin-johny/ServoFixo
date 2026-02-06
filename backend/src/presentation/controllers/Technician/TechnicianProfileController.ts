@@ -79,7 +79,7 @@ getOnboardingStatus = async (req: Request, res: Response): Promise<Response> => 
         folder: "avatars",
       });
 
-      // ✅ FIX: Frontend expects { url: "..." }
+      //  FIX: Frontend expects { url: "..." }
       return res.status(StatusCodes.OK).json({ url });
     } catch (err) {
       return this.handleError(res, err, LogEvents.AVATAR_UPLOAD_INIT);
@@ -97,7 +97,7 @@ getOnboardingStatus = async (req: Request, res: Response): Promise<Response> => 
         lng: lng ? parseFloat(lng) : undefined,
       });
 
-      // ✅ FIX: Match repository expectations
+      //  FIX: Match repository expectations
       return res.status(StatusCodes.OK).json({ isOnline });
     } catch (err) {
       return this.handleError(res, err, LogEvents.TECH_STATUS_TOGGLE_INIT);

@@ -15,7 +15,6 @@ export class GetServiceByIdUseCase {
     this._logger.info(`${LogEvents.SERVICE_BY_ID_FETCH} - ID: ${id}`);
 
     const service = await this._serviceRepo.findById(id);
-    
     if (!service) {
       this._logger.warn(`${LogEvents.SERVICE_NOT_FOUND} - ID: ${id}`);
       return null;

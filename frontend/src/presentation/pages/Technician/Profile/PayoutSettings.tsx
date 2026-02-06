@@ -11,8 +11,7 @@ import type { RootState } from "../../../../store/store";
 import { dismissRequestAlert } from "../../../../store/technicianSlice";
 import { dismissRequestNotification } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
 import { AlertCard } from "../../../components/Shared/AlertCard/AlertCard";
-
-//   Import the Bank Update Modal
+ 
 import BankUpdateModal from "../../../components/Technician/Modals/BankUpdateModal";
 
 const PayoutSettings: React.FC = () => {

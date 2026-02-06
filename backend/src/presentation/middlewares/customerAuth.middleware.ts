@@ -28,6 +28,7 @@ export function makeCustomerAuthMiddleware(jwtService: IJwtService) {
       }
 
       (req as any).userId = payload.sub;
+      (req as any).role = payload.type;
 
       return next();
     } catch (err) {

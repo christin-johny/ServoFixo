@@ -49,7 +49,7 @@ create = async (req: Request, res: Response): Promise<Response> => {
 
       const result = await this._createUseCase.execute(dto, fileData);
 
-      // ✅ FIX: Match response.data.data for createCategory
+      //  FIX: Match response.data.data for createCategory
       return res.status(StatusCodes.CREATED).json({
         success: true,
         message: SuccessMessages.CATEGORY_CREATED,
@@ -71,7 +71,7 @@ create = async (req: Request, res: Response): Promise<Response> => {
 
       const result = await this._getAllUseCase.execute(params);
 
-      // ✅ FIX: Match response.data for getCategories
+      //  FIX: Match response.data for getCategories
       // We return the paginated object directly
       return res.status(StatusCodes.OK).json(result);
     } catch (error) {
@@ -97,7 +97,7 @@ create = async (req: Request, res: Response): Promise<Response> => {
 
       const result = await this._editUseCase.execute(id, dto, fileData);
 
-      // ✅ FIX: Match response.data.data for updateCategory
+      //  FIX: Match response.data.data for updateCategory
       return res.status(StatusCodes.OK).json({
         success: true,
         message: SuccessMessages.CATEGORY_UPDATED,

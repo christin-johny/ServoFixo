@@ -1,22 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { 
-  Power, MapPin, Star, DollarSign, ShieldAlert, Briefcase, Timer, AlertCircle, Loader2, type LucideIcon, ChevronRight
+  Power, MapPin, Star, DollarSign, ShieldAlert, Briefcase, 
+  Timer, AlertCircle, Loader2, type LucideIcon, ChevronRight,
+  PlayCircle, Clock
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useNotification } from "../../../hooks/useNotification";
 import type { RootState, AppDispatch } from "../../../../store/store";
 import { setAvailability } from "../../../../store/technicianSlice";
 import { toggleOnlineStatus } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
+import { 
+    getTechnicianJobs, 
+    type JobHistoryParams 
+} from "../../../../infrastructure/repositories/technician/technicianBookingRepository";
+
+// --- Types ---
 
 interface ProfileWithRejection {
   globalRejectionReason?: string;
   rejectionReason?: string;
 }
- 
+
 interface ApiError {
   response?: { data?: { error?: string; message?: string } };
   message?: string;     
+}
+
+// Strict Type for the Active Job Data
+interface ActiveJobSummary {
+  id: string;
+  status: string;
+  service: { name: string };
+  location: { address: string };
+  snapshots?: { service?: { name: string } };
+}
+
+interface JobsApiResponse {
+  data: ActiveJobSummary[];
+  total: number;
 }
  
 const extractErrorMessage = (error: unknown): string => {
@@ -34,9 +56,11 @@ const TechnicianDashboard: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const dispatch = useDispatch<AppDispatch>();
   
-  const { profile} = useSelector((state: RootState) => state.technician);
+  const { profile } = useSelector((state: RootState) => state.technician);
   const [isLocating, setIsLocating] = useState(false);
   const { showSuccess, showError } = useNotification();
+
+  const [activeJob, setActiveJob] = useState<ActiveJobSummary | null>(null);
 
   const status = profile?.verificationStatus || "PENDING";
   const onboardingStep = profile?.onboardingStep || 0;
@@ -53,8 +77,34 @@ const TechnicianDashboard: React.FC = () => {
   
   const profileRejection = profile as unknown as ProfileWithRejection;
   const rawGlobalReason = profileRejection?.globalRejectionReason || profileRejection?.rejectionReason;
-  // Don't show generic text if we have specific docs
   const showGlobalReason = rawGlobalReason && rawGlobalReason !== "Invalid Documents";
+
+  // --- FETCH ACTIVE JOB (Including 'COMPLETED' for Payment Pending) ---
+  useEffect(() => {
+    if (isVerified) {
+        const fetchActiveJob = async () => {
+            try {
+                //  UPDATED: Added 'COMPLETED' to the list so unpaid jobs show up here
+                const queryParams: JobHistoryParams = { 
+                    status: ['ACCEPTED', 'EN_ROUTE', 'REACHED', 'IN_PROGRESS', 'EXTRAS_PENDING', 'COMPLETED'],
+                    page: 1,
+                    limit: 1
+                };
+
+                const response = await getTechnicianJobs(queryParams) as unknown as JobsApiResponse;
+                
+                if (response.data && response.data.length > 0) {
+                     setActiveJob(response.data[0]);
+                } else {
+                     setActiveJob(null);
+                }
+            } catch (err) {
+                console.error("Failed to fetch active job", err);
+            }
+        };
+        fetchActiveJob();
+    }
+  }, [isVerified]);
 
   const handleFixProfile = () => {
       if (hasDocRejection && !showGlobalReason) {
@@ -64,51 +114,93 @@ const TechnicianDashboard: React.FC = () => {
       }
   };
 
-const handleToggleOnline = async () => {
-  if (!isVerified) return;
-  setIsLocating(true);
+  const handleToggleOnline = async () => {
+    if (!isVerified) return;
+    setIsLocating(true);
 
-  try {
-    if (isOnline) {
-      // Offline logic is simple and synchronous-like
-      const response = await toggleOnlineStatus({ isOnline: false });
-      dispatch(setAvailability(response.isOnline));
-      showSuccess("You are now Offline");
-      setIsLocating(false); // Stop loading here
-    } else {
-      if (!navigator.geolocation) throw new Error("Geolocation not supported");
+    try {
+      if (isOnline) {
+        const response = await toggleOnlineStatus({ isOnline: false });
+        dispatch(setAvailability(response.isOnline));
+        showSuccess("You are now Offline");
+        setIsLocating(false); 
+      } else {
+        if (!navigator.geolocation) throw new Error("Geolocation not supported");
 
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          //   TRY/CATCH MUST BE INSIDE THE CALLBACK
-          try {
-            const { latitude, longitude } = position.coords;
-            const response = await toggleOnlineStatus({ 
-              isOnline: true, 
-              lat: latitude, 
-              lng: longitude 
-            });
-            dispatch(setAvailability(response.isOnline));
-            showSuccess("You are now Online!");
-          } catch (err: unknown) {
-            //   This will now catch the "outside service zones" error
-            showError(extractErrorMessage(err));
-          } finally {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            try {
+              const { latitude, longitude } = position.coords;
+              const response = await toggleOnlineStatus({ 
+                isOnline: true, 
+                lat: latitude, 
+                lng: longitude 
+              });
+              dispatch(setAvailability(response.isOnline));
+              showSuccess("You are now Online!");
+            } catch (err: unknown) {
+              showError(extractErrorMessage(err));
+            } finally {
+              setIsLocating(false);
+            }
+          },
+          () => {
+            showError("Could not determine location. Please check GPS permissions.");
             setIsLocating(false);
-          }
-        },
-        () => {
-          showError("Could not determine location. Please check GPS permissions.");
-          setIsLocating(false);
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      }
+    } catch (err: unknown) {
+      showError(extractErrorMessage(err));
+      setIsLocating(false);
     }
-  } catch (err: unknown) {
-    showError(extractErrorMessage(err));
-    setIsLocating(false);
-  }
-};
+  };
+
+  // --- HELPER: Render Correct Banner Style ---
+  const renderActiveJobBanner = () => {
+    if (!activeJob) return null;
+
+    const isPaymentPending = activeJob.status === 'COMPLETED';
+
+    return (
+        <div 
+            onClick={() => navigate(`/technician/jobs/${activeJob.id}`)}
+            className={`
+                border rounded-lg p-3 flex items-center justify-between gap-3 shadow-sm cursor-pointer transition-colors group
+                ${isPaymentPending ? 'bg-amber-50 border-amber-200 hover:bg-amber-100' : 'bg-green-50 border-green-200 hover:bg-green-100'}
+            `}
+        >
+          <div className="flex items-center gap-3">
+             <div className={`
+                 p-2 rounded-full transition-colors group-hover:bg-white
+                 ${isPaymentPending ? 'bg-amber-100 text-amber-700 group-hover:text-amber-800' : 'bg-green-100 text-green-700 group-hover:text-green-800'}
+             `}>
+                {isPaymentPending ? (
+                    <Clock className="w-5 h-5 animate-pulse" />
+                ) : (
+                    <PlayCircle className="w-5 h-5 animate-pulse" />
+                )}
+             </div>
+             <div>
+               <h3 className={`text-sm font-bold ${isPaymentPending ? 'text-amber-900' : 'text-green-900'}`}>
+                   {isPaymentPending ? "Payment Pending" : "Active Job in Progress"}
+               </h3>
+               <p className={`text-xs ${isPaymentPending ? 'text-amber-700' : 'text-green-700'}`}>
+                  {activeJob.snapshots?.service?.name || activeJob.service.name} • {isPaymentPending ? "Tap to collect" : "Tap to resume"}
+               </p>
+             </div>
+          </div>
+          <div className={`
+              p-1.5 rounded-full shadow-sm bg-white
+              ${isPaymentPending ? 'text-amber-700' : 'text-green-700'}
+          `}>
+             <ChevronRight className="w-4 h-4" />
+          </div>
+        </div>
+    );
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       
@@ -135,7 +227,7 @@ const handleToggleOnline = async () => {
         </button>
       </div>
 
-      {/* --- STATUS BANNERS (Compact) --- */}
+      {/* --- STATUS BANNERS --- */}
 
       {/* Case A: Incomplete */}
       {isIncomplete && (
@@ -164,7 +256,7 @@ const handleToggleOnline = async () => {
         </div>
       )}
 
-      {/* Case C: REJECTED (Compact & Readable) */}
+      {/* Case C: REJECTED */}
       {isRejected && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
           <div className="flex items-start md:items-center gap-3">
@@ -189,18 +281,21 @@ const handleToggleOnline = async () => {
         </div>
       )}
 
+      {/* --- NEW: ACTIVE JOB BANNER (Green or Amber) --- */}
+      {renderActiveJobBanner()}
+
       {/* --- STATS GRID --- */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon={DollarSign} label="Today's Earnings" value={"--"} color="text-green-600" bg="bg-green-50" />
+        <StatCard icon={DollarSign} label="Today's Earnings" value={profile?.walletBalance?.currentBalance ? `₹${profile.walletBalance.currentBalance}` : "--"} color="text-green-600" bg="bg-green-50" />
         <StatCard icon={MapPin} label="Active Zone" value={isVerified ? "Active" : "--"} color="text-blue-600" bg="bg-blue-50" />
         <StatCard icon={Star} label="Rating" value={isVerified ? (profile?.rating?.average || "New") : "--"} color="text-yellow-500" bg="bg-yellow-50" />
-        <StatCard icon={Briefcase} label="Jobs Done" value={"--"} color="text-purple-600" bg="bg-purple-50" />
+        <StatCard icon={Briefcase} label="Jobs Done" value={profile?.rating?.count || "--"} color="text-purple-600" bg="bg-purple-50" />
       </div>
 
     </div>
   );
 };
- 
+
 interface StatCardProps {
   icon: LucideIcon;
   label: string;

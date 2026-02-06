@@ -13,10 +13,26 @@ export interface INotificationService {
       metadata: Record<string, string>;
     }
   ): Promise<void>;
+
   sendUrgentAlert(
     recipientId: string,
     title: string,
     body: string,
     metadata: Record<string, string>
+  ): Promise<void>;
+
+  /**
+   * Triggers the "New Job" popup via Socket.IO
+   */
+  sendBookingRequest(
+    technicianId: string, 
+    payload: {
+      bookingId: string;
+      serviceName: string;
+      earnings: number;
+      distance: string;
+      address: string;
+      expiresAt: Date;
+    }
   ): Promise<void>;
 }

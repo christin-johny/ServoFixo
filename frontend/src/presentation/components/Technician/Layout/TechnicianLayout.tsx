@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Briefcase, 
   User,
   LogOut,
+  ChevronRight, 
+  CreditCard 
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../../../store/store";
@@ -16,19 +18,42 @@ import {
   fetchTechnicianFailure,
 } from "../../../../store/technicianSlice";
 import { useNotification } from "../../../hooks/useNotification";
-import ConfirmModal from "../../Admin/Modals/ConfirmModal";
+import ConfirmModal from "../../Shared/ConfirmModal/ConfirmModal";
 import LoaderFallback from "../../../components/LoaderFallback";
 
 import { getTechnicianProfileStatus } from "../../../../infrastructure/repositories/technician/technicianProfileRepository";
 import { technicianLogout } from "../../../../infrastructure/repositories/technician/technicianAuthRepository";
-import NotificationBell from "./NotificationBell";
-import { useTechnicianNotifications } from "../../../hooks/useTechnicianNotifications";
+import { getTechnicianJobs } from "../../../../infrastructure/repositories/technician/technicianBookingRepository"; 
 
+import NotificationBell from "../../Shared/Notification/NotificationBell";
+import { useTechnicianNotifications } from "../../../hooks/useTechnicianNotifications";
+ 
+//   Updated Imports: Specific Event Types
+import { 
+  socketService, 
+  type BookingConfirmedEvent,
+  type BookingStatusEvent,
+  type BookingCancelledEvent
+} from "../../../../infrastructure/api/socketClient"; 
+import IncomingJobModal from "../Job/IncomingJobModal";
+
+// --- Types ---
 interface NavItem {
   label: string;
   path: string;
   icon: React.ElementType;
 }
+
+interface JobStatusSummary {
+  id: string;
+  status: string;
+}
+
+//   Union Type for Global Socket Events
+type GlobalJobEvent = 
+  | BookingConfirmedEvent 
+  | BookingStatusEvent 
+  | BookingCancelledEvent;
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", path: "/technician", icon: LayoutDashboard },
@@ -129,18 +154,77 @@ const TechnicianLayout: React.FC = () => {
   const { showSuccess, showError } = useNotification();
   const location = useLocation();
 
-  //   Pulling state and hooks
-  const { profile, loading } = useSelector((state: RootState) => state.technician);
-  const { accessToken } = useSelector((state: RootState) => state.auth);
-  const { fetchNotifications } = useTechnicianNotifications(); //
-  //   Corrected: Fetch notifications once globally when accessToken is available
-useEffect(() => {
-    if (accessToken) {
-      fetchNotifications(); // Fetches history and starts Socket.io listener
-    }
-  }, [accessToken, fetchNotifications]);
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [activeJobStatus, setActiveJobStatus] = useState<string | null>(null);
 
-useEffect(() => {
+  const { profile, loading } = useSelector((state: RootState) => state.technician);
+  const { accessToken, user } = useSelector((state: RootState) => state.auth);
+  const { fetchNotifications } = useTechnicianNotifications();
+
+  // --- 1. INITIALIZE & LISTEN ---
+  useEffect(() => {
+    if (accessToken && user?.id) {
+        socketService.connect(user.id, "TECHNICIAN");
+        fetchNotifications();
+    }
+  }, [accessToken, user?.id, fetchNotifications]);
+
+  // --- 2. GLOBAL REAL-TIME JOB LISTENER ---
+  const checkActiveJob = useCallback(async () => {
+    if (!accessToken) return;
+    try {
+      const response = await getTechnicianJobs(); 
+      // Safe casting since we know the shape from repository
+      const jobs = response.data as unknown as JobStatusSummary[];
+
+      const runningJob = jobs.find((j) => 
+          ['ACCEPTED', 'EN_ROUTE', 'REACHED', 'IN_PROGRESS', 'EXTRAS_PENDING', 'COMPLETED'].includes(j.status)
+      );
+      
+      if (runningJob) {
+          console.log("⚡ [Layout] Active Job Detected:", runningJob.id);
+          setActiveJobId(runningJob.id);
+          setActiveJobStatus(runningJob.status); 
+      } else {
+          setActiveJobId(null);
+          setActiveJobStatus(null);
+      }
+    } catch (error) {
+      console.error("Failed to check active job", error);
+    }
+  }, [accessToken]);
+
+  // Initial Check on Mount & Route Change
+  useEffect(() => {
+    checkActiveJob();
+  }, [checkActiveJob, location.pathname]); 
+
+  //   LISTEN FOR SOCKET EVENTS (Strictly Typed)
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // Handler accepts specific Union Type instead of 'any'
+    const handleGlobalUpdate = (data: GlobalJobEvent) => {
+        console.log("⚡ [Layout] Global Update Received:", data);
+        
+        // Re-check the API to see if we have a new active job
+        checkActiveJob();
+    };
+
+    // Bind Listeners
+    socketService.onBookingConfirmed(handleGlobalUpdate); // Force Assign
+    socketService.onBookingStatusUpdate(handleGlobalUpdate); // Status Change
+    socketService.onBookingCancelled(handleGlobalUpdate); // Cancelled
+
+    return () => {
+        // Cleanup listeners if necessary
+        // socketService.offTrackingListeners(); 
+    };
+  }, [user?.id, checkActiveJob]);
+
+
+  // --- 3. PROFILE DATA ---
+  useEffect(() => {
     if (accessToken && !profile) {
       const loadProfile = async () => {
         dispatch(fetchTechnicianStart());
@@ -154,6 +238,7 @@ useEffect(() => {
       loadProfile();
     }
   }, [accessToken, profile, dispatch]);
+
 
   const isActive = (path: string) => {
     if (path === "/technician" && location.pathname !== "/technician") return false;
@@ -176,7 +261,20 @@ useEffect(() => {
     }
   };
 
+  const handleFooterClick = () => {
+    if (!activeJobId) return;
+    if (activeJobStatus === 'COMPLETED') {
+        navigate(`/technician/jobs/${activeJobId}/complete`); 
+    } else {
+        navigate(`/technician/jobs/${activeJobId}`);
+    }
+  };
+
   if (loading && !profile) return <LoaderFallback />;
+
+  const isOnActiveJobPage = activeJobId && (
+    location.pathname.includes(`/jobs/${activeJobId}`)
+  );
 
   return (
     <div className="min-h-screen bg-slate-50/50 flex flex-col md:flex-row font-sans text-gray-900">
@@ -184,6 +282,7 @@ useEffect(() => {
         <SidebarContent onLogoutClick={() => setIsLogoutModalOpen(true)} />
       </aside>
 
+      {/* Mobile Header */}
       <div className="md:hidden bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 h-16 flex items-center justify-between sticky top-0 z-40 shadow-sm transition-all">
         <div className="flex items-center gap-3">
           <img src="/assets/logo.png" alt="Logo" className="h-8 w-8 object-contain" />
@@ -191,10 +290,7 @@ useEffect(() => {
         </div>
         <div className="flex items-center gap-3">
           <NotificationBell />
-          <button
-            onClick={() => setIsLogoutModalOpen(true)}
-            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors active:scale-95"
-          >
+          <button onClick={() => setIsLogoutModalOpen(true)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors active:scale-95">
             <LogOut className="w-5 h-5" />
           </button>
         </div>
@@ -206,14 +302,11 @@ useEffect(() => {
             <div className="p-2 bg-white border border-gray-200 rounded-lg shadow-sm text-blue-600">
               <activeItem.icon className="w-5 h-5" strokeWidth={2} />
             </div>
-            <h2 className="text-lg font-bold text-gray-800 tracking-tight">
-              {activeItem.label}
-            </h2>
+            <h2 className="text-lg font-bold text-gray-800 tracking-tight">{activeItem.label}</h2>
           </div>
-
           <div className="flex items-center gap-4">
-            <div className="h-6 w-px bg-gray-200 mx-1"></div>
-            <NotificationBell/>
+             <div className="h-6 w-px bg-gray-200 mx-1"></div>
+             <NotificationBell/>
           </div>
         </header>
 
@@ -222,42 +315,57 @@ useEffect(() => {
         </div>
       </main>
 
+      {/*   DYNAMIC FLOATING STATUS BAR */}
+      {activeJobId && !isOnActiveJobPage && (
+        <div 
+          onClick={handleFooterClick}
+          className={`fixed bottom-[70px] md:bottom-8 left-4 right-4 md:left-[270px] md:right-8 
+             ${activeJobStatus === 'COMPLETED' ? 'bg-green-600 border-green-500' : 'bg-gray-900 border-gray-700'} 
+             text-white p-3 rounded-xl shadow-2xl z-50 flex items-center justify-between cursor-pointer animate-pulse-slow border hover:scale-[1.01] transition-transform`}
+        >
+           <div className="flex items-center gap-3">
+              {activeJobStatus === 'COMPLETED' ? (
+                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-bounce">
+                     <CreditCard className="w-4 h-4 text-white" />
+                  </div>
+              ) : (
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping ml-2"></div>
+              )}
+              
+              <div>
+                 <p className="text-xs font-bold text-gray-200 uppercase tracking-wider">
+                     {activeJobStatus === 'COMPLETED' ? 'Waiting for Payment' : 'Job in Progress'}
+                 </p>
+                 <p className="text-[10px] text-gray-300">
+                     {activeJobStatus === 'COMPLETED' ? 'Tap to view invoice status' : 'New update available. Tap to view.'}
+                 </p>
+              </div>
+           </div>
+           <div className="bg-white/10 p-1.5 rounded-full">
+             <ChevronRight className="w-4 h-4 text-white" />
+           </div>
+        </div>
+      )}
+
+      {/* Mobile Bottom Nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)]">
         <div className="flex justify-around items-center px-2">
           {NAV_ITEMS.map((item) => {
             const active = isActive(item.path);
             return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`group flex flex-col items-center justify-center w-full py-3 space-y-1 transition-all duration-200 ${active ? "text-blue-600" : "text-gray-400 hover:text-gray-600"
-                  }`}
-              >
-                <div className={`relative p-1 rounded-full transition-all duration-300 ${active ? "bg-blue-50 transform -translate-y-1" : ""
-                  }`}>
-                  <item.icon
-                    className={`w-6 h-6 ${active ? "fill-blue-600 text-blue-600" : ""}`}
-                    strokeWidth={active ? 2.5 : 2}
-                  />
+              <button key={item.path} onClick={() => navigate(item.path)} className={`group flex flex-col items-center justify-center w-full py-3 space-y-1 transition-all duration-200 ${active ? "text-blue-600" : "text-gray-400 hover:text-gray-600"}`}>
+                <div className={`relative p-1 rounded-full transition-all duration-300 ${active ? "bg-blue-50 transform -translate-y-1" : ""}`}>
+                  <item.icon className={`w-6 h-6 ${active ? "fill-blue-600 text-blue-600" : ""}`} strokeWidth={active ? 2.5 : 2} />
                 </div>
-                <span className={`text-[10px] font-semibold transition-colors ${active ? "text-blue-600" : "text-gray-500"
-                  }`}>
-                  {item.label}
-                </span>
+                <span className={`text-[10px] font-semibold transition-colors ${active ? "text-blue-600" : "text-gray-500"}`}>{item.label}</span>
               </button>
             );
           })}
         </div>
       </div>
-
-      <ConfirmModal
-        isOpen={isLogoutModalOpen}
-        onClose={() => setIsLogoutModalOpen(false)}
-        onConfirm={handleLogoutConfirm}
-        title="Sign Out"
-        message="Are you sure you want to sign out of your account?"
-        confirmText="Sign Out"
-      />
+      
+      <ConfirmModal isOpen={isLogoutModalOpen} onClose={() => setIsLogoutModalOpen(false)} onConfirm={handleLogoutConfirm} title="Sign Out" message="Are you sure you want to sign out?" confirmText="Sign Out" />
+      <IncomingJobModal />
     </div>
   );
 };

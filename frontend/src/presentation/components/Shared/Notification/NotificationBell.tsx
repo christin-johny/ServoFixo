@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Bell } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../../../store/store';
-import NotificationInbox from './NotificationInbox';
+import NotificationInbox from '../../Technician/Layout/NotificationInbox';
 
 const NotificationBell: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);

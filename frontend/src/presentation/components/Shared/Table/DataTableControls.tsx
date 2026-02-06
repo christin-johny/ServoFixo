@@ -129,7 +129,7 @@ export const PaginationBar: React.FC<Pick<DataTableControlsProps, 'page' | 'tota
         </button>
       </div>
 
-      {/* Desktop Page Indicator (Unchanged) */}
+      {/* Desktop Page Indicator   */}
       <span className="hidden sm:inline text-xs sm:text-sm font-medium text-gray-500">
         Page <span className="font-bold text-gray-800">{page}</span> of {totalPages}
       </span>

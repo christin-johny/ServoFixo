@@ -8,8 +8,8 @@ import { formatDistanceToNow } from "date-fns";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { useNotification } from "../../../hooks/useNotification";
 import * as techRepo from "../../../../infrastructure/repositories/admin/technicianRepository";
-import { SearchFilterBar, PaginationBar } from "../../../components/Admin/Shared/DataTableControls";
-import { DataTable, type TableColumn } from "../../../components/Admin/Shared/DataTable";
+import { SearchFilterBar, PaginationBar } from "../../../components/Shared/Table/DataTableControls";
+import { DataTable, type TableColumn } from "../../../components/Shared/Table/DataTable";
 import PartnerRequestResolutionModal from "../../../components/Admin/Modals/TechnicianRequestResolutionModal";
  
 import type { TechnicianQueueItemDto } from "../../../../domain/types/TechnicianQueueDto";

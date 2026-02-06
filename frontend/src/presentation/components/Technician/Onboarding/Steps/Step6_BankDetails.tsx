@@ -56,7 +56,7 @@ const Step6_BankDetails: React.FC<Step6Props> = ({ onNext, onBack }) => {
           return;
         }
  
-        // Optimization: Don't re-fetch if unchanged
+        // Optimization: Don't re-fetch if 
         if (profile?.bankDetails?.ifscCode === code && formData.bankName) {
             setIfscVerified(true);
             return;

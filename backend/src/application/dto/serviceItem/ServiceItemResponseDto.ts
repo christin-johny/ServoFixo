@@ -9,6 +9,7 @@ export class ServiceItemResponseDto {
   specifications!: ServiceSpecificationDto[];
   imageUrls!: string[];
   isActive!: boolean;
+  bookingCount!:number;
   rating!: number;
   reviewCount!: number;
   createdAt!: Date;

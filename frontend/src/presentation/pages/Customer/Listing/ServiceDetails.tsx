@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // Added useNavigate
+import { useSelector } from 'react-redux'; // Added useSelector
+import { type RootState } from '../../../../store/store'; 
 import {
    Star,
    ShieldCheck,
@@ -18,35 +20,39 @@ import { useNotification } from "../../../hooks/useNotification";
 
 import * as serviceRepo from '../../../../infrastructure/repositories/customer/serviceRepository';
 import type { ServiceItem } from '../../../../domain/types/ServiceItem';
+import { getServiceReviews, type ReviewResponse } from "../../../../infrastructure/repositories/customer/customerBookingRepository";
 
-const MOCK_REVIEWS = [
-   {
-      id: 1,
-      name: "Arjun Mehta",
-      date: "2 days ago",
-      rating: 5,
-      comment: "Absolutely brilliant service! The technician arrived exactly on time.",
-   },
-];
+
+ 
 
 const ServiceDetails: React.FC = () => {
    const { id } = useParams<{ id: string }>();
+   const navigate = useNavigate();
    const { showSuccess } = useNotification();
-
+   const { user } = useSelector((state: RootState) => state.auth);
    const [service, setService] = useState<ServiceItem | null>(null);
    const [similarServices, setSimilarServices] = useState<ServiceItem[]>([]);
    const [loading, setLoading] = useState(true);
+   const [reviews, setReviews] = useState<ReviewResponse[]>([]);
 
-   useEffect(() => {
+useEffect(() => {
       window.scrollTo(0, 0);
       const fetchData = async () => {
          setLoading(true);
          try {
             if (!id) return;
+            // 1. Fetch Service Details
             const data = await serviceRepo.getServiceById(id);
             setService(data);
+            
+            // 2. Fetch Similar Services
             const services = await serviceRepo.getServices({categoryId: data.categoryId});
             setSimilarServices(services.filter(s=>s.id !== id));
+            
+            // 3.   FETCH REAL REVIEWS
+            const reviewsData = await getServiceReviews(id);
+            setReviews(reviewsData); // This updates the 'reviews' state
+
          } catch (err) {
             console.error("Failed to load service", err);
          } finally {
@@ -55,6 +61,23 @@ const ServiceDetails: React.FC = () => {
       };
       fetchData();
    }, [id]);
+
+   const handleBookNow = () => {
+      if (!service || !id) return;
+ 
+      if (!user) {  
+         navigate('/login'); 
+         return;
+      }
+ 
+      navigate('/booking/confirm', { 
+         state: { 
+            serviceId: id, 
+            serviceName: service.name, 
+            basePrice: service.basePrice 
+         } 
+      });
+   };
 
    const handleShare = async () => {
       const shareUrl = window.location.href;
@@ -80,6 +103,11 @@ const ServiceDetails: React.FC = () => {
 
    const displayPrice = service.basePrice;
    const images = service.imageUrls?.length > 0 ? service.imageUrls : ['https://via.placeholder.com/800x600'];
+
+   const formatCount = (n?: number) => {
+  if (!n) return 0;
+  return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n;
+};
 
    return (
       <div className="min-h-screen bg-white font-sans text-gray-900">
@@ -157,10 +185,21 @@ const ServiceDetails: React.FC = () => {
                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 break-words leading-tight">{service.name}</h1>
                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
                               <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg">
-                                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                 <span className="font-bold text-gray-900">4.8</span>
-                                 <span className="underline ml-1 text-xs">(124 reviews)</span>
-                              </div>
+                                 <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                                 
+                                 <span className="font-bold text-sm text-gray-900">
+                                    {service.rating || 0}</span>
+
+                                 <span className="text-xs text-gray-500 underline decoration-gray-400 ml-1">
+                                    ({service.reviewCount || 0} reviews)
+                                 </span>
+
+                                 <span className="text-xs text-gray-300">•</span>
+
+                                 <span className="text-xs font-medium text-gray-600">
+                                    {formatCount(service.bookingCount)} booked
+                                 </span>
+                                 </div>
                               <div className="flex items-center gap-1">
                                  <MapPin size={16} /> <span>Bengaluru</span>
                               </div>
@@ -200,20 +239,64 @@ const ServiceDetails: React.FC = () => {
                      </div>
                   </div>
 
-                  {/* Reviews */}
+                  {/* Reviews Section */}
                   <div className="pt-8 border-t border-gray-100">
-                     <h3 className="font-bold text-xl mb-6">Customer Reviews</h3>
-                     {MOCK_REVIEWS.map((review) => (
-                        <div key={review.id} className="flex gap-4 mb-6">
-                           <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-bold text-gray-500 shrink-0">
-                              {review.name.charAt(0)}
+                     <div className="flex items-center justify-between mb-6">
+                        <h3 className="font-bold text-xl">Customer Reviews</h3>
+                        <span className="text-sm text-gray-500">
+                           {reviews.length} total ratings
+                        </span>
+                     </div>
+                     
+                     <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+                        
+                        {/* Filter only reviews with comments */}
+                        {reviews.filter(r => r.comment && r.comment.trim() !== "").length > 0 ? (
+                           reviews
+                              .filter(r => r.comment && r.comment.trim() !== "") // Step 1: Filter
+                              .map((review) => (
+                                 <div key={review.id} className="flex gap-4 mb-6 pb-6 border-b border-gray-50 last:border-0 last:pb-0">
+                                    {/* Avatar */}
+                                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-bold text-gray-500 shrink-0 overflow-hidden shadow-sm border border-gray-200">
+                                       {review.customerAvatar ? (
+                                          <img src={review.customerAvatar} className="w-full h-full object-cover" alt="avatar" />
+                                       ) : (
+                                          (review.customerName || "U").charAt(0).toUpperCase()
+                                       )}
+                                    </div>
+                                    
+                                    {/* Content */}
+                                    <div className="flex-1">
+                                       <div className="flex justify-between items-start">
+                                          <div>
+                                             <span className="font-bold text-gray-900 block text-sm">{review.customerName}</span>
+                                             <span className="text-xs text-gray-400">
+                                                {new Date(review.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                                             </span>
+                                          </div>
+                                          
+                                          {/* Star Rating */}
+                                          <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-md">
+                                             <Star className="w-3 h-3 fill-yellow-400 text-yellow-400 mr-1" />
+                                             <span className="text-xs font-bold text-gray-700">{review.rating}.0</span>
+                                          </div>
+                                       </div>
+
+                                       <p className="text-gray-600 text-sm mt-3 leading-relaxed bg-gray-50/50 p-3 rounded-lg border border-gray-100">
+                                          "{review.comment}"
+                                       </p>
+                                    </div>
+                                 </div>
+                              ))
+                        ) : (
+                           <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                              <p className="text-gray-500 italic text-sm">No detailed reviews yet.</p>
+                              {reviews.length > 0 && (
+                                 <p className="text-xs text-gray-400 mt-1">(Only star ratings available)</p>
+                              )}
                            </div>
-                           <div>
-                              <div className="font-bold text-gray-900">{review.name}</div>
-                              <p className="text-gray-600 text-sm mt-1">{review.comment}</p>
-                           </div>
-                        </div>
-                     ))}
+                        )}
+                     </div>
                   </div>
                </div>
 
@@ -228,9 +311,12 @@ const ServiceDetails: React.FC = () => {
                         <ShieldCheck className="w-5 h-5 text-blue-600" />
                         <span className="text-sm font-medium">Secure Payment</span>
                      </div>
-                     <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 active:scale-[0.98]">
-                        Book Now
-                     </button>
+                     <button 
+            onClick={handleBookNow} 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 active:scale-[0.98]"
+        >
+            Book Now
+        </button>
                   </div>
                </div>
             </div>
@@ -268,9 +354,12 @@ const ServiceDetails: React.FC = () => {
                <span className="text-xs text-gray-500 font-medium block">Total Price</span>
                <span className="text-xl font-bold text-gray-900">₹{displayPrice}</span>
             </div>
-            <button className="bg-blue-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-blue-200 active:scale-95">
-               Book Now
-            </button>
+            <button 
+        onClick={handleBookNow}
+        className="bg-blue-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-blue-200 active:scale-95"
+    >
+        Book Now
+    </button>
          </div>
 
          <div className="fixed bottom-0 left-0 w-full z-50 md:hidden bg-white">

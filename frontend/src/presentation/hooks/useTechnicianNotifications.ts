@@ -5,7 +5,7 @@ import { socketService } from "../../infrastructure/api/socketClient";
 import { notificationRepository } from "../../infrastructure/repositories/technician/notificationRepository";
 import { addNotification, setNotifications, markRead, markAllRead, setLoading, setError } from "../../store/notificationSlice";
 import type { Notification } from "../../domain/types/Notification";
-import { useNotification } from "./useNotification"; //   Ensure this path is correct
+import { useNotification } from "./useNotification"; 
 
 export const useTechnicianNotifications = () => {
   const dispatch = useDispatch();
@@ -15,17 +15,18 @@ export const useTechnicianNotifications = () => {
 
   useEffect(() => {
     if (techId) {
-      socketService.connect(techId);
+      // UPDATE: Connect identifying as a TECHNICIAN
+      socketService.connect(techId, "TECHNICIAN");
 
       socketService.onNotification((notification: Notification) => {
-        
         dispatch(addNotification(notification));
-        
         showSuccess(`New Alert: ${notification.title}`);
       });
     }
 
     return () => {
+      // We don't necessarily want to disconnect strictly here if other components need it,
+      // but we definitely want to stop listening to notifications for this hook instance.
       socketService.offNotification();
     };
   }, [techId, dispatch, showSuccess]);

@@ -70,7 +70,7 @@ export class AdminServiceItemController extends BaseController {
 
       const result = await this._createUseCase.execute(dto, fileData);
 
-      // ✅ Match response.data.serviceItem expected by repository
+      //  Match response.data.serviceItem expected by repository
       return res.status(StatusCodes.CREATED).json({
         message: SuccessMessages.SERVICE_CREATED,
         serviceItem: result,
@@ -92,7 +92,7 @@ export class AdminServiceItemController extends BaseController {
 
       const result = await this._getAllUseCase.execute(params);
       
-      // ✅ Match response.data directly for getServices
+      //  Match response.data directly for getServices
       return res.status(StatusCodes.OK).json(result);
     } catch (err) {
       return this.handleError(res, err, LogEvents.SERVICE_GET_ALL_ERROR);
@@ -131,7 +131,7 @@ export class AdminServiceItemController extends BaseController {
         imagesToDelete: parsedDeleteList,
       });
 
-      // ✅ Match response.data.serviceItem
+      //  Match response.data.serviceItem
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.SERVICE_UPDATED,
         serviceItem: result,

@@ -42,7 +42,7 @@ export class AdminAuthController extends BaseController {
 
       this._logger.info(`${LogEvents.AUTH_LOGIN_SUCCESS} (Admin) - Email: ${email}`);
       
-      // ✅ FIX: Match the repository expectation. 
+      //  FIX: Match the repository expectation. 
       // Instead of wrapping in 'data', we return accessToken at the level the repo expects.
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.LOGIN_SUCCESS,
@@ -68,7 +68,7 @@ export class AdminAuthController extends BaseController {
 
       this._logger.info(`${LogEvents.AUTH_LOGOUT_SUCCESS} (Admin)`);
       
-      // ✅ Aligned with repository resp.data
+      //  Aligned with repository resp.data
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.LOGOUT_SUCCESS,
       });

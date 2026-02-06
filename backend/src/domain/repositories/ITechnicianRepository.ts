@@ -33,6 +33,7 @@ export interface VerificationQueueFilters {
   type?: QueueType;
 }
 
+
 export interface ITechnicianRepository extends IBaseRepository<Technician> {
   findByEmail(email: string): Promise<Technician | null>;
   findByPhone(phone: string): Promise<Technician | null>;
@@ -67,12 +68,20 @@ export interface ITechnicianRepository extends IBaseRepository<Technician> {
     lat: number, 
     lng: number
   ): Promise<boolean>;
+  findRecommendedForAdmin(params: { 
+      zoneId: string; 
+      serviceId: string; 
+      search?: string 
+  }): Promise<Technician[]>;
 
   addServiceRequest(id: string, request: ServiceRequest): Promise<void>;
   addZoneRequest(id: string, request: ZoneRequest): Promise<void>;
   addBankUpdateRequest(id: string, request: BankUpdateRequest): Promise<void>;
   updatePayoutStatus(id: string, status: PayoutStatus): Promise<void>;
   dismissRequest(technicianId: string, requestId: string): Promise<void>;
+  updateAvailabilityStatus(id: string, isOnJob: boolean): Promise<void>;
+  addRating(id: string, rating: number): Promise<void>;
+
 }
 
 export { TechnicianUpdatePayload };

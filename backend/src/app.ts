@@ -8,8 +8,13 @@ import { connectDatabase } from "./infrastructure/config/Database";
 import cookieParser from "cookie-parser";
 import passport from "./infrastructure/security/PassportConfig";
 import { SocketServer } from "./infrastructure/socket/SocketServer"; 
-import { logger } from "./infrastructure/di/Container";  
-
+import { 
+  bookingRepo, 
+  technicianRepo, 
+  notificationService, 
+  logger 
+} from "./infrastructure/di/Container";
+import { BookingTimeoutScheduler } from "./infrastructure/scheduler/BookingTimeoutScheduler";
 const app = express();
 const httpServer = createServer(app);  
 
@@ -29,16 +34,27 @@ app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(passport.initialize());
 
+const timeoutScheduler = new BookingTimeoutScheduler(
+  bookingRepo,
+  technicianRepo,
+  notificationService,
+  logger
+);
+timeoutScheduler.start();
 // Routes
 import adminRoutes from "./presentation/routes/admin";
 import customerRoutes from "./presentation/routes/customer/index";
 import technicianRoutes from './presentation/routes/technician/index.ts'
 import globalAuthRouter from './presentation/routes/GlobalAuthRouter';
+import bookingRoutes from './presentation/routes/booking.routes';
+import webhookRoutes from "./presentation/routes/webhook.routes";
 
 app.use('/api/auth', globalAuthRouter);
 app.use("/api/admin", adminRoutes);
 app.use("/api/customer", customerRoutes);
 app.use("/api/technician", technicianRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/webhooks", webhookRoutes);
 
 export const startServer = async () => {
   await connectDatabase();

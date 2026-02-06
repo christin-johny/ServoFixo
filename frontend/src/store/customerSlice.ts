@@ -11,6 +11,7 @@ export interface CustomerProfile {
   googleId?: string;
   createdAt?: string;
 }
+
 export interface Coordinates {
   lat: number;
   lng: number;
@@ -46,6 +47,19 @@ interface CustomerState {
   loading: boolean;
   addressLoading: boolean; 
   error: string | null;
+  
+  // --- Persistent Booking State ---
+  activeBookingId: string | null;
+  activeBookingStatus: string | null;
+  
+  //  NEW: Store Technician details here
+  activeTechnician: {
+      name: string;
+      photo?: string;
+      phone?: string;
+      vehicle?: string;
+      otp?: string;
+  } | null;
 }
 
 const initialState: CustomerState = {
@@ -57,6 +71,9 @@ const initialState: CustomerState = {
   loading: false,
   addressLoading: false,
   error: null,
+  activeBookingId: null,
+  activeBookingStatus: null,
+  activeTechnician: null, 
 };
 
 const customerSlice = createSlice({
@@ -82,35 +99,54 @@ const customerSlice = createSlice({
       state.addressLoading = false;
       state.addresses = action.payload;
     },
-
-setCurrentLocation(state, action: PayloadAction<
-  | string 
-  | { name: string; coords: Coordinates; isManual?: boolean } //   Changed from lat/lng to coords
->) {
-  if (typeof action.payload === 'string') {
-    state.currentLocationName = action.payload;
-  } else {
-    state.currentLocationName = action.payload.name;
-    state.coords = action.payload.coords; //   Correctly mapping the nested object
-    state.isManualLocation = action.payload.isManual ?? true;
-  }
-},
+    setCurrentLocation(state, action: PayloadAction<
+      | string 
+      | { name: string; coords: Coordinates; isManual?: boolean }
+    >) {
+      if (typeof action.payload === 'string') {
+        state.currentLocationName = action.payload;
+      } else {
+        state.currentLocationName = action.payload.name;
+        state.coords = action.payload.coords;
+        state.isManualLocation = action.payload.isManual ?? true;
+      }
+    },
     clearCustomerData() {
       return initialState;
     },
     updateProfileSuccess(state, action: PayloadAction<Partial<CustomerProfile>>) {
-    if (state.profile) {
-      state.profile = { ...state.profile, ...action.payload };
+      if (state.profile) {
+        state.profile = { ...state.profile, ...action.payload };
+      }
+    },
+    updateAvatar(state, action: PayloadAction<string>) {
+      if (state.profile) {
+        state.profile.avatarUrl = action.payload;
+      }
+    },
+    // --- Active Booking Reducers ---
+    setActiveBooking(state, action: PayloadAction<{ id: string; status: string }>) {
+      state.activeBookingId = action.payload.id;
+      state.activeBookingStatus = action.payload.status;
+    },
+    
+    //  ADDED THIS REDUCER
+    setActiveTechnician(state, action: PayloadAction<CustomerState['activeTechnician']>) {
+        state.activeTechnician = action.payload;
+    },
+
+    clearActiveBooking(state) {
+      state.activeBookingId = null;
+      state.activeBookingStatus = null;
+      state.activeTechnician = null; 
+    },
+    updateActiveBookingStatus(state, action: PayloadAction<string>) {
+      state.activeBookingStatus = action.payload;
     }
-  },
-  updateAvatar(state, action: PayloadAction<string>) {
-    if (state.profile) {
-      state.profile.avatarUrl = action.payload;
-    }
-  },
   },
 });
 
+//  ADDED setActiveTechnician TO EXPORTS BELOW
 export const {
   fetchProfileStart,
   fetchProfileSuccess,
@@ -121,6 +157,10 @@ export const {
   clearCustomerData,
   updateProfileSuccess,
   updateAvatar,
+  setActiveBooking,
+  setActiveTechnician, 
+  clearActiveBooking,
+  updateActiveBookingStatus
 } = customerSlice.actions;
 
 export default customerSlice.reducer;

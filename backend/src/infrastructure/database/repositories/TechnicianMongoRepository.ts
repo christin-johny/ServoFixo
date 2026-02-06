@@ -23,6 +23,9 @@ import { ZoneModel } from "../mongoose/models/ZoneModel";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 
 export class TechnicianMongoRepository implements ITechnicianRepository {
+  
+  // --- CRUD OPERATIONS ---
+
   async create(technician: Technician): Promise<Technician> {
     const persistenceData = this.toPersistence(technician);
     const doc = await TechnicianModel.create(persistenceData);
@@ -53,6 +56,8 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     return !!result;
   }
 
+  // --- FINDERS ---
+
   async findById(id: string): Promise<Technician | null> {
     const doc = await TechnicianModel.findOne({
       _id: id,
@@ -71,6 +76,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     return this.toDomain(doc);
   }
 
+  // Used for Auth checks to see if email exists (even if deleted/suspended)
   async findByEmailOnly(email: string): Promise<Technician | null> {
     const doc = await TechnicianModel.findOne({
       email: email.toLowerCase(),
@@ -88,12 +94,19 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     return this.toDomain(doc);
   }
 
+  // --- ADMIN LISTS ---
+
+  /**
+   * "All Technicians" Tab
+   */
   async findAllPaginated(
     page: number,
     limit: number,
     filters: TechnicianFilterParams
   ): Promise<PaginatedTechnicianResult> {
     const query: FilterQuery<TechnicianDocument> = { isDeleted: { $ne: true } };
+
+    // Text Search (Name, Email, Phone)
     if (filters.search) {
       const searchRegex = new RegExp(filters.search, "i");
       query.$or = [
@@ -102,13 +115,19 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
         { phone: searchRegex },
       ];
     }
+
+    // Specific Filters
     if (filters.status) query.verificationStatus = filters.status;
     if (filters.zoneId) query.zoneIds = filters.zoneId;
     if (filters.categoryId) query.categoryIds = filters.categoryId;
-    if (filters.isOnline !== undefined)
+    
+    // Boolean Filter (needs strict check against undefined)
+    if (filters.isOnline !== undefined) {
       query["availability.isOnline"] = filters.isOnline;
+    }
 
     const skip = (page - 1) * limit;
+
     const [docs, total] = await Promise.all([
       TechnicianModel.find(query)
         .skip(skip)
@@ -117,18 +136,29 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
         .exec(),
       TechnicianModel.countDocuments(query),
     ]);
-    return { data: docs.map((doc) => this.toDomain(doc)), total, page, limit };
+
+    return { 
+        data: docs.map((doc) => this.toDomain(doc)), 
+        total, 
+        page, 
+        limit 
+    };
   }
 
+  /**
+   * "Verification Queue" Tabs (Onboarding vs Maintenance)
+   */
   async findPendingVerification(
     filters: VerificationQueueFilters
   ): Promise<{ technicians: Technician[]; total: number }> {
     const skip = (filters.page - 1) * filters.limit;
+    let query: FilterQuery<TechnicianDocument> = { isDeleted: { $ne: true } };
 
-    let query: FilterQuery<TechnicianDocument> = {};
-
+    // 1. Differentiate Queue Type
     if (filters.type === "MAINTENANCE") {
+      // Look for any pending sub-requests
       query = {
+        ...query,
         $or: [
           { "serviceRequests.status": "PENDING" },
           { "zoneRequests.status": "PENDING" },
@@ -136,21 +166,26 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
         ],
       };
     } else {
+      // Default: New Onboarding
       query.verificationStatus = "VERIFICATION_PENDING";
     }
 
+    // 2. Search Logic
     if (filters.search) {
+      const searchRegex = new RegExp(filters.search, "i");
       query.$and = [
-        { ...query },
+        { ...query }, // Preserve previous conditions
         {
           $or: [
-            { name: { $regex: filters.search, $options: "i" } },
-            { email: { $regex: filters.search, $options: "i" } },
-            { phone: { $regex: filters.search, $options: "i" } },
+            { name: searchRegex },
+            { email: searchRegex },
+            { phone: searchRegex },
           ],
         },
       ];
     }
+
+    // 3. Sorting
     const sortDir = filters.sort === "desc" ? -1 : 1;
     const sortField = filters.sortBy || "updatedAt";
 
@@ -162,12 +197,18 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
         .exec(),
       TechnicianModel.countDocuments(query),
     ]);
+
     return {
       technicians: docs.map((d) => this.toDomain(d)),
       total,
     };
   }
 
+  // --- MATCHMAKING & SMART LISTS ---
+
+  /**
+   * Used by Booking Creation Logic (Flow A)
+   */
   async findAvailableInZone(
     zoneId: string,
     subServiceId: string,
@@ -178,11 +219,63 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       verificationStatus: "VERIFIED",
       isSuspended: false,
       "availability.isOnline": true,
+      "availability.isOnJob": false,
       zoneIds: zoneId,
       subServiceIds: subServiceId,
     };
     const docs = await TechnicianModel.find(query).limit(limit).exec();
     return docs.map((doc) => this.toDomain(doc));
+  }
+
+  /**
+   *   NEW: Used by Admin Force Assign (God Mode)
+   * Shows a smart list: Verified + Correct Zone + Correct Service.
+   * Sorts by availability score.
+   */
+  async findRecommendedForAdmin(params: { 
+      zoneId: string; 
+      serviceId: string; 
+      search?: string 
+  }): Promise<Technician[]> {
+      
+      const query: any = { 
+          isDeleted: { $ne: true },
+          verificationStatus: "VERIFIED", // Must be a valid tech
+          zoneIds: params.zoneId,
+          subServiceIds: params.serviceId 
+      };
+  
+      if (params.search) {
+          const regex = new RegExp(params.search, 'i');
+          query.$or = [{ name: regex }, { phone: regex }];
+      }
+  
+      const docs = await TechnicianModel.find(query).exec();
+  
+      // Sort in memory (Available > Busy > Offline)
+      return docs.map(doc => this.toDomain(doc)).sort((a, b) => {
+          return this.getAvailabilityScore(b) - this.getAvailabilityScore(a);
+      });
+  }
+  
+  private getAvailabilityScore(tech: Technician): number {
+      const isOnline = tech.getIsOnline(); 
+      const isOnJob = tech.getIsOnJob();   
+  
+      if (isOnline && !isOnJob) return 3; // Best
+      if (isOnline && isOnJob) return 2;  // Okay (Busy)
+      return 1;                           // Worst (Offline)
+  }
+
+  // --- UPDATES & ACTIONS ---
+
+  async updateAvailabilityStatus(id: string, isOnJob: boolean): Promise<void> {
+    await TechnicianModel.findByIdAndUpdate(id, {
+      $set: { 
+        "availability.isOnJob": isOnJob,
+        ...(isOnJob === false ? { "availability.lastJobCompletedAt": new Date() } : {})
+      }
+    }).exec();
   }
 
   async updateTechnician(
@@ -206,6 +299,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     lat: number,
     lng: number
   ): Promise<boolean> {
+    // Check if ANY of the tech's zones cover this location
     const count = await ZoneModel.countDocuments({
       _id: { $in: zoneIds },
       isActive: true,
@@ -253,13 +347,32 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     }).exec();
   }
 
+  async addRating(id: string, newRating: number): Promise<void> {
+    const tech = await TechnicianModel.findById(id);
+    if (!tech) return;
+
+    const currentAvg = tech.ratings?.averageRating || 0;
+    const currentCount = tech.ratings?.totalReviews || 0;
+
+    const newCount = currentCount + 1;
+    const newAvg = ((currentAvg * currentCount) + newRating) / newCount;
+    const roundedAvg = Math.round(newAvg * 10) / 10;
+
+    await TechnicianModel.findByIdAndUpdate(id, {
+      $set: {
+        "ratings.averageRating": roundedAvg,
+        "ratings.totalReviews": newCount
+      }
+    }).exec();
+  }
+  
   async addBankUpdateRequest(
     id: string,
     request: BankUpdateRequest
   ): Promise<void> {
     await TechnicianModel.findByIdAndUpdate(id, {
       $push: { bankUpdateRequests: request },
-      $set: { payoutStatus: "ON_HOLD" },
+      $set: { payoutStatus: "ON_HOLD" }, // Lock payouts on change request
     }).exec();
   }
 
@@ -268,27 +381,30 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       $set: { payoutStatus: status },
     }).exec();
   }
-async dismissRequest(technicianId: string, requestId: string): Promise<void> { 
-  const result = await TechnicianModel.updateOne(
-    { _id: technicianId },
-    {
-      $set: {
-        "serviceRequests.$[elem].isDismissed": true,
-        "zoneRequests.$[elem].isDismissed": true,
-        "bankUpdateRequests.$[elem].isDismissed": true
+
+  async dismissRequest(technicianId: string, requestId: string): Promise<void> { 
+    // Atomic update to mark request as dismissed inside array
+    const result = await TechnicianModel.updateOne(
+      { _id: technicianId },
+      {
+        $set: {
+          "serviceRequests.$[elem].isDismissed": true,
+          "zoneRequests.$[elem].isDismissed": true,
+          "bankUpdateRequests.$[elem].isDismissed": true
+        }
+      },
+      {
+        arrayFilters: [{ "elem._id": requestId }] 
       }
-    },
-    {
-      arrayFilters: [{ "elem._id": requestId }] 
+    ).exec();
+    
+    if (result.matchedCount === 0) {
+      throw new Error(ErrorMessages.REQUEST_NOT_FOUND);
     }
-  ).exec();
-
-  if (result.matchedCount === 0) {
-    throw new Error(ErrorMessages.REQUEST_NOT_FOUND);
   }
-}
 
-  // --- Internal Mappers ---
+  // --- MAPPERS ---
+
   private toDomain(doc: TechnicianDocument): Technician {
     if (!doc) throw new Error("Technician document is undefined");
 
@@ -419,11 +535,7 @@ async dismissRequest(technicianId: string, requestId: string): Promise<void> {
       type: d.type,
       fileUrl: d.fileUrl,
       fileName: d.fileName,
-      status: d.status as
-        | "PENDING"
-        | "VERIFICATION_PENDING"
-        | "APPROVED"
-        | "REJECTED",
+      status: d.status,
       rejectionReason: d.rejectionReason,
       uploadedAt: d.uploadedAt || new Date(),
     }));
@@ -495,11 +607,7 @@ async dismissRequest(technicianId: string, requestId: string): Promise<void> {
       walletBalance: props.walletBalance,
       availability: props.availability,
       ratings: props.ratings,
-      verificationStatus: props.verificationStatus as
-        | "PENDING"
-        | "VERIFICATION_PENDING"
-        | "VERIFIED"
-        | "REJECTED",
+      verificationStatus: props.verificationStatus,
       verificationReason: props.verificationReason,
       isSuspended: props.isSuspended,
       suspendReason: props.suspendReason,

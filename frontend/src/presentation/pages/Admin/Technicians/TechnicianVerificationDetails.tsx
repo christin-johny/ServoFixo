@@ -8,7 +8,7 @@ import { format } from "date-fns";
 
 import { useNotification } from "../../../hooks/useNotification";
 import * as techRepo from "../../../../infrastructure/repositories/admin/technicianRepository";
-import ConfirmModal from "../../../components/Admin/Modals/ConfirmModal";
+import ConfirmModal from "../../../components/Shared/ConfirmModal/ConfirmModal";
 import TechnicianProfileSummary from "../../../components/Admin/technician/TechnicianProfileSummary";
 import type { AdminTechnicianProfileDto } from "../../../../domain/types/TechnicianVerificationDtos";
  
