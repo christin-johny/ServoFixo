@@ -31,7 +31,7 @@ export class CustomerServiceController extends BaseController {
   getMostBooked = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { limit } = RequestMapper.toPagination(req.query);
-      this._logger.info(LogEvents.SERVICE_MOST_BOOKED_FETCH, { limit });
+      
       const services = await this._getMostBookedUseCase.execute(limit);
       return this.ok(res, services);
     } catch (error: unknown) {
@@ -55,7 +55,7 @@ export class CustomerServiceController extends BaseController {
         isActive: true,
       };
 
-      this._logger.info(LogEvents.SERVICE_LISTING_FETCH, { filters });
+      
       const services = await this._getServiceListingUseCase.execute(filters);
       return this.ok(res, services);
     } catch (error: unknown) {
@@ -66,7 +66,7 @@ export class CustomerServiceController extends BaseController {
   getById = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      this._logger.info(LogEvents.SERVICE_BY_ID_FETCH, { serviceId: id });
+      
       const service = await this._getServiceByIdUseCase.execute(id);
       return this.ok(res, service);
     } catch (error: unknown) {

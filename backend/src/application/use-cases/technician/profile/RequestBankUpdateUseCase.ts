@@ -21,7 +21,6 @@ export class RequestBankUpdateUseCase implements IUseCase<void, [string, Request
 
   async execute(technicianId: string, input: RequestBankUpdateInput): Promise<void> {
     const logData = { technicianId };
-    this._logger.info(`${LogEvents.TECH_UPDATE_DETAILS_INIT}: Bank Request for ${technicianId}`);
 
     const technician = await this._technicianRepo.findById(technicianId);
     if (!technician) {
@@ -32,7 +31,10 @@ export class RequestBankUpdateUseCase implements IUseCase<void, [string, Request
     const request: BankUpdateRequest = {
       ...input,
       status: "PENDING",
-      requestedAt: new Date()
+      requestedAt: new Date(),
+      id: "",
+      isDismissed: false,
+      isArchived: false
     };
 
     // This method sets payoutStatus = ON_HOLD
@@ -41,6 +43,5 @@ export class RequestBankUpdateUseCase implements IUseCase<void, [string, Request
     // Persistence
     await this._technicianRepo.addBankUpdateRequest(technicianId, request);
 
-    this._logger.info(`Bank Update Requested: Payouts Paused for ${technicianId}`);
   }
 }

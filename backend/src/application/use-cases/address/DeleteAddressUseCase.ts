@@ -20,7 +20,6 @@ export class DeleteAddressUseCase {
 
     const result = await this._addressRepository.delete(addressId);
     
-    this._logger.info(LogEvents.ADDRESS_DELETED, { addressId });
 
     return result;
   }

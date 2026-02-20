@@ -134,7 +134,6 @@ export class RespondToBookingUseCase {
         }
     });
 
-    this._logger.info(`${LogEvents.BOOKING_ACCEPTED_LOG} ${booking.getId()} by ${techId}`);
   }
 
   private async handleRejection(booking: Booking, techId: string, reason?: string) {
@@ -160,7 +159,6 @@ export class RespondToBookingUseCase {
             address: booking.getLocation().address,
             expiresAt: booking.getAssignmentExpiresAt()!
         });
-        this._logger.info(`${LogEvents.BOOKING_REJECTED_LOG} ${booking.getId()} by ${techId}. Next -> ${nextCandidateId}`);
     } else {
         booking.updateStatus("FAILED_ASSIGNMENT", "system", "All candidates rejected");
         await this._bookingRepo.update(booking);

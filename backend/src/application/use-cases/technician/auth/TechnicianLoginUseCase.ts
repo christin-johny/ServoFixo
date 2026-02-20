@@ -25,10 +25,6 @@ export class TechnicianLoginUseCase {
     const { email, password } = input;
     const normalizedEmail = email.toLowerCase().trim();
 
-    this._logger.info(
-      `${LogEvents.AUTH_LOGIN_INIT} (Technician) - Email: ${normalizedEmail}`
-    );
-
     const technician = await this._technicianRepository.findByEmail(normalizedEmail);
     if (!technician) {
       this._logger.warn(
@@ -86,9 +82,6 @@ export class TechnicianLoginUseCase {
       this._logger.error(`${LogEvents.AUTH_REFRESH_FAILED} - Cache Error`, errorMessage);
     }
 
-    this._logger.info(
-      `${LogEvents.AUTH_LOGIN_SUCCESS} (Technician) - ID: ${technician.getId()}`
-    );
  
     return {
       accessToken,

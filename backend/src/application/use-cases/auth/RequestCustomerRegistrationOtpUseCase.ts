@@ -23,7 +23,6 @@ export class RequestCustomerRegistrationOtpUseCase {
   ): Promise<{ message: string; sessionId: string }> {
     const { email,phone } = input;
     const normalizedEmail = email.toLowerCase().trim();
-    this._logger.info(`${LogEvents.AUTH_REGISTER_INIT} - Email: ${normalizedEmail}`);
 
     const existing = await this._customerRepository.findByEmail(normalizedEmail);
     if (existing) {
@@ -53,7 +52,6 @@ export class RequestCustomerRegistrationOtpUseCase {
 
     await this._emailService.sendTextEmail(normalizedEmail, subject, text);
 
-    this._logger.info(`${LogEvents.AUTH_OTP_SENT} (Registration) - SessionID: ${sessionId}`);
     return {
       message: "OTP sent to email for registration",
       sessionId,

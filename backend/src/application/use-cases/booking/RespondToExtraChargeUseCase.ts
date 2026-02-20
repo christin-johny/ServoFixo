@@ -91,6 +91,5 @@ export class RespondToExtraChargeUseCase implements IUseCase<void, [RespondToExt
         }
     });
 
-    this._logger.info(`${LogEvents.CHARGE_RESPONSE_LOG}: ${input.chargeId} ${input.response} for booking ${booking.getId()}`);
   }
 }

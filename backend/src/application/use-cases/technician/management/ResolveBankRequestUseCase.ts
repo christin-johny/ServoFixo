@@ -21,8 +21,6 @@ export class ResolveBankRequestUseCase
     const tech: Technician | null = await this._technicianRepo.findById(techId);
     if (!tech) throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
 
-    this._logger.info(LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_INIT, { techId, type: PartnerRequestType.BANK });
-
     try {
       const requests = tech.getBankUpdateRequests();
       const reqIndex = requests.findIndex(
@@ -60,7 +58,6 @@ export class ResolveBankRequestUseCase
         },
       });
 
-      this._logger.info(LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_SUCCESS, { techId, requestId: dto.requestId });
     } catch (error) {
       this._logger.error(LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_FAILED, error instanceof Error ? error.message : ErrorMessages.INTERNAL_ERROR);
       throw error;

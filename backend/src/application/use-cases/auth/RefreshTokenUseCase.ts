@@ -16,7 +16,6 @@ export class RefreshTokenUseCase {
   ) {}
 
   async execute(refreshToken: string) {
-    this._logger.info(LogEvents.AUTH_REFRESH_INIT);
     if (!refreshToken) {
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
@@ -91,7 +90,6 @@ export class RefreshTokenUseCase {
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
 
-    this._logger.info(LogEvents.AUTH_REFRESH_SUCCESS);
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   }
 }

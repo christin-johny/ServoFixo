@@ -16,7 +16,6 @@ export class DeleteZoneUseCase {
       throw new Error(ErrorMessages.ZONE_DELETE_FAILED);
     }
     
-    this._logger.info(LogEvents.ZONE_DELETE_SUCCESS, { id });
     return true;
   }
 }

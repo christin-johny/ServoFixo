@@ -34,7 +34,7 @@ export class CustomerProfileController {
           .status(StatusCodes.UNAUTHORIZED)
           .json({ success: false, message: ErrorMessages.UNAUTHORIZED });
 
-      this._logger.info(LogEvents.PROFILE_FETCH_INIT, { userId });
+          
 
       const profileData = await this._getCustomerProfileUseCase.execute(userId);
 
@@ -68,7 +68,7 @@ export class CustomerProfileController {
           .json({ success: false, message: ErrorMessages.UNAUTHORIZED });
  
       const updatedFields = req.body ? Object.keys(req.body) : [];
-      this._logger.info(LogEvents.PROFILE_UPDATE_INIT, { userId, updatedFields });
+      
 
       const updatedCustomer = await this._updateCustomerUseCase.execute(
         userId,
@@ -113,7 +113,7 @@ export class CustomerProfileController {
         });
       }
 
-      this._logger.info(LogEvents.PASSWORD_CHANGE_INIT, { userId });
+      
 
       await this._changePasswordUseCase.execute(userId, req.body);
 
@@ -141,7 +141,7 @@ export class CustomerProfileController {
         });
       }
 
-      this._logger.info(LogEvents.ACCOUNT_DELETE_INIT, { userId });
+      
 
       await this._deleteCustomerUseCase.execute(userId);
 
@@ -173,11 +173,7 @@ export class CustomerProfileController {
         });
       }
 
-      this._logger.info(LogEvents.AVATAR_UPLOAD_INIT, { 
-        userId, 
-        fileName: req.file.originalname, 
-        mimeType: req.file.mimetype 
-      });
+      
 
       const avatarUrl = await this._uploadAvatarUseCase.execute(userId, {
         buffer: req.file.buffer,

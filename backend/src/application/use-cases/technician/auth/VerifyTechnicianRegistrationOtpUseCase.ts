@@ -25,9 +25,6 @@ export class VerifyTechnicianRegistrationOtpUseCase {
     const { email, otp, sessionId, name, password, phone } = input;
     const normalizedEmail = email.toLowerCase().trim();
 
-    this._logger.info(
-      `${LogEvents.AUTH_OTP_VERIFY_INIT} (Technician Reg) - Email: ${normalizedEmail}`
-    );
  
     const existingEmail = await this._technicianRepository.findByEmail(
       normalizedEmail
@@ -74,7 +71,10 @@ export class VerifyTechnicianRegistrationOtpUseCase {
       experienceSummary: "",
 
       walletBalance: { currentBalance: 0, frozenAmount: 0, currency: "INR" },
-      availability: { isOnline: false },
+      availability: {
+        isOnline: false,
+        isOnJob: false
+      },
       ratings: { averageRating: 0, totalReviews: 0 },
       verificationStatus: "PENDING",
       isSuspended: false,
@@ -86,7 +86,6 @@ export class VerifyTechnicianRegistrationOtpUseCase {
 
     const savedTechnician = await this._technicianRepository.create(technician);
  
-    this._logger.info(`${LogEvents.TECHNICIAN_CREATE_SUCCESS}: ${savedTechnician.getId()}`);
  
     const payload: JwtPayload = {
       sub: savedTechnician.getId(),

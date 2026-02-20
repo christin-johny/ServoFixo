@@ -61,8 +61,6 @@ export class UpdateAddressUseCase {
     });
 
     const saved = await this._addressRepository.update(updatedEntity);
-    
-    this._logger.info(LogEvents.ADDRESS_UPDATED, { addressId: saved.getId() });
 
     return AddressMapper.toResponse(saved);
   }

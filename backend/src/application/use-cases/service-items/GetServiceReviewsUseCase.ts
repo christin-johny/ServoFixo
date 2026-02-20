@@ -9,7 +9,6 @@ export class GetServiceReviewsUseCase {
   ) {}
 
   async execute(serviceId: string, limit: number = 5): Promise<Review[]> {
-    this._logger.info(`Fetching reviews for service: ${serviceId}`);
     return await this._reviewRepo.findByServiceId(serviceId, limit); 
   }
 }

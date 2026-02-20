@@ -14,7 +14,6 @@ export class VerifyTechnicianUseCase implements IUseCase<void, [string, VerifyTe
     const tech = await this._technicianRepo.findById(id);
     if (!tech) throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
 
-    this._logger.info(`Processing Verification for ${id}: ${dto.action}`);
 
     if (dto.action === "APPROVE") {
       tech.updateVerificationStatus("VERIFIED");

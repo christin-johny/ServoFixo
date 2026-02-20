@@ -10,7 +10,6 @@ export class FindZoneByLocationUseCase {
   ) {}
 
   async execute(lat: number, lng: number): Promise<ZoneServiceabilityDto> {
-    this._logger.info(LogEvents.ZONE_SERVICEABILITY_CHECK_INIT, { lat, lng });
 
     const result = await this._zoneService.checkServiceability(lat, lng);
 
@@ -23,10 +22,6 @@ export class FindZoneByLocationUseCase {
         : "Outside service area",
     };
 
-    this._logger.info(LogEvents.ZONE_SERVICEABILITY_CHECK_SUCCESS, {
-      isServiceable: response.isServiceable,
-      zoneId: response.zoneId,
-    });
 
     return response;
   }

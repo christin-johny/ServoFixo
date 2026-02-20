@@ -33,7 +33,7 @@ export class TechnicianAuthController {
  
   register = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(`${LogEvents.AUTH_REGISTER_INIT} (Technician)`);
+      
       const result = await this._requestOtpUseCase.execute(req.body);
        
       return res.status(StatusCodes.OK).json({
@@ -55,11 +55,11 @@ export class TechnicianAuthController {
  
   verifyRegistration = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} (Technician)`);
+      
       const result = await this._verifyOtpUseCase.execute(req.body);
       
       res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
-      this._logger.info(`${LogEvents.AUTH_REGISTER_SUCCESS} (Technician)`);
+      
       
       return res.status(StatusCodes.CREATED).json({
         message: SuccessMessages.REGISTRATION_SUCCESS,
@@ -80,11 +80,11 @@ export class TechnicianAuthController {
  
   login = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(`${LogEvents.AUTH_LOGIN_INIT} (Technician)`);
+      
       const result = await this._loginUseCase.execute(req.body);
       
       res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
-      this._logger.info(`${LogEvents.AUTH_LOGIN_SUCCESS} (Technician)`);
+      
       
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.LOGIN_SUCCESS,
@@ -105,7 +105,7 @@ export class TechnicianAuthController {
  
   forgotPasswordInitOtp = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(`${LogEvents.AUTH_FORGOT_PASSWORD_INIT} (Technician)`);
+      
       const result = await this._requestForgotOtpUseCase.execute(req.body);
       
       return res.status(StatusCodes.OK).json({
@@ -125,7 +125,6 @@ export class TechnicianAuthController {
  
   forgotPasswordVerifyOtp = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} (Forgot Password)`);
       const result = await this._verifyForgotOtpUseCase.execute(req.body);
       return res.status(StatusCodes.OK).json(result);
     } catch (err: unknown) {
@@ -150,7 +149,6 @@ export class TechnicianAuthController {
         }
       }
       res.clearCookie("refreshToken", refreshCookieOptions);
-      this._logger.info(`${LogEvents.AUTH_LOGOUT_SUCCESS} (Technician)`);
       return res.status(StatusCodes.OK).json({ message: SuccessMessages.LOGOUT_SUCCESS });
     } catch (err: unknown) {
       this._logger.error(LogEvents.AUTH_LOGOUT_FAILED, String(err));

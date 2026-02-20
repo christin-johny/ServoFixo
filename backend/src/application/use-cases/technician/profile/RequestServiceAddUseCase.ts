@@ -27,7 +27,6 @@ export class RequestServiceAddUseCase implements IUseCase<void, [string, Request
       action: input.action  
     };
     
-    this._logger.info(LogEvents.TECH_SERVICE_REQUEST_INIT, logData);
 
     const technician = await this._technicianRepo.findById(technicianId);
     if (!technician) {
@@ -50,6 +49,5 @@ export class RequestServiceAddUseCase implements IUseCase<void, [string, Request
     technician.addServiceRequest(request); 
     await this._technicianRepo.addServiceRequest(technicianId, request);
 
-    this._logger.info(LogEvents.TECH_SERVICE_REQUEST_SUCCESS, logData);
   }
 }

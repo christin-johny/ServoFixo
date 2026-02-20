@@ -23,7 +23,6 @@ export class TechnicianCancelBookingUseCase implements IUseCase<void, [CancelBoo
         throw new Error(ErrorMessages.UNAUTHORIZED);
     }
 
-    this._logger.info(`${LogEvents.TECH_CANCEL_INIT}: Tech ${input.userId} -> Booking ${booking.getId()}`);
 
     await this._technicianRepo.updateAvailabilityStatus(input.userId, false);   
     try {
@@ -65,7 +64,6 @@ export class TechnicianCancelBookingUseCase implements IUseCase<void, [CancelBoo
             metadata: { bookingId: booking.getId() }
         });
 
-        this._logger.info(`${LogEvents.TECH_CANCEL_REASSIGNED}: ${nextCandidateId}`);
 
     } else { 
         booking.updateStatus("FAILED_ASSIGNMENT", "system", ErrorMessages.REASON_TECH_CANCELLED_NO_REPLACEMENT);

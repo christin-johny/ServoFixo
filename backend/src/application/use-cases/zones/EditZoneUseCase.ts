@@ -36,7 +36,6 @@ export class EditZoneUseCase {
 
     const savedZone = await this._zoneRepository.update(updatedEntity);
     
-    this._logger.info(LogEvents.ZONE_UPDATE_SUCCESS, { id });
     
     return ZoneMapper.toResponse(savedZone);
   }

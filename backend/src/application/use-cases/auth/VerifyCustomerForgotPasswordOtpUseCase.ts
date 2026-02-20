@@ -21,7 +21,6 @@ export class VerifyCustomerForgotPasswordOtpUseCase {
   ): Promise<{ message: string }> {
     const { email, otp, sessionId, newPassword } = input;
     const normalizedEmail = email.toLowerCase().trim();
-    this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} (Forgot Password) - Email: ${normalizedEmail}`);
 
     const session = await this._otpSessionRepository.findValidSession(
       normalizedEmail,
@@ -68,7 +67,6 @@ export class VerifyCustomerForgotPasswordOtpUseCase {
 
     await this._customerRepository.update(updated);
 
-    this._logger.info(`${LogEvents.AUTH_PASSWORD_RESET_SUCCESS} - Email: ${normalizedEmail}`);
     return {
       message: 'Password reset successful. You can now log in with your new password.',
     };

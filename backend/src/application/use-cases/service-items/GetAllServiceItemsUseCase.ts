@@ -18,8 +18,6 @@ export class GetAllServiceItemsUseCase {
   ) {}
 
   async execute(params: ServiceItemQueryParams): Promise<PaginatedServiceResponse> {
-    this._logger.info(`${LogEvents.SERVICE_GET_ALL_INIT} - Params: ${JSON.stringify(params)}`);
-    
     const result = await this._serviceRepo.findAll(params);
     
     return {

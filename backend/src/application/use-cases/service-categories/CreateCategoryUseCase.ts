@@ -21,8 +21,6 @@ export class CreateCategoryUseCase {
   ) {}
 
   async execute(dto: CreateCategoryDto, imageFile?: IFile): Promise<CategoryResponseDto> {
-    this._logger.info(`${LogEvents.CATEGORY_CREATE_INIT} - Name: ${dto.name}`);
-
     const existing = await this._categoryRepo.findByName(dto.name);
     if (existing) {
       this._logger.warn(`${LogEvents.CATEGORY_CREATE_FAILED} - ${LogEvents.CATEGORY_ALREADY_EXISTS} - Name: ${dto.name}`);
@@ -39,13 +37,13 @@ export class CreateCategoryUseCase {
       imageFile.originalName,
       imageFile.mimeType
     );
-    this._logger.info(LogEvents.CATEGORY_IMAGE_UPLOAD_SUCCESS);
+    
 
     const newCategory = CategoryMapper.toDomain(dto, iconUrl);
 
     const savedCategory = await this._categoryRepo.create(newCategory);
     
-    this._logger.info(`${LogEvents.CATEGORY_CREATED} - ID: ${savedCategory.getId()}`);
+    
     return CategoryMapper.toResponse(savedCategory);
   }
 }

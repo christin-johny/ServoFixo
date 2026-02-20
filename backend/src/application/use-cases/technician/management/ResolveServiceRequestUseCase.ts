@@ -24,10 +24,7 @@ export class ResolveServiceRequestUseCase
       throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
     }
 
-    this._logger.info(LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_INIT, {
-      techId,
-      type: PartnerRequestType.SERVICE,
-    });
+
 
     try {
       const requests = tech.getServiceRequests();
@@ -93,7 +90,6 @@ export class ResolveServiceRequestUseCase
         },
       });
 
-      this._logger.info(LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_SUCCESS, { techId, requestId: dto.requestId });
     } catch (error) {
       this._logger.error(LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_FAILED, error instanceof Error ? error.message : ErrorMessages.INTERNAL_ERROR);
       throw error;

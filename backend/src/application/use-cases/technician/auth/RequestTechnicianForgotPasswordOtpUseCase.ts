@@ -23,8 +23,6 @@ export class RequestTechnicianForgotPasswordOtpUseCase {
   ): Promise<{ message: string; sessionId: string }> {
     const { email } = input;
     const normalizedEmail = email.toLowerCase().trim();
-
-    this._logger.info(`${LogEvents.AUTH_FORGOT_PASSWORD_INIT} (Technician) - Email: ${normalizedEmail}`);
  
     const technician = await this._technicianRepository.findByEmail(normalizedEmail);
     if (!technician) {
@@ -51,8 +49,6 @@ export class RequestTechnicianForgotPasswordOtpUseCase {
     const text = `Your OTP to reset your password is: ${otp}. It is valid for ${this._otpExpiryMinutes} minutes.`;
 
     await this._emailService.sendTextEmail(normalizedEmail, subject, text);
-
-    this._logger.info(`${LogEvents.AUTH_OTP_SENT} (Forgot Pass) - SessionID: ${sessionId}`);
 
     return {
       message: "OTP sent to email for password reset",

@@ -11,6 +11,5 @@ export class DeleteTechnicianUseCase implements IUseCase<void, [string]> {
   async execute(id: string): Promise<void> {
     const deleted = await this._technicianRepo.delete(id);
     if (!deleted) throw new Error("Failed to delete technician");
-    this._logger.info(`Technician ${id} deleted`);
   }
 }

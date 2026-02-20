@@ -25,7 +25,6 @@ export class VerifyCustomerRegistrationOtpUseCase {
  
     const { email, otp, sessionId, name, password, phone } = input;
     const normalizedEmail = email.toLowerCase().trim();
-    this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} (Registration) - Email: ${normalizedEmail}`);
 
     const existingCustomer = await this._customerRepository.findByEmail(normalizedEmail);
     if (existingCustomer) throw new Error(ErrorMessages.EMAIL_ALREADY_EXISTS);
@@ -62,7 +61,6 @@ export class VerifyCustomerRegistrationOtpUseCase {
       );
     } catch (_) {}
 
-    this._logger.info(`${LogEvents.AUTH_REGISTER_SUCCESS} - ID: ${savedCustomer.getId()}`);
     return { accessToken, refreshToken };
   }
 }

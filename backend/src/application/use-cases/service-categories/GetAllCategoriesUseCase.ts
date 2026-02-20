@@ -17,9 +17,7 @@ export class GetAllCategoriesUseCase {
     private readonly _logger: ILogger
   ) {}
 
-  async execute(params: CategoryQueryParams): Promise<PaginatedCategoriesResponse> {
-    this._logger.info(`${LogEvents.CATEGORY_GET_ALL_INIT} - Params: ${JSON.stringify(params)}`);
-    
+  async execute(params: CategoryQueryParams): Promise<PaginatedCategoriesResponse> {    
     const result = await this._categoryRepo.findAll(params);
     
     return {

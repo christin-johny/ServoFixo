@@ -22,7 +22,6 @@ export class UploadTechnicianFileUseCase implements IUseCase<string, [string, Up
     const cleanFileName = fileName.replace(/\s+/g, "-");
     const key = `technician/${technicianId}/${folder}/${Date.now()}-${cleanFileName}`;
 
-    this._logger.info(`${LogEvents.TECH_DOC_UPLOAD_INIT}: ${key}`);
  
     const fileUrl = await this._imageService.uploadImage(
       fileBuffer,
@@ -30,7 +29,6 @@ export class UploadTechnicianFileUseCase implements IUseCase<string, [string, Up
       mimeType
     );
 
-    this._logger.info(`${LogEvents.TECH_DOC_UPLOAD_SUCCESS}: ${fileUrl}`);
     return fileUrl;
   }
 }

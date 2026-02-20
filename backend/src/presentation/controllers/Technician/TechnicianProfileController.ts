@@ -218,7 +218,7 @@ getOnboardingStatus = async (req: Request, res: Response): Promise<Response> => 
       const technicianId = this.getTechId(req);
       const { serviceId, categoryId, proofUrl, action } = req.body;
       if (!serviceId || !categoryId || !action) {
-        throw new Error(ErrorMessages.MISSING_FIELDS);
+        throw new Error(ErrorMessages.MISSING_REQUIRED_FIELDS);
       }
 
       await this._requestServiceAddUseCase.execute(technicianId, {
@@ -239,7 +239,7 @@ getOnboardingStatus = async (req: Request, res: Response): Promise<Response> => 
       const technicianId = this.getTechId(req);
       const { currentZoneId, requestedZoneId } = req.body;
       if (!currentZoneId || !requestedZoneId) {
-        throw new Error(ErrorMessages.MISSING_FIELDS);
+        throw new Error(ErrorMessages.MISSING_REQUIRED_FIELDS);
       }
 
       await this._requestZoneTransferUseCase.execute(technicianId, {
@@ -258,7 +258,7 @@ getOnboardingStatus = async (req: Request, res: Response): Promise<Response> => 
       const technicianId = this.getTechId(req);
       const { accountHolderName, accountNumber, bankName, ifscCode, proofUrl, upiId } = req.body;
       if (!accountHolderName || !accountNumber || !bankName || !ifscCode || !proofUrl) {
-        throw new Error(ErrorMessages.MISSING_FIELDS);
+        throw new Error(ErrorMessages.MISSING_REQUIRED_FIELDS);
       }
 
       await this._requestBankUpdateUseCase.execute(technicianId, {

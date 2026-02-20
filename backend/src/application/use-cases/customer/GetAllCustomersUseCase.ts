@@ -23,7 +23,6 @@ export class GetAllCustomersUseCase {
   ) {}
 
   async execute(filterDto: CustomerFilterDto): Promise<PaginatedResult<CustomerResponseDto>> {
-    this._logger.info(LogEvents.ADMIN_CUSTOMER_FETCH_ALL_INIT, { filters: filterDto });
 
     const page = filterDto.page;
     const limit = filterDto.limit;

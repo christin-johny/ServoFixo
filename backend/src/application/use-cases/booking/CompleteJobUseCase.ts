@@ -87,6 +87,5 @@ export class CompleteJobUseCase implements IUseCase<void, [CompleteJobDto, IFile
         clickAction: `/customer/bookings/${booking.getId()}/payment`
     });
 
-    this._logger.info(`Job ${booking.getId()} COMPLETED. Invoice: ₹${finalAmount}`);
   }
 }

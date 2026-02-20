@@ -34,8 +34,6 @@ export class CustomerAddressController extends BaseController {
     try {
       const userId = this.getUserId(req);
       const dto = req.body as CreateAddressDto;
-      
-      this._logger.info(LogEvents.ADDRESS_ADD_INIT, { userId, dto });
 
       const resultDto = await this._addAddressUseCase.execute(dto, userId); 
       const isServiceable = (resultDto as any).isServiceable ?? true;
@@ -50,7 +48,6 @@ export class CustomerAddressController extends BaseController {
   getMyAddresses = async (req: Request, res: Response): Promise<Response> => {
     try {
       const userId = this.getUserId(req);
-      this._logger.info(LogEvents.ADDRESS_FETCH_ALL, { userId });
 
       const addressDtos = await this._getAddressesUseCase.execute(userId);
       return this.ok(res, addressDtos);

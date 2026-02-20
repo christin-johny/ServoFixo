@@ -17,8 +17,5 @@ export class BlockTechnicianUseCase
     reason?: string
   ): Promise<void> {
     await this._technicianRepo.toggleBlockTechnician(id, isSuspended, reason);
-    this._logger.info(
-      `Technician ${id} suspension status changed to: ${isSuspended}`
-    );
   }
 }

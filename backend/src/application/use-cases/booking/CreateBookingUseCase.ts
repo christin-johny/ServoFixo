@@ -127,9 +127,6 @@ export class CreateBookingUseCase {
     // 10. Persist
     const createdBooking = await this._bookingRepo.create(booking);
 
-    this._logger.info(
-      `${LogEvents.BOOKING_CREATED_LOG}: ${createdBooking.getId()} | Zone: ${resolvedZoneId} | Candidates: ${candidateIds.length}`
-    );
 
     // 11. Trigger Real-Time Notification 
     if (candidateIds.length > 0) {

@@ -35,9 +35,6 @@ export class TechnicianOnboardingUseCase
           avatarUrl: input.avatarUrl,
         });
         this.updateStep(technician, 2);
-        this._logger.info(
-          `${LogEvents.TECH_ONBOARDING_STEP_1_SUCCESS}: ${technician.getId()}`
-        );
         break;
 
       case 2:
@@ -49,9 +46,7 @@ export class TechnicianOnboardingUseCase
           input.subServiceIds
         );
         this.updateStep(technician, 3);
-        this._logger.info(
-          `${LogEvents.TECH_ONBOARDING_STEP_2_SUCCESS}: ${technician.getId()}`
-        );
+
         break;
 
       case 3:
@@ -59,18 +54,14 @@ export class TechnicianOnboardingUseCase
           throw new Error(ErrorMessages.TECH_MISSING_ZONES);
         technician.updateZones(input.zoneIds);
         this.updateStep(technician, 4);
-        this._logger.info(
-          `${LogEvents.TECH_ONBOARDING_STEP_3_SUCCESS}: ${technician.getId()}`
-        );
+
         break;
 
       case 4:
         if (!input.agreedToRates)
           throw new Error(ErrorMessages.TECH_RATE_DISAGREE);
         this.updateStep(technician, 5);
-        this._logger.info(
-          `${LogEvents.TECH_ONBOARDING_STEP_4_SUCCESS}: ${technician.getId()}`
-        );
+
         break;
 
       case 5:
@@ -91,9 +82,7 @@ export class TechnicianOnboardingUseCase
 
         technician.updateDocuments(docs);
         this.updateStep(technician, 6);
-        this._logger.info(
-          `${LogEvents.TECH_ONBOARDING_STEP_5_SUCCESS}: ${technician.getId()}`
-        );
+
         break;
 
       case 6:
@@ -101,13 +90,6 @@ export class TechnicianOnboardingUseCase
 
         technician.setOnboardingStep(7);
         technician.setVerificationStatus("VERIFICATION_PENDING");
-
-        this._logger.info(
-          `${LogEvents.TECH_ONBOARDING_STEP_6_SUCCESS}: ${technician.getId()}`
-        );
-        this._logger.info(
-          `${LogEvents.TECH_PROFILE_SUBMITTED}: ${technician.getId()}`
-        );
         break;
 
       default:

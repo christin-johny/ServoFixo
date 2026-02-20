@@ -34,7 +34,6 @@ export class AdminCategoryController extends BaseController {
 
 create = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.CATEGORY_CREATE_INIT);
 
       const dto: CreateCategoryDto = {
         name: req.body.name,
@@ -62,7 +61,6 @@ create = async (req: Request, res: Response): Promise<Response> => {
 
   getAll = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.CATEGORY_GET_ALL_INIT);
 
       const params: CategoryQueryParams = {
         ...RequestMapper.toPagination(req.query),
@@ -82,7 +80,6 @@ create = async (req: Request, res: Response): Promise<Response> => {
   update = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      this._logger.info(`${LogEvents.CATEGORY_UPDATE_INIT} - ID: ${id}`);
 
       const dto: UpdateCategoryDto = {
         name: req.body.name,

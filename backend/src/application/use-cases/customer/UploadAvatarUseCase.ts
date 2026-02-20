@@ -16,11 +16,6 @@ export class UploadAvatarUseCase {
     userId: string,
     file: { buffer: Buffer; originalName: string; mimeType: string }
   ): Promise<string> {
-    this._logger.info(LogEvents.AVATAR_UPLOAD_INIT, { 
-        userId, 
-        fileName: file.originalName 
-    });
-
     const customer = await this._customerRepository.findById(userId);
     if (!customer) throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
 
@@ -47,7 +42,7 @@ export class UploadAvatarUseCase {
     );
 
     await this._customerRepository.update(updatedCustomer);
-    this._logger.info(LogEvents.AVATAR_UPLOAD_SUCCESS, { userId, avatarUrl });
+    
     return avatarUrl;
   }
 }

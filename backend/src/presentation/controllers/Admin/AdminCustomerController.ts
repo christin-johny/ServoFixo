@@ -27,7 +27,7 @@ export class AdminCustomerController extends BaseController {
     private readonly _getCustomerByIdUseCase: IUseCase<unknown, [string]>, 
     private readonly _deleteCustomerUseCase: IUseCase<void, [string]>, 
     private readonly _getAddressesByUserIdUseCase: IUseCase<unknown[],[string]>,
-    _logger: ILogger // Passed to BaseController
+    _logger: ILogger 
   ) {
     super(_logger);
   }
@@ -46,8 +46,6 @@ export class AdminCustomerController extends BaseController {
           errors: validationResult.error.errors,
         });
       }
-
-      this._logger.info(LogEvents.ADMIN_CUSTOMER_FETCH_ALL_INIT, { filters: validationResult.data });
 
       const result = await this._getAllCustomersUseCase.execute(validationResult.data);
 
@@ -70,8 +68,6 @@ export class AdminCustomerController extends BaseController {
         });
       }
 
-      this._logger.info(LogEvents.ADMIN_CUSTOMER_UPDATE_INIT, { customerId });
-
       const updatedCustomer = await this._updateCustomerUseCase.execute(customerId, validationResult.data);
 
       //  Aligned with updateCustomer: returns response.data (the customer object)
@@ -84,7 +80,6 @@ export class AdminCustomerController extends BaseController {
   getCustomerById = async (req: Request, res: Response): Promise<Response> => {
     const customerId = req.params.id;
     try {
-      this._logger.info(LogEvents.ADMIN_CUSTOMER_FETCH_BY_ID_INIT, { customerId });
 
       const customer = await this._getCustomerByIdUseCase.execute(customerId);
 
@@ -98,7 +93,6 @@ export class AdminCustomerController extends BaseController {
   deleteCustomer = async (req: Request, res: Response): Promise<Response> => {
     const customerId = req.params.id;
     try {
-      this._logger.info(LogEvents.ADMIN_CUSTOMER_DELETE_INIT, { customerId });
       await this._deleteCustomerUseCase.execute(customerId);
       
       return res.status(StatusCodes.NO_CONTENT).send();
@@ -110,7 +104,6 @@ export class AdminCustomerController extends BaseController {
   getCustomerAddresses = async (req: Request, res: Response): Promise<Response> => {
     const customerId = req.params.id;
     try {
-      this._logger.info(LogEvents.ADMIN_CUSTOMER_ADDRESS_FETCH_INIT, { customerId });
 
       const addresses = await this._getAddressesByUserIdUseCase.execute(customerId);
 

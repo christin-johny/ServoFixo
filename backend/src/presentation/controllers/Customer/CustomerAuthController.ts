@@ -30,9 +30,6 @@ export class CustomerAuthController {
   registerInitOtp = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { email, phone } = req.body;
-      this._logger.info(
-        `${LogEvents.AUTH_REGISTER_INIT} - Requesting OTP for: ${email}`
-      );
 
       if (!email) {
         return res.status(StatusCodes.BAD_REQUEST).json({
@@ -44,7 +41,6 @@ export class CustomerAuthController {
         phone,
       });
 
-      this._logger.info(`${LogEvents.AUTH_OTP_SENT} - Registration`);
       return res.status(StatusCodes.OK).json(result);
     } catch (err: unknown) {
       const trace = err instanceof Error ? err.stack : String(err);
@@ -74,7 +70,6 @@ export class CustomerAuthController {
     res: Response
   ): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.AUTH_OTP_VERIFY_INIT);
       const { email, otp, sessionId, name, password, phone } = req.body;
 
       if (!email || !otp || !sessionId || !name || !password) {
@@ -95,7 +90,6 @@ export class CustomerAuthController {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
 
-      this._logger.info(`${LogEvents.AUTH_REGISTER_SUCCESS} - Email: ${email}`);
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.REGISTRATION_SUCCESS,
         accessToken: result.accessToken,
@@ -137,7 +131,6 @@ export class CustomerAuthController {
 
   login = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(`${LogEvents.AUTH_LOGIN_INIT} (Customer)`);
       const { email, password } = req.body;
 
       if (!email || !password) {
@@ -155,9 +148,6 @@ export class CustomerAuthController {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
 
-      this._logger.info(
-        `${LogEvents.AUTH_LOGIN_SUCCESS} (Customer) - Email: ${email}`
-      );
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.LOGIN_SUCCESS,
         accessToken: result.accessToken,
@@ -191,9 +181,6 @@ export class CustomerAuthController {
   ): Promise<Response> => {
     try {
       const { email } = req.body;
-      this._logger.info(
-        `${LogEvents.AUTH_FORGOT_PASSWORD_INIT} - Email: ${email}`
-      );
 
       if (!email) {
         return res.status(StatusCodes.BAD_REQUEST).json({
@@ -204,8 +191,6 @@ export class CustomerAuthController {
       const result = await this._requestForgotPasswordOtpUseCase.execute({
         email,
       });
-
-      this._logger.info(`${LogEvents.AUTH_OTP_SENT} - Forgot Password`);
       return res.status(StatusCodes.OK).json(result);
     } catch (err: unknown) {
       const trace = err instanceof Error ? err.stack : String(err);
@@ -236,7 +221,6 @@ export class CustomerAuthController {
     res: Response
   ): Promise<Response> => {
     try {
-      this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} - Forgot Password`);
       const { email, otp, sessionId, newPassword } = req.body;
 
       if (!email || !otp || !sessionId || !newPassword) {
@@ -252,9 +236,6 @@ export class CustomerAuthController {
         newPassword,
       });
 
-      this._logger.info(
-        `${LogEvents.AUTH_PASSWORD_RESET_SUCCESS} - Email: ${email}`
-      );
       return res.status(StatusCodes.OK).json(result);
     } catch (err: unknown) {
       const trace = err instanceof Error ? err.stack : String(err);
@@ -288,7 +269,7 @@ export class CustomerAuthController {
 
   googleLogin = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.AUTH_GOOGLE_LOGIN_INIT);
+      
       const { token } = req.body;
 
       if (!token) {
@@ -303,7 +284,7 @@ export class CustomerAuthController {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
 
-      this._logger.info(LogEvents.AUTH_GOOGLE_LOGIN_SUCCESS);
+      
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.GOOGLE_LOGIN_SUCCESS,
         accessToken: result.accessToken,
@@ -321,7 +302,7 @@ export class CustomerAuthController {
 
   googleLoginCallback = async (req: Request, res: Response): Promise<void> => {
     try {
-      this._logger.info(`${LogEvents.AUTH_GOOGLE_LOGIN_INIT} (Callback)`);
+      
       const user = req.user as unknown; 
 
       if (!user) {
@@ -345,7 +326,7 @@ export class CustomerAuthController {
       if (result.refreshToken) {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
-      this._logger.info(`${LogEvents.AUTH_GOOGLE_LOGIN_SUCCESS} (Callback)`);
+      
       res.redirect(`${process.env.FRONTEND_ORIGIN}`);
     } catch (err: unknown) {
       const trace = err instanceof Error ? err.stack : String(err);
@@ -372,7 +353,7 @@ export class CustomerAuthController {
       }
       res.clearCookie("refreshToken", refreshCookieOptions);
 
-      this._logger.info(LogEvents.AUTH_LOGOUT_SUCCESS);
+      
       return res
         .status(StatusCodes.OK)
         .json({ message: SuccessMessages.LOGOUT_SUCCESS });

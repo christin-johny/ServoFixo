@@ -75,6 +75,5 @@ export class AddExtraChargeUseCase implements IUseCase<void, [AddExtraChargeDto,
         clickAction: `/customer/bookings/${booking.getId()}?action=approve_charge`
     });
  
-    this._logger.info(`${LogEvents.EXTRA_CHARGE_ADDED_LOG} ${booking.getId()}: ${input.title}`);
   }
 }

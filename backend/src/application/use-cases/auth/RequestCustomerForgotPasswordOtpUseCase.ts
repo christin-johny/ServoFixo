@@ -25,7 +25,6 @@ export class RequestCustomerForgotPasswordOtpUseCase {
   ): Promise<{ message: string; sessionId: string }> {
     const { email } = input;
     const normalizedEmail = email.toLowerCase().trim();
-    this._logger.info(`${LogEvents.AUTH_FORGOT_PASSWORD_INIT} - Email: ${normalizedEmail}`);
 
     const customer = await this._customerRepository.findByEmail(normalizedEmail);
     if (!customer) {
@@ -68,7 +67,6 @@ export class RequestCustomerForgotPasswordOtpUseCase {
 
     await this._emailService.sendTextEmail(normalizedEmail, subject, text);
 
-    this._logger.info(`${LogEvents.AUTH_OTP_SENT} (Forgot Password) - SessionID: ${sessionId}`);
     return {
       message: 'OTP sent to email for password reset',
       sessionId,

@@ -19,7 +19,6 @@ export class AdminLoginUseCase {
 
   async execute(input: AdminLoginDto): Promise<AuthResultDto> {
     const { email, password } = input;
-    this._logger.info(`${LogEvents.AUTH_LOGIN_INIT} (Admin) - Email: ${email}`);
 
     const admin = await this._adminRepository.findByEmail(email);
 
@@ -63,9 +62,6 @@ export class AdminLoginUseCase {
       this._logger.error("Cache error during admin login", errorMessage);
     }
 
-    this._logger.info(
-      `${LogEvents.AUTH_LOGIN_SUCCESS} (Admin) - ID: ${admin.getId()}`
-    );
     return {
       accessToken,
       refreshToken,

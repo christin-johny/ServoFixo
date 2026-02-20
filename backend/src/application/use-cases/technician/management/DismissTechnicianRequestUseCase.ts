@@ -13,15 +13,9 @@ export class DismissTechnicianRequestUseCase
   ) {}
 
   async execute(technicianId: string, requestId: string): Promise<void> { 
-    this._logger.info(LogEvents.TECH_DISMISS_REQUEST_INIT, {
-      technicianId,
-      requestId,
-    });
-
     try { 
       await this._technicianRepository.dismissRequest(technicianId, requestId);
 
-      this._logger.info(LogEvents.TECH_DISMISS_REQUEST_SUCCESS, { requestId });
     } catch (error) {
       this._logger.error(
         LogEvents.TECH_DISMISS_REQUEST_FAILED,

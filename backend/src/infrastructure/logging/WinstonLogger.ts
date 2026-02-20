@@ -15,8 +15,8 @@ export class WinstonLogger implements ILogger {
       filename: "logs/error-%DATE%.log",
       datePattern: "YYYY-MM-DD",
       zippedArchive: true,
-      maxSize: "5m",
-      maxFiles: "3d",
+      maxSize: process.env.LOG_MAX_SIZE || "5m",
+      maxFiles: process.env.LOG_RETENTION_DAYS || "3d",
       level: "error",
     });
 
@@ -24,12 +24,12 @@ export class WinstonLogger implements ILogger {
       filename: "logs/combined-%DATE%.log",
       datePattern: "YYYY-MM-DD",
       zippedArchive: true,
-      maxSize: "5m",
-      maxFiles: "3d",
+      maxSize: process.env.LOG_MAX_SIZE || "5m",
+      maxFiles: process.env.LOG_RETENTION_DAYS || "3d",
     });
 
     this.logger = winston.createLogger({
-      level: process.env.LOG_LEVEL || "info",
+      level:"info",
       format: logFormat,
       transports: [errorTransport, combinedTransport],
     });

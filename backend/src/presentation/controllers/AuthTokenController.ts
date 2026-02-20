@@ -15,7 +15,6 @@ export class AuthTokenController {
 
   refresh = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.AUTH_REFRESH_INIT);
       const refreshToken = req.cookies?.refreshToken as string | undefined;
 
       if (!refreshToken) {
@@ -30,7 +29,6 @@ export class AuthTokenController {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
 
-      this._logger.info(LogEvents.AUTH_REFRESH_SUCCESS);
       return res.status(StatusCodes.OK).json({
         message: "Token refreshed",
         accessToken: result.accessToken,

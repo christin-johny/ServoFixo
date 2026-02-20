@@ -11,7 +11,7 @@ export class GetServiceListingUseCase {
   ) {}
 
   async execute(filters: ServiceFilters): Promise<ServiceItemResponseDto[]> {
-    this._logger.info(`${LogEvents.SERVICE_GET_ALL_INIT} - Filters: ${JSON.stringify(filters)}`);
+    
 
     const safeFilters = { ...filters, isActive: true };
     const services = await this._serviceItemRepo.findWithFilters(safeFilters);

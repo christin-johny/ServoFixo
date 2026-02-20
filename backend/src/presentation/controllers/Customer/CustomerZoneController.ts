@@ -28,7 +28,7 @@ export class CustomerZoneController extends BaseController {
         });
       }
 
-      this._logger.info(LogEvents.ZONE_FIND_BY_LOC_INIT, { lat, lng });
+      
 
       const resultDto = await this._findZoneByLocationUseCase.execute(lat, lng);
        

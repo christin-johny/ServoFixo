@@ -21,7 +21,7 @@ export class EditCategoryUseCase {
     dto: UpdateCategoryDto,
     imageFile?: IFile
   ): Promise<CategoryResponseDto> {
-    this._logger.info(`${LogEvents.CATEGORY_UPDATE_INIT} - ID: ${id}`);
+    
 
     const existingCategory = await this._categoryRepo.findById(id);
     if (!existingCategory) {
@@ -44,9 +44,6 @@ export class EditCategoryUseCase {
     let iconUrl = existingCategory.getIconUrl();
 
     if (imageFile) {
-      this._logger.info(
-        `${LogEvents.CATEGORY_UPDATE_INIT} - Uploading new image`
-      );
       const newUrl = await this._imageService.uploadImage(
         imageFile.buffer,
         imageFile.originalName,
@@ -83,7 +80,7 @@ export class EditCategoryUseCase {
     });
 
     const saved = await this._categoryRepo.update(updatedEntity);
-    this._logger.info(`${LogEvents.CATEGORY_UPDATED} - ID: ${id}`);
+    
     return CategoryMapper.toResponse(saved);
   }
 }

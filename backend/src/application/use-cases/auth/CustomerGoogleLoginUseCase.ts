@@ -34,7 +34,6 @@ export class CustomerGoogleLoginUseCase {
 
   async execute(request: GoogleLoginRequest): Promise<GoogleLoginResponse> {
     try {
-      this._logger.info(LogEvents.AUTH_GOOGLE_LOGIN_INIT);
       let customer: Customer | null = null;
       let picture: string | undefined;
 
@@ -125,9 +124,6 @@ export class CustomerGoogleLoginUseCase {
         this._logger.error("Failed to store refresh token in cache:", errorMessage);
       }
 
-      this._logger.info(
-        `${LogEvents.AUTH_GOOGLE_LOGIN_SUCCESS} - ID: ${customerId}`
-      );
       return {
         accessToken,
         refreshToken,

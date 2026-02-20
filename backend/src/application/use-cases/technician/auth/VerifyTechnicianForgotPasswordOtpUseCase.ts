@@ -20,7 +20,6 @@ export class VerifyTechnicianForgotPasswordOtpUseCase {
     const { email, otp, sessionId, newPassword } = input;
     const normalizedEmail = email.toLowerCase().trim();
 
-    this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} (Reset Pass) - Email: ${normalizedEmail}`);
  
     const session = await this._otpSessionRepository.findValidSession(
       normalizedEmail,
@@ -58,8 +57,7 @@ export class VerifyTechnicianForgotPasswordOtpUseCase {
 
     await this._technicianRepository.update(updatedTechnician);
 
-    this._logger.info(`${LogEvents.AUTH_PASSWORD_RESET_SUCCESS} - Technician: ${technician.getId()}`);
-
+ 
     return {
       message: SuccessMessages.PASSWORD_RESET_SUCCESS,
     };

@@ -26,7 +26,6 @@ export class AdminZoneController extends BaseController {
   create = async (req: Request, res: Response): Promise<Response> => {
     try {
       const dto = req.body as CreateZoneDto;
-      this._logger.info(LogEvents.ZONE_CREATE_INIT, { body: req.body });
 
       if (!dto.name || !dto.boundaries || !Array.isArray(dto.boundaries) || dto.boundaries.length < 3) {
         throw new Error(ErrorMessages.MISSING_REQUIRED_FIELDS + " (Valid boundaries required)");
@@ -46,7 +45,6 @@ export class AdminZoneController extends BaseController {
 
   getAll = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.ZONE_GET_ALL_INIT, { query: req.query });
 
       const params: ZoneQueryParams = {
         ...RequestMapper.toPagination(req.query),
@@ -66,7 +64,6 @@ export class AdminZoneController extends BaseController {
     try {
       const { id } = req.params;
       const dto = req.body as UpdateZoneDto;
-      this._logger.info(LogEvents.ZONE_UPDATE_INIT, { id, dto });
 
       if (dto.boundaries && (!Array.isArray(dto.boundaries) || dto.boundaries.length < 3)) {
         throw new Error(ErrorMessages.INVALID_BOUNDARIES);
@@ -87,7 +84,6 @@ export class AdminZoneController extends BaseController {
   delete = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      this._logger.info(LogEvents.ZONE_DELETE_INIT, { id });
 
       await this._deleteZoneUseCase.execute(id);
       

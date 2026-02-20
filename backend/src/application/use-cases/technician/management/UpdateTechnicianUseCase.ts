@@ -69,6 +69,5 @@ export class UpdateTechnicianUseCase {
     t._updatedAt = new Date();
 
     await this._technicianRepo.update(tech);
-    this._logger.info(`Technician ${id} updated by Admin (Full Profile)`);
   }
 }

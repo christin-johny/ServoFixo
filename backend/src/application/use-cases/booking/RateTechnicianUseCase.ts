@@ -2,7 +2,7 @@ import { IUseCase } from "../../interfaces/IUseCase";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
 import { IReviewRepository } from "../../../domain/repositories/IReviewRepository";
-import { IServiceItemRepository } from "../../../domain/repositories/IServiceItemRepository"; //   NEW
+import { IServiceItemRepository } from "../../../domain/repositories/IServiceItemRepository";  
 import { ILogger } from "../../interfaces/ILogger";
 import { RateTechnicianDto } from "../../dto/booking/RateTechnicianDto";
 import { Review } from "../../../domain/entities/Review";
@@ -25,11 +25,11 @@ async execute(input: RateTechnicianDto): Promise<void> {
         throw new Error(ErrorMessages.UNAUTHORIZED);
     }
 
-    // const existingReview = await this._reviewRepo.findByBookingId(input.bookingId);
-    // console.log(existingReview)
-    // if (existingReview) {
-    //     throw new Error("You have already rated this technician.");
-    // }
+    const existingReview = await this._reviewRepo.findByBookingId(input.bookingId);
+    console.log(existingReview)
+    if (existingReview) {
+        throw new Error("You have already rated this technician.");
+    }
     
     if (booking.getStatus() !== "PAID" && booking.getStatus() !== "COMPLETED") {
         throw new Error("You can only rate completed jobs.");
@@ -57,7 +57,5 @@ async execute(input: RateTechnicianDto): Promise<void> {
     }
  
     await this._serviceRepo.addRating(serviceId, input.rating);
-
-    this._logger.info(`Rating submitted for Booking ${input.bookingId}`);
   }
 }

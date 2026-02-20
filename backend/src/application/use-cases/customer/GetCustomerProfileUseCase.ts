@@ -12,7 +12,6 @@ export class GetCustomerProfileUseCase {
   ) {}
 
   async execute(userId: string) {
-    this._logger.info(LogEvents.PROFILE_FETCH_INIT, { userId });
 
     const customer = await this._customerRepository.findById(userId);
     if (!customer) {

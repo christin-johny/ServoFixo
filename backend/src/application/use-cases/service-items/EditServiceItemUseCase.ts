@@ -24,7 +24,6 @@ export class EditServiceItemUseCase {
   ) {}
 
   async execute(request: EditServiceRequest): Promise<ServiceItemResponseDto> {
-    this._logger.info(`${LogEvents.SERVICE_UPDATE_INIT} - ID: ${request.id}`);
 
     const existingService = await this._serviceRepo.findById(request.id);
     if (!existingService) {
@@ -63,7 +62,6 @@ export class EditServiceItemUseCase {
       );
       const newUrls = await Promise.all(uploadPromises);
       currentImages = [...currentImages, ...newUrls];
-      this._logger.info(LogEvents.SERVICE_IMAGE_UPLOAD_SUCCESS);
     }
  
     const updatedEntity = new ServiceItem({
@@ -86,7 +84,7 @@ export class EditServiceItemUseCase {
     });
 
     const savedService = await this._serviceRepo.update(updatedEntity);
-    this._logger.info(`${LogEvents.SERVICE_UPDATED} - ID: ${request.id}`);
+    
 
     return ServiceItemMapper.toResponse(savedService);
   }

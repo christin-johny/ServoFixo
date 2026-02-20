@@ -10,7 +10,7 @@ export class DeleteServiceItemUseCase {
   ) {}
 
   async execute(id: string): Promise<void> {
-    this._logger.info(`${LogEvents.SERVICE_DELETE_INIT} - ID: ${id}`);
+    
     
     const service = await this._serviceRepo.findById(id);
     if (!service) {
@@ -19,6 +19,6 @@ export class DeleteServiceItemUseCase {
     }
 
     await this._serviceRepo.delete(id);
-    this._logger.info(`${LogEvents.SERVICE_DELETED} - ID: ${id}`);
+    
   }
 }

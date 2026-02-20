@@ -33,12 +33,8 @@ export class AddAddressUseCase {
     );
 
     const savedAddress = await this._addressRepository.create(newAddress);
+    
 
-    this._logger.info(LogEvents.ADDRESS_ADDED, { 
-      addressId: savedAddress.getId(), 
-      userId, 
-      isServiceable: zoneResult.isServiceable 
-    });
 
     return AddressMapper.toResponse(savedAddress);
   }

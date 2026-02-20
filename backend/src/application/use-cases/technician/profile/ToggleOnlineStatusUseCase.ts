@@ -55,12 +55,6 @@ export class ToggleOnlineStatusUseCase implements IUseCase<boolean, [ToggleStatu
     
     await this._technicianRepo.updateOnlineStatus(technicianId, newStatus, locationData);
 
-    this._logger.info(LogEvents.TECH_STATUS_TOGGLE_SUCCESS, { 
-      id: technicianId, 
-      status: newStatus ? "ONLINE" : "OFFLINE",
-      coords: locationData
-    });
-
     return newStatus;
   }
 }

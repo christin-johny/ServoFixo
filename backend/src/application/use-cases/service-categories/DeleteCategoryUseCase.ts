@@ -10,7 +10,7 @@ export class DeleteCategoryUseCase {
   ) {}
 
   async execute(id: string): Promise<void> {
-    this._logger.info(`${LogEvents.CATEGORY_DELETE_INIT} - ID: ${id}`);
+    
 
     const category = await this._categoryRepo.findById(id);
     if (!category) {
@@ -19,6 +19,6 @@ export class DeleteCategoryUseCase {
     }
 
     await this._categoryRepo.delete(id);
-    this._logger.info(`${LogEvents.CATEGORY_DELETED} - ID: ${id}`);
+    
   }
 }

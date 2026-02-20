@@ -21,7 +21,6 @@ export class RequestCustomerEmailOtpUseCase {
   async execute(input: OtpLoginInitDto): Promise<AuthResponse> {
     const { email } = input;
     const normalizedEmail = email.toLowerCase().trim();
-    this._logger.info(`${LogEvents.AUTH_OTP_REQUEST_INIT} (Login) - Email: ${normalizedEmail}`);
 
     const customer = await this._customerRepository.findByEmail(normalizedEmail);
     if (!customer) {
@@ -49,7 +48,6 @@ export class RequestCustomerEmailOtpUseCase {
 
     await this._emailService.sendTextEmail(normalizedEmail, subject, text);
 
-    this._logger.info(`${LogEvents.AUTH_OTP_SENT} - SessionID: ${sessionId}`);
     return {
       message: 'OTP sent to email',
       sessionId,

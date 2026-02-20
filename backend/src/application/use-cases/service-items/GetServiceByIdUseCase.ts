@@ -12,7 +12,7 @@ export class GetServiceByIdUseCase {
   ) {}
 
   async execute(id: string): Promise<ServiceItemResponseDto | null> {
-    this._logger.info(`${LogEvents.SERVICE_BY_ID_FETCH} - ID: ${id}`);
+    
 
     const service = await this._serviceRepo.findById(id);
     if (!service) {

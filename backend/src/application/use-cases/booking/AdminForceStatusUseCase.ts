@@ -64,9 +64,6 @@ export class AdminForceStatusUseCase implements IUseCase<void, [AdminForceStatus
  
         await this.sendPushNotifications(input, customerId, techId, booking.getId());
 
-        this._logger.info(
-            `Admin ${input.adminId} forced status change: ${previousStatus} -> ${input.status} for Booking ${input.bookingId}`
-        );
     }
 
     private async sendPushNotifications(

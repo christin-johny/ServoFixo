@@ -19,7 +19,7 @@ export class CustomerCategoryController extends BaseController {
 
   public getAll = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(`${LogEvents.CATEGORY_GET_ALL_INIT} - Customer View`);
+      
   
       const params: CategoryQueryParams = {
         ...RequestMapper.toPagination(req.query),

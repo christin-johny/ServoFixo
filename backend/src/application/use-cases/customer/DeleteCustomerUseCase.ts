@@ -9,8 +9,6 @@ export class DeleteCustomerUseCase {
     ) {}
     
     async execute(customerId: string): Promise<void> {
-        this._logger.info(LogEvents.ACCOUNT_DELETE_INIT, { customerId });
         await this._customerRepository.delete(customerId);
-        this._logger.info(LogEvents.ACCOUNT_DELETE_SUCCESS, { customerId });
     }
 }

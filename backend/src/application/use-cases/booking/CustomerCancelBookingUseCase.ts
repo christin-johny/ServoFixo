@@ -75,6 +75,5 @@ export class CustomerCancelBookingUseCase implements IUseCase<void, [CancelBooki
         }
     });
 
-    this._logger.info(`${LogEvents.BOOKING_CANCELLED_BY_CUSTOMER} ${booking.getId()}`);
   }
 }

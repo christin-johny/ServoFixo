@@ -25,6 +25,5 @@ export class ResubmitProfileUseCase implements IUseCase<void, [string]> {
  
     await this._technicianRepo.update(tech);
 
-    this._logger.info(LogEvents.TECH_PROFILE_SUBMITTED, { technicianId });
   }
 }

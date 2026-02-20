@@ -70,6 +70,5 @@ export class VerifyPaymentUseCase implements IUseCase<void, [VerifyPaymentDto]> 
         }
     });
 
-    this._logger.info(`${LogEvents.PAYMENT_VERIFIED_LOG} ${booking.getId()}`);
   }
 }

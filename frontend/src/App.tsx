@@ -3,15 +3,15 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Provider, useDispatch } from "react-redux";
 import store from "./store/store";
 import { setAccessToken, setUser, logout } from "./store/authSlice";
-import * as authRepo from "./infrastructure/repositories/authRepository";
-import AdminRoutes from "./presentation/routes/AdminRoutes";
-import CustomerRoutes from "./presentation/routes/CustomerRoutes";
-import TechnicianRoutes from "./presentation/routes/TechnicianRoutes";
-import LoaderFallback from "./presentation/components/LoaderFallback";
+import * as authRepo from "./features/auth/api/authRepository";
+import AdminRoutes from "./routes/AdminRoutes";
+import CustomerRoutes from "./routes/CustomerRoutes";
+import TechnicianRoutes from "./routes/TechnicianRoutes";
+import LoaderFallback from "./components/LoaderFallback";
 import { parseJwt } from "./utils/jwt";
-import { NotificationProvider } from "./presentation/contexts/NotificationContext";
-import ToastContainer from "../src/presentation/components/Notifications/ToastContainer";
-import type { RefreshResponse } from "./domain/types/auth";
+import { NotificationProvider } from "./features/notifications/context/NotificationContext";
+import ToastContainer from "./features/notifications/components/ToastContainer";
+import type { RefreshResponse } from "./features/auth/types/auth";
 
 const AppInner: React.FC = () => {
   const dispatch = useDispatch();

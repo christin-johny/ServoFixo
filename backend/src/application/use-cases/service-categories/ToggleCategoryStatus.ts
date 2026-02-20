@@ -10,7 +10,7 @@ export class ToggleCategoryStatusUseCase {
   ) {}
 
   async execute(id: string, isActive: boolean): Promise<void> {
-    this._logger.info(`${LogEvents.CATEGORY_TOGGLE_STATUS_INIT} - ID: ${id} to ${isActive}`);
+    
 
     const success = await this._categoryRepo.toggleStatus(id, isActive);
     if (!success) {
@@ -18,6 +18,6 @@ export class ToggleCategoryStatusUseCase {
       throw new Error(ErrorMessages.CATEGORY_NOT_FOUND);
     }
     
-    this._logger.info(`${LogEvents.CATEGORY_TOGGLE_STATUS_SUCCESS} - ID: ${id}`);
+    
   }
 }

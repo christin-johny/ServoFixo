@@ -75,6 +75,5 @@ export class AdminForceAssignUseCase implements IUseCase<void, [AdminForceAssign
         metadata: { bookingId: booking.getId() }
     });
 
-    this._logger.info(`Admin ${input.adminId} forced assigned Tech ${input.technicianId} to Booking ${booking.getId()}`);
   }
 }

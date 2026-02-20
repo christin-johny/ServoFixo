@@ -41,7 +41,6 @@ export class NotificationService implements INotificationService {
             // Emit directly to the Admin Room
             io.to("ADMIN_BROADCAST_CHANNEL").emit("NOTIFICATION_RECEIVED", virtualNotification);
             
-            this._logger.info(`Broadcast sent to ADMIN_BROADCAST_CHANNEL: ${dto.title}`);
             return virtualNotification; 
 
         } catch (error) {
@@ -51,8 +50,6 @@ export class NotificationService implements INotificationService {
         }
     }
 
-    // --- Standard Logic for Users/Technicians (Saved to DB) ---
-    this._logger.info(LogEvents.NOTIFICATION_CREATE_INIT, { recipientId: dto.recipientId });
 
     const notification = new Notification({
       recipientId: dto.recipientId,
@@ -75,7 +72,6 @@ export class NotificationService implements INotificationService {
       const io = SocketServer.getInstance(); //
       io.to(dto.recipientId).emit("NOTIFICATION_RECEIVED", responseDto);
       
-      this._logger.info(LogEvents.NOTIFICATION_SEND_SUCCESS, { recipientId: dto.recipientId });
     } catch (error) {
       this._logger.error(LogEvents.NOTIFICATION_SEND_FAILED, { error, recipientId: dto.recipientId });
     }
@@ -183,7 +179,6 @@ async sendBookingRequest(
         priority: "URGENT"
       });
 
-      this._logger.info(`Booking Request Socket Event sent to ${technicianId}`);
     } catch (error) {
       this._logger.error(`Failed to send booking request socket to ${technicianId}`, error);
     }

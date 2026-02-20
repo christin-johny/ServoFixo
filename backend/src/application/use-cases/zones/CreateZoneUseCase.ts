@@ -22,7 +22,6 @@ export class CreateZoneUseCase {
     const newZoneEntity = ZoneMapper.toDomain(input);
     const savedZone = await this._zoneRepository.create(newZoneEntity);
     
-    this._logger.info(LogEvents.ZONE_CREATED, { id: savedZone.getId(), name: savedZone.getName() });
 
     return ZoneMapper.toResponse(savedZone);
   }

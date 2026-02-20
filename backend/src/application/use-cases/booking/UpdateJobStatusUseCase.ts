@@ -53,7 +53,6 @@ export class UpdateJobStatusUseCase {
         }
     });
 
-    this._logger.info(`${LogEvents.BOOKING_STATUS_CHANGED}: ${booking.getId()} moved to ${input.status}`);
   }
 
   private validateTransition(current: BookingStatus, target: BookingStatus) {

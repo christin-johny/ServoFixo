@@ -28,8 +28,6 @@ export class AdminUpdatePaymentUseCase implements IUseCase<void, [AdminUpdatePay
         txnId
     );
 
-    this._logger.info(
-      `Admin ${input.adminId} changed Payment for Booking ${booking.getId()}: ${previousStatus} -> ${input.status}`
-    );
+
   }
 }

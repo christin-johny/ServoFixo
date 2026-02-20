@@ -46,7 +46,6 @@ export class AdminServiceItemController extends BaseController {
 
   public create = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.SERVICE_CREATE_INIT);
 
       const { specifications, basePrice, isActive, ...rest } = req.body;
       const files = req.files as Express.Multer.File[];
@@ -82,7 +81,6 @@ export class AdminServiceItemController extends BaseController {
 
   public getAll = async (req: Request, res: Response): Promise<Response> => {
     try {
-      this._logger.info(LogEvents.SERVICE_LISTING_FETCH);
 
       const params: ServiceQueryParams = {
         ...RequestMapper.toPagination(req.query),
@@ -102,7 +100,6 @@ export class AdminServiceItemController extends BaseController {
   public update = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { id } = req.params;
-      this._logger.info(`${LogEvents.SERVICE_UPDATE_INIT} - ID: ${id}`);
 
       const { specifications, imagesToDelete, basePrice, isActive, ...rest } = req.body;
       const files = req.files as Express.Multer.File[];
