@@ -9,7 +9,7 @@ import { ILogger } from "../../../interfaces/ILogger";
 import { LogEvents } from "../../../../../../shared/constants/LogEvents";
 
 export class RequestTechnicianRegistrationOtpUseCase {
-  private readonly _otpExpiryMinutes = 5; 
+  private readonly _otpExpiryMinutes = Number(process.env.OTP_EXPIRY_MINUTES) || 2;
 
   constructor(
     private readonly _technicianRepository: ITechnicianRepository,

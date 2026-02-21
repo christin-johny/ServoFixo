@@ -5,11 +5,10 @@ import { CustomerRegisterInitDto } from "../../../../../shared/types/dto/AuthDto
 import { OtpContext } from "../../../../../shared/types/enums/OtpContext";
 import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { OtpSession } from "../../../domain/entities/OtpSession";
-import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { ILogger } from "../../interfaces/ILogger"; 
 
 export class RequestCustomerRegistrationOtpUseCase {
-  private readonly _otpExpiryMinutes = 2;
+  private readonly _otpExpiryMinutes = Number(process.env.OTP_EXPIRY_MINUTES) || 2;
 
   constructor(
     private readonly _customerRepository: ICustomerRepository,

@@ -65,7 +65,7 @@ export interface BookingMeta {
 
 export interface BookingTimelineEvent {
   status: BookingStatus;
-  changedBy: string; // e.g., "customer", "tech:123", "system", "admin:999"
+  changedBy: string;  
   timestamp: Date;
   reason?: string;
   meta?: any;

@@ -3,8 +3,7 @@ import { IZoneService } from "../../interfaces/IZoneService";
 import { CreateAddressDto } from "../../dto/address/CreateAddressDto";
 import { AddressResponseDto } from "../../dto/address/AddressResponseDto";
 import { AddressMapper } from "../../mappers/AddressMapper";
-import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { ILogger } from "../../interfaces/ILogger"; 
 
 export class AddAddressUseCase {
   constructor(

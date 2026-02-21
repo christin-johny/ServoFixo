@@ -90,6 +90,8 @@ export enum ErrorMessages {
   INVALID_TRANSITION_REACHED = "Cannot mark Reached. Technician must be EN_ROUTE first.",
   INVALID_TRANSITION_START = "Cannot start job. Technician must be at location (REACHED) first.",
   PAYMENT_SIGNATURE_INVALID = "Payment verification failed. Invalid signature.",
+
+  TOO_MANY_OTP_REQUESTS='Too many otp requests try again after some time.'
 }
 
 export enum SuccessMessages {

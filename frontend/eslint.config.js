@@ -18,6 +18,11 @@ export default defineConfig([
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+      parserOptions: {
+        // FIX: Include all Vite tsconfig files here
+        project: ['./tsconfig.json', './tsconfig.app.json', './tsconfig.node.json'], 
+        tsconfigRootDir: import.meta.dirname, 
+      },
     },
   },
 ])

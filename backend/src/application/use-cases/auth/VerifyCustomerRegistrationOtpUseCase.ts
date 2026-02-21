@@ -8,8 +8,7 @@ import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
 import { OtpContext } from "../../../../../shared/types/enums/OtpContext";
 import { Customer } from "../../../domain/entities/Customer";
 import { ICacheService } from "../../interfaces/ICacheService"; 
-import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { ILogger } from "../../interfaces/ILogger"; 
 
 export class VerifyCustomerRegistrationOtpUseCase {
   constructor(
@@ -52,14 +51,13 @@ export class VerifyCustomerRegistrationOtpUseCase {
     const refreshToken = await this._jwtService.generateRefreshToken(payload);
 
     const ttlSeconds = parseInt(process.env.JWT_REFRESH_EXPIRES_SECONDS ?? String(7 * 24 * 60 * 60), 10);
-    
-    try { 
+      
       await this._cacheService.set(
         `refresh:${refreshToken}`,
         String(savedCustomer.getId()),
         ttlSeconds
       );
-    } catch (_) {}
+     
 
     return { accessToken, refreshToken };
   }

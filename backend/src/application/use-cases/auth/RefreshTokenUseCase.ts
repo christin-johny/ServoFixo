@@ -23,7 +23,7 @@ export class RefreshTokenUseCase {
     let payload: JwtPayload;
     try {
       payload = await this._jwtService.verifyRefreshToken(refreshToken);
-    } catch (err) {
+    } catch   {
       this._logger.warn(`${LogEvents.AUTH_REFRESH_FAILED} - Invalid Token Signature`);
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
@@ -54,7 +54,7 @@ export class RefreshTokenUseCase {
     let stored: string | null = null;
     try {
       stored = await this._cacheService.get(redisKey);
-    } catch { 
+    } catch { throw new Error(ErrorMessages.UNAUTHORIZED);
     }
 
     if (!stored) { 
@@ -63,7 +63,7 @@ export class RefreshTokenUseCase {
         await this._cacheService.set(redisKey, String(payload.sub), fallbackTtl);
         stored = String(payload.sub);
         this._logger.warn("Refresh Token Reuse Attempt Detected");
-      } catch (err) {
+      } catch   {
         throw new Error(ErrorMessages.UNAUTHORIZED);
       }
     }

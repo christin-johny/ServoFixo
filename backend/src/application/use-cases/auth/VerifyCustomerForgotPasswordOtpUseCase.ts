@@ -5,8 +5,7 @@ import {CustomerForgotPasswordVerifyDto,} from '../../../../../shared/types/dto/
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 import { OtpContext } from '../../../../../shared/types/enums/OtpContext';
 import { Customer } from '../../../domain/entities/Customer';
-import { ILogger } from '../../interfaces/ILogger';
-import { LogEvents } from '../../../../../shared/constants/LogEvents';
+import { ILogger } from '../../interfaces/ILogger'; 
 
 export class VerifyCustomerForgotPasswordOtpUseCase {
   constructor(
@@ -28,13 +27,11 @@ export class VerifyCustomerForgotPasswordOtpUseCase {
       OtpContext.ForgotPassword
     );
 
-    if (!session) {
-      this._logger.warn("Invalid OTP Session for Password Reset");
+    if (!session) { 
       throw new Error(ErrorMessages.OTP_SESSION_INVALID);
     }
 
-    if (session.getOtp() !== otp) {
-      this._logger.warn("Invalid OTP entered for Password Reset");
+    if (session.getOtp() !== otp) { 
       throw new Error(ErrorMessages.OTP_INVALID);
     }
 

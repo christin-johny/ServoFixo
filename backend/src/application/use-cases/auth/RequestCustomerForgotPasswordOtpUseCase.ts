@@ -5,13 +5,12 @@ import { OtpSession } from '../../../domain/entities/OtpSession';
 import { OtpContext } from '../../../../../shared/types/enums/OtpContext';
 import { CustomerForgotPasswordInitDto } from '../../../../../shared/types/dto/AuthDtos';
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
-import { ILogger } from '../../interfaces/ILogger';
-import { LogEvents } from '../../../../../shared/constants/LogEvents';
+import { ILogger } from '../../interfaces/ILogger'; 
 
 export class RequestCustomerForgotPasswordOtpUseCase {
-  private readonly _otpExpiryMinutes = 2;
-  private readonly _rateLimitWindowMinutes = 60;
-  private readonly _rateLimitMax = 10; 
+  private readonly _otpExpiryMinutes = Number(process.env.OTP_EXPIRY_MINUTES) || 2;
+  private readonly _rateLimitWindowMinutes = Number(process.env.OTP_RATE_LIMIT_WINDOW_MINUTES) || 60;
+  private readonly _rateLimitMax = Number(process.env.OTP_RATE_LIMIT_MAX) || 10;
 
   constructor(
     private readonly _customerRepository: ICustomerRepository,
@@ -27,8 +26,7 @@ export class RequestCustomerForgotPasswordOtpUseCase {
     const normalizedEmail = email.toLowerCase().trim();
 
     const customer = await this._customerRepository.findByEmail(normalizedEmail);
-    if (!customer) {
-      this._logger.warn(`Forgot Password failed - Customer not found: ${normalizedEmail}`);
+    if (!customer) { 
       throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
     }
 
@@ -37,12 +35,11 @@ export class RequestCustomerForgotPasswordOtpUseCase {
         normalizedEmail,
         this._rateLimitWindowMinutes
       );
-      if (recentCount >= this._rateLimitMax) {
-        this._logger.warn(`Rate Limit Exceeded for OTP: ${normalizedEmail}`);
-        throw new Error('TOO_MANY_OTP_REQUESTS');
+      if (recentCount >= this._rateLimitMax) { 
+        throw new Error(ErrorMessages.TOO_MANY_OTP_REQUESTS);
       }
     } catch (err) {
-      if ((err as Error).message === 'TOO_MANY_OTP_REQUESTS') {
+      if ((err as Error).message === ErrorMessages.TOO_MANY_OTP_REQUESTS) {
         throw err;
       }
     }

@@ -5,11 +5,10 @@ import { OtpContext } from '../../../../../shared/types/enums/OtpContext';
 import { OtpLoginInitDto, AuthResponse } from '../../../../../shared/types/dto/AuthDtos';
 import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
 import { OtpSession } from '../../../domain/entities/OtpSession';
-import { ILogger } from '../../interfaces/ILogger';
-import { LogEvents } from '../../../../../shared/constants/LogEvents';
+import { ILogger } from '../../interfaces/ILogger'; 
 
 export class RequestCustomerEmailOtpUseCase {
-  private readonly otpExpiryMinutes = 5;
+  private readonly _otpExpiryMinutes= Number(process.env.OTP_EXPIRY_MINUTES) || 5;
 
   constructor(
     private readonly _customerRepository: ICustomerRepository,
@@ -23,8 +22,7 @@ export class RequestCustomerEmailOtpUseCase {
     const normalizedEmail = email.toLowerCase().trim();
 
     const customer = await this._customerRepository.findByEmail(normalizedEmail);
-    if (!customer) {
-      this._logger.warn(`OTP Request Failed - Customer not found: ${normalizedEmail}`);
+    if (!customer) { 
       throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
     }
 
@@ -44,7 +42,7 @@ export class RequestCustomerEmailOtpUseCase {
     await this._otpSessionRepository.create(session);
 
     const subject = 'Your ServoFixo login OTP';
-    const text = `Your OTP for login is: ${otp}. It is valid for ${this.otpExpiryMinutes} minutes.`;
+    const text = `Your OTP for login is: ${otp}. It is valid for ${this._otpExpiryMinutes} minutes.`;
 
     await this._emailService.sendTextEmail(normalizedEmail, subject, text);
 
@@ -64,7 +62,7 @@ export class RequestCustomerEmailOtpUseCase {
 
   private calculateExpiry(): Date {
     const expires = new Date();
-    expires.setMinutes(expires.getMinutes() + this.otpExpiryMinutes);
+    expires.setMinutes(expires.getMinutes() + this._otpExpiryMinutes);
     return expires;
   }
 }
