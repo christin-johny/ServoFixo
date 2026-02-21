@@ -1,5 +1,5 @@
 
-import { OtpContext } from '../enums/OtpContext'; 
+import { OtpContext } from '../../../domain/enums/OtpContext'; 
 
 
 export interface OtpLoginInitDto {

@@ -2,7 +2,7 @@ import { Technician } from "../../domain/entities/Technician";
 import { TechnicianResponseDto } from "../../application/dto/technician/TechnicianResponseDto";
 import {
   VerificationStatus
-} from "../../../../shared/types/value-objects/TechnicianTypes";
+} from "../../domain/value-objects/TechnicianTypes";
 import { TechnicianQueueItemDto } from "../dto/technician/TechnicianQueueDto";
 import { AdminTechnicianProfileDto } from "../dto/technician/TechnicianVerificationDtos";
 

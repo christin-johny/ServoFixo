@@ -1,8 +1,8 @@
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { Customer } from "../../../domain/entities/Customer";
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class UpdateCustomerUseCase {
   constructor(

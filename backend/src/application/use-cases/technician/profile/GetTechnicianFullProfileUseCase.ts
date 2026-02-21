@@ -6,7 +6,7 @@ import { IUseCase } from "../../../interfaces/IUseCase";
 import { AdminTechnicianProfileDto } from "../../../dto/technician/TechnicianVerificationDtos";
 import { TechnicianMapper } from "../../../mappers/TechnicianMapper";
 import { ILogger } from "../../../interfaces/ILogger";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
 
 import { Zone } from "../../../../domain/entities/Zone";
 import { ServiceCategory } from "../../../../domain/entities/ServiceCategory";

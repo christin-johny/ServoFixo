@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AnyZodObject, ZodError } from "zod";
-import { StatusCodes } from "../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages } from "../../../../shared/types/enums/ErrorMessages";
+import { StatusCodes } from "../../presentation/utils/StatusCodes";
+import { ErrorMessages } from "../../application/constants/ErrorMessages";
 
 export const validateRequest = (schema: AnyZodObject) => {
   return async (req: Request, res: Response, next: NextFunction) => {

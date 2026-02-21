@@ -5,7 +5,7 @@ import {
 } from "../../../domain/repositories/IZoneRepository";
 import { Zone } from "../../../domain/entities/Zone";
 import { ZoneModel, IZoneDocument } from "../mongoose/models/ZoneModel";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../../application/constants/ErrorMessages";
 
 export class ZoneMongoRepository implements IZoneRepository {
   async create(zone: Zone): Promise<Zone> {

@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { IUseCase } from "../../../application/interfaces/IUseCase"; 
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { StatusCodes } from "../../utils/StatusCodes";
+import { ErrorMessages, SuccessMessages } from "../../../application/constants/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 interface ICustomerEntity {
   getId(): string;

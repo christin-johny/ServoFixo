@@ -8,9 +8,9 @@ import { INotificationService } from "../../services/INotificationService";
 import { CreateBookingRequestDto } from "../../dto/booking/CreateBookingRequestDto";
 import { Booking } from "../../../domain/entities/Booking";
 import { Technician } from "../../../domain/entities/Technician";
-import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class CreateBookingUseCase {
   constructor(

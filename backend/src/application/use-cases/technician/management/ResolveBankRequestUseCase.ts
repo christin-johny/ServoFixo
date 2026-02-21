@@ -2,9 +2,9 @@ import { ITechnicianRepository } from "../../../../domain/repositories/ITechnici
 import { IUseCase } from "../../../interfaces/IUseCase";
 import { ResolvePartnerRequestDto } from "../../../dto/admin/ManageRequestDto";
 import { ILogger } from "../../../interfaces/ILogger";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
-import { PartnerRequestType, RequestAction } from "../../../../../../shared/types/enums/RequestResolutionEnums";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
+import { PartnerRequestType, RequestAction } from "../../../../domain/enums/RequestResolutionEnums";
 import { Technician } from "../../../../domain/entities/Technician";
 import { INotificationService } from "../../../services/INotificationService";
 

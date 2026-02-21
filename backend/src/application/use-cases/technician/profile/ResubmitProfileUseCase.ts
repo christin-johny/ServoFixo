@@ -1,8 +1,8 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { IUseCase } from "../../../interfaces/IUseCase";
 import { ILogger } from "../../../interfaces/ILogger";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 
 export class ResubmitProfileUseCase implements IUseCase<void, [string]> {
   constructor(

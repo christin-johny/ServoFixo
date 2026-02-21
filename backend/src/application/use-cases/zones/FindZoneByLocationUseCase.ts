@@ -1,7 +1,7 @@
 import { IZoneService } from "../../interfaces/IZoneService";
 import { ZoneServiceabilityDto } from "../../dto/zone/ZoneServiceabilityDto";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class FindZoneByLocationUseCase {
   constructor(

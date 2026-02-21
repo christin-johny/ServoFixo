@@ -1,4 +1,4 @@
-import { Phone } from "../../../../shared/types/value-objects/ContactTypes";
+import { Phone } from "../value-objects/ContactTypes";
  
 export interface AddressProps {
   id: string;

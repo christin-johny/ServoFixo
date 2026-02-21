@@ -1,6 +1,6 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { ILogger } from "../../../interfaces/ILogger";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
  
 export interface UpdateTechnicianDto {
   name?: string;

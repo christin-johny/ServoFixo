@@ -1,7 +1,7 @@
 import { IZoneRepository } from '../../../domain/repositories/IZoneRepository';
 import { ILogger } from '../../interfaces/ILogger';
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { ErrorMessages } from '../../constants/ErrorMessages';
 
 export class DeleteZoneUseCase {
   constructor(

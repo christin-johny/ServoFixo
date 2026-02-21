@@ -14,8 +14,8 @@ import {
   TechAssignmentAttempt,  
   ExtraCharge,
   PaymentStatus
-} from "../../../../../shared/types/value-objects/BookingTypes";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+} from "../../../domain/value-objects/BookingTypes";
+import { ErrorMessages } from "../../../application/constants/ErrorMessages";
 import { isValidObjectId } from "mongoose";
 
 

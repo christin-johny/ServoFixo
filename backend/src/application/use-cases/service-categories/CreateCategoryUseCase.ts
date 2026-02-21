@@ -3,9 +3,9 @@ import { IImageService } from "../../interfaces/IImageService";
 import { CreateCategoryDto } from "../../dto/category/CreateCategoryDto";
 import { CategoryResponseDto } from "../../dto/category/CategoryResponseDto";
 import { CategoryMapper } from "../../mappers/CategoryMapper";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export interface IFile {
   buffer: Buffer;

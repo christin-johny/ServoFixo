@@ -2,8 +2,8 @@ import { IUseCase } from "../../interfaces/IUseCase";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { ILogger } from "../../interfaces/ILogger";
 import { AdminUpdatePaymentDto } from "../../dto/admin/AdminUpdatePaymentDto";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { PaymentStatus } from "../../../../../shared/types/value-objects/BookingTypes"; 
+import { ErrorMessages } from "../../constants/ErrorMessages";
+import { PaymentStatus } from "../../../domain/value-objects/BookingTypes"; 
 
 export class AdminUpdatePaymentUseCase implements IUseCase<void, [AdminUpdatePaymentDto]> {
   constructor(

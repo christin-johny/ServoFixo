@@ -5,7 +5,7 @@ import { BaseController } from '../BaseController';
 import { RequestMapper } from '../../utils/RequestMapper';
 import { IUseCase } from '../../../application/interfaces/IUseCase';
 import { ILogger } from '../../../application/interfaces/ILogger';
-import { LogEvents } from '../../../../../shared/constants/LogEvents';
+import { LogEvents } from '../../../infrastructure/logging/LogEvents';
 import { CategoryQueryParams } from '../../../domain/repositories/IServiceCategoryRepository';
 import { PaginatedCategoriesResponse } from '../../../application/use-cases/service-categories/GetAllCategoriesUseCase';
 

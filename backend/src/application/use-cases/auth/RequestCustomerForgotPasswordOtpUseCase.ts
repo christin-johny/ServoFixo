@@ -2,9 +2,9 @@ import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepos
 import { IOtpSessionRepository } from '../../../domain/repositories/IOtpSessionRepository';
 import { IEmailService } from '../../interfaces/IEmailService';
 import { OtpSession } from '../../../domain/entities/OtpSession';
-import { OtpContext } from '../../../../../shared/types/enums/OtpContext';
-import { CustomerForgotPasswordInitDto } from '../../../../../shared/types/dto/AuthDtos';
-import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
+import { OtpContext } from '../../../domain/enums/OtpContext';
+import { CustomerForgotPasswordInitDto } from '../../dto/auth/AuthDtos';
+import { ErrorMessages } from '../../constants/ErrorMessages';
 import { ILogger } from '../../interfaces/ILogger'; 
 
 export class RequestCustomerForgotPasswordOtpUseCase {

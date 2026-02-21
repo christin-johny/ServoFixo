@@ -1,8 +1,8 @@
 import { IUseCase } from "../../../interfaces/IUseCase";
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
 
 export class DismissTechnicianRequestUseCase
   implements IUseCase<void, [string, string]>

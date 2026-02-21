@@ -1,9 +1,9 @@
 import { IServiceItemRepository } from '../../../domain/repositories/IServiceItemRepository';
 import { ILogger } from '../../interfaces/ILogger';
-import { LogEvents } from '../../../../../shared/constants/LogEvents';
+import { LogEvents } from '../../../infrastructure/logging/LogEvents';
 import { ServiceItemMapper } from '../../mappers/ServiceItemMapper';
 import { ServiceItemResponseDto } from '../../dto/serviceItem/ServiceItemResponseDto';
-import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
+import { ErrorMessages } from '../../constants/ErrorMessages';
 
 export class GetServiceByIdUseCase {
   constructor(

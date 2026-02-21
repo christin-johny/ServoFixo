@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
-import { VerificationStatus } from "../../../../../../shared/types/value-objects/TechnicianTypes";
+import { VerificationStatus } from "../../../../domain/value-objects/TechnicianTypes";
 
 export interface TechnicianDocument extends Document {
   name: string;

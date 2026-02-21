@@ -2,7 +2,7 @@ import {
   TechnicianBankDetails,
   EmergencyContact,
   TechnicianAvailability
-} from "../../../../../shared/types/value-objects/TechnicianTypes";
+} from "../../../domain/value-objects/TechnicianTypes";
 
 export class UpdateTechnicianDto {
   name?: string;

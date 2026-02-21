@@ -3,10 +3,10 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { CancelBookingDto } from "../../dto/booking/CancelBookingDto";
-import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
 
 export class TechnicianCancelBookingUseCase implements IUseCase<void, [CancelBookingDto]> {
   constructor(

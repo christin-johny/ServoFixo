@@ -3,8 +3,8 @@ import { CreateZoneDto } from "../../dto/zone/CreateZoneDto";
 import { ZoneResponseDto } from "../../dto/zone/ZoneResponseDto";
 import { ZoneMapper } from "../../mappers/ZoneMapper";
 import { ILogger } from "../../interfaces/ILogger";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { ErrorMessages } from "../../constants/ErrorMessages";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class CreateZoneUseCase {
   constructor(

@@ -9,10 +9,10 @@ import { UpdateCategoryDto } from "../../../application/dto/category/UpdateCateg
 import { CategoryResponseDto } from "../../../application/dto/category/CategoryResponseDto";
 import { PaginatedCategoriesResponse } from "../../../application/use-cases/service-categories/GetAllCategoriesUseCase";
 import { CategoryQueryParams } from "../../../domain/repositories/IServiceCategoryRepository";
-import { SuccessMessages, ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { SuccessMessages, ErrorMessages } from "../../../application/constants/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { StatusCodes } from "../../utils/StatusCodes";
 
 interface FileData {
   buffer: Buffer;

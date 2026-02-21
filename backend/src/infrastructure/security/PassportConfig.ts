@@ -1,7 +1,7 @@
 import passport from "passport";
 import { CustomerMongoRepository } from "../database/repositories/CustomerMongoRepository";
 import { Customer } from "../../domain/entities/Customer";
-import { Email } from "../../../../shared/types/value-objects/ContactTypes";
+import { Email } from "../../domain/value-objects/ContactTypes";
 
 const customerRepository = new CustomerMongoRepository();
 

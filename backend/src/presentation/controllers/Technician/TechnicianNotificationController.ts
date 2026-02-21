@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { StatusCodes } from "../../utils/StatusCodes";
+import { ErrorMessages } from "../../../application/constants/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { GetNotificationHistoryUseCase } from "../../../application/use-cases/notification/GetNotificationHistoryUseCase";
 import { MarkNotificationAsReadUseCase } from "../../../application/use-cases/notification/MarkNotificationAsReadUseCase";

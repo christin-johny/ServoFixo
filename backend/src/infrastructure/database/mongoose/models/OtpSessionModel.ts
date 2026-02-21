@@ -1,5 +1,5 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
-import { OtpContext } from "../../../../../../shared/types/enums/OtpContext";
+import { OtpContext } from "../../../../domain/enums/OtpContext";
 
 export interface OtpSessionDocument extends Document {
   email: string;

@@ -1,14 +1,14 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { IUseCase } from "../../../interfaces/IUseCase";
 import { TechnicianOnboardingInput } from "../../../dto/technician/TechnicianOnboardingDtos";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 import { Technician } from "../../../../domain/entities/Technician";
 import {
   TechnicianDocument,
   DocumentStatus,
-} from "../../../../../../shared/types/value-objects/TechnicianTypes";
+} from "../../../../domain/value-objects/TechnicianTypes";
 
 export class TechnicianOnboardingUseCase
   implements IUseCase<boolean, [TechnicianOnboardingInput]>

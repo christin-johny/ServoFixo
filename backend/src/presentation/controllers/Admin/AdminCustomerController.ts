@@ -5,11 +5,11 @@ import {
   CustomerFilterSchema,
   CustomerUpdateSchema,
 } from "../../../application/dto/customer/AdminCustomerDtos";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { StatusCodes } from "../../utils/StatusCodes";
+import { ErrorMessages } from "../../../application/constants/ErrorMessages";
 import { mapToResponseDto } from "../../../application/use-cases/customer/GetAllCustomersUseCase";
 import { ILogger } from "../../../application/interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 interface CustomerFilterDto {
   search?: string;

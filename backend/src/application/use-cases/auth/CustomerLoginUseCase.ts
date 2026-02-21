@@ -2,10 +2,10 @@ import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepos
 import { IPasswordHasher } from "../../interfaces/IPasswordHasher";
 import { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
 import { AuthResultDto } from "../../dto/auth/AuthResultDto";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { ICacheService } from "../../interfaces/ICacheService";  
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export interface CustomerLoginDto {
   email: string;

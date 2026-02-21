@@ -1,6 +1,6 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { ILogger } from "../../interfaces/ILogger"; 
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class DeleteCustomerUseCase {
     constructor(

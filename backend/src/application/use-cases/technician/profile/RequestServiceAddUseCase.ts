@@ -1,9 +1,9 @@
 import { IUseCase } from "../../../interfaces/IUseCase";
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
-import { ServiceRequest } from "../../../../../../shared/types/value-objects/TechnicianTypes";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
+import { ServiceRequest } from "../../../../domain/value-objects/TechnicianTypes";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
 
 export interface RequestServiceAddInput {
   serviceId: string;

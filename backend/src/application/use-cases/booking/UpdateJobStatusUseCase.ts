@@ -2,10 +2,10 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { UpdateJobStatusDto } from "../../dto/booking/UpdateJobStatusDto";
-import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { BookingStatus } from "../../../../../shared/types/value-objects/BookingTypes";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
+import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
+import { BookingStatus } from "../../../domain/value-objects/BookingTypes";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
 
 export class UpdateJobStatusUseCase {
   constructor(

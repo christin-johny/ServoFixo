@@ -4,7 +4,7 @@ import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianR
 import { INotificationService } from "../../services/INotificationService"; //   Added
 import { ILogger } from "../../interfaces/ILogger";
 import { ProcessPaymentDto } from "../../dto/webhook/ProcessPaymentDto";
-import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes"; //   Added
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes"; //   Added
 
 export class ProcessPaymentUseCase implements IUseCase<void, [ProcessPaymentDto]> {
   constructor(

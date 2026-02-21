@@ -1,12 +1,12 @@
 import { IAdminRepository } from "../../../domain/repositories/IAdminRepository";
 import { IPasswordHasher } from "../../interfaces/IPasswordHasher";
 import { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
-import { AdminLoginDto } from "../../../../../shared/types/dto/AuthDtos";
+import { AdminLoginDto } from "../../dto/auth/AuthDtos";
 import { AuthResultDto } from "../../dto/auth/AuthResultDto";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { ICacheService } from "../../interfaces/ICacheService"; 
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class AdminLoginUseCase {
   constructor(

@@ -4,10 +4,10 @@ import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianR
 import { RazorpayService } from "../../../infrastructure/payments/RazorpayService"; 
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/ILogger";
-import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
 import { VerifyPaymentDto } from "../../dto/booking/VerifyPaymentDto";
-import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class VerifyPaymentUseCase implements IUseCase<void, [VerifyPaymentDto]> {
   constructor(

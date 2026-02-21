@@ -3,9 +3,9 @@ import { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
 import { IGoogleAuthService } from "../../interfaces/IGoogleAuthService";  
 import { ICacheService } from "../../interfaces/ICacheService";  
 import { Customer } from "../../../domain/entities/Customer";
-import { Email } from "../../../../../shared/types/value-objects/ContactTypes";
+import { Email } from "../../../domain/value-objects/ContactTypes";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 interface GoogleLoginRequest {
   token?: string;

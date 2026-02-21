@@ -1,10 +1,10 @@
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import type { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";  
 import { ICacheService } from "../../interfaces/ICacheService";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class RefreshTokenUseCase {
   constructor(

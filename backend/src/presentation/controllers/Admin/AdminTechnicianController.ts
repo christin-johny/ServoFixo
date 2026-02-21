@@ -16,10 +16,10 @@ import {
   VerificationQueueFilters,
   QueueType,
 } from "../../../domain/repositories/ITechnicianRepository"; 
-import { SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { SuccessMessages } from "../../../application/constants/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { RequestAction, PartnerRequestType } from "../../../../../shared/types/enums/RequestResolutionEnums";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { RequestAction, PartnerRequestType } from "../../../domain/enums/RequestResolutionEnums";
 import { GetRecommendedTechniciansDto } from "../../../application/use-cases/booking/GetRecommendedTechniciansUseCase";  
 
 export class AdminTechnicianController extends BaseController {

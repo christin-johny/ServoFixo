@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { JwtService } from '../../../infrastructure/security/JwtService';
 import { makeCustomerAuthMiddleware } from '../../middlewares/customerAuth.middleware';
-import { StatusCodes } from '../../../../../shared/types/enums/StatusCodes';
+import { StatusCodes } from '../../utils/StatusCodes';
  
 import authRoutes from './auth.routes';        
 import serviceRoutes from './service.routes'; 

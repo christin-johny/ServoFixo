@@ -68,7 +68,7 @@ export interface BookingTimelineEvent {
   changedBy: string;  
   timestamp: Date;
   reason?: string;
-  meta?: any;
+  meta?: Record<string, unknown>; 
 }
 
 export interface BookingTimestamps {

@@ -2,7 +2,7 @@ import { ICustomerRepository, PaginatedResult } from '../../../domain/repositori
 import { Customer } from '../../../domain/entities/Customer';
 import { CustomerFilterDto, CustomerResponseDto } from '../../dto/customer/AdminCustomerDtos';
 import { ILogger } from '../../interfaces/ILogger';
-import { LogEvents } from '../../../../../shared/constants/LogEvents';
+import { LogEvents } from '../../../infrastructure/logging/LogEvents';
 
 export const mapToResponseDto = (customer: Customer): CustomerResponseDto => {
   return {

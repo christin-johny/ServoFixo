@@ -1,6 +1,6 @@
 import { IImageService } from "../../../interfaces/IImageService";
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 import { IUseCase } from "../../../interfaces/IUseCase";
  
 export interface UploadTechnicianFileInput {

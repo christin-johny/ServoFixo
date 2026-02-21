@@ -5,11 +5,11 @@ import { IUseCase } from "../../../application/interfaces/IUseCase";
 import {
   ErrorMessages,
   SuccessMessages,
-} from "../../../../../shared/types/enums/ErrorMessages";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
+} from "../../../application/constants/ErrorMessages";
+import { StatusCodes } from "../../utils/StatusCodes";
 import { refreshCookieOptions } from "../../../infrastructure/config/Cookie";
 import { ILogger } from "../../../application/interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 interface AdminLoginResult {
   accessToken: string;

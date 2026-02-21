@@ -4,8 +4,8 @@ import { CreateServiceItemDto } from '../../dto/serviceItem/CreateServiceItemDto
 import { ServiceItemResponseDto } from '../../dto/serviceItem/ServiceItemResponseDto';
 import { ServiceItemMapper } from '../../mappers/ServiceItemMapper';
 import { ILogger } from '../../interfaces/ILogger';
-import { LogEvents } from '../../../../../shared/constants/LogEvents';
-import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
+import { LogEvents } from '../../../infrastructure/logging/LogEvents';
+import { ErrorMessages } from '../../constants/ErrorMessages';
 
 export interface IFile {
   buffer: Buffer;

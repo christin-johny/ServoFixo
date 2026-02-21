@@ -1,7 +1,7 @@
 import { IServiceItemRepository } from '../../../domain/repositories/IServiceItemRepository';
 import { ILogger } from '../../interfaces/ILogger';
-import { LogEvents } from '../../../../../shared/constants/LogEvents';
-import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
+import { LogEvents } from '../../../infrastructure/logging/LogEvents';
+import { ErrorMessages } from '../../constants/ErrorMessages';
 
 export class DeleteServiceItemUseCase {
   constructor(

@@ -2,10 +2,10 @@ import { ITechnicianRepository } from "../../../../domain/repositories/ITechnici
 import { IOtpSessionRepository } from "../../../../domain/repositories/IOtpSessionRepository";
 import { IPasswordHasher } from "../../../interfaces/IPasswordHasher";
 import { TechnicianForgotPasswordVerifyDto } from "../../../dto/technician/TechnicianAuthDtos";
-import { ErrorMessages, SuccessMessages } from "../../../../../../shared/types/enums/ErrorMessages";
-import { OtpContext } from "../../../../../../shared/types/enums/OtpContext";
+import { ErrorMessages, SuccessMessages } from "../../../constants/ErrorMessages";
+import { OtpContext } from "../../../../domain/enums/OtpContext";
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 import { Technician } from "../../../../domain/entities/Technician";
 
 export class VerifyTechnicianForgotPasswordOtpUseCase {

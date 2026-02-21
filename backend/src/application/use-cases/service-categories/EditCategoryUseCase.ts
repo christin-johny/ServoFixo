@@ -5,9 +5,9 @@ import { CategoryResponseDto } from "../../dto/category/CategoryResponseDto";
 import { ServiceCategory } from "../../../domain/entities/ServiceCategory";
 import { CategoryMapper } from "../../mappers/CategoryMapper";
 import { IFile } from "./CreateCategoryUseCase";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class EditCategoryUseCase {
   constructor(

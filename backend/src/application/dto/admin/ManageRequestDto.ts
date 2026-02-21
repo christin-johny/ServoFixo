@@ -1,4 +1,4 @@
-import { RequestAction, PartnerRequestType } from "../../../../../shared/types/enums/RequestResolutionEnums";
+import { RequestAction, PartnerRequestType } from "../../../domain/enums/RequestResolutionEnums";
 
 export interface ResolvePartnerRequestDto {
   requestType: PartnerRequestType;

@@ -2,7 +2,7 @@ import { ITechnicianRepository } from "../../../../domain/repositories/ITechnici
 import { IUseCase } from "../../../interfaces/IUseCase";
 import { VerifyTechnicianDto } from "../../../dto/technician/TechnicianVerificationDtos";
 import { ILogger } from "../../../interfaces/ILogger";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
 
 export class VerifyTechnicianUseCase implements IUseCase<void, [string, VerifyTechnicianDto]> {
   constructor(

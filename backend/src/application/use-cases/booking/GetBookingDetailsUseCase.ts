@@ -2,8 +2,8 @@ import { IUseCase } from "../../interfaces/IUseCase";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { GetBookingDetailsDto } from "../../dto/booking/GetBookingDetailsDto";
 import { Booking } from "../../../domain/entities/Booking";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { UserRole } from "../../../../../shared/types/enums/UserRole";
+import { ErrorMessages } from "../../constants/ErrorMessages";
+import { UserRole } from "../../../domain/enums/UserRole";
 
 export class GetBookingDetailsUseCase implements IUseCase<Booking, [GetBookingDetailsDto]> {
   constructor(

@@ -4,7 +4,7 @@ import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { AdminForceAssignDto } from "../../../application/dto/admin/AdminForceAssignDto";
 import { AdminForceStatusDto } from "../../../application/dto/admin/AdminForceStatusDto"; 
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../../application/constants/ErrorMessages";
 import { AdminUpdatePaymentDto } from "../../../application/dto/admin/AdminUpdatePaymentDto";
 import { GetAllBookingsDto } from "../../../application/use-cases/booking/GetAllBookingsUseCase";
 import { BookingMapper } from "../../../application/mappers/BookingMapper";

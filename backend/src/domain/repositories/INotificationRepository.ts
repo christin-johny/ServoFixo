@@ -1,5 +1,5 @@
 import { Notification} from "../entities/Notification";
-import { NotificationStatus } from "../../../../shared/types/value-objects/NotificationTypes";
+import { NotificationStatus } from "../value-objects/NotificationTypes";
 import { IBaseRepository } from "./IBaseRepository";
 
 export interface NotificationFilterParams {

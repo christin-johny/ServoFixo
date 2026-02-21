@@ -1,9 +1,9 @@
 import { Customer } from "../../../domain/entities/Customer";
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { StatusCodes } from "../../../presentation/utils/StatusCodes";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class GetCustomerByIdUseCase {
   constructor(

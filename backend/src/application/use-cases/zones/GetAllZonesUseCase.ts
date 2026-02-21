@@ -5,7 +5,7 @@ import {
 import { ZoneResponseDto } from "../../dto/zone/ZoneResponseDto";
 import { ZoneMapper } from "../../mappers/ZoneMapper";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export interface PaginatedZonesResponse {
   zones: ZoneResponseDto[];

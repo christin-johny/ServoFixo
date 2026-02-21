@@ -2,10 +2,10 @@ import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepos
 import { IOtpSessionRepository } from "../../../domain/repositories/IOtpSessionRepository";
 import { IPasswordHasher } from "../../interfaces/IPasswordHasher";
 import { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
-import { CustomerRegisterVerifyDto } from "../../../../../shared/types/dto/AuthDtos";
+import { CustomerRegisterVerifyDto } from "../../dto/auth/AuthDtos";
 import { AuthResultDto } from "../../dto/auth/AuthResultDto";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { OtpContext } from "../../../../../shared/types/enums/OtpContext";
+import { ErrorMessages } from "../../constants/ErrorMessages";
+import { OtpContext } from "../../../domain/enums/OtpContext";
 import { Customer } from "../../../domain/entities/Customer";
 import { ICacheService } from "../../interfaces/ICacheService"; 
 import { ILogger } from "../../interfaces/ILogger"; 

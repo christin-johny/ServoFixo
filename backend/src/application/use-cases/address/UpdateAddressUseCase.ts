@@ -4,9 +4,9 @@ import { UpdateAddressDto } from "../../dto/address/UpdateAddressDto";
 import { AddressResponseDto } from "../../dto/address/AddressResponseDto";
 import { AddressMapper } from "../../mappers/AddressMapper";
 import { Address } from "../../../domain/entities/Address";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class UpdateAddressUseCase {
   constructor(

@@ -1,9 +1,9 @@
 import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepository';
 import { IOtpSessionRepository } from '../../../domain/repositories/IOtpSessionRepository';
 import { IPasswordHasher } from '../../interfaces/IPasswordHasher';
-import {CustomerForgotPasswordVerifyDto,} from '../../../../../shared/types/dto/AuthDtos';
-import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
-import { OtpContext } from '../../../../../shared/types/enums/OtpContext';
+import {CustomerForgotPasswordVerifyDto,} from '../../dto/auth/AuthDtos';
+import { ErrorMessages } from '../../constants/ErrorMessages';
+import { OtpContext } from '../../../domain/enums/OtpContext';
 import { Customer } from '../../../domain/entities/Customer';
 import { ILogger } from '../../interfaces/ILogger'; 
 

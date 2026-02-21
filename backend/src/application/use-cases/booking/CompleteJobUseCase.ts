@@ -6,7 +6,7 @@ import { IImageService } from "../../interfaces/IImageService";
 import { IServiceItemRepository } from "../../../domain/repositories/IServiceItemRepository"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { CompleteJobDto } from "../../dto/booking/CompleteJobDto";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
+import { ErrorMessages } from "../../constants/ErrorMessages"; 
  
 export interface IFile {
     buffer: Buffer;

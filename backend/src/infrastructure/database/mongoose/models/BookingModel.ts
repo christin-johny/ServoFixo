@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 import { 
   BookingStatus, 
   PaymentStatus 
-} from "../../../../../../shared/types/value-objects/BookingTypes";
+} from "../../../../domain/value-objects/BookingTypes";
 
 export interface BookingDocument extends Document {
   customerId: string;

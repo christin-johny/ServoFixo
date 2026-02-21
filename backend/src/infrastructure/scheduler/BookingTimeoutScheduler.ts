@@ -4,7 +4,7 @@ import { ITechnicianRepository } from "../../domain/repositories/ITechnicianRepo
 import { INotificationService } from "../../application/services/INotificationService"; 
 import { ILogger } from "../../application/interfaces/ILogger";
 import { Booking } from "../../domain/entities/Booking";
-import { NotificationType } from "../../../../shared/types/value-objects/NotificationTypes";
+import { NotificationType } from "../../domain/value-objects/NotificationTypes";
 
 export class BookingTimeoutScheduler {
   constructor(

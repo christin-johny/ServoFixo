@@ -3,7 +3,7 @@ import {
   NotificationStatus, 
   RecipientType, 
   NotificationPriority 
-} from "../../../../../shared/types/value-objects/NotificationTypes";
+} from "../../../domain/value-objects/NotificationTypes";
 
 export interface NotificationResponseDto {
   id: string;

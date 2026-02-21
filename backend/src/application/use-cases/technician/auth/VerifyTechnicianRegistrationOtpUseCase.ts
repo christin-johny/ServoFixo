@@ -4,12 +4,12 @@ import { IPasswordHasher } from "../../../interfaces/IPasswordHasher";
 import { IJwtService, JwtPayload } from "../../../interfaces/IJwtService";
 import { TechnicianRegisterVerifyDto } from "../../../dto/technician/TechnicianAuthDtos";
 import { AuthResultDto } from "../../../dto/auth/AuthResultDto";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
-import { OtpContext } from "../../../../../../shared/types/enums/OtpContext";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
+import { OtpContext } from "../../../../domain/enums/OtpContext";
 import { Technician } from "../../../../domain/entities/Technician";
 import { ICacheService } from "../../../interfaces/ICacheService";
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 
 export class VerifyTechnicianRegistrationOtpUseCase {
   constructor(

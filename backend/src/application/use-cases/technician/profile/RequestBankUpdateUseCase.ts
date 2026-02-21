@@ -1,8 +1,8 @@
 import { IUseCase } from "../../../interfaces/IUseCase";
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
-import { BankUpdateRequest } from "../../../../../../shared/types/value-objects/TechnicianTypes";
+import { BankUpdateRequest } from "../../../../domain/value-objects/TechnicianTypes";
 
 export interface RequestBankUpdateInput {
   accountHolderName: string;

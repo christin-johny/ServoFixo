@@ -2,7 +2,7 @@ import { IServiceItemRepository, ServiceItemQueryParams } from '../../../domain/
 import { ServiceItemResponseDto } from '../../dto/serviceItem/ServiceItemResponseDto';
 import { ServiceItemMapper } from '../../mappers/ServiceItemMapper';
 import { ILogger } from '../../interfaces/ILogger';
-import { LogEvents } from '../../../../../shared/constants/LogEvents';
+import { LogEvents } from '../../../infrastructure/logging/LogEvents';
 
 export interface PaginatedServiceResponse {
     data: ServiceItemResponseDto[];

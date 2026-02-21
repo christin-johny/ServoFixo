@@ -4,7 +4,7 @@ import {
   OtpSessionModel,
   OtpSessionDocument,
 } from "../mongoose/models/OtpSessionModel";
-import { OtpContext } from "../../../../../shared/types/enums/OtpContext";
+import { OtpContext } from "../../../domain/enums/OtpContext";
 
 export class OtpSessionMongoRepository implements IOtpSessionRepository {
   async create(session: OtpSession): Promise<OtpSession> {

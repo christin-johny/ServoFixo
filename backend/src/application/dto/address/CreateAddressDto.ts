@@ -1,4 +1,4 @@
-import { Phone } from "../../../../../shared/types/value-objects/ContactTypes";
+import { Phone } from "../../../domain/value-objects/ContactTypes";
 
 export class CreateAddressDto {
   tag!: string;

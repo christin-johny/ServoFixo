@@ -6,7 +6,7 @@ import { IServiceItemRepository } from "../../../domain/repositories/IServiceIte
 import { ILogger } from "../../interfaces/ILogger";
 import { RateTechnicianDto } from "../../dto/booking/RateTechnicianDto";
 import { Review } from "../../../domain/entities/Review";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 
 export class RateTechnicianUseCase implements IUseCase<void, [RateTechnicianDto]> {
   constructor(

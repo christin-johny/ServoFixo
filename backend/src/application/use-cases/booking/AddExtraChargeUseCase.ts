@@ -3,11 +3,11 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { AddExtraChargeDto } from "../../dto/booking/AddExtraChargeDto"; 
-import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { ExtraCharge } from "../../../../../shared/types/value-objects/BookingTypes";
+import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { ExtraCharge } from "../../../domain/value-objects/BookingTypes";
 import { IImageService } from "../../interfaces/IImageService"; 
-import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";  
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes";  
 
 export interface IFile {
     buffer: Buffer;

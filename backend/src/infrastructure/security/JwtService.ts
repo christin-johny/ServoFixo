@@ -1,6 +1,6 @@
 import jwt, { Secret, SignOptions } from 'jsonwebtoken';
 import { IJwtService, JwtPayload } from '../../application/interfaces/IJwtService';
-import { ErrorMessages } from '../../../../shared/types/enums/ErrorMessages';
+import { ErrorMessages } from '../../application/constants/ErrorMessages';
 
 export class JwtService implements IJwtService {
   private readonly _accessSecret: Secret;

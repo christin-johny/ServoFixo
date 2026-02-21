@@ -5,8 +5,8 @@ import { ServiceItemResponseDto } from "../../dto/serviceItem/ServiceItemRespons
 import { ServiceItem } from "../../../domain/entities/ServiceItem";
 import { ServiceItemMapper } from "../../mappers/ServiceItemMapper";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { IFile } from "./CreateServiceItemUseCase";
 
 interface EditServiceRequest {

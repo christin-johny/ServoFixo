@@ -1,9 +1,9 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { IImageService } from "../../interfaces/IImageService";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { Customer } from "../../../domain/entities/Customer";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class UploadAvatarUseCase {
   constructor(

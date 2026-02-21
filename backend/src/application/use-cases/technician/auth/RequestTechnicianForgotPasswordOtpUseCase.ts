@@ -2,11 +2,11 @@ import { ITechnicianRepository } from "../../../../domain/repositories/ITechnici
 import { IOtpSessionRepository } from "../../../../domain/repositories/IOtpSessionRepository";
 import { IEmailService } from "../../../interfaces/IEmailService";
 import { TechnicianForgotPasswordInitDto } from "../../../dto/technician/TechnicianAuthDtos";
-import { OtpContext } from "../../../../../../shared/types/enums/OtpContext";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
+import { OtpContext } from "../../../../domain/enums/OtpContext";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
 import { OtpSession } from "../../../../domain/entities/OtpSession";
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 
 export class RequestTechnicianForgotPasswordOtpUseCase {
   private readonly _otpExpiryMinutes = Number(process.env.OTP_EXPIRY_MINUTES) || 2;

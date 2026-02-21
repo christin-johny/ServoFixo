@@ -1,8 +1,8 @@
 import { IAddressRepository } from "../../../domain/repositories/IAddressRepository";
 import { Address } from "../../../domain/entities/Address";
 import AddressModel, { AddressDocument } from "../mongoose/models/AddressModel"; 
-import { Phone } from "../../../../../shared/types/value-objects/ContactTypes";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { Phone } from "../../../domain/value-objects/ContactTypes";
+import { ErrorMessages } from "../../../application/constants/ErrorMessages";
 
 export class AddressMongoRepository implements IAddressRepository {
  

@@ -1,5 +1,5 @@
 
-import { OtpContext } from '../../../../shared/types/enums/OtpContext';
+import { OtpContext } from '../enums/OtpContext';
 
 export class OtpSession {
   private readonly id: string;

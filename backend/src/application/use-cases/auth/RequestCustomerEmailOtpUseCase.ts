@@ -1,9 +1,9 @@
 import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepository';
 import { IOtpSessionRepository } from '../../../domain/repositories/IOtpSessionRepository';
 import { IEmailService } from '../../interfaces/IEmailService';
-import { OtpContext } from '../../../../../shared/types/enums/OtpContext';
-import { OtpLoginInitDto, AuthResponse } from '../../../../../shared/types/dto/AuthDtos';
-import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
+import { OtpContext } from '../../../domain/enums/OtpContext';
+import { OtpLoginInitDto, AuthResponse } from '../../dto/auth/AuthDtos';
+import { ErrorMessages } from '../../constants/ErrorMessages';
 import { OtpSession } from '../../../domain/entities/OtpSession';
 import { ILogger } from '../../interfaces/ILogger'; 
 

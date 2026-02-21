@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { ILogger } from "../../../application/interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { SuccessMessages, ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { SuccessMessages, ErrorMessages } from "../../../application/constants/ErrorMessages";
 import { TechnicianResponseDto } from "../../../application/dto/technician/TechnicianResponseDto";
 import { UploadTechnicianFileInput } from "../../../application/use-cases/technician/profile/UploadTechnicianFileUseCase";
 import { ToggleStatusInput } from "../../../application/use-cases/technician/profile/ToggleOnlineStatusUseCase";
@@ -21,7 +21,7 @@ import {
   RequestZoneTransferInput, 
   RequestBankUpdateInput 
 } from "../../../application/dto/technician/TechnicianRequestDtos";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
+import { StatusCodes } from "../../utils/StatusCodes";
 
 // Using your existing interface to prevent breaking changes
 interface AuthenticatedRequest extends Request {

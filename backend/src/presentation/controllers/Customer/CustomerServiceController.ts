@@ -3,7 +3,7 @@ import { BaseController } from "../BaseController";
 import { RequestMapper } from "../../utils/RequestMapper";
 import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { ILogger } from "../../../application/interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { Review } from "../../../domain/entities/Review";  
  
 interface ServiceFilters {

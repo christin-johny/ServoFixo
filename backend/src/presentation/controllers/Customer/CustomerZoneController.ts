@@ -4,9 +4,9 @@ import { Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { ILogger } from "../../../application/interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { StatusCodes } from "../../utils/StatusCodes";
+import { ErrorMessages } from "../../../application/constants/ErrorMessages";
 
 export class CustomerZoneController extends BaseController {
   constructor(

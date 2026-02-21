@@ -4,8 +4,8 @@ import { Notification } from "../../domain/entities/Notification";
 import { NotificationMapper } from "../../application/mappers/NotificationMapper";
 import { CreateNotificationDto } from "../../application/dto/notification/CreateNotificationDto";
 import { NotificationResponseDto } from "../../application/dto/notification/NotificationResponseDto";
-import { LogEvents } from "../../../../shared/constants/LogEvents";
-import { NotificationType } from "../../../../shared/types/value-objects/NotificationTypes";
+import { LogEvents } from "../logging/LogEvents";
+import { NotificationType } from "../../domain/value-objects/NotificationTypes";
 import { SocketServer } from "../socket/SocketServer";
 
 export class NotificationService implements INotificationService {

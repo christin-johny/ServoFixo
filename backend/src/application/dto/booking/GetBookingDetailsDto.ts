@@ -1,4 +1,4 @@
-import { UserRoleType } from "../../../../../shared/types/enums/UserRole"; 
+import { UserRoleType } from "../../../domain/enums/UserRole"; 
 
 export class GetBookingDetailsDto {
   bookingId!: string;

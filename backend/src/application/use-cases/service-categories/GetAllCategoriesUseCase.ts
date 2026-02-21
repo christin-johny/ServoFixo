@@ -2,7 +2,7 @@ import { IServiceCategoryRepository, CategoryQueryParams } from '../../../domain
 import { CategoryResponseDto } from '../../dto/category/CategoryResponseDto';
 import { CategoryMapper } from '../../mappers/CategoryMapper';
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export interface PaginatedCategoriesResponse {
   categories: CategoryResponseDto[]; 

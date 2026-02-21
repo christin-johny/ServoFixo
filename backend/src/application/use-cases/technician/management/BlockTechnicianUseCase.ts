@@ -1,7 +1,7 @@
 import { IUseCase } from "../../../interfaces/IUseCase";
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { ILogger } from "../../../interfaces/ILogger";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
 
 export class BlockTechnicianUseCase
   implements IUseCase<void, [string, boolean, string | undefined]>

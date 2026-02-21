@@ -4,7 +4,7 @@ import { IServiceCategoryRepository } from "../../../../domain/repositories/ISer
 import { IServiceItemRepository } from "../../../../domain/repositories/IServiceItemRepository";
 import { IZoneRepository } from "../../../../domain/repositories/IZoneRepository";
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 import { TechnicianResponseDto } from "../../../dto/technician/TechnicianResponseDto";
 
 export class GetTechnicianProfileUseCase

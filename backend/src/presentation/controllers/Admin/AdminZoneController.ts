@@ -8,9 +8,9 @@ import { ZoneResponseDto } from "../../../application/dto/zone/ZoneResponseDto";
 import { PaginatedZonesResponse } from "../../../application/use-cases/zones/GetAllZonesUseCase";
 import { ILogger } from '../../../application/interfaces/ILogger';
 import { ZoneQueryParams } from "../../../domain/repositories/IZoneRepository";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { StatusCodes } from "../../utils/StatusCodes";
+import { ErrorMessages, SuccessMessages } from "../../../application/constants/ErrorMessages";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class AdminZoneController extends BaseController {
   constructor(

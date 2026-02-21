@@ -6,8 +6,8 @@ import { CreateAddressDto } from "../../../application/dto/address/CreateAddress
 import { UpdateAddressDto } from "../../../application/dto/address/UpdateAddressDto"; 
 import { AddressResponseDto } from "../../../application/dto/address/AddressResponseDto"; 
 import { ILogger } from "../../../application/interfaces/ILogger"; 
-import { LogEvents } from "../../../../../shared/constants/LogEvents"; 
-import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
+import { LogEvents } from "../../../infrastructure/logging/LogEvents"; 
+import { ErrorMessages, SuccessMessages } from "../../../application/constants/ErrorMessages"; 
 
 export interface AuthenticatedRequest extends Request {
   userId?: string; 

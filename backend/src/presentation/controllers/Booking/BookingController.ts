@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { ILogger } from "../../../application/interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { SuccessMessages, ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { SuccessMessages, ErrorMessages } from "../../../application/constants/ErrorMessages";
 import { Booking } from "../../../domain/entities/Booking";
 import { CreateBookingRequestDto } from "../../../application/dto/booking/CreateBookingRequestDto";
 import { RespondToBookingDto } from "../../../application/dto/booking/RespondToBookingDto";
@@ -17,7 +17,7 @@ import { CancelBookingDto } from "../../../application/dto/booking/CancelBooking
 import { RateTechnicianDto } from "../../../application/dto/booking/RateTechnicianDto"; 
 import { GetTechnicianHistoryDto } from "../../../application/use-cases/booking/GetTechnicianHistoryUseCase";
 import { PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
-import { BookingStatus } from "../../../../../shared/types/value-objects/BookingTypes"; 
+import { BookingStatus } from "../../../domain/value-objects/BookingTypes"; 
 import {  GetCustomerBookingsDto } from "../../../application/use-cases/booking/GetCustomerBookingsUseCase";
 import {VerifyPaymentDto} from '../../../application/dto/booking/VerifyPaymentDto'
 interface AuthenticatedRequest extends Request {

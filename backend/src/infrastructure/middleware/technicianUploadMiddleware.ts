@@ -1,6 +1,6 @@
 import multer, { FileFilterCallback } from "multer";
 import { Request } from "express";
-import { ErrorMessages } from "../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../application/constants/ErrorMessages";
 
 const storage = multer.memoryStorage();
  

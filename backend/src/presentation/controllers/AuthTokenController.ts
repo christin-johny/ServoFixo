@@ -2,10 +2,10 @@ import type { Request, Response } from "express";
 import { refreshCookieOptions } from "../../infrastructure/config/Cookie";
 import { RefreshTokenUseCase } from "../../application/use-cases/auth/RefreshTokenUseCase";
 
-import { ErrorMessages } from "../../../../shared/types/enums/ErrorMessages";
-import { StatusCodes } from "../../../../shared/types/enums/StatusCodes";
+import { ErrorMessages } from "../../application/constants/ErrorMessages";
+import { StatusCodes } from "../utils/StatusCodes";
 import { ILogger } from "../../application/interfaces/ILogger";
-import { LogEvents } from "../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../infrastructure/logging/LogEvents";
 
 export class AuthTokenController {
   constructor(

@@ -3,7 +3,7 @@ import { IUseCase } from "../../../interfaces/IUseCase";
 import { PaginatedTechnicianQueueResponse } from "../../../dto/technician/TechnicianQueueDto";
 import { TechnicianMapper } from "../../../mappers/TechnicianMapper";  
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 
 export class GetVerificationQueueUseCase implements IUseCase<PaginatedTechnicianQueueResponse, [VerificationQueueFilters]> {
   constructor(
