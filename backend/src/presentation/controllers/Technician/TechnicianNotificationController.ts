@@ -1,10 +1,11 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "../../utils/StatusCodes";
 import { ErrorMessages } from "../../../application/constants/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { GetNotificationHistoryUseCase } from "../../../application/use-cases/notification/GetNotificationHistoryUseCase";
 import { MarkNotificationAsReadUseCase } from "../../../application/use-cases/notification/MarkNotificationAsReadUseCase";
 import { MarkAllNotificationsAsReadUseCase } from "../../../application/use-cases/notification/MarkAllNotificationsAsReadUseCase";
+
 interface AuthenticatedRequest extends Request {
   userId?: string;  
 }
@@ -17,11 +18,10 @@ export class TechnicianNotificationController {
     private readonly _logger: ILogger
   ) {}
 
-  getNotifications = async (req: Request, res: Response): Promise<Response> => {
+  getNotifications = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const techId = (req as AuthenticatedRequest).userId;
 
-      //  Fix: Explicitly check for techId to satisfy TypeScript strictness
       if (!techId) {
         return res.status(StatusCodes.UNAUTHORIZED).json({ error: ErrorMessages.UNAUTHORIZED });
       }
@@ -30,7 +30,7 @@ export class TechnicianNotificationController {
       const limit = parseInt(req.query.limit as string) || 20;
 
       const result = await this._getHistoryUseCase.execute({
-        recipientId: techId, // Now guaranteed to be a string
+        recipientId: techId, 
         page,
         limit
       });
@@ -40,14 +40,12 @@ export class TechnicianNotificationController {
         data: result
       });
     } catch (error) {
-      this._logger.error("Failed to fetch notification history", `${error}`);
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
-        error: ErrorMessages.INTERNAL_ERROR 
-      });
+      (error as Error & { logContext?: string }).logContext = "FETCH_NOTIFICATION_HISTORY_FAILED";
+      next(error);
     }
   };
 
-  markAsRead = async (req: Request, res: Response): Promise<Response> => {
+  markAsRead = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { notificationId } = req.params;
       const techId = (req as AuthenticatedRequest).userId;
@@ -63,16 +61,17 @@ export class TechnicianNotificationController {
         message: "Notification marked as read"
       });
     } catch (error) {
-      this._logger.error("Failed to mark notification as read", `${error}`);
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
-        error: ErrorMessages.INTERNAL_ERROR 
-      });
+      (error as Error & { logContext?: string }).logContext = "MARK_NOTIFICATION_READ_FAILED";
+      next(error);
     }
   };
-  markAllAsRead = async (req: Request, res: Response): Promise<Response> => {
+
+  markAllAsRead = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const techId = (req as AuthenticatedRequest).userId;
-      if (!techId) return res.status(StatusCodes.UNAUTHORIZED).json({ error: ErrorMessages.UNAUTHORIZED });
+      if (!techId) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({ error: ErrorMessages.UNAUTHORIZED });
+      }
 
       await this._markAllAsReadUseCase.execute(techId);
 
@@ -81,8 +80,8 @@ export class TechnicianNotificationController {
         message: "All notifications marked as read"
       });
     } catch (error) {
-      this._logger.error("Failed to mark all as read", `${error}`);
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
+      (error as Error & { logContext?: string }).logContext = "MARK_ALL_NOTIFICATIONS_READ_FAILED";
+      next(error);
     }
   };
 }

@@ -1,11 +1,10 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { BaseController } from '../BaseController';
 import { RequestMapper } from '../../utils/RequestMapper';
 import { IUseCase } from '../../../application/interfaces/IUseCase';
 import { ILogger } from '../../../application/interfaces/ILogger';
-import { StatusCodes } from '../../utils/StatusCodes';
-import { ErrorMessages } from '../../../application/constants/ErrorMessages';
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { ErrorMessages } from '../../../application/constants/ErrorMessages';
 import { CategoryQueryParams } from '../../../domain/repositories/IServiceCategoryRepository';
 import { PaginatedCategoriesResponse } from '../../../application/use-cases/service-categories/GetAllCategoriesUseCase';
 import { ZoneQueryParams } from '../../../domain/repositories/IZoneRepository';
@@ -44,29 +43,28 @@ export class TechnicianDataController extends BaseController {
     return userId;
   }
 
-  public getCategories = async (req: Request, res: Response): Promise<Response> => {
+  public getCategories = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      // Using standard RequestMapper for pagination logic
-      const { page, limit } = RequestMapper.toPagination(req.query);
+      const { page } = RequestMapper.toPagination(req.query);
       const params: CategoryQueryParams = { 
         isActive: undefined, 
         page, 
-        limit: 100 // Keep as 100 to ensure dropdowns are populated in onboarding
+        limit: 100 
       };
       
       const result = await this._getAllCategoriesUseCase.execute(params);
       
-      // Matches technicianOnboardingRepository.getCategories which expects res.data.data
       return this.ok(res, result.categories);
     } catch (error: unknown) {
-      return this.handleError(res, error, LogEvents.TECH_CATEGORY_FETCH_FAILED);
+      (error as Error & { logContext?: string }).logContext = LogEvents.TECH_CATEGORY_FETCH_FAILED;
+      next(error);
     }
   };
 
-  public getServices = async (req: Request, res: Response): Promise<Response> => {
+  public getServices = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { categoryId } = req.query;
-      const { page, limit, search } = RequestMapper.toPagination(req.query);
+      const { page, search } = RequestMapper.toPagination(req.query);
 
       const filters: ServiceFilters = {
         searchTerm: search || "",
@@ -79,11 +77,12 @@ export class TechnicianDataController extends BaseController {
       const services = await this._getServiceListingUseCase.execute(filters);
       return this.ok(res, services);
     } catch (error: unknown) {
-      return this.handleError(res, error, LogEvents.TECH_SERVICE_FETCH_FAILED);
+      (error as Error & { logContext?: string }).logContext = LogEvents.TECH_SERVICE_FETCH_FAILED;
+      next(error);
     }
   };
 
-  public getZones = async (req: Request, res: Response): Promise<Response> => {
+  public getZones = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { page } = RequestMapper.toPagination(req.query);
       const params: ZoneQueryParams = { page, limit: 100, isActive: undefined };
@@ -91,19 +90,20 @@ export class TechnicianDataController extends BaseController {
       const result = await this._getAllZonesUseCase.execute(params);
       return this.ok(res, result.zones);
     } catch (error: unknown) {
-      return this.handleError(res, error, LogEvents.TECH_ZONE_FETCH_FAILED);
+      (error as Error & { logContext?: string }).logContext = LogEvents.TECH_ZONE_FETCH_FAILED;
+      next(error);
     }
   };
 
-  public getRateCard = async (req: Request, res: Response): Promise<Response> => {
+  public getRateCard = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const technicianId = this.getTechId(req);
       const rateCard = await this._getRateCardUseCase.execute(technicianId);
 
       return this.ok(res, rateCard);
     } catch (error: unknown) {
-      // Reusing TECH_PROFILE_ERROR from existing constants as it matches profile-related data fetch
-      return this.handleError(res, error, LogEvents.TECH_PROFILE_ERROR);
+      (error as Error & { logContext?: string }).logContext = LogEvents.TECH_PROFILE_ERROR;
+      next(error);
     }
   };
 }

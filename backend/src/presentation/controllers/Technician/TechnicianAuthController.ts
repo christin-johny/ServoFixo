@@ -1,7 +1,7 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "../../utils/StatusCodes";
 import { refreshCookieOptions } from "../../../infrastructure/config/Cookie";
-import { ErrorMessages, SuccessMessages } from "../../../application/constants/ErrorMessages";
+import {  SuccessMessages } from "../../../application/constants/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import redis from "../../../infrastructure/redis/redisClient";
@@ -31,9 +31,8 @@ export class TechnicianAuthController {
     private readonly _logger: ILogger
   ) {}
  
-  register = async (req: Request, res: Response): Promise<Response> => {
+  register = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      
       const result = await this._requestOtpUseCase.execute(req.body);
        
       return res.status(StatusCodes.OK).json({
@@ -41,71 +40,45 @@ export class TechnicianAuthController {
         sessionId: result.sessionId
       });
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      this._logger.error(LogEvents.AUTH_REGISTER_FAILED, errorMessage);
-      if (
-        errorMessage === ErrorMessages.EMAIL_ALREADY_EXISTS ||
-        errorMessage === ErrorMessages.PHONE_ALREADY_EXISTS
-      ) {
-        return res.status(StatusCodes.CONFLICT).json({ error: errorMessage });
-      }
-      return res.status(StatusCodes.BAD_REQUEST).json({ error: errorMessage });
+      (err as Error & { logContext?: string }).logContext = LogEvents.AUTH_REGISTER_FAILED;
+      next(err);
     }
   };
  
-  verifyRegistration = async (req: Request, res: Response): Promise<Response> => {
+  verifyRegistration = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      
       const result = await this._verifyOtpUseCase.execute(req.body);
       
       res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
-      
       
       return res.status(StatusCodes.CREATED).json({
         message: SuccessMessages.REGISTRATION_SUCCESS,
         accessToken: result.accessToken,
       });
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      this._logger.error(LogEvents.AUTH_OTP_VERIFY_FAILED, errorMessage);
-      if (
-        errorMessage === ErrorMessages.OTP_INVALID ||
-        errorMessage === ErrorMessages.OTP_SESSION_INVALID
-      ) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({ error: errorMessage });
-      }
-      return res.status(StatusCodes.BAD_REQUEST).json({ error: errorMessage });
+      (err as Error & { logContext?: string }).logContext = LogEvents.AUTH_OTP_VERIFY_FAILED;
+      next(err);
     }
   };
  
-  login = async (req: Request, res: Response): Promise<Response> => {
+  login = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      
       const result = await this._loginUseCase.execute(req.body);
       
       res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
-      
       
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.LOGIN_SUCCESS,
         accessToken: result.accessToken,
       });
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      this._logger.error(LogEvents.AUTH_LOGIN_FAILED, errorMessage);
-      if (errorMessage === ErrorMessages.INVALID_CREDENTIALS) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({ error: errorMessage });
-      }
-      if (errorMessage === ErrorMessages.ACCOUNT_BLOCKED) {
-        return res.status(StatusCodes.FORBIDDEN).json({ error: errorMessage });
-      }
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
+      (err as Error & { logContext?: string }).logContext = LogEvents.AUTH_LOGIN_FAILED;
+      next(err);
     }
   };
  
-  forgotPasswordInitOtp = async (req: Request, res: Response): Promise<Response> => {
+  forgotPasswordInitOtp = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      
       const result = await this._requestForgotOtpUseCase.execute(req.body);
       
       return res.status(StatusCodes.OK).json({
@@ -113,32 +86,22 @@ export class TechnicianAuthController {
           sessionId: result.sessionId
       });
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      this._logger.error(LogEvents.AUTH_FORGOT_PASS_INIT_FAILED, errorMessage);
-      
-      if (errorMessage === ErrorMessages.TECHNICIAN_NOT_FOUND) {
-        return res.status(StatusCodes.NOT_FOUND).json({ error: errorMessage });
-      }
-      return res.status(StatusCodes.BAD_REQUEST).json({ error: errorMessage });
+      (err as Error & { logContext?: string }).logContext = LogEvents.AUTH_FORGOT_PASS_INIT_FAILED;
+      next(err);
     }
   };
  
-  forgotPasswordVerifyOtp = async (req: Request, res: Response): Promise<Response> => {
+  forgotPasswordVerifyOtp = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const result = await this._verifyForgotOtpUseCase.execute(req.body);
       return res.status(StatusCodes.OK).json(result);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      this._logger.error(LogEvents.AUTH_FORGOT_PASS_VERIFY_FAILED, errorMessage);
-
-      if (errorMessage === ErrorMessages.OTP_INVALID || errorMessage === ErrorMessages.OTP_SESSION_INVALID) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({ error: errorMessage });
-      }
-      return res.status(StatusCodes.BAD_REQUEST).json({ error: errorMessage });
+      (err as Error & { logContext?: string }).logContext = LogEvents.AUTH_FORGOT_PASS_VERIFY_FAILED;
+      next(err);
     }
   };
  
-  logout = async (req: Request, res: Response): Promise<Response> => {
+  logout = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const refreshToken = req.cookies?.refreshToken as string | undefined;
       if (refreshToken) {
@@ -151,8 +114,8 @@ export class TechnicianAuthController {
       res.clearCookie("refreshToken", refreshCookieOptions);
       return res.status(StatusCodes.OK).json({ message: SuccessMessages.LOGOUT_SUCCESS });
     } catch (err: unknown) {
-      this._logger.error(LogEvents.AUTH_LOGOUT_FAILED, String(err));
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: ErrorMessages.INTERNAL_ERROR });
+      (err as Error & { logContext?: string }).logContext = LogEvents.AUTH_LOGOUT_FAILED;
+      next(err);
     }
   };
 }

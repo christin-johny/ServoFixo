@@ -1,6 +1,4 @@
-// src/presentation/controllers/admin/AdminCategoryController.ts
-
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { RequestMapper } from "../../utils/RequestMapper";
 import { IUseCase } from "../../../application/interfaces/IUseCase";  
@@ -32,9 +30,8 @@ export class AdminCategoryController extends BaseController {
     super(_logger);
   }
 
-create = async (req: Request, res: Response): Promise<Response> => {
+  create = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-
       const dto: CreateCategoryDto = {
         name: req.body.name,
         description: req.body.description,
@@ -43,41 +40,40 @@ create = async (req: Request, res: Response): Promise<Response> => {
 
       const file = req.file;
       const fileData = file ? {
-        buffer: file.buffer, originalName: file.originalname, mimeType: file.mimetype,
+        buffer: file.buffer, 
+        originalName: file.originalname, 
+        mimeType: file.mimetype,
       } : undefined;
 
       const result = await this._createUseCase.execute(dto, fileData);
 
-      //  FIX: Match response.data.data for createCategory
       return res.status(StatusCodes.CREATED).json({
         success: true,
         message: SuccessMessages.CATEGORY_CREATED,
         data: result, 
       });
-    } catch (error) {
-      return this.handleError(res, error, LogEvents.CATEGORY_CREATE_FAILED);
+    } catch (err) { 
+      (err as Error & { logContext?: string }).logContext = LogEvents.CATEGORY_CREATE_FAILED;
+      next(err);
     }
   };
 
-  getAll = async (req: Request, res: Response): Promise<Response> => {
+  getAll = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-
       const params: CategoryQueryParams = {
         ...RequestMapper.toPagination(req.query),
         isActive: RequestMapper.toBoolean(req.query.isActive),
       };
 
       const result = await this._getAllUseCase.execute(params);
-
-      //  FIX: Match response.data for getCategories
-      // We return the paginated object directly
       return res.status(StatusCodes.OK).json(result);
-    } catch (error) {
-      return this.handleError(res, error, LogEvents.CATEGORY_GET_ALL_ERROR);
+    } catch (err) { 
+      (err as Error & { logContext?: string }).logContext = LogEvents.CATEGORY_GET_ALL_ERROR;
+      next(err);
     }
   };
 
-  update = async (req: Request, res: Response): Promise<Response> => {
+  update = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { id } = req.params;
 
@@ -89,26 +85,25 @@ create = async (req: Request, res: Response): Promise<Response> => {
 
       const file = req.file;
       const fileData = file ? {
-        buffer: file.buffer, originalName: file.originalname, mimeType: file.mimetype,
+        buffer: file.buffer, 
+        originalName: file.originalname, 
+        mimeType: file.mimetype,
       } : undefined;
 
       const result = await this._editUseCase.execute(id, dto, fileData);
 
-      //  FIX: Match response.data.data for updateCategory
       return res.status(StatusCodes.OK).json({
         success: true,
         message: SuccessMessages.CATEGORY_UPDATED,
         data: result,
       });
-    } catch (error) {
-      return this.handleError(res, error, LogEvents.CATEGORY_UPDATE_FAILED);
+    } catch (err) {
+      (err as Error & { logContext?: string }).logContext = LogEvents.CATEGORY_UPDATE_FAILED;
+      next(err);
     }
   };
 
-
-
-
-  toggleStatus = async (req: Request, res: Response): Promise<Response> => {
+  toggleStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { id } = req.params;
       const isActive = RequestMapper.toBoolean(req.body.isActive);
@@ -119,18 +114,20 @@ create = async (req: Request, res: Response): Promise<Response> => {
 
       await this._toggleStatusUseCase.execute(id, isActive);
       return this.ok(res, null, `Category status updated to ${isActive}`);
-    } catch (error) {
-      return this.handleError(res, error, LogEvents.CATEGORY_TOGGLE_STATUS_FAILED);
+    } catch (err) {
+      (err as Error & { logContext?: string }).logContext = LogEvents.CATEGORY_TOGGLE_STATUS_FAILED;
+      next(err);
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<Response> => {
+  delete = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { id } = req.params;
       await this._deleteUseCase.execute(id);
       return this.ok(res, null, SuccessMessages.CATEGORY_DELETED);
-    } catch (error) {
-      return this.handleError(res, error, LogEvents.CATEGORY_DELETE_FAILED);
+    } catch (err) {
+      (err as Error & { logContext?: string }).logContext = LogEvents.CATEGORY_DELETE_FAILED;
+      next(err);
     }
   };
 }

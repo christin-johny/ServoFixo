@@ -1,7 +1,6 @@
-import type { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { refreshCookieOptions } from "../../infrastructure/config/Cookie";
 import { RefreshTokenUseCase } from "../../application/use-cases/auth/RefreshTokenUseCase";
-
 import { ErrorMessages } from "../../application/constants/ErrorMessages";
 import { StatusCodes } from "../utils/StatusCodes";
 import { ILogger } from "../../application/interfaces/ILogger";
@@ -13,7 +12,7 @@ export class AuthTokenController {
     private readonly _logger: ILogger
   ) {}
 
-  refresh = async (req: Request, res: Response): Promise<Response> => {
+  refresh = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const refreshToken = req.cookies?.refreshToken as string | undefined;
 
@@ -35,30 +34,15 @@ export class AuthTokenController {
       });
 
     } catch (err: unknown) {
-  const errorMessage =
-    err instanceof Error ? err.message : String(err);
+      // Logic for clearing cookie remains here as it's a specific requirement for refresh failure
+      res.clearCookie("refreshToken", {
+        path: refreshCookieOptions.path || "/",
+      });
 
-  this._logger.error(
-    LogEvents.AUTH_REFRESH_FAILED,
-    errorMessage
-  );
-
-  res.clearCookie("refreshToken", {
-    path: refreshCookieOptions.path || "/",
-  });
-
-  if (errorMessage === ErrorMessages.ACCOUNT_BLOCKED) {
-    return res.status(StatusCodes.FORBIDDEN).json({
-      error: ErrorMessages.ACCOUNT_BLOCKED
-    });
-  }
-
-  return res
-    .status(StatusCodes.UNAUTHORIZED)
-    .json({ error: ErrorMessages.UNAUTHORIZED });
-}
-
-}
+      (err as Error & { logContext?: string }).logContext = LogEvents.AUTH_REFRESH_FAILED;
+      next(err);
+    }
+  };
 }
 
 export default AuthTokenController;

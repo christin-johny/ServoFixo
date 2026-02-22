@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { RequestMapper } from "../../utils/RequestMapper";
 import { IUseCase } from "../../../application/interfaces/IUseCase"; 
@@ -23,7 +23,7 @@ export class AdminZoneController extends BaseController {
     super(_logger);
   }
 
-  create = async (req: Request, res: Response): Promise<Response> => {
+  create = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const dto = req.body as CreateZoneDto;
 
@@ -33,19 +33,18 @@ export class AdminZoneController extends BaseController {
 
       const result = await this._createZoneUseCase.execute(dto);
 
-      //  Aligned with createZone: response.data.zone
       return res.status(StatusCodes.CREATED).json({
         message: SuccessMessages.ZONE_CREATED,
         zone: result, 
       });
     } catch (err: unknown) {
-      return this.handleError(res, err, LogEvents.ZONE_CREATE_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.ZONE_CREATE_FAILED;
+      next(err);
     }
   };
 
-  getAll = async (req: Request, res: Response): Promise<Response> => {
+  getAll = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-
       const params: ZoneQueryParams = {
         ...RequestMapper.toPagination(req.query),
         isActive: RequestMapper.toBoolean(req.query.isActive)
@@ -53,14 +52,14 @@ export class AdminZoneController extends BaseController {
 
       const result = await this._getAllZonesUseCase.execute(params);
 
-      //  Aligned with getZones: response.data directly
       return res.status(StatusCodes.OK).json(result);
     } catch (err: unknown) {
-      return this.handleError(res, err, LogEvents.ZONE_GET_ALL_ERROR);
+      (err as Error & { logContext?: string }).logContext = LogEvents.ZONE_GET_ALL_ERROR;
+      next(err);
     }
   };
 
-  update = async (req: Request, res: Response): Promise<Response> => {
+  update = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { id } = req.params;
       const dto = req.body as UpdateZoneDto;
@@ -71,17 +70,17 @@ export class AdminZoneController extends BaseController {
 
       const result = await this._editZoneUseCase.execute(id, dto);
 
-      //  Aligned with updateZone: response.data.zone
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.ZONE_UPDATED,
         zone: result,
       });
     } catch (err: unknown) {
-      return this.handleError(res, err, LogEvents.ZONE_UPDATE_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.ZONE_UPDATE_FAILED;
+      next(err);
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<Response> => {
+  delete = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { id } = req.params;
 
@@ -89,7 +88,8 @@ export class AdminZoneController extends BaseController {
       
       return this.ok(res, null, SuccessMessages.ZONE_DELETED);
     } catch (err: unknown) {
-      return this.handleError(res, err, LogEvents.ZONE_DELETE_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.ZONE_DELETE_FAILED;
+      next(err);
     }
   };
 }

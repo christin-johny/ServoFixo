@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { RequestMapper } from "../../utils/RequestMapper";
 import { IUseCase } from "../../../application/interfaces/IUseCase";
@@ -28,18 +28,19 @@ export class CustomerServiceController extends BaseController {
     super(_logger);
   }
 
-  getMostBooked = async (req: Request, res: Response): Promise<Response> => {
+  getMostBooked = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { limit } = RequestMapper.toPagination(req.query);
       
       const services = await this._getMostBookedUseCase.execute(limit);
       return this.ok(res, services);
     } catch (error: unknown) {
-      return this.handleError(res, error, LogEvents.SERVICE_FETCH_FAILED);
+      (error as Error & { logContext?: string }).logContext = LogEvents.SERVICE_FETCH_FAILED;
+      next(error);
     }
   };
 
-  getAll = async (req: Request, res: Response): Promise<Response> => {
+  getAll = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { search, categoryId, minPrice, maxPrice, sortBy } = req.query;
       const { page, limit } = RequestMapper.toPagination(req.query);
@@ -49,32 +50,33 @@ export class CustomerServiceController extends BaseController {
         categoryId: categoryId as string,
         minPrice: minPrice ? Number(minPrice) : undefined,
         maxPrice: maxPrice ? Number(maxPrice) : undefined,
-        sortBy: sortBy as any,
+        sortBy: sortBy as "price_asc" | "price_desc" | "newest" | "popular" | undefined,
         page,
         limit,
         isActive: true,
       };
 
-      
       const services = await this._getServiceListingUseCase.execute(filters);
       return this.ok(res, services);
     } catch (error: unknown) {
-      return this.handleError(res, error, LogEvents.SERVICE_FETCH_FAILED);
+      (error as Error & { logContext?: string }).logContext = LogEvents.SERVICE_FETCH_FAILED;
+      next(error);
     }
   };
 
-  getById = async (req: Request, res: Response): Promise<Response> => {
+  getById = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { id } = req.params;
       
       const service = await this._getServiceByIdUseCase.execute(id);
       return this.ok(res, service);
     } catch (error: unknown) {
-      return this.handleError(res, error, LogEvents.SERVICE_FETCH_FAILED);
+      (error as Error & { logContext?: string }).logContext = LogEvents.SERVICE_FETCH_FAILED;
+      next(error);
     }
   };
 
-  getReviews = async (req: Request, res: Response): Promise<Response> => {
+  getReviews = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { id } = req.params;
       const limit = Number(req.query.limit) || 5;
@@ -88,7 +90,6 @@ export class CustomerServiceController extends BaseController {
             rating: r.getRating(),
             comment: r.getComment(),
             date: r.getCreatedAt(),
-            
             customerName: snapshot?.name || "Anonymous User",
             customerAvatar: snapshot?.avatarUrl
           };
@@ -96,7 +97,8 @@ export class CustomerServiceController extends BaseController {
 
       return this.ok(res, response);
     } catch (error: unknown) {
-      return this.handleError(res, error, "FETCH_REVIEWS_FAILED");
+      (error as Error & { logContext?: string }).logContext = "FETCH_REVIEWS_FAILED";
+      next(error);
     }
   };
 }

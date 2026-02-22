@@ -104,9 +104,8 @@ class SocketService {
   private paymentRequestCallback: ((data: PaymentRequestEvent) => void) | null = null;
   private adminListeners: ((data: AdminUpdateEvent) => void)[] = [];
 
-  connect(userId: string, role: UserRole): void {
-    console.log(`🔌 [SocketClient] Attempting to connect... User: ${userId}, Role: ${role}`);  
-    if (this.socket?.connected && this.currentUserId === userId) {console.log("⚡ [SocketClient] Already connected. Skipping.");
+  connect(userId: string, role: UserRole): void { 
+    if (this.socket?.connected && this.currentUserId === userId) { 
       return;
     }
 
@@ -129,8 +128,7 @@ class SocketService {
       reconnection: true,
     });
 
-    this.socket.on("connect", () => {
-      console.log("  [SocketClient] Connected! ID:", this.socket?.id); // <--- LOG 2
+    this.socket.on("connect", () => { 
     });
 
     // --- Direct Listeners ---
@@ -151,8 +149,7 @@ class SocketService {
 
     // --- Master Notification Listener ---
     this.socket.on("NOTIFICATION_RECEIVED", (data: Notification) => {
-      if (role === "ADMIN") {
-        console.log("👑 [SocketClient] Processing as Admin Event");  
+      if (role === "ADMIN") {  
              this.handleAdminEvent(data);
              return;  
           }

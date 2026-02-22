@@ -35,7 +35,7 @@ export function makeAdminAuthMiddleware(jwtService: IJwtService) {
       (req as any).role = payload.type;
 
       return next();
-    } catch (err) {
+    } catch{
       return res.status(StatusCodes.UNAUTHORIZED).json({
         error: ErrorMessages.UNAUTHORIZED,
       });

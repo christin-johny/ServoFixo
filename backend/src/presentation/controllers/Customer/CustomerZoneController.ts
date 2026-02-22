@@ -1,22 +1,19 @@
-// src/presentation/controllers/Customer/CustomerZoneController.ts
-
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
-import { StatusCodes } from "../../utils/StatusCodes";
-import { ErrorMessages } from "../../../application/constants/ErrorMessages";
+import { StatusCodes } from "../../utils/StatusCodes"; 
 
 export class CustomerZoneController extends BaseController {
   constructor(
     private readonly _findZoneByLocationUseCase: IUseCase<unknown, [number, number]>,
-    _logger: ILogger // Passed to BaseController
+    _logger: ILogger  
   ) {
     super(_logger);
   }
 
-  findByLocation = async (req: Request, res: Response): Promise<Response> => {
+  findByLocation = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const lat = parseFloat(req.query.lat as string);
       const lng = parseFloat(req.query.lng as string);
@@ -28,13 +25,13 @@ export class CustomerZoneController extends BaseController {
         });
       }
 
-      
-
       const resultDto = await this._findZoneByLocationUseCase.execute(lat, lng);
        
       return this.ok(res, resultDto);
     } catch (error: unknown) {
-      return this.handleError(res, error, LogEvents.ZONE_FIND_FAILED);
+      // Attach the custom log event and pass to global middleware
+      (error as Error & { logContext?: string }).logContext = LogEvents.ZONE_FIND_FAILED;
+      next(error);
     }
   }
 }

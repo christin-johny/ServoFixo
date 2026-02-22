@@ -181,8 +181,7 @@ const TechnicianLayout: React.FC = () => {
           ['ACCEPTED', 'EN_ROUTE', 'REACHED', 'IN_PROGRESS', 'EXTRAS_PENDING', 'COMPLETED'].includes(j.status)
       );
       
-      if (runningJob) {
-          console.log("⚡ [Layout] Active Job Detected:", runningJob.id);
+      if (runningJob) { 
           setActiveJobId(runningJob.id);
           setActiveJobStatus(runningJob.status); 
       } else {
@@ -204,8 +203,7 @@ const TechnicianLayout: React.FC = () => {
     if (!user?.id) return;
 
     // Handler accepts specific Union Type instead of 'any'
-    const handleGlobalUpdate = (data: GlobalJobEvent) => {
-        console.log("⚡ [Layout] Global Update Received:", data);
+    const handleGlobalUpdate = (data: GlobalJobEvent) => { 
         
         // Re-check the API to see if we have a new active job
         checkActiveJob();

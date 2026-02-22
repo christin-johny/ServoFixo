@@ -25,8 +25,7 @@ async execute(input: RateTechnicianDto): Promise<void> {
         throw new Error(ErrorMessages.UNAUTHORIZED);
     }
 
-    const existingReview = await this._reviewRepo.findByBookingId(input.bookingId);
-    console.log(existingReview)
+    const existingReview = await this._reviewRepo.findByBookingId(input.bookingId); 
     if (existingReview) {
         throw new Error("You have already rated this technician.");
     }

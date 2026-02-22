@@ -63,7 +63,7 @@ finally {
 
         {/* Rating Card */}
         <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Rate your experience</p>
+            <p className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-4">Rate your experience</p>
             
             {/* Stars */}
             <div className="flex justify-center gap-2 mb-8">
@@ -75,7 +75,7 @@ finally {
                     >
                         <Star 
                             size={36} 
-                            className={`${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-gray-200'} transition-colors`} 
+                            className={`${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-gray-400'} transition-colors`} 
                             strokeWidth={star <= rating ? 0 : 2}
                         />
                     </button>

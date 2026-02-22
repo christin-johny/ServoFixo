@@ -1,5 +1,4 @@
-// src/presentation/controllers/Customer/CustomerAddressController.ts
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { IUseCase } from "../../../application/interfaces/IUseCase"; 
 import { CreateAddressDto } from "../../../application/dto/address/CreateAddressDto";
@@ -30,59 +29,65 @@ export class CustomerAddressController extends BaseController {
     return userId;
   }
 
-  addAddress = async (req: Request, res: Response): Promise<Response> => {
+  addAddress = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const userId = this.getUserId(req);
       const dto = req.body as CreateAddressDto;
 
       const resultDto = await this._addAddressUseCase.execute(dto, userId); 
-      const isServiceable = (resultDto as any).isServiceable ?? true;
+      // Use cast only for the dynamic property check to avoid broad 'any' usage
+      const isServiceable = (resultDto as { isServiceable?: boolean }).isServiceable ?? true;
 
       const message = isServiceable ? SuccessMessages.ADDRESS_ADDED : SuccessMessages.ADDRESS_OUTSIDE_ZONE;
       return this.created(res, resultDto, message);
     } catch (error: unknown) {
-      return this.handleError(res, error, LogEvents.ADDRESS_ADD_FAILED);
+      (error as Error & { logContext?: string }).logContext = LogEvents.ADDRESS_ADD_FAILED;
+      next(error);
     }
   };
 
-  getMyAddresses = async (req: Request, res: Response): Promise<Response> => {
+  getMyAddresses = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const userId = this.getUserId(req);
 
       const addressDtos = await this._getAddressesUseCase.execute(userId);
       return this.ok(res, addressDtos);
     } catch (error: unknown) {
-      return this.handleError(res, error, LogEvents.ADDRESS_FETCH_FAILED);
+      (error as Error & { logContext?: string }).logContext = LogEvents.ADDRESS_FETCH_FAILED;
+      next(error);
     }
   };
 
-  deleteAddress = async (req: Request, res: Response): Promise<Response> => {
+  deleteAddress = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const userId = this.getUserId(req);
       await this._deleteAddressUseCase.execute(req.params.id, userId);
       return this.ok(res, null, SuccessMessages.ADDRESS_DELETED);
     } catch (error: unknown) {
-      return this.handleError(res, error, LogEvents.ADDRESS_DELETE_FAILED);
+      (error as Error & { logContext?: string }).logContext = LogEvents.ADDRESS_DELETE_FAILED;
+      next(error);
     }
   };
 
-  updateAddress = async (req: Request, res: Response): Promise<Response> => {
+  updateAddress = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const userId = this.getUserId(req);
       const resultDto = await this._updateAddressUseCase.execute(req.params.id, userId, req.body);
       return this.ok(res, resultDto, SuccessMessages.ADDRESS_UPDATED);
     } catch (error: unknown) {
-      return this.handleError(res, error, LogEvents.ADDRESS_UPDATE_FAILED);
+      (error as Error & { logContext?: string }).logContext = LogEvents.ADDRESS_UPDATE_FAILED;
+      next(error);
     }
   };
 
-  setDefaultAddress = async (req: Request, res: Response): Promise<Response> => {
+  setDefaultAddress = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const userId = this.getUserId(req);
       await this._updateAddressUseCase.execute(req.params.id, userId, { isDefault: true });
       return this.ok(res, null, SuccessMessages.DEFAULT_ADDRESS_UPDATED);
     } catch (error: unknown) {
-      return this.handleError(res, error, LogEvents.ADDRESS_UPDATE_FAILED);
+      (error as Error & { logContext?: string }).logContext = LogEvents.ADDRESS_UPDATE_FAILED;
+      next(error);
     }
   };
 }

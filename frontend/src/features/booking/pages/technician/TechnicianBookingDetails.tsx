@@ -44,15 +44,13 @@ const TechnicianBookingDetails: React.FC = () => {
 
     //   Typed Handlers for Socket Events
     const handleStatusUpdate = (data: BookingStatusEvent) => {
-        if (data.bookingId === id) {
-            console.log("⚡ Job details updated via socket (Status)");
+        if (data.bookingId === id) { 
             fetch();
         }
     };
 
     const handleConfirm = (data: BookingConfirmedEvent) => {
-        if (data.bookingId === id) {
-            console.log("⚡ Job details updated via socket (Confirm)");
+        if (data.bookingId === id) { 
             fetch();
         }
     };

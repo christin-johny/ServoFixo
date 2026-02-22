@@ -116,8 +116,7 @@ const ActiveJobPage: React.FC = () => {
 
     //   Typed Handlers
     const handleStatusUpdate = (data: BookingStatusEvent) => { 
-        if (data.bookingId === id) {
-            console.log("⚡ Admin updated job status. Refreshing...", data.status);
+        if (data.bookingId === id) { 
             fetchJob();
         }
     };

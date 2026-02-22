@@ -7,13 +7,11 @@ import type { RootState } from '../../../../store/store';
 const ActiveBookingFooter: React.FC = () => {
     const navigate = useNavigate();
     const { activeBookingId, activeBookingStatus } = useSelector((state: RootState) => state.customer);
-
-    // 1. Hide if no ID, or if the flow is completely finished/cancelled
-    if (!activeBookingId || activeBookingStatus === 'PAID' || activeBookingStatus === 'CANCELLED') {
+ 
+    if (!activeBookingId || activeBookingStatus === 'PAID' || activeBookingStatus === 'CANCELLED' || activeBookingStatus === 'FAILED_ASSIGNMENT' ) {
         return null;
     }
-
-    // --- CASE 1: JOB COMPLETED (Show "Pay Now") ---
+ 
     if (activeBookingStatus === 'COMPLETED') {
         return (
             <div 
@@ -36,8 +34,7 @@ const ActiveBookingFooter: React.FC = () => {
             </div>
         );
     }
-
-    // --- CASE 2: JOB IN PROGRESS (Show "Track Now") ---
+ 
     return (
         <div 
             onClick={() => navigate(`/booking/${activeBookingId}/track`)}

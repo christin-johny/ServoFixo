@@ -1,5 +1,5 @@
 import redis from "../../../infrastructure/redis/redisClient";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { IUseCase } from "../../../application/interfaces/IUseCase";
 import {
@@ -25,7 +25,7 @@ export class AdminAuthController extends BaseController {
     super(_logger);
   }
 
-  login = async (req: Request, res: Response): Promise<Response> => {
+  login = async (req: Request, res: Response,next: NextFunction): Promise<Response|void> => {
     try {
       const { email, password } = req.body;
 
@@ -44,11 +44,12 @@ export class AdminAuthController extends BaseController {
         accessToken: result.accessToken,
       });
     } catch (err: unknown) {
-      return this.handleError(res, err, `${LogEvents.AUTH_LOGIN_FAILED} (Admin)`);
+     (err as Error & { logContext?: string }).logContext = `${LogEvents.AUTH_LOGIN_FAILED} (Admin)`;
+      next(err);
     }
   };
 
-  logout = async (req: Request, res: Response): Promise<Response> => {
+  logout = async (req: Request, res: Response,next: NextFunction): Promise<Response|void> => {
     try {
       const refreshToken = req.cookies?.refreshToken as string | undefined;
       res.clearCookie("refreshToken", refreshCookieOptions);
@@ -66,7 +67,8 @@ export class AdminAuthController extends BaseController {
         message: SuccessMessages.LOGOUT_SUCCESS,
       });
     } catch (err: unknown) {
-      return this.handleError(res, err, "Admin Logout Error");
+      (err as Error & { logContext?: string }).logContext = "Admin Logout Error";
+      next(err);
     }
   };
 }

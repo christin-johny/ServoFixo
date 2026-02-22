@@ -15,6 +15,7 @@ import {
   logger 
 } from "./infrastructure/di/Container";
 import { BookingTimeoutScheduler } from "./infrastructure/scheduler/BookingTimeoutScheduler";
+import { makeErrorHandlerMiddleware } from "./presentation/middlewares/errorHandler.middleware";
 const app = express();
 const httpServer = createServer(app);  
 
@@ -55,6 +56,8 @@ app.use("/api/customer", customerRoutes);
 app.use("/api/technician", technicianRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/webhooks", webhookRoutes);
+
+app.use(makeErrorHandlerMiddleware(logger));
 
 export const startServer = async () => {
   await connectDatabase();

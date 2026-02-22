@@ -95,10 +95,10 @@ const AdminBookingsPage: React.FC = () => {
       if (items.length === 0) setLoading(true);
 
       const liveStatuses: BookingStatus[] = [
-        "REQUESTED", "ASSIGNED_PENDING", "ACCEPTED", "EN_ROUTE", "REACHED", "IN_PROGRESS", "EXTRAS_PENDING"
+        "REQUESTED", "ASSIGNED_PENDING", "ACCEPTED", "EN_ROUTE", "REACHED", "IN_PROGRESS", "EXTRAS_PENDING","COMPLETED"
       ];
       const historyStatuses: BookingStatus[] = [
-        "COMPLETED", "PAID", "CANCELLED", "FAILED_ASSIGNMENT", "TIMEOUT", "CANCELLED_BY_TECH"
+         "COMPLETED","PAID", "CANCELLED", "FAILED_ASSIGNMENT", "TIMEOUT", "CANCELLED_BY_TECH"
       ];
 
       let finalStatus: BookingStatus | BookingStatus[] = isHistory ? historyStatuses : liveStatuses;
@@ -122,7 +122,7 @@ const AdminBookingsPage: React.FC = () => {
       setTotalPages(result.totalPages);
 
     } catch {
-      // showError("Failed to load bookings."); // Optional: silence errors for socket updates
+       //showError("Failed to load bookings."); 
     } finally {
       setLoading(false);
     }
@@ -461,3 +461,4 @@ const AdminBookingsPage: React.FC = () => {
 };
 
 export default AdminBookingsPage;
+ 
