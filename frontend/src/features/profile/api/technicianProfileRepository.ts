@@ -8,9 +8,8 @@ import type {
   ZoneRequest, 
   BankUpdateRequest
 } from "../types/TechnicianRequestTypes";
-import type {PayoutStatus}  from '../../../../../shared/types/value-objects/TechnicianTypes'
-// --- DTOs ---
-
+import type {PayoutStatus}  from '../types/TechnicianTypes';
+ 
 export interface TechnicianProfileStatusDto {
   id: string;
   name: string;
@@ -28,20 +27,18 @@ export interface TechnicianProfileStatusDto {
 
   availability: {
     isOnline: boolean;
-    isOnJob: boolean; //   Added this too
+    isOnJob: boolean; 
   };
 
   categoryIds: string[];
   subServiceIds: string[];
   zoneIds: string[];
-
-  //   FIXED: Added Missing Request Fields to match TechnicianApiResponse
+ 
   serviceRequests: ServiceRequest[];
   zoneRequests: ZoneRequest[];
   bankUpdateRequests: BankUpdateRequest[];
   payoutStatus: PayoutStatus;
-
-  // Hydrated Fields
+ 
   categories?: { id: string; name: string; iconUrl?: string }[];
   subServices?: { id: string; name: string; categoryId: string }[];
   serviceZones?: { id: string; name: string }[];
@@ -64,7 +61,7 @@ export interface TechnicianProfileStatusDto {
 
 walletBalance?: {
     currentBalance: number;
-    frozenAmount: number; // <--- This was missing
+    frozenAmount: number; 
     currency: string;
   };
 
@@ -102,8 +99,7 @@ export interface RequestBankPayload {
   upiId?: string;
   proofUrl: string;
 }
-
-// --- Repository Methods (Named Exports) ---
+ 
 
 export const getTechnicianProfileStatus = async (): Promise<TechnicianProfileStatusDto> => {
   const response = await api.get(TECHNICIAN_PROFILE_ENDPOINTS.GET_STATUS);
@@ -111,7 +107,7 @@ export const getTechnicianProfileStatus = async (): Promise<TechnicianProfileSta
 };
 
 export const toggleOnlineStatus = async (payload: ToggleStatusPayload) => {
-  const response = await api.patch("/technician/profile/status", payload);
+  const response = await api.patch(TECHNICIAN_PROFILE_ENDPOINTS.TOGGLE_ONLINE, payload);
   return response.data; 
 };
 
@@ -127,11 +123,11 @@ export const uploadDocument = async (file: File, folder: "avatars" | "documents"
     headers: { "Content-Type": "multipart/form-data" },
   });
   
-  return data.url; 
+  return data.data.url;
 };
  
 export const requestServiceAddition = async (payload: RequestServicePayload): Promise<{ success: boolean }> => {
-  // Ensure the API call sends the full payload including the action
+
   const { data } = await api.post(TECHNICIAN_PROFILE_ENDPOINTS.REQUEST_SERVICE, payload);
   return data;
 };

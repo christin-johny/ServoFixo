@@ -2,8 +2,7 @@ import { ITechnicianRepository } from "../../../../domain/repositories/ITechnici
 import { IUseCase } from "../../../interfaces/IUseCase";
 import { TechnicianOnboardingInput } from "../../../dto/technician/TechnicianOnboardingDtos";
 import { ErrorMessages } from "../../../constants/ErrorMessages";
-import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
+import { ILogger } from "../../../interfaces/ILogger"; 
 import { Technician } from "../../../../domain/entities/Technician";
 import {
   TechnicianDocument,
@@ -64,7 +63,7 @@ export class TechnicianOnboardingUseCase
 
         break;
 
-      case 5:
+      case 5: { // <--- Add this curly brace to create a block scope
         if (!input.documents || input.documents.length === 0) {
           throw new Error(ErrorMessages.TECH_DOCS_MISSING);
         }
@@ -72,9 +71,10 @@ export class TechnicianOnboardingUseCase
           throw new Error(ErrorMessages.TECH_DOC_LIMIT);
         }
 
+        // Now 'docs' is scoped only to this case block
         const docs: TechnicianDocument[] = input.documents.map((d) => ({
           type: d.type,
-          fileUrl: d.fileUrl,
+          fileUrl: d.fileUrl, // This stores the KEY (e.g., "technician/123/documents/file.pdf")
           fileName: d.fileName,
           status: "PENDING" as DocumentStatus,
           uploadedAt: new Date(),
@@ -82,8 +82,8 @@ export class TechnicianOnboardingUseCase
 
         technician.updateDocuments(docs);
         this.updateStep(technician, 6);
-
         break;
+      }
 
       case 6:
         technician.updateBankDetails(input.bankDetails);

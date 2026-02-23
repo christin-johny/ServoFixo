@@ -10,7 +10,7 @@ import type {
   CustomerRegisterVerifyDto,
   CustomerForgotPasswordInitDto,
   CustomerForgotPasswordVerifyDto,
-} from "../../../../../shared/types/dto/AuthDtos";
+} from "../types/auth";
 
 export const customerLogin = async (
   payload: CustomerLoginRequestDto

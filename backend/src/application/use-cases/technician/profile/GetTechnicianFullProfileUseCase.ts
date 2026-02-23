@@ -28,7 +28,7 @@ async execute(technicianId: string): Promise<AdminTechnicianProfileDto> {
   const tech = await this._technicianRepo.findById(technicianId);
   if (!tech) throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
 
-  const baseProfile = TechnicianMapper.toAdminProfile(tech);
+ const baseProfile = await TechnicianMapper.toAdminProfile(tech);
 
   //   1. Collect unique IDs from both current state and pending requests
   const allZoneIds = Array.from(new Set([...tech.getZoneIds(), ...tech.getZoneRequests().map(r => r.requestedZoneId)]));

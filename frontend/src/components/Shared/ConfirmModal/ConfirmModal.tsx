@@ -13,6 +13,7 @@ interface ConfirmModalProps {
   cancelText?: string;
   isLoading?: boolean;
   variant?: ModalVariant; 
+  customContent?: React.ReactNode;
 }
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -25,6 +26,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   cancelText = "Cancel",
   isLoading = false,
   variant = "danger",
+  customContent,
 }) => {
   useEffect(() => {
     if (isOpen) document.body.style.overflow = "hidden";
@@ -75,6 +77,12 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
             
             <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
             <p className="text-sm text-gray-500 leading-relaxed mb-8 px-2">{message}</p>
+            
+            {customContent && (
+              <div className="w-full text-left mb-6">
+                {customContent}
+              </div>
+            )}
             
             <div className="grid grid-cols-2 gap-3 w-full">
               <button 

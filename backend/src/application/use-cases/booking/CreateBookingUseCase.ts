@@ -9,8 +9,8 @@ import { CreateBookingRequestDto } from "../../dto/booking/CreateBookingRequestD
 import { Booking } from "../../../domain/entities/Booking";
 import { Technician } from "../../../domain/entities/Technician";
 import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
-import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
-import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes"; 
+import { S3UrlHelper } from "../../../infrastructure/storage/S3UrlHelper"; 
 
 export class CreateBookingUseCase {
   constructor(
@@ -103,7 +103,7 @@ export class CreateBookingUseCase {
     }
 
     booking.setInitialSnapshots(
-        { name: snapshotName, phone: snapshotPhone, avatarUrl: customer.getAvatarUrl() },
+        { name: snapshotName, phone: snapshotPhone, avatarUrl: S3UrlHelper.getFullUrl(customer.getAvatarUrl()) },
         { name: service.getName ? service.getName() : (service as any).name, categoryId: service.getCategoryId() }
     );
 

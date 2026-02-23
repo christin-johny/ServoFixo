@@ -25,6 +25,7 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext, onSaveAndExit }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { profile } = useSelector((state: RootState) => state.technician);
   const { showSuccess, showError } = useNotification();
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     
   // --- STATE ---
   const [formData, setFormData] = useState<Partial<Step1FormData>>(() => ({
@@ -68,6 +69,11 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext, onSaveAndExit }) => {
       }));
     }
   }, [profile]);
+  useEffect(() => {
+    if (profile?.avatarUrl) {
+        setPreviewUrl(profile.avatarUrl);
+    }
+}, [profile]);
  
   const handleChange = (field: keyof Step1FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -114,26 +120,27 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext, onSaveAndExit }) => {
   const handleUploadCroppedImage = async (blob: Blob) => {
     try {
       setIsUploading(true);
+      
+      // CREATE INSTANT PREVIEW
+      const localPreview = URL.createObjectURL(blob);
+      setPreviewUrl(localPreview);
+
       const file = new File([blob], "profile_avatar.jpg", { type: "image/jpeg" });
-
-      if (file.size > 5 * 1024 * 1024) {
-         showError("Image is too large. Please zoom out or pick another.");
-         return;
-      }
-
       const response = await technicianOnboardingRepository.uploadAvatar(file);
-      handleChange("avatarUrl", response.url);
+      
+      // Store the KEY in formData (for DB), but UI uses previewUrl
+      handleChange("avatarUrl", response.url); 
       
       showSuccess("Avatar updated successfully");
       setIsCropping(false);
       setImageSrc(null);
-    } catch (e) {
-      console.error(e);
+    } catch{
+      setPreviewUrl(null); // Reset on failure
       showError("Failed to process image");
     } finally {
       setIsUploading(false);
     }
-  };
+};
 
   const validateAndSave = async (): Promise<boolean> => {
     const result = step1Schema.safeParse(formData);
@@ -171,7 +178,6 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext, onSaveAndExit }) => {
     }
   };
 
-  // --- RENDER ---
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="grid md:grid-cols-12 gap-8">
@@ -181,10 +187,10 @@ const Step1_Personal: React.FC<Step1Props> = ({ onNext, onSaveAndExit }) => {
             <div className="flex flex-col items-center gap-2">
                 <div className={`relative group w-40 h-40 rounded-full border-4 shadow-xl overflow-hidden bg-gray-50 flex items-center justify-center ring-4 
                     ${errors.avatarUrl ? "border-red-500 ring-red-100" : "border-white ring-gray-100"}`}>
-                    
-                    {formData.avatarUrl ? (
-                        <img src={formData.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
-                    ) : (
+                    {previewUrl ? (<img src={previewUrl} alt="Profile" className="w-full h-full object-cover" />
+                      ) : formData.avatarUrl ? (
+                          <img src={formData.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
                         <Camera className={`w-12 h-12 ${errors.avatarUrl ? "text-red-300" : "text-gray-300"}`} />
                     )}
                 </div>

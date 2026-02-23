@@ -9,7 +9,7 @@ const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 const googleCallbackUrl =
   process.env.GOOGLE_CALLBACK_URL ??
-  `${process.env.BACKEND_ORIGIN ?? ""}/api/customer/auth/google/callback`;
+  `${process.env.BACKEND_ORIGIN ?? ""}/api/v1/customer/auth/google/callback`;
 
 const { Strategy: GoogleStrategy } = require("passport-google-oauth20");
 

@@ -1,6 +1,5 @@
 import { IUseCase } from "../../../interfaces/IUseCase";
-import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
+import { ILogger } from "../../../interfaces/ILogger"; 
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { BankUpdateRequest } from "../../../../domain/value-objects/TechnicianTypes";
 
@@ -20,7 +19,7 @@ export class RequestBankUpdateUseCase implements IUseCase<void, [string, Request
   ) {}
 
   async execute(technicianId: string, input: RequestBankUpdateInput): Promise<void> {
-    const logData = { technicianId };
+ 
 
     const technician = await this._technicianRepo.findById(technicianId);
     if (!technician) {

@@ -1,18 +1,21 @@
+const VERSION = "/v1";
+
 export const CUSTOMER_DASHBOARD_ENDPOINTS = { 
-  POPULAR_SERVICES: "/customer/services/popular", 
-  BANNERS: "/customer/banners", 
+  POPULAR_SERVICES: `${VERSION}/customer/services/popular`, 
+  BANNERS: `${VERSION}/customer/banners`, 
 };
 
 export const ADMIN_DASHBOARD_ENDPOINTS = { 
-  STATS: "/admin/dashboard/stats", 
+  STATS: `${VERSION}/admin/dashboard/stats`, 
 };
 
 export const TECHNICIAN_DASHBOARD_ENDPOINTS = {
-  SUMMARY: "/technician/dashboard/summary", 
+  SUMMARY: `${VERSION}/technician/dashboard/summary`, 
 };
+
 export const CUSTOMER_SERVICE_ENDPOINTS = {
-  CATEGORIES: "/customer/categories",
-  POPULAR_SERVICES: "/customer/services/popular",
-  SERVICES: "/customer/services",
-  SERVICE_BY_ID: (id: string) => `/customer/services/${id}`,
+  CATEGORIES: `${VERSION}/customer/categories`,
+  POPULAR_SERVICES: `${VERSION}/customer/services/popular`,
+  SERVICES: `${VERSION}/customer/services`,
+  SERVICE_BY_ID: (id: string) => `${VERSION}/customer/services/${id}`,
 };

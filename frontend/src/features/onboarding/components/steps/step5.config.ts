@@ -7,9 +7,9 @@ export interface UploadedDoc {
   id: string;
   type: DocType;
   customName?: string;
-  url: string;
+  url: string;     
+  s3Key?: string;  
   file?: File;
-  // APPROVED status here triggers the locking in DocUploadCard
   status: "PENDING" | "APPROVED" | "REJECTED"; 
   rejectionReason?: string;
 }

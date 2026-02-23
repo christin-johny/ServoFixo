@@ -46,7 +46,7 @@ export interface BankUpdateRequest {
   bankName: string;
   ifscCode: string;
   upiId?: string;
-  proofUrl: string; // Passbook Photo
+  proofUrl?: string;// Passbook Photo
   status: RequestStatus;
   adminComments?: string;
   requestedAt: Date;

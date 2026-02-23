@@ -80,14 +80,16 @@ const handleUpload = async (file: File, type: DocType, id?: string) => {
   const docId = id || `doc_${Date.now()}`;
   setUploadingId(type === 'OTHER' ? docId : type);
 
+  // 1. Create instant local preview URL
+  const localPreviewUrl = URL.createObjectURL(file);
+
   try {
     const response = await technicianOnboardingRepository.uploadDocument(file);
 
-    // --- FIX APPLIED HERE ---
-    // The backend returns { data: { url: "..." } }, so we must access response.data.url
-    const uploadedUrl = response.data?.url || response.url; 
+    // The backend returns { data: { url: "..." } }
+    const uploadedKey = response.data?.url || response.url; 
 
-    if (!uploadedUrl) {
+    if (!uploadedKey) {
         throw new Error("No URL returned from server");
     }
 
@@ -96,7 +98,8 @@ const handleUpload = async (file: File, type: DocType, id?: string) => {
       return [...others, {
         id: docId,
         type,
-        url: uploadedUrl, // Use the extracted URL
+        url: localPreviewUrl, // Use local preview so it shows up instantly
+        s3Key: uploadedKey,   // Store the real key for the database
         file: file,
         status: "PENDING",
         customName: type === 'OTHER' ? "New Document" : undefined
@@ -104,8 +107,7 @@ const handleUpload = async (file: File, type: DocType, id?: string) => {
     });
     
     showSuccess("Document uploaded!");
-  } catch (err) {
-    console.error("Upload error details:", err);
+  } catch  {
     showError("Upload failed. Please try again.");
   } finally {
     setUploadingId(null);
@@ -131,25 +133,25 @@ const handleUpload = async (file: File, type: DocType, id?: string) => {
   };
 
   const saveDocumentsToBackend = async () => {
-    const payload = documents
-      .filter(d => d.url)
-      .map(d => ({
-        type: d.type,
-        fileUrl: d.url,
-        fileName: d.customName || d.file?.name || d.type
-      }));
-
-    await technicianOnboardingRepository.updateStep5({ documents: payload });
-
-    const reduxDocs = documents.map(d => ({
-      type: d.type,
-      fileUrl: d.url,
-      fileName: d.customName || d.file?.name || d.type,
-      status: d.status
+  const payload = documents
+    .filter(d => d.url)
+    .map(d => ({
+      type: d.type, 
+      fileUrl: d.s3Key || d.url, 
+      fileName: d.customName || d.file?.name || d.type
     }));
 
-    dispatch(updateDocuments(reduxDocs));
-  };
+  await technicianOnboardingRepository.updateStep5({ documents: payload });
+
+  const reduxDocs = documents.map(d => ({
+    type: d.type,
+    fileUrl: d.s3Key || d.url, // Keep keys in Redux for consistent mapping
+    fileName: d.customName || d.file?.name || d.type,
+    status: d.status
+  }));
+
+  dispatch(updateDocuments(reduxDocs));
+};
 
   const handleNextClick = async () => {
     const result = step5Schema.safeParse({ documents });

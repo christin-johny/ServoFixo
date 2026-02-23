@@ -262,6 +262,7 @@ export class TechnicianProfileController extends BaseController {
     try {
       const technicianId = this.getTechId(req);
       const { accountHolderName, accountNumber, bankName, ifscCode, proofUrl, upiId } = req.body;
+      console.log(proofUrl)
       if (!accountHolderName || !accountNumber || !bankName || !ifscCode || !proofUrl) {
         throw new Error(ErrorMessages.MISSING_REQUIRED_FIELDS);
       }

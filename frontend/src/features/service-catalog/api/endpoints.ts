@@ -1,23 +1,26 @@
+// Central versioning prefix to match backend app.use('/api/v1', v1Router)
+const VERSION = "/v1";
+
 export const ADMIN_SERVICE_ENDPOINTS = {
-  SERVICES: "/admin/services",
-  SERVICE_BY_ID: (id: string) => `/admin/services/${id}`,
-  TOGGLE_STATUS: (id: string) => `/admin/services/${id}/toggle`,
+  SERVICES: `${VERSION}/admin/services`,
+  SERVICE_BY_ID: (id: string) => `${VERSION}/admin/services/${id}`,
+  TOGGLE_STATUS: (id: string) => `${VERSION}/admin/services/${id}/toggle`,
 };
 
 export const ADMIN_CATEGORY_ENDPOINTS = {
-  CATEGORIES: "/admin/categories",
-  CATEGORY_BY_ID: (id: string) => `/admin/categories/${id}`,
-  TOGGLE_STATUS: (id: string) => `/admin/categories/${id}/toggle`,
+  CATEGORIES: `${VERSION}/admin/categories`,
+  CATEGORY_BY_ID: (id: string) => `${VERSION}/admin/categories/${id}`,
+  TOGGLE_STATUS: (id: string) => `${VERSION}/admin/categories/${id}/toggle`,
 };
 
 export const CUSTOMER_SERVICE_ENDPOINTS = {
-  CATEGORIES: "/customer/categories",
-  POPULAR_SERVICES: "/customer/services/popular",
-  SERVICES: "/customer/services",
-  SERVICE_BY_ID: (id: string) => `/customer/services/${id}`,
+  CATEGORIES: `${VERSION}/customer/categories`,
+  POPULAR_SERVICES: `${VERSION}/customer/services/popular`,
+  SERVICES: `${VERSION}/customer/services`,
+  SERVICE_BY_ID: (id: string) => `${VERSION}/customer/services/${id}`,
 };
 
 export const TECHNICIAN_CATALOG_ENDPOINTS = {
-  GET_CATEGORIES: "/technician/data/categories",
-  GET_SERVICES: "/technician/data/services",
+  GET_CATEGORIES: `${VERSION}/technician/data/categories`,
+  GET_SERVICES: `${VERSION}/technician/data/services`,
 };

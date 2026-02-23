@@ -3,8 +3,7 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { AddExtraChargeDto } from "../../dto/booking/AddExtraChargeDto"; 
-import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
-import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages"; 
 import { ExtraCharge } from "../../../domain/value-objects/BookingTypes";
 import { IImageService } from "../../interfaces/IImageService"; 
 import { NotificationType } from "../../../domain/value-objects/NotificationTypes";  
@@ -37,7 +36,7 @@ export class AddExtraChargeUseCase implements IUseCase<void, [AddExtraChargeDto,
             uploadedProofUrl = await this._imageService.uploadImage(
                 proofFile.buffer, proofFile.originalName, proofFile.mimeType
             );
-        } catch (error) { 
+        } catch  { 
              throw new Error(ErrorMessages.PROOF_UPLOAD_FAILED);
         }
     }

@@ -317,7 +317,7 @@ const CustomerLogin: React.FC = () => {
             <div>
               <button
                 type="button"
-                onClick={() => (window.location.href = `${import.meta.env.VITE_API_BASE}/customer/auth/google`)}
+                onClick={() => (window.location.href = `${import.meta.env.VITE_API_BASE}/v1/customer/auth/google`)}
                 className="flex items-center justify-center w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all"
               >
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-5 w-5 mr-3" />

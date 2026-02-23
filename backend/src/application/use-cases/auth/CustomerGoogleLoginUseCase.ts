@@ -5,7 +5,7 @@ import { ICacheService } from "../../interfaces/ICacheService";
 import { Customer } from "../../../domain/entities/Customer";
 import { Email } from "../../../domain/value-objects/ContactTypes";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { S3UrlHelper } from "../../../infrastructure/storage/S3UrlHelper";
 
 interface GoogleLoginRequest {
   token?: string;
@@ -84,7 +84,7 @@ export class CustomerGoogleLoginUseCase {
           customer = await this._customerRepository.create(customer);
         }
       } else if (request.customer) {
-        const rawCust = request.customer as any;
+        const rawCust = request.customer as any  ;
         customer = rawCust;
         picture = rawCust.avatarUrl || rawCust.picture;
       } else {
@@ -134,7 +134,7 @@ export class CustomerGoogleLoginUseCase {
             typeof customer.getEmail === "function"
               ? (customer.getEmail() as string)
               : customer.getEmail(),
-          avatarUrl: picture,
+          avatarUrl: S3UrlHelper.getFullUrl(customer.getAvatarUrl() || picture),
         },
       };
     } catch (err: unknown) {

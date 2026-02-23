@@ -1,4 +1,4 @@
-import { ADMIN_BOOKING_ENDPOINTS } from "./endpoints";
+import { ADMIN_BOOKING_ENDPOINTS} from "./endpoints";
 import api from "../../../lib/axiosClient";
 
 
@@ -142,7 +142,7 @@ export const searchTechnicians = async (
     filters?: SmartFilters 
 ): Promise<TechnicianSearchResult[]> => {
   
-  const response = await api.get("/admin/technicians", { 
+  const response = await api.get(ADMIN_BOOKING_ENDPOINTS.SEARCH, { 
       params: { 
         search: query, 
         limit: 10, 

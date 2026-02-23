@@ -1,6 +1,5 @@
 import { IImageService } from "../../../interfaces/IImageService";
-import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
+import { ILogger } from "../../../interfaces/ILogger"; 
 import { IUseCase } from "../../../interfaces/IUseCase";
  
 export interface UploadTechnicianFileInput {
@@ -23,11 +22,7 @@ export class UploadTechnicianFileUseCase implements IUseCase<string, [string, Up
     const key = `technician/${technicianId}/${folder}/${Date.now()}-${cleanFileName}`;
 
  
-    const fileUrl = await this._imageService.uploadImage(
-      fileBuffer,
-      key, 
-      mimeType
-    );
+    const fileUrl = await this._imageService.uploadImage(fileBuffer, key, mimeType);
 
     return fileUrl;
   }
