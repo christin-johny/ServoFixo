@@ -11,8 +11,9 @@ interface BookingHistoryCardProps {
 const BookingHistoryCard: React.FC<BookingHistoryCardProps> = ({ booking, compact = false }) => {
   const navigate = useNavigate();
  
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getStatusColor = (status: string = '') => {  
+    const s = status?.toUpperCase();  
+    switch (s) {
       case 'COMPLETED': return 'bg-green-100 text-green-700 border-green-200';
       case 'PAID': return 'bg-green-100 text-green-700 border-green-200';
       case 'CANCELLED': return 'bg-red-50 text-red-600 border-red-100';
@@ -22,29 +23,35 @@ const BookingHistoryCard: React.FC<BookingHistoryCardProps> = ({ booking, compac
   };
  
   const formatDate = (dateString?: string) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric'
-    });
+    if (!dateString) return 'Date N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric'
+      });
+    } catch {
+      return 'Invalid Date';
+    }
   };
 
-  const isCompleted = booking.status === 'COMPLETED' || booking.status === 'PAID';
-  const isPaid = booking.status === 'PAID';
-  const serviceName = booking.snapshots?.service?.name || 'Service';
-  const techName = booking.snapshots?.technician?.name;
-  const price = booking.pricing?.final || booking.pricing?.estimated;
+  // Added Optional Chaining to all logic
+  const status = booking?.status || 'PENDING';
+  const isCompleted = status === 'COMPLETED' || status === 'PAID';
+  const isPaid = status === 'PAID';
+  const serviceName = booking?.snapshots?.service?.name || 'Service';
+  const techName = booking?.snapshots?.technician?.name;
+  const price = booking?.pricing?.final || booking?.pricing?.estimated;
  
   const handleViewDetails = () => {
-    if (isCompleted || booking.status === 'CANCELLED') { 
-        navigate(`/booking/${booking.id}/details`); 
+    if (isCompleted || status === 'CANCELLED') { 
+        navigate(`/booking/${booking?.id}/details`); 
     } else {
-        navigate(`/booking/${booking.id}/track`);
+        navigate(`/booking/${booking?.id}/track`);
     }
   };
 
   const handleRate = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/booking/${booking.id}/rate`);
+    navigate(`/booking/${booking?.id}/rate`);
   };
 
   return (
@@ -65,10 +72,9 @@ const BookingHistoryCard: React.FC<BookingHistoryCardProps> = ({ booking, compac
             
             <div className="flex items-center gap-2 mt-1 text-gray-500 text-xs">
               <Calendar size={12} />
-              <span>{formatDate(booking.timestamps?.scheduledAt || booking.timestamps?.createdAt)}</span>
+              <span>{formatDate(booking?.timestamps?.scheduledAt || booking?.timestamps?.createdAt)}</span>
             </div>
 
-            {/* Show Tech Name only in Full View */}
             {!compact && techName && (
                <div className="flex items-center gap-2 mt-1 text-gray-500 text-xs">
                  <User size={12} />
@@ -78,23 +84,20 @@ const BookingHistoryCard: React.FC<BookingHistoryCardProps> = ({ booking, compac
           </div>
         </div>
 
-        {/* Status Badge */}
         <div className="flex flex-col items-end gap-2">
-            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(booking.status)}`}>
-            {booking.status.replace('_', ' ')}
+            {/* Added null check for status.replace */}
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(status)}`}>
+            {status.replace('_', ' ')}
             </span>
-            {/* Show Price only in Full View */}
             {!compact && price && (
                 <span className="font-semibold text-gray-900 text-sm">₹{price}</span>
             )}
         </div>
       </div>
 
-      {/* Footer Actions (Only for Full View) */}
       {!compact && (
         <div className="mt-4 pt-4 border-t border-gray-50 flex justify-end gap-3">
-            {/* Logic: If Paid but not Rated -> Show Rate Button */}
-            {isPaid && !booking.isRated && (
+            {isPaid && !booking?.isRated && (
                 <button 
                     onClick={handleRate}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-yellow-700 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors"
@@ -104,7 +107,6 @@ const BookingHistoryCard: React.FC<BookingHistoryCardProps> = ({ booking, compac
                 </button>
             )}
             
-            {/* Logic: Details is always there */}
             <button className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                 View Details <ChevronRight size={14} />
             </button>

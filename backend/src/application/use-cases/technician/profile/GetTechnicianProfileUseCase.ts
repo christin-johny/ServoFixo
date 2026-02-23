@@ -22,15 +22,13 @@ export class GetTechnicianProfileUseCase
   async execute(technicianId: string): Promise<TechnicianResponseDto | null> {
   const tech = await this._technicianRepository.findById(technicianId);
   if (!tech) return null;
-
-  // 1. Parallel fetch relations for hydration
+ 
   const [categories, subServices, zones] = await Promise.all([
     Promise.all(tech.getCategoryIds().map(id => this._categoryRepository.findById(id))),
     Promise.all(tech.getSubServiceIds().map(id => this._serviceRepository.findById(id))),
     Promise.all(tech.getZoneIds().map(id => this._zoneRepository.findById(id)))
   ]);
-
-  // 2. Use the Mapper to resolve S3 Keys into Public/Signed URLs
+ 
   const baseProfile = await TechnicianMapper.toResponse(tech);
 
   // 3. Add the hydrated relation data to the response

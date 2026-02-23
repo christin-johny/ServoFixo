@@ -18,6 +18,8 @@ export interface AdminTechnicianProfileDto {
   zoneIds: string[]; 
   categoryIds: string[];
   subServiceIds: string[];
+  isSuspended:boolean;
+  suspendReason:string | undefined;
 
   // Resolved Names for UI
 zoneNames: { id: string; name: string }[];

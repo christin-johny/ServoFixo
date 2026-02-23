@@ -146,6 +146,8 @@ export class TechnicianMapper {
       zoneIds: entity.getZoneIds(),
       categoryIds: entity.getCategoryIds(),
       subServiceIds: entity.getSubServiceIds(),
+      isSuspended: entity.getIsSuspended(),
+      suspendReason: entity.getSuspendReason(),
       zoneNames: [],
       categoryNames: [],
       subServiceNames: [], 

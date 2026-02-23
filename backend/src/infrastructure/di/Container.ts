@@ -90,7 +90,7 @@ import { AdminAuthController } from "../../presentation/controllers/Admin/AdminA
 import { AdminMongoRepository } from "../database/repositories/AdminMongoRepository";
 
 // --- Infrastructure Services ---
-import { OtpSessionMongoRepository } from "../database/repositories/OtpSessionMongoRepository";
+
 import { NodemailerEmailService } from "../email/NodemailerEmailService";
 import { BcryptPasswordHasher } from "../security/BcryptPasswordHasher";
 import { JwtService } from "../security/JwtService";
@@ -153,11 +153,11 @@ import { VerifyPaymentUseCase } from "../../application/use-cases/booking/Verify
 import { GetServiceReviewsUseCase } from "../../application/use-cases/service-items/GetServiceReviewsUseCase";
 import { GetAllBookingsUseCase } from "../../application/use-cases/booking/GetAllBookingsUseCase";
 import { GetRecommendedTechniciansUseCase } from "../../application/use-cases/booking/GetRecommendedTechniciansUseCase";
+import { RedisOtpSessionRepository } from "../redis/RedisOtpSessionRepository";
 
 // INFRASTRUCTURE SERVICE INSTANTIATION
 
 const imageService = new S3ImageService();
-const otpSessionRepo = new OtpSessionMongoRepository();
 const emailService = new NodemailerEmailService();
 const passwordHasher = new BcryptPasswordHasher();
 const jwtService = new JwtService();
@@ -167,7 +167,7 @@ const cacheService = new RedisCacheService(redis);
 const googleAuthService = new GoogleAuthService(
   process.env.GOOGLE_CLIENT_ID || ""
 );
-
+const otpSessionRepo = new RedisOtpSessionRepository(cacheService);
 // ZONE MODULE WIRING
 const zoneRepo = new ZoneMongoRepository();
 const createZoneUseCase = new CreateZoneUseCase(zoneRepo, logger);
