@@ -3,7 +3,7 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
 import { INotificationService } from "../../services/INotificationService";
 import { ILogger } from "../../interfaces/ILogger";
-import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
+import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages"; 
 import { SocketServer } from "../../../infrastructure/socket/SocketServer"; 
 
 export interface AdminForceAssignDto {
@@ -75,6 +75,5 @@ export class AdminForceAssignUseCase implements IUseCase<void, [AdminForceAssign
         metadata: { bookingId: booking.getId() }
     });
 
-    this._logger.info(`Admin ${input.adminId} forced assigned Tech ${input.technicianId} to Booking ${booking.getId()}`);
   }
 }

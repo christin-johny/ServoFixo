@@ -4,9 +4,9 @@ import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianR
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { CancelBookingDto } from "../../dto/booking/CancelBookingDto";
-import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class CustomerCancelBookingUseCase implements IUseCase<void, [CancelBookingDto]> {
   constructor(
@@ -75,6 +75,5 @@ export class CustomerCancelBookingUseCase implements IUseCase<void, [CancelBooki
         }
     });
 
-    this._logger.info(`${LogEvents.BOOKING_CANCELLED_BY_CUSTOMER} ${booking.getId()}`);
   }
 }

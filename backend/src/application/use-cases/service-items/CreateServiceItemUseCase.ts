@@ -4,8 +4,8 @@ import { CreateServiceItemDto } from '../../dto/serviceItem/CreateServiceItemDto
 import { ServiceItemResponseDto } from '../../dto/serviceItem/ServiceItemResponseDto';
 import { ServiceItemMapper } from '../../mappers/ServiceItemMapper';
 import { ILogger } from '../../interfaces/ILogger';
-import { LogEvents } from '../../../../../shared/constants/LogEvents';
-import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
+import { LogEvents } from '../../../infrastructure/logging/LogEvents';
+import { ErrorMessages } from '../../constants/ErrorMessages';
 
 export interface IFile {
   buffer: Buffer;
@@ -21,7 +21,7 @@ export class CreateServiceItemUseCase {
   ) {}
 
   async execute(dto: CreateServiceItemDto, imageFiles: IFile[]): Promise<ServiceItemResponseDto> {
-    this._logger.info(`${LogEvents.SERVICE_CREATE_INIT} - Name: ${dto.name}`);
+    
 
     const existing = await this._serviceRepo.findByNameAndCategory(dto.name, dto.categoryId);
     if (existing) {
@@ -39,12 +39,10 @@ export class CreateServiceItemUseCase {
     );
     
     const imageUrls = await Promise.all(uploadPromises);
-    this._logger.info(LogEvents.SERVICE_IMAGE_UPLOAD_SUCCESS);
-
+    
     const newService = ServiceItemMapper.toDomain(dto, imageUrls);
     const savedService = await this._serviceRepo.create(newService);
-
-    this._logger.info(`${LogEvents.SERVICE_CREATED} - ID: ${savedService.getId()}`);
+    
     return ServiceItemMapper.toResponse(savedService);
   }
 }

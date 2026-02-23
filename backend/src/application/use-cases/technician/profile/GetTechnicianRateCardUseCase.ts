@@ -1,6 +1,6 @@
 import { ILogger } from "../../../interfaces/ILogger";
 import { IUseCase } from "../../../interfaces/IUseCase";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 import { ICommissionStrategy } from "../../../../application/interfaces/ICommissionStrategy";
 
 export interface ITechnicianRepositoryForRateCard {

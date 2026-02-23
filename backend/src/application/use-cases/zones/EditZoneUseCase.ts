@@ -4,8 +4,8 @@ import { ZoneResponseDto } from "../../dto/zone/ZoneResponseDto";
 import { ZoneMapper } from "../../mappers/ZoneMapper";
 import { Zone } from "../../../domain/entities/Zone";
 import { ILogger } from "../../interfaces/ILogger";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { ErrorMessages } from "../../constants/ErrorMessages";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class EditZoneUseCase {
   constructor(
@@ -36,7 +36,6 @@ export class EditZoneUseCase {
 
     const savedZone = await this._zoneRepository.update(updatedEntity);
     
-    this._logger.info(LogEvents.ZONE_UPDATE_SUCCESS, { id });
     
     return ZoneMapper.toResponse(savedZone);
   }

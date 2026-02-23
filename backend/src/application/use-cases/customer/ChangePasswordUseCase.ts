@@ -1,9 +1,9 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { IPasswordHasher } from "../../interfaces/IPasswordHasher";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { Customer } from "../../../domain/entities/Customer";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class ChangePasswordUseCase {
   constructor(
@@ -13,7 +13,7 @@ export class ChangePasswordUseCase {
   ) {}
 
   async execute(userId: string, data: any): Promise<void> {
-    this._logger.info(LogEvents.PASSWORD_CHANGE_INIT, { userId });
+    
 
     const { currentPassword, newPassword } = data;
     const customer = await this._customerRepository.findById(userId);
@@ -55,6 +55,5 @@ export class ChangePasswordUseCase {
     );
 
     await this._customerRepository.update(updatedCustomer);
-    this._logger.info(LogEvents.PASSWORD_CHANGE_SUCCESS, { userId });
   }
 }

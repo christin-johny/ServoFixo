@@ -1,9 +1,9 @@
 import { IServiceItemRepository } from '../../../domain/repositories/IServiceItemRepository';
 import { ILogger } from '../../interfaces/ILogger';
-import { LogEvents } from '../../../../../shared/constants/LogEvents';
+import { LogEvents } from '../../../infrastructure/logging/LogEvents';
 import { ServiceItemMapper } from '../../mappers/ServiceItemMapper';
 import { ServiceItemResponseDto } from '../../dto/serviceItem/ServiceItemResponseDto';
-import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
+import { ErrorMessages } from '../../constants/ErrorMessages';
 
 export class GetServiceByIdUseCase {
   constructor(
@@ -12,7 +12,7 @@ export class GetServiceByIdUseCase {
   ) {}
 
   async execute(id: string): Promise<ServiceItemResponseDto | null> {
-    this._logger.info(`${LogEvents.SERVICE_BY_ID_FETCH} - ID: ${id}`);
+    
 
     const service = await this._serviceRepo.findById(id);
     if (!service) {

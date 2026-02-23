@@ -1,11 +1,26 @@
 import { Booking } from "../../domain/entities/Booking";
 import { BookingResponseDto } from "../dto/booking/BookingResponseDto";
+import { S3UrlHelper } from "../../infrastructure/storage/S3UrlHelper"; //
 
 export class BookingMapper {
-  /**
-   * Maps Domain Entity to the standard Response DTO.
-   */
-  static toResponse(entity: Booking): BookingResponseDto {
+  static async toResponse(entity: Booking): Promise<BookingResponseDto> {
+    const snapshots = entity.getSnapshots();
+
+    // 1. Resolve Private Completion Photos (Signed)
+    const resolvedCompletionPhotos = await Promise.all(
+      (entity.getCompletionPhotos() || []).map(async (key) => 
+        await S3UrlHelper.getPrivateUrl(key)
+      )
+    );
+
+    // 2. Resolve Private Extra Charge Proofs (Signed)
+    const resolvedExtraCharges = await Promise.all(
+      entity.getExtraCharges().map(async (charge) => ({
+        ...charge,
+        proofUrl: charge.proofUrl ? await S3UrlHelper.getPrivateUrl(charge.proofUrl) : undefined
+      }))
+    );
+
     return {
       id: entity.getId(),
       customerId: entity.getCustomerId(),
@@ -20,22 +35,29 @@ export class BookingMapper {
       
       candidateIds: entity.getCandidateIds(),
       assignedTechAttempts: entity.getAttempts(),
-      extraCharges: entity.getExtraCharges(),
-      completionPhotos: entity.getCompletionPhotos(),
+      extraCharges: resolvedExtraCharges,
+      completionPhotos: resolvedCompletionPhotos,
       timeline: entity.getTimeline(),
       isRated: entity.getIsRated(),
       chatId: entity.getChatId(),
        
-      snapshots: entity.getSnapshots() || undefined,
+      snapshots: {
+        ...snapshots,
+        customer: {
+          ...snapshots.customer,
+          avatarUrl: S3UrlHelper.getFullUrl(snapshots.customer.avatarUrl) // Public
+        },
+        technician: snapshots.technician ? {
+          ...snapshots.technician,
+          avatarUrl: S3UrlHelper.getFullUrl(snapshots.technician.avatarUrl) // Public
+        } : undefined,
+        service: snapshots.service
+      },
       
       meta: entity.getMeta(),
       timestamps: entity.getTimestamps()
     };
   }
-
-  /**
-   * Maps raw DB data to Domain Entity.
-   */
   static toDomain(raw: any): Booking {
     if (!raw) throw new Error("Booking data is null/undefined");
     

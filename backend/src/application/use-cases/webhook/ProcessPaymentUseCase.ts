@@ -4,7 +4,7 @@ import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianR
 import { INotificationService } from "../../services/INotificationService"; //   Added
 import { ILogger } from "../../interfaces/ILogger";
 import { ProcessPaymentDto } from "../../dto/webhook/ProcessPaymentDto";
-import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes"; //   Added
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes"; //   Added
 
 export class ProcessPaymentUseCase implements IUseCase<void, [ProcessPaymentDto]> {
   constructor(
@@ -25,7 +25,6 @@ export class ProcessPaymentUseCase implements IUseCase<void, [ProcessPaymentDto]
 
     // 2. Idempotency Check (Don't process if already paid)
     if (booking.getStatus() === "PAID") {
-        this._logger.info(`Webhook ignored: Booking ${booking.getId()} already PAID.`);
         return;
     }
 
@@ -43,7 +42,6 @@ export class ProcessPaymentUseCase implements IUseCase<void, [ProcessPaymentDto]
     const techId = booking.getTechnicianId();
     if (techId) { 
         await this._technicianRepo.updateAvailabilityStatus(techId, false);
-        this._logger.info(`Technician ${techId} released from job.`);
     }
  
     if (techId) {
@@ -59,7 +57,5 @@ export class ProcessPaymentUseCase implements IUseCase<void, [ProcessPaymentDto]
             }
         });
     }
-
-    this._logger.info(`Booking ${booking.getId()} payment confirmed via Webhook.`);
   }
 }

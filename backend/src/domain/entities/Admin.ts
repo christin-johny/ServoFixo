@@ -1,4 +1,4 @@
-import { Email } from "../../../../shared/types/value-objects/ContactTypes";
+import { Email } from "../value-objects/ContactTypes";
 
 export class Admin {
   private readonly id: string;

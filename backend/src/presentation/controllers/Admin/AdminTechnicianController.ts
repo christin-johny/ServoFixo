@@ -1,6 +1,4 @@
-// src/presentation/controllers/admin/AdminTechnicianController.ts
-
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { RequestMapper } from "../../utils/RequestMapper";
 import { IUseCase } from "../../../application/interfaces/IUseCase";
@@ -16,10 +14,10 @@ import {
   VerificationQueueFilters,
   QueueType,
 } from "../../../domain/repositories/ITechnicianRepository"; 
-import { SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { SuccessMessages } from "../../../application/constants/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { RequestAction, PartnerRequestType } from "../../../../../shared/types/enums/RequestResolutionEnums";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { RequestAction, PartnerRequestType } from "../../../domain/enums/RequestResolutionEnums";
 import { GetRecommendedTechniciansDto } from "../../../application/use-cases/booking/GetRecommendedTechniciansUseCase";  
 
 export class AdminTechnicianController extends BaseController {
@@ -40,7 +38,7 @@ export class AdminTechnicianController extends BaseController {
     super(_logger);
   }
 
-  getVerificationQueue = async (req: Request, res: Response): Promise<Response> => {
+  getVerificationQueue = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { page, limit, search } = RequestMapper.toPagination(req.query);
       const params: VerificationQueueFilters = {
@@ -55,20 +53,22 @@ export class AdminTechnicianController extends BaseController {
       const result = await this._getQueueUseCase.execute(params);
       return this.ok(res, result);
     } catch (err) {
-      return this.handleError(res, err, LogEvents.ADMIN_GET_TECH_QUEUE_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.ADMIN_GET_TECH_QUEUE_FAILED;
+      next(err);
     }
   };
 
-  getTechnicianProfile = async (req: Request, res: Response): Promise<Response> => {
+  getTechnicianProfile = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const result = await this._getFullProfileUseCase.execute(req.params.id);
       return this.ok(res, result);
     } catch (err) {
-      return this.handleError(res, err, LogEvents.PROFILE_FETCH_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.PROFILE_FETCH_FAILED;
+      next(err);
     }
   };
 
-  verifyTechnician = async (req: Request, res: Response): Promise<Response> => {
+  verifyTechnician = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const dto = req.body as VerifyTechnicianDto;
       await this._verifyTechnicianUseCase.execute(req.params.id, dto);
@@ -79,17 +79,17 @@ export class AdminTechnicianController extends BaseController {
         
       return this.ok(res, null, message);
     } catch (err) {
-      return this.handleError(res, err, LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_FAILED;
+      next(err);
     }
   };
 
-  getAllTechnicians = async (req: Request, res: Response): Promise<Response> => {
+  getAllTechnicians = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { page, limit, search } = RequestMapper.toPagination(req.query);
       const zoneId = req.query.zoneId as string;
       const serviceId = req.query.serviceId as string;
 
-      //   SMART MODE: Use the Use Case
       if (zoneId && serviceId) {
            const techs = await this._getRecommendedTechniciansUseCase.execute({
                zoneId,
@@ -97,7 +97,6 @@ export class AdminTechnicianController extends BaseController {
                search
            });
 
-           // Map to simple list for Modal
            const data = techs.map((tech: any) => ({
                 id: tech.getId(),
                 name: tech.getName(),
@@ -111,7 +110,6 @@ export class AdminTechnicianController extends BaseController {
            return this.ok(res, { data, total: data.length });
       } 
 
-      // ❌ NORMAL MODE: Browse All
       const filters = {
         page,
         limit,
@@ -123,41 +121,44 @@ export class AdminTechnicianController extends BaseController {
       const result = await this._getAllTechniciansUseCase.execute(filters);
       return this.ok(res, result);
     } catch (err) {
-      return this.handleError(res, err, "GET_ALL_TECHS_FAILED");
+      (err as Error & { logContext?: string }).logContext = "GET_ALL_TECHS_FAILED";
+      next(err);
     }
   };
 
-
-  updateTechnician = async (req: Request, res: Response): Promise<Response> => {
+  updateTechnician = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       await this._updateTechnicianUseCase.execute(req.params.id, req.body);
       return this.ok(res, null, SuccessMessages.TECH_UPDATED);
     } catch (err) {
-      return this.handleError(res, err, LogEvents.CATEGORY_UPDATE_FAILED);  
+      (err as Error & { logContext?: string }).logContext = LogEvents.CATEGORY_UPDATE_FAILED;  
+      next(err);
     }
   };
 
-  toggleBlockTechnician = async (req: Request, res: Response): Promise<Response> => {
+  toggleBlockTechnician = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { isSuspended, reason } = req.body;
       await this._blockTechnicianUseCase.execute(req.params.id, isSuspended, reason);
 
       return this.ok(res, null, isSuspended ? SuccessMessages.TECH_SUSPENDED : SuccessMessages.TECH_ACTIVATED);
     } catch (err) {
-      return this.handleError(res, err, LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_FAILED;
+      next(err);
     }
   };
 
-  deleteTechnician = async (req: Request, res: Response): Promise<Response> => {
+  deleteTechnician = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       await this._deleteTechnicianUseCase.execute(req.params.id);
       return this.ok(res, null, SuccessMessages.TECH_DELETED);
     } catch (err) {
-      return this.handleError(res, err, LogEvents.CATEGORY_DELETE_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.CATEGORY_DELETE_FAILED;
+      next(err);
     }
   };
 
-  resolvePartnerRequest = async (req: Request, res: Response): Promise<Response> => {
+  resolvePartnerRequest = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const dto = req.body as ResolvePartnerRequestDto;
       
@@ -178,7 +179,8 @@ export class AdminTechnicianController extends BaseController {
 
       return this.ok(res, null, message);
     } catch (err) {
-      return this.handleError(res, err, LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_FAILED;
+      next(err);
     }
   };
 }

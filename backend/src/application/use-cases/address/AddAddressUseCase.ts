@@ -3,8 +3,7 @@ import { IZoneService } from "../../interfaces/IZoneService";
 import { CreateAddressDto } from "../../dto/address/CreateAddressDto";
 import { AddressResponseDto } from "../../dto/address/AddressResponseDto";
 import { AddressMapper } from "../../mappers/AddressMapper";
-import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { ILogger } from "../../interfaces/ILogger"; 
 
 export class AddAddressUseCase {
   constructor(
@@ -33,12 +32,8 @@ export class AddAddressUseCase {
     );
 
     const savedAddress = await this._addressRepository.create(newAddress);
+    
 
-    this._logger.info(LogEvents.ADDRESS_ADDED, { 
-      addressId: savedAddress.getId(), 
-      userId, 
-      isServiceable: zoneResult.isServiceable 
-    });
 
     return AddressMapper.toResponse(savedAddress);
   }

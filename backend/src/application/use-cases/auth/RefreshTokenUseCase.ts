@@ -1,10 +1,10 @@
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import type { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";  
 import { ICacheService } from "../../interfaces/ICacheService";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class RefreshTokenUseCase {
   constructor(
@@ -16,7 +16,6 @@ export class RefreshTokenUseCase {
   ) {}
 
   async execute(refreshToken: string) {
-    this._logger.info(LogEvents.AUTH_REFRESH_INIT);
     if (!refreshToken) {
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
@@ -24,7 +23,7 @@ export class RefreshTokenUseCase {
     let payload: JwtPayload;
     try {
       payload = await this._jwtService.verifyRefreshToken(refreshToken);
-    } catch (err) {
+    } catch   {
       this._logger.warn(`${LogEvents.AUTH_REFRESH_FAILED} - Invalid Token Signature`);
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
@@ -55,7 +54,7 @@ export class RefreshTokenUseCase {
     let stored: string | null = null;
     try {
       stored = await this._cacheService.get(redisKey);
-    } catch { 
+    } catch { throw new Error(ErrorMessages.UNAUTHORIZED);
     }
 
     if (!stored) { 
@@ -64,7 +63,7 @@ export class RefreshTokenUseCase {
         await this._cacheService.set(redisKey, String(payload.sub), fallbackTtl);
         stored = String(payload.sub);
         this._logger.warn("Refresh Token Reuse Attempt Detected");
-      } catch (err) {
+      } catch   {
         throw new Error(ErrorMessages.UNAUTHORIZED);
       }
     }
@@ -91,7 +90,6 @@ export class RefreshTokenUseCase {
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }
 
-    this._logger.info(LogEvents.AUTH_REFRESH_SUCCESS);
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   }
 }

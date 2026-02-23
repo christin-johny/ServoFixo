@@ -2,10 +2,10 @@ import { ITechnicianRepository } from "../../../../domain/repositories/ITechnici
 import { IPasswordHasher } from "../../../interfaces/IPasswordHasher";
 import { IJwtService, JwtPayload } from "../../../interfaces/IJwtService";
 import { AuthResultDto } from "../../../dto/auth/AuthResultDto";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
 import { ICacheService } from "../../../interfaces/ICacheService";
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 
 export interface TechnicianLoginDto {
   email: string;
@@ -24,10 +24,6 @@ export class TechnicianLoginUseCase {
   async execute(input: TechnicianLoginDto): Promise<AuthResultDto> {
     const { email, password } = input;
     const normalizedEmail = email.toLowerCase().trim();
-
-    this._logger.info(
-      `${LogEvents.AUTH_LOGIN_INIT} (Technician) - Email: ${normalizedEmail}`
-    );
 
     const technician = await this._technicianRepository.findByEmail(normalizedEmail);
     if (!technician) {
@@ -86,9 +82,6 @@ export class TechnicianLoginUseCase {
       this._logger.error(`${LogEvents.AUTH_REFRESH_FAILED} - Cache Error`, errorMessage);
     }
 
-    this._logger.info(
-      `${LogEvents.AUTH_LOGIN_SUCCESS} (Technician) - ID: ${technician.getId()}`
-    );
  
     return {
       accessToken,

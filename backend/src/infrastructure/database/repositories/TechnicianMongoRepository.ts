@@ -1,4 +1,4 @@
-import { FilterQuery } from "mongoose";
+import  FilterQuery  from "mongoose";
 import {
   ITechnicianRepository,
   TechnicianFilterParams,
@@ -12,7 +12,7 @@ import {
   BankUpdateRequest,
   PayoutStatus,
   TechnicianDocument as TechnicianVO,
-} from "../../../../../shared/types/value-objects/TechnicianTypes";
+} from "../../../domain/value-objects/TechnicianTypes";
 
 import { Technician } from "../../../domain/entities/Technician";
 import {
@@ -20,7 +20,7 @@ import {
   TechnicianDocument,
 } from "../mongoose/models/TechnicianModel";
 import { ZoneModel } from "../mongoose/models/ZoneModel";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../../application/constants/ErrorMessages";
 
 export class TechnicianMongoRepository implements ITechnicianRepository {
   

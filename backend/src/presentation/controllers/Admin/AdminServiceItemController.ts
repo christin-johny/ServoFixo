@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { RequestMapper } from "../../utils/RequestMapper";
 import { IUseCase } from "../../../application/interfaces/IUseCase";  
@@ -6,10 +6,10 @@ import { CreateServiceItemDto } from "../../../application/dto/serviceItem/Creat
 import { UpdateServiceItemDto } from "../../../application/dto/serviceItem/UpdateServiceItemDto";
 import { ServiceItemResponseDto } from "../../../application/dto/serviceItem/ServiceItemResponseDto";
 import { PaginatedServiceResponse } from "../../../application/use-cases/service-items/GetAllServiceItemsUseCase";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { StatusCodes } from "../../utils/StatusCodes";
+import { ErrorMessages, SuccessMessages } from "../../../application/constants/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 interface FileData {
   buffer: Buffer;
@@ -44,10 +44,8 @@ export class AdminServiceItemController extends BaseController {
     super(_logger);
   }
 
-  public create = async (req: Request, res: Response): Promise<Response> => {
+  public create = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      this._logger.info(LogEvents.SERVICE_CREATE_INIT);
-
       const { specifications, basePrice, isActive, ...rest } = req.body;
       const files = req.files as Express.Multer.File[];
 
@@ -58,11 +56,11 @@ export class AdminServiceItemController extends BaseController {
       
       try {
         dto.specifications = specifications ? JSON.parse(specifications) : [];
-      } catch (e) {
+      } catch {
         throw new Error(ErrorMessages.INVALID_SPECIFICATIONS);
       }
 
-      const fileData = files ? files.map(f => ({
+      const fileData: FileData[] = files ? files.map(f => ({
         buffer: f.buffer,
         originalName: f.originalname,
         mimeType: f.mimetype,
@@ -70,20 +68,18 @@ export class AdminServiceItemController extends BaseController {
 
       const result = await this._createUseCase.execute(dto, fileData);
 
-      //  Match response.data.serviceItem expected by repository
       return res.status(StatusCodes.CREATED).json({
         message: SuccessMessages.SERVICE_CREATED,
         serviceItem: result,
       });
     } catch (err) {
-      return this.handleError(res, err, LogEvents.SERVICE_CREATE_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.SERVICE_CREATE_FAILED;
+      next(err);
     }
   };
 
-  public getAll = async (req: Request, res: Response): Promise<Response> => {
+  public getAll = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      this._logger.info(LogEvents.SERVICE_LISTING_FETCH);
-
       const params: ServiceQueryParams = {
         ...RequestMapper.toPagination(req.query),
         categoryId: req.query.categoryId as string,
@@ -92,18 +88,16 @@ export class AdminServiceItemController extends BaseController {
 
       const result = await this._getAllUseCase.execute(params);
       
-      //  Match response.data directly for getServices
       return res.status(StatusCodes.OK).json(result);
     } catch (err) {
-      return this.handleError(res, err, LogEvents.SERVICE_GET_ALL_ERROR);
+      (err as Error & { logContext?: string }).logContext = LogEvents.SERVICE_GET_ALL_ERROR;
+      next(err);
     }
   };
 
-  public update = async (req: Request, res: Response): Promise<Response> => {
+  public update = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { id } = req.params;
-      this._logger.info(`${LogEvents.SERVICE_UPDATE_INIT} - ID: ${id}`);
-
       const { specifications, imagesToDelete, basePrice, isActive, ...rest } = req.body;
       const files = req.files as Express.Multer.File[];
 
@@ -112,11 +106,14 @@ export class AdminServiceItemController extends BaseController {
       dto.basePrice = basePrice ? Number(basePrice) : undefined;
       dto.isActive = RequestMapper.toBoolean(isActive);
 
-      let parsedSpecs, parsedDeleteList;
+      let parsedDeleteList: string[];
       try {
-        parsedSpecs = specifications ? JSON.parse(specifications) : [];
+        // We parse but use the result directly in the execute call to keep logic clean
+        if (specifications) {
+            dto.specifications = JSON.parse(specifications);
+        }
         parsedDeleteList = imagesToDelete ? JSON.parse(imagesToDelete) : [];
-      } catch (e) {
+      } catch {
         throw new Error(ErrorMessages.INVALID_SPECIFICATIONS);
       }
 
@@ -131,17 +128,17 @@ export class AdminServiceItemController extends BaseController {
         imagesToDelete: parsedDeleteList,
       });
 
-      //  Match response.data.serviceItem
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.SERVICE_UPDATED,
         serviceItem: result,
       });
     } catch (err) {
-      return this.handleError(res, err, LogEvents.SERVICE_UPDATE_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.SERVICE_UPDATE_FAILED;
+      next(err);
     }
   };
 
-  public toggleStatus = async (req: Request, res: Response): Promise<Response> => {
+  public toggleStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { id } = req.params;
       const isActive = RequestMapper.toBoolean(req.body.isActive);
@@ -153,16 +150,18 @@ export class AdminServiceItemController extends BaseController {
       await this._toggleStatusUseCase.execute(id, isActive);
       return this.ok(res, null, SuccessMessages.SERVICE_STATUS_UPDATED);
     } catch (err) {
-      return this.handleError(res, err, LogEvents.SERVICE_TOGGLE_STATUS_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.SERVICE_TOGGLE_STATUS_FAILED;
+      next(err);
     }
   };
 
-  public delete = async (req: Request, res: Response): Promise<Response> => {
+  public delete = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       await this._deleteUseCase.execute(req.params.id);
       return this.ok(res, null, SuccessMessages.SERVICE_DELETED);
     } catch (err) {
-      return this.handleError(res, err, LogEvents.SERVICE_DELETE_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.SERVICE_DELETE_FAILED;
+      next(err);
     }
   };
 }

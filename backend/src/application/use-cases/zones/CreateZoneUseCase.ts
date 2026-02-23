@@ -3,8 +3,8 @@ import { CreateZoneDto } from "../../dto/zone/CreateZoneDto";
 import { ZoneResponseDto } from "../../dto/zone/ZoneResponseDto";
 import { ZoneMapper } from "../../mappers/ZoneMapper";
 import { ILogger } from "../../interfaces/ILogger";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { ErrorMessages } from "../../constants/ErrorMessages";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class CreateZoneUseCase {
   constructor(
@@ -22,7 +22,6 @@ export class CreateZoneUseCase {
     const newZoneEntity = ZoneMapper.toDomain(input);
     const savedZone = await this._zoneRepository.create(newZoneEntity);
     
-    this._logger.info(LogEvents.ZONE_CREATED, { id: savedZone.getId(), name: savedZone.getName() });
 
     return ZoneMapper.toResponse(savedZone);
   }

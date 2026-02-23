@@ -1,9 +1,9 @@
 import { IUseCase } from "../../../interfaces/IUseCase";
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
-import { ServiceRequest } from "../../../../../../shared/types/value-objects/TechnicianTypes";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
+import { ServiceRequest } from "../../../../domain/value-objects/TechnicianTypes";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
 
 export interface RequestServiceAddInput {
   serviceId: string;
@@ -27,7 +27,6 @@ export class RequestServiceAddUseCase implements IUseCase<void, [string, Request
       action: input.action  
     };
     
-    this._logger.info(LogEvents.TECH_SERVICE_REQUEST_INIT, logData);
 
     const technician = await this._technicianRepo.findById(technicianId);
     if (!technician) {
@@ -50,6 +49,5 @@ export class RequestServiceAddUseCase implements IUseCase<void, [string, Request
     technician.addServiceRequest(request); 
     await this._technicianRepo.addServiceRequest(technicianId, request);
 
-    this._logger.info(LogEvents.TECH_SERVICE_REQUEST_SUCCESS, logData);
   }
 }

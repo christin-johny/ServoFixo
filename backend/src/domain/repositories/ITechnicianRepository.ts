@@ -6,7 +6,7 @@ import {
   TechnicianUpdatePayload,
   BankUpdateRequest,
   PayoutStatus
-} from "../../../../shared/types/value-objects/TechnicianTypes";
+} from "../value-objects/TechnicianTypes";
 
 export interface TechnicianFilterParams {
   search?: string;

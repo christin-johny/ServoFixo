@@ -1,6 +1,6 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { ILogger } from "../../../interfaces/ILogger";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
 
 export class ManageTechnicianUseCase {
   constructor(
@@ -18,12 +18,10 @@ export class ManageTechnicianUseCase {
     tech.setSuspension(isSuspended, reason); 
     
     await this._technicianRepo.update(tech);
-    this._logger.info(`Technician ${id} suspension status: ${isSuspended}`);
   }
 
   async delete(id: string): Promise<void> {
     const deleted = await this._technicianRepo.delete(id);
     if (!deleted) throw new Error("Failed to delete technician");
-    this._logger.info(`Technician ${id} deleted`);
   }
 }

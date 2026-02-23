@@ -2,14 +2,14 @@ import { ITechnicianRepository } from "../../../../domain/repositories/ITechnici
 import { IOtpSessionRepository } from "../../../../domain/repositories/IOtpSessionRepository";
 import { IEmailService } from "../../../interfaces/IEmailService";
 import { TechnicianForgotPasswordInitDto } from "../../../dto/technician/TechnicianAuthDtos";
-import { OtpContext } from "../../../../../../shared/types/enums/OtpContext";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
+import { OtpContext } from "../../../../domain/enums/OtpContext";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
 import { OtpSession } from "../../../../domain/entities/OtpSession";
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 
 export class RequestTechnicianForgotPasswordOtpUseCase {
-  private readonly _otpExpiryMinutes = 5;
+  private readonly _otpExpiryMinutes = Number(process.env.OTP_EXPIRY_MINUTES) || 2;
 
   constructor(
     private readonly _technicianRepository: ITechnicianRepository,
@@ -23,8 +23,6 @@ export class RequestTechnicianForgotPasswordOtpUseCase {
   ): Promise<{ message: string; sessionId: string }> {
     const { email } = input;
     const normalizedEmail = email.toLowerCase().trim();
-
-    this._logger.info(`${LogEvents.AUTH_FORGOT_PASSWORD_INIT} (Technician) - Email: ${normalizedEmail}`);
  
     const technician = await this._technicianRepository.findByEmail(normalizedEmail);
     if (!technician) {
@@ -51,8 +49,6 @@ export class RequestTechnicianForgotPasswordOtpUseCase {
     const text = `Your OTP to reset your password is: ${otp}. It is valid for ${this._otpExpiryMinutes} minutes.`;
 
     await this._emailService.sendTextEmail(normalizedEmail, subject, text);
-
-    this._logger.info(`${LogEvents.AUTH_OTP_SENT} (Forgot Pass) - SessionID: ${sessionId}`);
 
     return {
       message: "OTP sent to email for password reset",

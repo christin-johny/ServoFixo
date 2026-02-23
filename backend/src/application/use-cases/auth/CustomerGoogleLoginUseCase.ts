@@ -3,9 +3,9 @@ import { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
 import { IGoogleAuthService } from "../../interfaces/IGoogleAuthService";  
 import { ICacheService } from "../../interfaces/ICacheService";  
 import { Customer } from "../../../domain/entities/Customer";
-import { Email } from "../../../../../shared/types/value-objects/ContactTypes";
+import { Email } from "../../../domain/value-objects/ContactTypes";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { S3UrlHelper } from "../../../infrastructure/storage/S3UrlHelper";
 
 interface GoogleLoginRequest {
   token?: string;
@@ -34,7 +34,6 @@ export class CustomerGoogleLoginUseCase {
 
   async execute(request: GoogleLoginRequest): Promise<GoogleLoginResponse> {
     try {
-      this._logger.info(LogEvents.AUTH_GOOGLE_LOGIN_INIT);
       let customer: Customer | null = null;
       let picture: string | undefined;
 
@@ -85,7 +84,7 @@ export class CustomerGoogleLoginUseCase {
           customer = await this._customerRepository.create(customer);
         }
       } else if (request.customer) {
-        const rawCust = request.customer as any;
+        const rawCust = request.customer as any  ;
         customer = rawCust;
         picture = rawCust.avatarUrl || rawCust.picture;
       } else {
@@ -125,9 +124,6 @@ export class CustomerGoogleLoginUseCase {
         this._logger.error("Failed to store refresh token in cache:", errorMessage);
       }
 
-      this._logger.info(
-        `${LogEvents.AUTH_GOOGLE_LOGIN_SUCCESS} - ID: ${customerId}`
-      );
       return {
         accessToken,
         refreshToken,
@@ -138,7 +134,7 @@ export class CustomerGoogleLoginUseCase {
             typeof customer.getEmail === "function"
               ? (customer.getEmail() as string)
               : customer.getEmail(),
-          avatarUrl: picture,
+          avatarUrl: S3UrlHelper.getFullUrl(customer.getAvatarUrl() || picture),
         },
       };
     } catch (err: unknown) {

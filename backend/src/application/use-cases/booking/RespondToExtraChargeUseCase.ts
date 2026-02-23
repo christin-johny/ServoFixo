@@ -3,9 +3,9 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { RespondToExtraChargeDto } from "../../dto/booking/RespondToExtraChargeDto";
-import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages"; 
-import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages"; 
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class RespondToExtraChargeUseCase implements IUseCase<void, [RespondToExtraChargeDto]> {
   constructor(
@@ -91,6 +91,5 @@ export class RespondToExtraChargeUseCase implements IUseCase<void, [RespondToExt
         }
     });
 
-    this._logger.info(`${LogEvents.CHARGE_RESPONSE_LOG}: ${input.chargeId} ${input.response} for booking ${booking.getId()}`);
   }
 }

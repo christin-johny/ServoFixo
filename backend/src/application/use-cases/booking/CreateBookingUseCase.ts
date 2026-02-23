@@ -8,9 +8,9 @@ import { INotificationService } from "../../services/INotificationService";
 import { CreateBookingRequestDto } from "../../dto/booking/CreateBookingRequestDto";
 import { Booking } from "../../../domain/entities/Booking";
 import { Technician } from "../../../domain/entities/Technician";
-import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes"; 
+import { S3UrlHelper } from "../../../infrastructure/storage/S3UrlHelper"; 
 
 export class CreateBookingUseCase {
   constructor(
@@ -103,7 +103,7 @@ export class CreateBookingUseCase {
     }
 
     booking.setInitialSnapshots(
-        { name: snapshotName, phone: snapshotPhone, avatarUrl: customer.getAvatarUrl() },
+        { name: snapshotName, phone: snapshotPhone, avatarUrl: S3UrlHelper.getFullUrl(customer.getAvatarUrl()) },
         { name: service.getName ? service.getName() : (service as any).name, categoryId: service.getCategoryId() }
     );
 
@@ -127,9 +127,6 @@ export class CreateBookingUseCase {
     // 10. Persist
     const createdBooking = await this._bookingRepo.create(booking);
 
-    this._logger.info(
-      `${LogEvents.BOOKING_CREATED_LOG}: ${createdBooking.getId()} | Zone: ${resolvedZoneId} | Candidates: ${candidateIds.length}`
-    );
 
     // 11. Trigger Real-Time Notification 
     if (candidateIds.length > 0) {

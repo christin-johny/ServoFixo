@@ -1,12 +1,11 @@
 import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepository';
 import { IOtpSessionRepository } from '../../../domain/repositories/IOtpSessionRepository';
 import { IPasswordHasher } from '../../interfaces/IPasswordHasher';
-import {CustomerForgotPasswordVerifyDto,} from '../../../../../shared/types/dto/AuthDtos';
-import { ErrorMessages } from '../../../../../shared/types/enums/ErrorMessages';
-import { OtpContext } from '../../../../../shared/types/enums/OtpContext';
+import {CustomerForgotPasswordVerifyDto,} from '../../dto/auth/AuthDtos';
+import { ErrorMessages } from '../../constants/ErrorMessages';
+import { OtpContext } from '../../../domain/enums/OtpContext';
 import { Customer } from '../../../domain/entities/Customer';
-import { ILogger } from '../../interfaces/ILogger';
-import { LogEvents } from '../../../../../shared/constants/LogEvents';
+import { ILogger } from '../../interfaces/ILogger'; 
 
 export class VerifyCustomerForgotPasswordOtpUseCase {
   constructor(
@@ -21,7 +20,6 @@ export class VerifyCustomerForgotPasswordOtpUseCase {
   ): Promise<{ message: string }> {
     const { email, otp, sessionId, newPassword } = input;
     const normalizedEmail = email.toLowerCase().trim();
-    this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} (Forgot Password) - Email: ${normalizedEmail}`);
 
     const session = await this._otpSessionRepository.findValidSession(
       normalizedEmail,
@@ -29,13 +27,11 @@ export class VerifyCustomerForgotPasswordOtpUseCase {
       OtpContext.ForgotPassword
     );
 
-    if (!session) {
-      this._logger.warn("Invalid OTP Session for Password Reset");
+    if (!session) { 
       throw new Error(ErrorMessages.OTP_SESSION_INVALID);
     }
 
-    if (session.getOtp() !== otp) {
-      this._logger.warn("Invalid OTP entered for Password Reset");
+    if (session.getOtp() !== otp) { 
       throw new Error(ErrorMessages.OTP_INVALID);
     }
 
@@ -68,7 +64,6 @@ export class VerifyCustomerForgotPasswordOtpUseCase {
 
     await this._customerRepository.update(updated);
 
-    this._logger.info(`${LogEvents.AUTH_PASSWORD_RESET_SUCCESS} - Email: ${normalizedEmail}`);
     return {
       message: 'Password reset successful. You can now log in with your new password.',
     };

@@ -26,28 +26,29 @@ export class S3ImageService implements IImageService {
   async uploadImage(
     fileBuffer: Buffer,
     fileName: string,
-    mimeType: string
-  ): Promise<string> {
+    mimeType: string,
+    folder: string = "general"  
+  ): Promise<string> { 
     const uniqueFileName = `${Date.now()}-${fileName}`;
+    const key = `${folder}/${uniqueFileName}`;
 
     const command = new PutObjectCommand({
       Bucket: this._bucketName,
-      Key: uniqueFileName,
+      Key: key,
       Body: fileBuffer,
       ContentType: mimeType,
     });
 
     await this._s3Client.send(command);
-
-    return `https://${this._bucketName}.s3.${this._region}.amazonaws.com/${uniqueFileName}`;
+ 
+    return key; 
   }
 
-  async deleteImage(imageUrl: string): Promise<void> {
-    try {
-      const urlParts = imageUrl.split(".amazonaws.com/");
-      if (urlParts.length < 2) return;
-
-      const key = urlParts[1];
+  async deleteImage(fileKey: string): Promise<void> {
+    try { 
+      const key = fileKey.includes(".amazonaws.com/") 
+        ? fileKey.split(".amazonaws.com/")[1] 
+        : fileKey;
 
       const command = new DeleteObjectCommand({
         Bucket: this._bucketName,

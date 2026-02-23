@@ -1,9 +1,9 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { IUseCase } from "../../../application/interfaces/IUseCase"; 
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages, SuccessMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { StatusCodes } from "../../utils/StatusCodes";
+import { ErrorMessages, SuccessMessages } from "../../../application/constants/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 interface ICustomerEntity {
   getId(): string;
@@ -26,15 +26,15 @@ export class CustomerProfileController {
     private readonly _logger: ILogger
   ) {}
 
-  getProfile = async (req: Request, res: Response): Promise<Response> => {
+  getProfile = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const userId = (req as AuthenticatedRequest).userId;
-      if (!userId)
-        return res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ success: false, message: ErrorMessages.UNAUTHORIZED });
-
-      this._logger.info(LogEvents.PROFILE_FETCH_INIT, { userId });
+      if (!userId) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({ 
+          success: false, 
+          message: ErrorMessages.UNAUTHORIZED 
+        });
+      }
 
       const profileData = await this._getCustomerProfileUseCase.execute(userId);
 
@@ -43,32 +43,20 @@ export class CustomerProfileController {
         data: profileData,
       });
     } catch (error: unknown) {
-      this._logger.error(LogEvents.PROFILE_FETCH_FAILED, undefined, { error });
-      
-      if (error instanceof Error) {
-        return res.status(StatusCodes.NOT_FOUND).json({
-          success: false,
-          message: error.message,
-        });
-      }
-
-      return res.status(StatusCodes.NOT_FOUND).json({
-        success: false,
-        message: "Something went wrong",
-      });
+      (error as Error & { logContext?: string }).logContext = LogEvents.PROFILE_FETCH_FAILED;
+      next(error);
     }
   };
 
-  updateProfile = async (req: Request, res: Response): Promise<Response> => {
+  updateProfile = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const userId = (req as AuthenticatedRequest).userId;
-      if (!userId)
-        return res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ success: false, message: ErrorMessages.UNAUTHORIZED });
- 
-      const updatedFields = req.body ? Object.keys(req.body) : [];
-      this._logger.info(LogEvents.PROFILE_UPDATE_INIT, { userId, updatedFields });
+      if (!userId) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({ 
+          success: false, 
+          message: ErrorMessages.UNAUTHORIZED 
+        });
+      }
 
       const updatedCustomer = await this._updateCustomerUseCase.execute(
         userId,
@@ -86,34 +74,20 @@ export class CustomerProfileController {
         },
       });
     } catch (error: unknown) {
-      this._logger.error(LogEvents.PROFILE_UPDATE_FAILED, undefined, { error });
-      
-      if (error instanceof Error) {
-        return res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          message: error.message,
-        });
-      }
-
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: ErrorMessages.SOMETHING_WRONG,
-      });
+      (error as Error & { logContext?: string }).logContext = LogEvents.PROFILE_UPDATE_FAILED;
+      next(error);
     }
   };
 
-  changePassword = async (req: Request, res: Response): Promise<Response> => {
+  changePassword = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const userId = (req as AuthenticatedRequest).userId;
-
       if (!userId) {
         return res.status(StatusCodes.UNAUTHORIZED).json({
           success: false,
           message: ErrorMessages.UNAUTHORIZED,
         });
       }
-
-      this._logger.info(LogEvents.PASSWORD_CHANGE_INIT, { userId });
 
       await this._changePasswordUseCase.execute(userId, req.body);
 
@@ -122,16 +96,12 @@ export class CustomerProfileController {
         message: SuccessMessages.CHANGE_PASSWORD_SUCCESS,
       });
     } catch (error: unknown) {
-      this._logger.error(LogEvents.PASSWORD_CHANGE_FAILED, undefined, { error });
-      const msg = error instanceof Error ? error.message : ErrorMessages.SOMETHING_WRONG;
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: msg,
-      });
+      (error as Error & { logContext?: string }).logContext = LogEvents.PASSWORD_CHANGE_FAILED;
+      next(error);
     }
   };
 
-  deleteAccount = async (req: Request, res: Response): Promise<Response> => {
+  deleteAccount = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const userId = (req as AuthenticatedRequest).userId;
       if (!userId) {
@@ -141,8 +111,6 @@ export class CustomerProfileController {
         });
       }
 
-      this._logger.info(LogEvents.ACCOUNT_DELETE_INIT, { userId });
-
       await this._deleteCustomerUseCase.execute(userId);
 
       return res.status(StatusCodes.OK).json({
@@ -150,13 +118,12 @@ export class CustomerProfileController {
         message: SuccessMessages.ACCOUNT_DELETED,
       });
     } catch (error: unknown) {
-      this._logger.error(LogEvents.ACCOUNT_DELETE_FAILED, undefined, { error });
-      const msg = error instanceof Error ? error.message : 'Unknown Error';
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: msg });
+      (error as Error & { logContext?: string }).logContext = LogEvents.ACCOUNT_DELETE_FAILED;
+      next(error);
     }
   };
 
-  uploadAvatar = async (req: Request, res: Response): Promise<Response> => {
+  uploadAvatar = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const userId = (req as AuthenticatedRequest).userId;
       if (!userId) {
@@ -173,12 +140,6 @@ export class CustomerProfileController {
         });
       }
 
-      this._logger.info(LogEvents.AVATAR_UPLOAD_INIT, { 
-        userId, 
-        fileName: req.file.originalname, 
-        mimeType: req.file.mimetype 
-      });
-
       const avatarUrl = await this._uploadAvatarUseCase.execute(userId, {
         buffer: req.file.buffer,
         originalName: req.file.originalname,
@@ -191,12 +152,8 @@ export class CustomerProfileController {
         data: { avatarUrl },
       });
     } catch (error: unknown) {
-      this._logger.error(LogEvents.AVATAR_UPLOAD_FAILED, undefined, { error });
-      const msg = error instanceof Error ? error.message : ErrorMessages.SOMETHING_WRONG;
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: msg,
-      });
+      (error as Error & { logContext?: string }).logContext = LogEvents.AVATAR_UPLOAD_FAILED;
+      next(error);
     }
   };
 }

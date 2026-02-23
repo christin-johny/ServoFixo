@@ -3,9 +3,9 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/ILogger";
-import { BookingStatus } from "../../../../../shared/types/value-objects/BookingTypes";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
+import { BookingStatus } from "../../../domain/value-objects/BookingTypes";
+import { ErrorMessages } from "../../constants/ErrorMessages";
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
 import { SocketServer } from "../../../infrastructure/socket/SocketServer";  
 
 export class AdminForceStatusDto {
@@ -64,9 +64,6 @@ export class AdminForceStatusUseCase implements IUseCase<void, [AdminForceStatus
  
         await this.sendPushNotifications(input, customerId, techId, booking.getId());
 
-        this._logger.info(
-            `Admin ${input.adminId} forced status change: ${previousStatus} -> ${input.status} for Booking ${input.bookingId}`
-        );
     }
 
     private async sendPushNotifications(

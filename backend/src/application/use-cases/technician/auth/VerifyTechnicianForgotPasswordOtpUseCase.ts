@@ -2,10 +2,10 @@ import { ITechnicianRepository } from "../../../../domain/repositories/ITechnici
 import { IOtpSessionRepository } from "../../../../domain/repositories/IOtpSessionRepository";
 import { IPasswordHasher } from "../../../interfaces/IPasswordHasher";
 import { TechnicianForgotPasswordVerifyDto } from "../../../dto/technician/TechnicianAuthDtos";
-import { ErrorMessages, SuccessMessages } from "../../../../../../shared/types/enums/ErrorMessages";
-import { OtpContext } from "../../../../../../shared/types/enums/OtpContext";
+import { ErrorMessages, SuccessMessages } from "../../../constants/ErrorMessages";
+import { OtpContext } from "../../../../domain/enums/OtpContext";
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 import { Technician } from "../../../../domain/entities/Technician";
 
 export class VerifyTechnicianForgotPasswordOtpUseCase {
@@ -20,7 +20,6 @@ export class VerifyTechnicianForgotPasswordOtpUseCase {
     const { email, otp, sessionId, newPassword } = input;
     const normalizedEmail = email.toLowerCase().trim();
 
-    this._logger.info(`${LogEvents.AUTH_OTP_VERIFY_INIT} (Reset Pass) - Email: ${normalizedEmail}`);
  
     const session = await this._otpSessionRepository.findValidSession(
       normalizedEmail,
@@ -58,8 +57,7 @@ export class VerifyTechnicianForgotPasswordOtpUseCase {
 
     await this._technicianRepository.update(updatedTechnician);
 
-    this._logger.info(`${LogEvents.AUTH_PASSWORD_RESET_SUCCESS} - Technician: ${technician.getId()}`);
-
+ 
     return {
       message: SuccessMessages.PASSWORD_RESET_SUCCESS,
     };

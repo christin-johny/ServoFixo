@@ -1,4 +1,4 @@
-import { BookingStatus } from "../../../../../shared/types/value-objects/BookingTypes";  
+import { BookingStatus } from "../../../domain/value-objects/BookingTypes";  
 export class UpdateJobStatusDto {
   bookingId!: string;
   technicianId!: string;

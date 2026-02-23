@@ -4,7 +4,7 @@ import {
   NotificationStatus, 
   RecipientType, 
   NotificationPriority 
-} from "../../../../shared/types/value-objects/NotificationTypes";
+} from "../value-objects/NotificationTypes";
 export interface NotificationProps {
   id?: string;
   recipientId: string;

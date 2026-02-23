@@ -3,10 +3,10 @@ import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianR
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { RespondToBookingDto } from "../../dto/booking/RespondToBookingDto";
-import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
 import { Booking } from "../../../domain/entities/Booking";
-import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class RespondToBookingUseCase {
   constructor(
@@ -134,7 +134,6 @@ export class RespondToBookingUseCase {
         }
     });
 
-    this._logger.info(`${LogEvents.BOOKING_ACCEPTED_LOG} ${booking.getId()} by ${techId}`);
   }
 
   private async handleRejection(booking: Booking, techId: string, reason?: string) {
@@ -160,7 +159,6 @@ export class RespondToBookingUseCase {
             address: booking.getLocation().address,
             expiresAt: booking.getAssignmentExpiresAt()!
         });
-        this._logger.info(`${LogEvents.BOOKING_REJECTED_LOG} ${booking.getId()} by ${techId}. Next -> ${nextCandidateId}`);
     } else {
         booking.updateStatus("FAILED_ASSIGNMENT", "system", "All candidates rejected");
         await this._bookingRepo.update(booking);

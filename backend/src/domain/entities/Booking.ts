@@ -9,7 +9,7 @@ import {
   BookingTimelineEvent,
   BookingTimestamps,
   BookingSnapshots
-} from "../../../../shared/types/value-objects/BookingTypes";
+} from "../value-objects/BookingTypes";
 
 export interface BookingProps {
   id?: string;

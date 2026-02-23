@@ -1,4 +1,4 @@
-import { PaymentStatus } from "../../../../../shared/types/value-objects/BookingTypes";
+import { PaymentStatus } from "../../../domain/value-objects/BookingTypes";
 
 export class AdminUpdatePaymentDto {
   bookingId!: string;

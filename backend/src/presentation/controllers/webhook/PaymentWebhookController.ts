@@ -1,8 +1,9 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import crypto from "crypto";
-import { IUseCase } from "../../../application/interfaces/IUseCase"; // <--- Interface
+import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { ILogger } from "../../../application/interfaces/ILogger";
 import { ProcessPaymentDto } from "../../../application/dto/webhook/ProcessPaymentDto";
+import { StatusCodes } from "../../utils/StatusCodes";
 
 export class PaymentWebhookController {
   constructor( 
@@ -10,7 +11,7 @@ export class PaymentWebhookController {
     private readonly _logger: ILogger
   ) {}
 
-  handleRazorpayWebhook = async (req: Request, res: Response) => {
+  handleRazorpayWebhook = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const secret = process.env.RAZORPAY_WEBHOOK_SECRET || "my_secret";
       const signature = req.headers["x-razorpay-signature"] as string;
@@ -22,7 +23,9 @@ export class PaymentWebhookController {
         .digest("hex");
 
       if (expectedSignature !== signature) {
-        return res.status(400).json({ status: "invalid_signature" });
+        // Webhooks often require a specific response even on failure to stop retries, 
+        // but 400 is standard for invalid signatures.
+        return res.status(StatusCodes.BAD_REQUEST).json({ status: "invalid_signature" });
       }
  
       const event = req.body.event;
@@ -37,10 +40,10 @@ export class PaymentWebhookController {
         await this._processPaymentUseCase.execute(dto);
       }
 
-      return res.status(200).json({ status: "ok" });
-    } catch (err: any) {
-      this._logger.error(`Webhook Error: ${err.message}`);
-      return res.status(500).json({ status: "error" });
+      return res.status(StatusCodes.OK).json({ status: "ok" });
+    } catch (err: unknown) {
+      (err as Error & { logContext?: string }).logContext = "RAZORPAY_WEBHOOK_FAILED";
+      next(err);
     }
   };
 }

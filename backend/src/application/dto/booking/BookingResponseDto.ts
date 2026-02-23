@@ -8,7 +8,7 @@ import {
   BookingMeta,
   BookingTimelineEvent, // Added
   BookingTimestamps
-} from "../../../../../shared/types/value-objects/BookingTypes";
+} from "../../../domain/value-objects/BookingTypes";
 
 export interface BookingResponseDto {
   id: string;

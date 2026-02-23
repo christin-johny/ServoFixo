@@ -1,15 +1,15 @@
 import redis from "../../../infrastructure/redis/redisClient";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { IUseCase } from "../../../application/interfaces/IUseCase";
 import {
   ErrorMessages,
   SuccessMessages,
-} from "../../../../../shared/types/enums/ErrorMessages";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
+} from "../../../application/constants/ErrorMessages";
+import { StatusCodes } from "../../utils/StatusCodes";
 import { refreshCookieOptions } from "../../../infrastructure/config/Cookie";
 import { ILogger } from "../../../application/interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 interface AdminLoginResult {
   accessToken: string;
@@ -25,9 +25,8 @@ export class AdminAuthController extends BaseController {
     super(_logger);
   }
 
-  login = async (req: Request, res: Response): Promise<Response> => {
+  login = async (req: Request, res: Response,next: NextFunction): Promise<Response|void> => {
     try {
-      this._logger.info(`${LogEvents.AUTH_LOGIN_INIT} (Admin)`);
       const { email, password } = req.body;
 
       if (!email || !password) {
@@ -39,21 +38,18 @@ export class AdminAuthController extends BaseController {
       if (result.refreshToken) {
         res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
       }
-
-      this._logger.info(`${LogEvents.AUTH_LOGIN_SUCCESS} (Admin) - Email: ${email}`);
       
-      //  FIX: Match the repository expectation. 
-      // Instead of wrapping in 'data', we return accessToken at the level the repo expects.
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.LOGIN_SUCCESS,
         accessToken: result.accessToken,
       });
     } catch (err: unknown) {
-      return this.handleError(res, err, `${LogEvents.AUTH_LOGIN_FAILED} (Admin)`);
+     (err as Error & { logContext?: string }).logContext = `${LogEvents.AUTH_LOGIN_FAILED} (Admin)`;
+      next(err);
     }
   };
 
-  logout = async (req: Request, res: Response): Promise<Response> => {
+  logout = async (req: Request, res: Response,next: NextFunction): Promise<Response|void> => {
     try {
       const refreshToken = req.cookies?.refreshToken as string | undefined;
       res.clearCookie("refreshToken", refreshCookieOptions);
@@ -65,15 +61,14 @@ export class AdminAuthController extends BaseController {
           this._logger.error("Error deleting refresh token from Redis", String(redisErr));
         }
       }
-
-      this._logger.info(`${LogEvents.AUTH_LOGOUT_SUCCESS} (Admin)`);
       
       //  Aligned with repository resp.data
       return res.status(StatusCodes.OK).json({
         message: SuccessMessages.LOGOUT_SUCCESS,
       });
     } catch (err: unknown) {
-      return this.handleError(res, err, "Admin Logout Error");
+      (err as Error & { logContext?: string }).logContext = "Admin Logout Error";
+      next(err);
     }
   };
 }

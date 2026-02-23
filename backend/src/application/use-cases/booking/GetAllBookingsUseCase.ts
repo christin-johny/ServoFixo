@@ -1,6 +1,6 @@
 import { IUseCase } from "../../interfaces/IUseCase";
 import { IBookingRepository, PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
-import { BookingStatus } from "../../../../../shared/types/value-objects/BookingTypes";
+import { BookingStatus } from "../../../domain/value-objects/BookingTypes";
 
 export interface GetAllBookingsDto {
   page: number;

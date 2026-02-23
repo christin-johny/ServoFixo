@@ -1,6 +1,6 @@
 import { Booking } from "../entities/Booking";
 import { IBaseRepository } from "./IBaseRepository";
-import { BookingStatus, TechAssignmentAttempt, ExtraCharge, PaymentStatus } from "../../../../shared/types/value-objects/BookingTypes";
+import { BookingStatus, TechAssignmentAttempt, ExtraCharge, PaymentStatus } from "../value-objects/BookingTypes";
 
 export interface BookingFilterParams {
   customerId?: string;

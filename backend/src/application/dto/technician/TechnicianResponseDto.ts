@@ -4,7 +4,7 @@ import {
   ZoneRequest,
   BankUpdateRequest,
   PayoutStatus
-} from "../../../../../shared/types/value-objects/TechnicianTypes";
+} from "../../../domain/value-objects/TechnicianTypes";
 
 export interface CategoryData { id: string; name: string; iconUrl?: string; }
 export interface ServiceData { id: string; name: string; categoryId: string; }

@@ -3,7 +3,7 @@ import {
   ZoneRequest, 
   BankUpdateRequest, 
   PayoutStatus 
-} from "../../../../../shared/types/value-objects/TechnicianTypes";
+} from "../../../domain/value-objects/TechnicianTypes";
 
 export interface AdminTechnicianProfileDto {
   id: string;
@@ -18,6 +18,8 @@ export interface AdminTechnicianProfileDto {
   zoneIds: string[]; 
   categoryIds: string[];
   subServiceIds: string[];
+  isSuspended:boolean;
+  suspendReason:string | undefined;
 
   // Resolved Names for UI
 zoneNames: { id: string; name: string }[];

@@ -3,7 +3,7 @@ import { IUseCase } from "../../../interfaces/IUseCase";
 import { PaginatedTechnicianQueueResponse } from "../../../dto/technician/TechnicianQueueDto";
 import { TechnicianMapper } from "../../../mappers/TechnicianMapper";  
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 
 export class GetVerificationQueueUseCase implements IUseCase<PaginatedTechnicianQueueResponse, [VerificationQueueFilters]> {
   constructor(
@@ -12,9 +12,6 @@ export class GetVerificationQueueUseCase implements IUseCase<PaginatedTechnician
   ) {}
 
   async execute(params: VerificationQueueFilters): Promise<PaginatedTechnicianQueueResponse> {
-    this._logger.info(LogEvents.ADMIN_GET_TECH_QUEUE_INIT, { params });
-
-
     const result = await this._technicianRepo.findPendingVerification(params);
  
     const dtos = result.technicians.map(tech => TechnicianMapper.toQueueItem(tech));

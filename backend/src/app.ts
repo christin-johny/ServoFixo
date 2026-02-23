@@ -15,6 +15,15 @@ import {
   logger 
 } from "./infrastructure/di/Container";
 import { BookingTimeoutScheduler } from "./infrastructure/scheduler/BookingTimeoutScheduler";
+import { makeErrorHandlerMiddleware } from "./presentation/middlewares/errorHandler.middleware";
+ 
+import adminRoutes from "./presentation/routes/admin";
+import customerRoutes from "./presentation/routes/customer/index";
+import technicianRoutes from './presentation/routes/technician/index.ts';
+import globalAuthRouter from './presentation/routes/GlobalAuthRouter';
+import bookingRoutes from './presentation/routes/booking.routes';
+import webhookRoutes from "./presentation/routes/webhook.routes";
+
 const app = express();
 const httpServer = createServer(app);  
 
@@ -41,20 +50,21 @@ const timeoutScheduler = new BookingTimeoutScheduler(
   logger
 );
 timeoutScheduler.start();
-// Routes
-import adminRoutes from "./presentation/routes/admin";
-import customerRoutes from "./presentation/routes/customer/index";
-import technicianRoutes from './presentation/routes/technician/index.ts'
-import globalAuthRouter from './presentation/routes/GlobalAuthRouter';
-import bookingRoutes from './presentation/routes/booking.routes';
-import webhookRoutes from "./presentation/routes/webhook.routes";
+ 
+const v1Router = express.Router();
 
-app.use('/api/auth', globalAuthRouter);
-app.use("/api/admin", adminRoutes);
-app.use("/api/customer", customerRoutes);
-app.use("/api/technician", technicianRoutes);
-app.use("/api/bookings", bookingRoutes);
+v1Router.use('/auth', globalAuthRouter);
+v1Router.use("/admin", adminRoutes);
+v1Router.use("/customer", customerRoutes);
+v1Router.use("/technician", technicianRoutes);
+v1Router.use("/bookings", bookingRoutes);
+ 
+app.use('/api/v1', v1Router);
+ 
 app.use("/webhooks", webhookRoutes);
+ 
+
+app.use(makeErrorHandlerMiddleware(logger));
 
 export const startServer = async () => {
   await connectDatabase();

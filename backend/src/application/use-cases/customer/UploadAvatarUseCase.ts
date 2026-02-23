@@ -1,9 +1,9 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { IImageService } from "../../interfaces/IImageService";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { Customer } from "../../../domain/entities/Customer";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { S3UrlHelper } from "../../../infrastructure/storage/S3UrlHelper";
 
 export class UploadAvatarUseCase {
   constructor(
@@ -16,15 +16,11 @@ export class UploadAvatarUseCase {
     userId: string,
     file: { buffer: Buffer; originalName: string; mimeType: string }
   ): Promise<string> {
-    this._logger.info(LogEvents.AVATAR_UPLOAD_INIT, { 
-        userId, 
-        fileName: file.originalName 
-    });
-
     const customer = await this._customerRepository.findById(userId);
     if (!customer) throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
 
-    const avatarUrl = await this._imageService.uploadImage(
+    // 1. This now returns the KEY (e.g. "avatars/unique-name.jpg")
+    const avatarKey = await this._imageService.uploadImage(
       file.buffer,
       file.originalName,
       file.mimeType
@@ -36,7 +32,7 @@ export class UploadAvatarUseCase {
       customer.getEmail(),
       customer.getPassword(),
       customer.getPhone(),
-      avatarUrl,
+      avatarKey, // Save the KEY to the database
       customer.getDefaultZoneId(),
       customer.isSuspended(),
       customer.getAdditionalInfo(),
@@ -47,7 +43,8 @@ export class UploadAvatarUseCase {
     );
 
     await this._customerRepository.update(updatedCustomer);
-    this._logger.info(LogEvents.AVATAR_UPLOAD_SUCCESS, { userId, avatarUrl });
-    return avatarUrl;
+    
+    // 2. Wrap the return value so the frontend gets a clickable URL
+    return S3UrlHelper.getFullUrl(avatarKey);
   }
 }

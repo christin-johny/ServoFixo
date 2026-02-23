@@ -1,8 +1,8 @@
 import { IUseCase } from "../../../interfaces/IUseCase";
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
 
 export class DismissTechnicianRequestUseCase
   implements IUseCase<void, [string, string]>
@@ -13,15 +13,9 @@ export class DismissTechnicianRequestUseCase
   ) {}
 
   async execute(technicianId: string, requestId: string): Promise<void> { 
-    this._logger.info(LogEvents.TECH_DISMISS_REQUEST_INIT, {
-      technicianId,
-      requestId,
-    });
-
     try { 
       await this._technicianRepository.dismissRequest(technicianId, requestId);
 
-      this._logger.info(LogEvents.TECH_DISMISS_REQUEST_SUCCESS, { requestId });
     } catch (error) {
       this._logger.error(
         LogEvents.TECH_DISMISS_REQUEST_FAILED,

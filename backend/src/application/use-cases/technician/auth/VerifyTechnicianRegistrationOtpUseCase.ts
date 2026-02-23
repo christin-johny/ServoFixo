@@ -4,12 +4,12 @@ import { IPasswordHasher } from "../../../interfaces/IPasswordHasher";
 import { IJwtService, JwtPayload } from "../../../interfaces/IJwtService";
 import { TechnicianRegisterVerifyDto } from "../../../dto/technician/TechnicianAuthDtos";
 import { AuthResultDto } from "../../../dto/auth/AuthResultDto";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
-import { OtpContext } from "../../../../../../shared/types/enums/OtpContext";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
+import { OtpContext } from "../../../../domain/enums/OtpContext";
 import { Technician } from "../../../../domain/entities/Technician";
 import { ICacheService } from "../../../interfaces/ICacheService";
 import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 
 export class VerifyTechnicianRegistrationOtpUseCase {
   constructor(
@@ -25,9 +25,6 @@ export class VerifyTechnicianRegistrationOtpUseCase {
     const { email, otp, sessionId, name, password, phone } = input;
     const normalizedEmail = email.toLowerCase().trim();
 
-    this._logger.info(
-      `${LogEvents.AUTH_OTP_VERIFY_INIT} (Technician Reg) - Email: ${normalizedEmail}`
-    );
  
     const existingEmail = await this._technicianRepository.findByEmail(
       normalizedEmail
@@ -74,7 +71,10 @@ export class VerifyTechnicianRegistrationOtpUseCase {
       experienceSummary: "",
 
       walletBalance: { currentBalance: 0, frozenAmount: 0, currency: "INR" },
-      availability: { isOnline: false },
+      availability: {
+        isOnline: false,
+        isOnJob: false
+      },
       ratings: { averageRating: 0, totalReviews: 0 },
       verificationStatus: "PENDING",
       isSuspended: false,
@@ -86,7 +86,6 @@ export class VerifyTechnicianRegistrationOtpUseCase {
 
     const savedTechnician = await this._technicianRepository.create(technician);
  
-    this._logger.info(`${LogEvents.TECHNICIAN_CREATE_SUCCESS}: ${savedTechnician.getId()}`);
  
     const payload: JwtPayload = {
       sub: savedTechnician.getId(),

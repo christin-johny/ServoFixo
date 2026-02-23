@@ -1,7 +1,7 @@
 import { IUseCase } from "../../interfaces/IUseCase";
 import { IBookingRepository, PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
 import { ILogger } from "../../interfaces/ILogger"; 
-import { BookingStatus } from "../../../../../shared/types/value-objects/BookingTypes"; 
+import { BookingStatus } from "../../../domain/value-objects/BookingTypes"; 
 
 export interface GetTechnicianHistoryDto {
   technicianId: string;

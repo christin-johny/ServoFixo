@@ -3,11 +3,10 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/ILogger";
 import { AddExtraChargeDto } from "../../dto/booking/AddExtraChargeDto"; 
-import { ErrorMessages, NotificationMessages } from "../../../../../shared/types/enums/ErrorMessages";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { ExtraCharge } from "../../../../../shared/types/value-objects/BookingTypes";
+import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages"; 
+import { ExtraCharge } from "../../../domain/value-objects/BookingTypes";
 import { IImageService } from "../../interfaces/IImageService"; 
-import { NotificationType } from "../../../../../shared/types/value-objects/NotificationTypes";  
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes";  
 
 export interface IFile {
     buffer: Buffer;
@@ -37,7 +36,7 @@ export class AddExtraChargeUseCase implements IUseCase<void, [AddExtraChargeDto,
             uploadedProofUrl = await this._imageService.uploadImage(
                 proofFile.buffer, proofFile.originalName, proofFile.mimeType
             );
-        } catch (error) { 
+        } catch  { 
              throw new Error(ErrorMessages.PROOF_UPLOAD_FAILED);
         }
     }
@@ -75,6 +74,5 @@ export class AddExtraChargeUseCase implements IUseCase<void, [AddExtraChargeDto,
         clickAction: `/customer/bookings/${booking.getId()}?action=approve_charge`
     });
  
-    this._logger.info(`${LogEvents.EXTRA_CHARGE_ADDED_LOG} ${booking.getId()}: ${input.title}`);
   }
 }

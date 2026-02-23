@@ -9,7 +9,7 @@ import {
   ServiceCategoryModel,
   IServiceCategoryDocument,
 } from "../mongoose/models/ServiceCategoryModel";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../../application/constants/ErrorMessages";
 
 export class ServiceCategoryMongoRepository
   implements IServiceCategoryRepository

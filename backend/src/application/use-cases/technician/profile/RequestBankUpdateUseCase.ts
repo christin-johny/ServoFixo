@@ -1,8 +1,7 @@
 import { IUseCase } from "../../../interfaces/IUseCase";
-import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { ILogger } from "../../../interfaces/ILogger"; 
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
-import { BankUpdateRequest } from "../../../../../../shared/types/value-objects/TechnicianTypes";
+import { BankUpdateRequest } from "../../../../domain/value-objects/TechnicianTypes";
 
 export interface RequestBankUpdateInput {
   accountHolderName: string;
@@ -20,8 +19,7 @@ export class RequestBankUpdateUseCase implements IUseCase<void, [string, Request
   ) {}
 
   async execute(technicianId: string, input: RequestBankUpdateInput): Promise<void> {
-    const logData = { technicianId };
-    this._logger.info(`${LogEvents.TECH_UPDATE_DETAILS_INIT}: Bank Request for ${technicianId}`);
+ 
 
     const technician = await this._technicianRepo.findById(technicianId);
     if (!technician) {
@@ -32,7 +30,10 @@ export class RequestBankUpdateUseCase implements IUseCase<void, [string, Request
     const request: BankUpdateRequest = {
       ...input,
       status: "PENDING",
-      requestedAt: new Date()
+      requestedAt: new Date(),
+      id: "",
+      isDismissed: false,
+      isArchived: false
     };
 
     // This method sets payoutStatus = ON_HOLD
@@ -41,6 +42,5 @@ export class RequestBankUpdateUseCase implements IUseCase<void, [string, Request
     // Persistence
     await this._technicianRepo.addBankUpdateRequest(technicianId, request);
 
-    this._logger.info(`Bank Update Requested: Payouts Paused for ${technicianId}`);
   }
 }

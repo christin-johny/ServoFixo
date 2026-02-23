@@ -1,14 +1,13 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { IUseCase } from "../../../interfaces/IUseCase";
 import { TechnicianOnboardingInput } from "../../../dto/technician/TechnicianOnboardingDtos";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
-import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
+import { ILogger } from "../../../interfaces/ILogger"; 
 import { Technician } from "../../../../domain/entities/Technician";
 import {
   TechnicianDocument,
   DocumentStatus,
-} from "../../../../../../shared/types/value-objects/TechnicianTypes";
+} from "../../../../domain/value-objects/TechnicianTypes";
 
 export class TechnicianOnboardingUseCase
   implements IUseCase<boolean, [TechnicianOnboardingInput]>
@@ -35,9 +34,6 @@ export class TechnicianOnboardingUseCase
           avatarUrl: input.avatarUrl,
         });
         this.updateStep(technician, 2);
-        this._logger.info(
-          `${LogEvents.TECH_ONBOARDING_STEP_1_SUCCESS}: ${technician.getId()}`
-        );
         break;
 
       case 2:
@@ -49,9 +45,7 @@ export class TechnicianOnboardingUseCase
           input.subServiceIds
         );
         this.updateStep(technician, 3);
-        this._logger.info(
-          `${LogEvents.TECH_ONBOARDING_STEP_2_SUCCESS}: ${technician.getId()}`
-        );
+
         break;
 
       case 3:
@@ -59,21 +53,17 @@ export class TechnicianOnboardingUseCase
           throw new Error(ErrorMessages.TECH_MISSING_ZONES);
         technician.updateZones(input.zoneIds);
         this.updateStep(technician, 4);
-        this._logger.info(
-          `${LogEvents.TECH_ONBOARDING_STEP_3_SUCCESS}: ${technician.getId()}`
-        );
+
         break;
 
       case 4:
         if (!input.agreedToRates)
           throw new Error(ErrorMessages.TECH_RATE_DISAGREE);
         this.updateStep(technician, 5);
-        this._logger.info(
-          `${LogEvents.TECH_ONBOARDING_STEP_4_SUCCESS}: ${technician.getId()}`
-        );
+
         break;
 
-      case 5:
+      case 5: { // <--- Add this curly brace to create a block scope
         if (!input.documents || input.documents.length === 0) {
           throw new Error(ErrorMessages.TECH_DOCS_MISSING);
         }
@@ -81,9 +71,10 @@ export class TechnicianOnboardingUseCase
           throw new Error(ErrorMessages.TECH_DOC_LIMIT);
         }
 
+        // Now 'docs' is scoped only to this case block
         const docs: TechnicianDocument[] = input.documents.map((d) => ({
           type: d.type,
-          fileUrl: d.fileUrl,
+          fileUrl: d.fileUrl, // This stores the KEY (e.g., "technician/123/documents/file.pdf")
           fileName: d.fileName,
           status: "PENDING" as DocumentStatus,
           uploadedAt: new Date(),
@@ -91,23 +82,14 @@ export class TechnicianOnboardingUseCase
 
         technician.updateDocuments(docs);
         this.updateStep(technician, 6);
-        this._logger.info(
-          `${LogEvents.TECH_ONBOARDING_STEP_5_SUCCESS}: ${technician.getId()}`
-        );
         break;
+      }
 
       case 6:
         technician.updateBankDetails(input.bankDetails);
 
         technician.setOnboardingStep(7);
         technician.setVerificationStatus("VERIFICATION_PENDING");
-
-        this._logger.info(
-          `${LogEvents.TECH_ONBOARDING_STEP_6_SUCCESS}: ${technician.getId()}`
-        );
-        this._logger.info(
-          `${LogEvents.TECH_PROFILE_SUBMITTED}: ${technician.getId()}`
-        );
         break;
 
       default:

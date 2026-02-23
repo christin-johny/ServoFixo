@@ -10,7 +10,7 @@ import {
   ServiceItemModel,
   IServiceItemDocument,
 } from "../mongoose/models/ServiceItemModel";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../../application/constants/ErrorMessages";
 
 export class ServiceItemMongoRepository implements IServiceItemRepository {
   async create(serviceItem: ServiceItem): Promise<ServiceItem> {

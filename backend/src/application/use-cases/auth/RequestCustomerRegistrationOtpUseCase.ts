@@ -1,15 +1,14 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { IOtpSessionRepository } from "../../../domain/repositories/IOtpSessionRepository";
 import { IEmailService } from "../../interfaces/IEmailService";
-import { CustomerRegisterInitDto } from "../../../../../shared/types/dto/AuthDtos";
-import { OtpContext } from "../../../../../shared/types/enums/OtpContext";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { CustomerRegisterInitDto } from "../../dto/auth/AuthDtos";
+import { OtpContext } from "../../../domain/enums/OtpContext";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { OtpSession } from "../../../domain/entities/OtpSession";
-import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { ILogger } from "../../interfaces/ILogger"; 
 
 export class RequestCustomerRegistrationOtpUseCase {
-  private readonly _otpExpiryMinutes = 2;
+  private readonly _otpExpiryMinutes = Number(process.env.OTP_EXPIRY_MINUTES) || 2;
 
   constructor(
     private readonly _customerRepository: ICustomerRepository,
@@ -23,7 +22,6 @@ export class RequestCustomerRegistrationOtpUseCase {
   ): Promise<{ message: string; sessionId: string }> {
     const { email,phone } = input;
     const normalizedEmail = email.toLowerCase().trim();
-    this._logger.info(`${LogEvents.AUTH_REGISTER_INIT} - Email: ${normalizedEmail}`);
 
     const existing = await this._customerRepository.findByEmail(normalizedEmail);
     if (existing) {
@@ -53,7 +51,6 @@ export class RequestCustomerRegistrationOtpUseCase {
 
     await this._emailService.sendTextEmail(normalizedEmail, subject, text);
 
-    this._logger.info(`${LogEvents.AUTH_OTP_SENT} (Registration) - SessionID: ${sessionId}`);
     return {
       message: "OTP sent to email for registration",
       sessionId,

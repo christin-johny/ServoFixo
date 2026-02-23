@@ -2,7 +2,7 @@ import { IServiceItemRepository, ServiceItemQueryParams } from '../../../domain/
 import { ServiceItemResponseDto } from '../../dto/serviceItem/ServiceItemResponseDto';
 import { ServiceItemMapper } from '../../mappers/ServiceItemMapper';
 import { ILogger } from '../../interfaces/ILogger';
-import { LogEvents } from '../../../../../shared/constants/LogEvents';
+import { LogEvents } from '../../../infrastructure/logging/LogEvents';
 
 export interface PaginatedServiceResponse {
     data: ServiceItemResponseDto[];
@@ -18,8 +18,6 @@ export class GetAllServiceItemsUseCase {
   ) {}
 
   async execute(params: ServiceItemQueryParams): Promise<PaginatedServiceResponse> {
-    this._logger.info(`${LogEvents.SERVICE_GET_ALL_INIT} - Params: ${JSON.stringify(params)}`);
-    
     const result = await this._serviceRepo.findAll(params);
     
     return {

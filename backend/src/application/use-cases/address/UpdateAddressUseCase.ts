@@ -4,9 +4,9 @@ import { UpdateAddressDto } from "../../dto/address/UpdateAddressDto";
 import { AddressResponseDto } from "../../dto/address/AddressResponseDto";
 import { AddressMapper } from "../../mappers/AddressMapper";
 import { Address } from "../../../domain/entities/Address";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class UpdateAddressUseCase {
   constructor(
@@ -61,8 +61,6 @@ export class UpdateAddressUseCase {
     });
 
     const saved = await this._addressRepository.update(updatedEntity);
-    
-    this._logger.info(LogEvents.ADDRESS_UPDATED, { addressId: saved.getId() });
 
     return AddressMapper.toResponse(saved);
   }

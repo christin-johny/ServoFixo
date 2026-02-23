@@ -5,15 +5,18 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only --poll src/app.ts",
     "build": "tsc",
-    "start": "node dist/backend/src/app.js"
+    "start": "node dist/backend/src/app.js",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.946.0",
+    "@aws-sdk/s3-request-presigner": "^3.995.0",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "express": "~4.16.1",
     "google-auth-library": "^10.5.0",
     "ioredis": "^5.8.2",
+    "mongoose": "^9.2.1",
     "morgan": "~1.9.1",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.11",

@@ -1,8 +1,9 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { IAddressRepository } from "../../../domain/repositories/IAddressRepository";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { S3UrlHelper } from "../../../infrastructure/storage/S3UrlHelper";
 
 export class GetCustomerProfileUseCase {
   constructor(
@@ -12,15 +13,13 @@ export class GetCustomerProfileUseCase {
   ) {}
 
   async execute(userId: string) {
-    this._logger.info(LogEvents.PROFILE_FETCH_INIT, { userId });
 
     const customer = await this._customerRepository.findById(userId);
     if (!customer) {
         this._logger.warn(LogEvents.PROFILE_FETCH_FAILED, { userId, reason: "Not Found" });
         throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
     }
-
-    const addresses = await this._addressRepository.findAllByUserId(userId);
+ 
 
     return {
       user: {
@@ -28,7 +27,7 @@ export class GetCustomerProfileUseCase {
         name: customer.getName(),
         email: customer.getEmail(),
         phone: customer.getPhone(),
-        avatarUrl: customer.getAvatarUrl(),
+        avatarUrl: S3UrlHelper.getFullUrl(customer.getAvatarUrl()),
       }
     };
   }

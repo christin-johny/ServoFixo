@@ -1,9 +1,9 @@
 import { Customer } from "../../../domain/entities/Customer";
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { StatusCodes } from "../../../../../shared/types/enums/StatusCodes";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { StatusCodes } from "../../../presentation/utils/StatusCodes";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class GetCustomerByIdUseCase {
   constructor(
@@ -12,7 +12,6 @@ export class GetCustomerByIdUseCase {
   ) {}
 
   async execute(customerId: string): Promise<Customer> {
-    this._logger.info(LogEvents.ADMIN_CUSTOMER_FETCH_BY_ID_INIT, { customerId });
 
     const customer = await this._customerRepository.findById(customerId);
     if (!customer) {

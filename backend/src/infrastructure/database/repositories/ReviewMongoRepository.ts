@@ -7,12 +7,12 @@ export class ReviewMongoRepository implements IReviewRepository {
   async create(review: Review): Promise<Review> {
     const props = review.toProps();
     
-    // 1. Create the document (Now includes serviceId)
+    // 1. Create the document 
     const doc = await ReviewModel.create({
         bookingId: props.bookingId,
         customerId: props.customerId,
         technicianId: props.technicianId,
-        serviceId: props.serviceId, //   Saving Service ID
+        serviceId: props.serviceId,
         rating: props.rating,
         comment: props.comment,
         createdAt: props.createdAt
@@ -53,9 +53,8 @@ async findByServiceId(serviceId: string, limit: number): Promise<Review[]> {
         serviceId: serviceId,
         isDeleted: { $ne: true } 
     })
-    .sort({ createdAt: -1 }) // Newest first
-    .limit(limit)
-    // Populate customer details to show Name/Avatar in the comment section
+    .sort({ createdAt: -1 })  
+    .limit(limit) 
     .populate("customerId", "name avatarUrl") 
     .exec();
 
@@ -68,7 +67,7 @@ async findByServiceId(serviceId: string, limit: number): Promise<Review[]> {
       bookingId: doc.bookingId.toString(),
       customerId: doc.customerId._id 
         ? doc.customerId._id.toString() 
-        : doc.customerId.toString(), // Handle populated vs unpopulated
+        : doc.customerId.toString(),  
       serviceId: doc.serviceId.toString(),
       technicianId: doc.technicianId.toString(),
       rating: doc.rating,

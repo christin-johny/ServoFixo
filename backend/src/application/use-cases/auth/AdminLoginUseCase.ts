@@ -1,12 +1,12 @@
 import { IAdminRepository } from "../../../domain/repositories/IAdminRepository";
 import { IPasswordHasher } from "../../interfaces/IPasswordHasher";
 import { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
-import { AdminLoginDto } from "../../../../../shared/types/dto/AuthDtos";
+import { AdminLoginDto } from "../../dto/auth/AuthDtos";
 import { AuthResultDto } from "../../dto/auth/AuthResultDto";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { ICacheService } from "../../interfaces/ICacheService"; 
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class AdminLoginUseCase {
   constructor(
@@ -19,7 +19,6 @@ export class AdminLoginUseCase {
 
   async execute(input: AdminLoginDto): Promise<AuthResultDto> {
     const { email, password } = input;
-    this._logger.info(`${LogEvents.AUTH_LOGIN_INIT} (Admin) - Email: ${email}`);
 
     const admin = await this._adminRepository.findByEmail(email);
 
@@ -63,9 +62,6 @@ export class AdminLoginUseCase {
       this._logger.error("Cache error during admin login", errorMessage);
     }
 
-    this._logger.info(
-      `${LogEvents.AUTH_LOGIN_SUCCESS} (Admin) - ID: ${admin.getId()}`
-    );
     return {
       accessToken,
       refreshToken,

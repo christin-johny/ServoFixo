@@ -1,7 +1,13 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { Notification, NotificationState } from "../domain/types/Notification";
-//   Fixed: Changed to relative path for better compatibility
-import type { PaginatedNotifications } from "../infrastructure/repositories/technician/notificationRepository";
+import type { Notification, NotificationState } from "../features/notifications/types/Notification";
+
+interface PaginatedNotifications {
+ notifications: Notification[];
+  total: number;
+  page: number;
+  limit: number;
+  unreadCount: number;
+}
 
 const initialState: NotificationState = {
   notifications: [],

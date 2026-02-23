@@ -1,8 +1,8 @@
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { Customer } from "../../../domain/entities/Customer";
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export class UpdateCustomerUseCase {
   constructor(
@@ -11,11 +11,6 @@ export class UpdateCustomerUseCase {
   ) {}
 
   async execute(customerId: string, updateDto: any): Promise<Customer> {
-    this._logger.info(LogEvents.PROFILE_UPDATE_INIT, { 
-        customerId, 
-        updatedFields: Object.keys(updateDto) 
-    });
-
     const existing = await this._customerRepository.findById(customerId);
     if (!existing) {
         this._logger.warn(LogEvents.PROFILE_UPDATE_FAILED, { customerId, reason: "Customer Not Found" });
@@ -56,7 +51,6 @@ export class UpdateCustomerUseCase {
     );
 
     const result = await this._customerRepository.update(updatedCustomer);
-    this._logger.info(LogEvents.PROFILE_UPDATED, { customerId });
     return result;
   }
 }

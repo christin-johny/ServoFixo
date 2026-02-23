@@ -1,9 +1,9 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { BaseController } from "../BaseController";
 import { IUseCase } from "../../../application/interfaces/IUseCase";
 import { ILogger } from "../../../application/interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
-import { SuccessMessages, ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { SuccessMessages, ErrorMessages } from "../../../application/constants/ErrorMessages";
 import { Booking } from "../../../domain/entities/Booking";
 import { CreateBookingRequestDto } from "../../../application/dto/booking/CreateBookingRequestDto";
 import { RespondToBookingDto } from "../../../application/dto/booking/RespondToBookingDto";
@@ -17,17 +17,20 @@ import { CancelBookingDto } from "../../../application/dto/booking/CancelBooking
 import { RateTechnicianDto } from "../../../application/dto/booking/RateTechnicianDto"; 
 import { GetTechnicianHistoryDto } from "../../../application/use-cases/booking/GetTechnicianHistoryUseCase";
 import { PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
-import { BookingStatus } from "../../../../../shared/types/value-objects/BookingTypes"; 
-import {  GetCustomerBookingsDto } from "../../../application/use-cases/booking/GetCustomerBookingsUseCase";
-import {VerifyPaymentDto} from '../../../application/dto/booking/VerifyPaymentDto'
+import { BookingStatus } from "../../../domain/value-objects/BookingTypes"; 
+import { GetCustomerBookingsDto } from "../../../application/use-cases/booking/GetCustomerBookingsUseCase";
+import { VerifyPaymentDto } from '../../../application/dto/booking/VerifyPaymentDto';
+import { UserRoleType } from "../../../domain/enums/UserRole";
+
 interface AuthenticatedRequest extends Request {
   userId?: string;
   role?: string;
 }
+
 interface IFile {
-    buffer: Buffer;
-    originalName: string;
-    mimeType: string;
+  buffer: Buffer;
+  originalName: string;
+  mimeType: string;
 }
 
 export class BookingController extends BaseController {
@@ -50,31 +53,22 @@ export class BookingController extends BaseController {
     super(_logger);
   }
 
-  /**
-   * @route POST /api/bookings
-   * @desc Customer creates a new booking (Flow A: Matchmaking)
-   * @access Customer
-   */
-createBooking = async (req: Request, res: Response): Promise<Response> => {
+  createBooking = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { userId, role } = req as AuthenticatedRequest;
- 
       if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
       
       let targetCustomerId = userId;
-      
       if (role === "ADMIN") {
-          if (!req.body.customerId) throw new Error(ErrorMessages.ADMIN_CUSTOMER_ID_MISSING);
-          targetCustomerId = req.body.customerId;
+        if (!req.body.customerId) throw new Error(ErrorMessages.ADMIN_CUSTOMER_ID_MISSING);
+        targetCustomerId = req.body.customerId;
       }
 
       const input: CreateBookingRequestDto = {
         customerId: targetCustomerId,
         serviceId: req.body.serviceId, 
         zoneId: req.body.zoneId, 
-         
         contact: req.body.contact,  
-
         location: {
           address: req.body.location?.address,
           coordinates: req.body.location?.coordinates,
@@ -86,26 +80,23 @@ createBooking = async (req: Request, res: Response): Promise<Response> => {
 
       const booking = await this._createBookingUseCase.execute(input);
       const responseDto = BookingMapper.toResponse(booking);
-
       return this.created(res, responseDto, SuccessMessages.BOOKING_CREATED);
-
     } catch (err) {
-      return this.handleError(res, err, LogEvents.BOOKING_CREATION_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.BOOKING_CREATION_FAILED;
+      next(err);
     }
-};
-startJob = async (req: Request, res: Response): Promise<Response> => {
+  };
+
+  startJob = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const technicianId = (req as AuthenticatedRequest).userId;
       if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
       const bookingId = req.params.id;
-      const { otp } = req.body; // Frontend sends { otp: "1234" }
+      const { otp } = req.body;
 
-      if (!otp) {
-        return this.clientError(res, ErrorMessages.OTP_MISSING);
-      }
+      if (!otp) return this.clientError(res, ErrorMessages.OTP_MISSING);
 
-      // Reuse the existing Use Case logic, but force the status to IN_PROGRESS
       const input: UpdateJobStatusDto = {
         bookingId,
         technicianId,
@@ -114,72 +105,49 @@ startJob = async (req: Request, res: Response): Promise<Response> => {
       };
 
       await this._updateJobStatusUseCase.execute(input);
-
       return this.ok(res, null, SuccessMessages.OTP_VERIFIED_JOB_STARTED);
-
     } catch (err) {
-      return this.handleError(res, err, LogEvents.START_JOB_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.START_JOB_FAILED;
+      next(err);
     }
   };
 
-  /**
-   * @route POST /api/bookings/:id/respond
-   * @desc Technician accepts or rejects a booking (Flow B: Handshake)
-   * @access Technician
-   */
-  respondToBooking = async (req: Request, res: Response): Promise<Response> => {
+  respondToBooking = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const technicianId = (req as AuthenticatedRequest).userId;
       if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
-      const bookingId = req.params.id;
-      const { response, reason } = req.body; 
-
       const input: RespondToBookingDto = {
-        bookingId,
+        bookingId: req.params.id,
         technicianId,
-        response,
-        reason
+        response: req.body.response,
+        reason: req.body.reason
       };
 
       await this._respondToBookingUseCase.execute(input);
-
-      const message = response === "ACCEPT" 
-        ? SuccessMessages.BOOKING_ACCEPTED 
-        : SuccessMessages.BOOKING_REJECTED_NEXT;
-
-      // EFFECTIVE USE: this.ok handles 200 + structure
+      const message = input.response === "ACCEPT" ? SuccessMessages.BOOKING_ACCEPTED : SuccessMessages.BOOKING_REJECTED_NEXT;
       return this.ok(res, null, message);
-
     } catch (err) {
-      return this.handleError(res, err, LogEvents.BOOKING_RESPONSE_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.BOOKING_RESPONSE_FAILED;
+      next(err);
     }
   };
 
-
-  /**
-   * @route GET /api/bookings
-   * @desc Get customer bookings (Active or History)
-   * @access Customer
-   */
-  getCustomerBookings = async (req: Request, res: Response): Promise<Response> => {
+  getCustomerBookings = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const customerId = (req as AuthenticatedRequest).userId;
       if (!customerId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
       const page = Number(req.query.page) || 1;
       const limit = Number(req.query.limit) || 10;
-      const status = req.query.status as string;
-
       const input: GetCustomerBookingsDto = {
         customerId,
         page,
         limit,
-        status // "active" or "COMPLETED" etc.
+        status: req.query.status as string
       };
 
       const result = await this._getCustomerBookingsUseCase.execute(input);
-
       return this.ok(res, {
         data: result.data.map(b => BookingMapper.toResponse(b)), 
         total: result.total,
@@ -187,19 +155,13 @@ startJob = async (req: Request, res: Response): Promise<Response> => {
         limit: result.limit,
         totalPages: Math.ceil(result.total / limit)
       }, SuccessMessages.ALL_BOOKINGS_FETCHED);
-
     } catch (err) {
-      return this.handleError(res, err, LogEvents.GET_CUSTOMER_BOOKINGS_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.GET_CUSTOMER_BOOKINGS_FAILED;
+      next(err);
     }
   };
 
-  
-  /**
-   * @route PATCH /api/bookings/:id/status
-   * @desc Technician updates job status (Flow C: EN_ROUTE -> REACHED -> IN_PROGRESS)
-   * @access Technician
-   */
-  updateJobStatus = async (req: Request, res: Response): Promise<Response> => {
+  updateJobStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const technicianId = (req as AuthenticatedRequest).userId;
       if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
@@ -213,21 +175,14 @@ startJob = async (req: Request, res: Response): Promise<Response> => {
       };
 
       await this._updateJobStatusUseCase.execute(input);
-
-      // EFFECTIVE USE: this.ok handles 200 + structure
       return this.ok(res, null, `Job status updated to ${input.status}`);
-
     } catch (err) {
-      return this.handleError(res, err, LogEvents.JOB_STATUS_UPDATE_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.JOB_STATUS_UPDATE_FAILED;
+      next(err);
     }
   };
 
-  /**
-   * @route POST /api/bookings/:id/extras
-   * @desc Technician adds an extra charge (Flow D)
-   * @access Technician
-   */
-addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
+  addExtraCharge = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const technicianId = (req as AuthenticatedRequest).userId;
       if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
@@ -238,10 +193,9 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
         title: req.body.title,
         amount: req.body.amount,
         description: req.body.description,
-        proofUrl: req.body.proofUrl // Fallback if sent as string
+        proofUrl: req.body.proofUrl
       };
 
-      // Extract File
       let proofFile: IFile | undefined;
       if (req.file) {
           proofFile = {
@@ -251,70 +205,50 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
           };
       }
 
-      // Pass file as second argument
       await this._addExtraChargeUseCase.execute(input, proofFile);
-
       return this.created(res, null, SuccessMessages.EXTRA_CHARGE_ADDED);
-
     } catch (err) {
-      return this.handleError(res, err, LogEvents.ADD_EXTRA_CHARGE_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.ADD_EXTRA_CHARGE_FAILED;
+      next(err);
     }
   };
 
-  /**
-   * @route POST /api/bookings/:id/extras/:chargeId/respond
-   * @desc Customer Approves/Rejects an extra charge
-   * @access Customer
-   */
-  respondToExtraCharge = async (req: Request, res: Response): Promise<Response> => {
+  respondToExtraCharge = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const customerId = (req as AuthenticatedRequest).userId;
       if (!customerId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
-      const { id: bookingId, chargeId } = req.params;
-      const { response } = req.body; 
-
       const input: RespondToExtraChargeDto = {
-        bookingId,
+        bookingId: req.params.id,
         customerId,
-        chargeId,
-        response
+        chargeId: req.params.chargeId,
+        response: req.body.response
       };
 
       await this._respondToExtraChargeUseCase.execute(input);
-
-      // EFFECTIVE USE: this.ok handles 200 + structure
-      return this.ok(res, null, `Charge ${response.toLowerCase()}d successfully.`);
-
+      return this.ok(res, null, `Charge ${input.response.toLowerCase()}d successfully.`);
     } catch (err) {
-      return this.handleError(res, err, LogEvents.RESPOND_EXTRA_CHARGE_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.RESPOND_EXTRA_CHARGE_FAILED;
+      next(err);
     }
   };
 
-  getTechnicianHistory = async (req: Request, res: Response): Promise<Response> => {
+  getTechnicianHistory = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const technicianId = (req as AuthenticatedRequest).userId;
       if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
-      // Extract Query Params (Default to Page 1, Limit 10)
       const page = Number(req.query.page) || 1;
       const limit = Number(req.query.limit) || 10;
-      const search = req.query.search as string;
-      
-      // Handle status filter (e.g. from Tabs)
-      const status = req.query.status as BookingStatus  ;
-
       const input: GetTechnicianHistoryDto = {
         technicianId,
         page,
         limit,
-        search,
-        status
+        search: req.query.search as string,
+        status: req.query.status as BookingStatus
       };
 
       const result = await this._getTechnicianHistoryUseCase.execute(input);
-
-      // Return in the format your DataTable expects
       return this.ok(res, {
         data: result.data.map(b => BookingMapper.toResponse(b)), 
         total: result.total,
@@ -322,18 +256,13 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
         limit: result.limit,
         totalPages: Math.ceil(result.total / limit)
       }, SuccessMessages.HISTORY_FETCHED);
-
     } catch (err) {
-      return this.handleError(res, err, LogEvents.GET_TECH_HISTORY_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.GET_TECH_HISTORY_FAILED;
+      next(err);
     }
   };
 
-/**
-   * @route POST /api/bookings/:id/complete
-   * @desc Technician marks job as done and generates invoice (Flow E)
-   * @access Technician
-   */
-  completeJob = async (req: Request, res: Response): Promise<Response> => {
+  completeJob = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const technicianId = (req as AuthenticatedRequest).userId;
       if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
@@ -342,7 +271,7 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
         bookingId: req.params.id,
         technicianId
       }; 
- 
+
       let proofFile: IFile | undefined;
       if (req.file) {
           proofFile = {
@@ -352,50 +281,36 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
           };
       }
 
-      //   PASS FILE TO USE CASE
       await this._completeJobUseCase.execute(input, proofFile);
-
       return this.ok(res, null, SuccessMessages.JOB_COMPLETED_INVOICE);
-
     } catch (err) {
-      return this.handleError(res, err, LogEvents.JOB_COMPLETION_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.JOB_COMPLETION_FAILED;
+      next(err);
     }
   };
 
-  /**
-   * @route GET /api/bookings/:id
-   * @desc Get booking details (Secured by Role)
-   * @access Customer | Technician | Admin
-   */
-  getBookingDetails = async (req: Request, res: Response): Promise<Response> => {
+  getBookingDetails = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const authReq = req as AuthenticatedRequest;
-      const userId = authReq.userId;
-      const role = authReq.role;  
-
+      const { userId, role } = authReq;
       if (!userId || !role) throw new Error(ErrorMessages.UNAUTHORIZED);
 
       const input: GetBookingDetailsDto = {
         bookingId: req.params.id,
         userId,
-        role: role as any  
+        role: role as UserRoleType
       };
 
       const booking = await this._getBookingDetailsUseCase.execute(input);
       const responseDto = BookingMapper.toResponse(booking);
-
-      // EFFECTIVE USE: this.ok()
       return this.ok(res, responseDto, SuccessMessages.BOOKINGS_FETCHED);
-
     } catch (err) {
-      return this.handleError(res, err, LogEvents.GET_BOOKING_DETAILS_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.GET_BOOKING_DETAILS_FAILED;
+      next(err);
     }
   };
-  /**
-   * @route POST /api/bookings/:id/cancel
-   * @desc Smart Cancel (Routes to logic based on Role)
-   */
-  cancelBooking = async (req: Request, res: Response): Promise<Response> => {
+
+  cancelBooking = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { userId, role } = req as AuthenticatedRequest;
       if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
@@ -411,22 +326,19 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
       } else if (role === "technician") {
           await this._technicianCancelUseCase.execute(input);
       } else {
-          // Admin cancellation can reuse customer logic or have its own
           await this._customerCancelUseCase.execute(input); 
       }
 
       return this.ok(res, null, SuccessMessages.BOOKING_ACCEPTED);
-
     } catch (err) {
-      return this.handleError(res, err, LogEvents.BOOKING_CANCELLATION_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.BOOKING_CANCELLATION_FAILED;
+      next(err);
     }
   };
 
-  // Inside BookingController class...
-
-  verifyPayment = async (req: Request, res: Response): Promise<Response> => {
+  verifyPayment = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      const input = {
+      const input: VerifyPaymentDto = {
         bookingId: req.params.id,
         orderId: req.body.razorpay_order_id,
         paymentId: req.body.razorpay_payment_id,
@@ -434,16 +346,14 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
       };
 
       await this._verifyPaymentUseCase.execute(input);
-
       return this.ok(res, null, SuccessMessages.PAYMENT_VERIFIED);
-
     } catch (err) {
-      return this.handleError(res, err, LogEvents.PAYMENT_VERIFICATION_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.PAYMENT_VERIFICATION_FAILED;
+      next(err);
     }
   };
-
   
-  rateTechnician = async (req: Request, res: Response): Promise<Response> => {
+  rateTechnician = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { userId, role } = req as AuthenticatedRequest;  
       if (!userId || role !== "customer") {
@@ -452,22 +362,20 @@ addExtraCharge = async (req: Request, res: Response): Promise<Response> => {
 
       const input: RateTechnicianDto = {
         bookingId: req.params.id,
-        customerId: userId, // TypeScript now knows this is a string
+        customerId: userId,
         rating: req.body.rating,
         comment: req.body.comment
       };
 
-      // Validate basic input
       if (!input.rating || input.rating < 1 || input.rating > 5) {
         return this.clientError(res, ErrorMessages.RATING_RANGE_ERROR);
       }
 
       await this._rateTechnicianUseCase.execute(input);
-
       return this.ok(res, null, SuccessMessages.RATING_SUBMITTED);
-
     } catch (err) {
-      return this.handleError(res, err, LogEvents.RATING_FAILED);
+      (err as Error & { logContext?: string }).logContext = LogEvents.RATING_FAILED;
+      next(err);
     }
   };
 }

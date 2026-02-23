@@ -1,5 +1,5 @@
 
-import { Email,Phone } from '../../../../shared/types/value-objects/ContactTypes';  
+import { Email,Phone } from '../value-objects/ContactTypes';  
 
 
 export class Customer {

@@ -2,9 +2,9 @@ import { ITechnicianRepository } from "../../../../domain/repositories/ITechnici
 import { IUseCase } from "../../../interfaces/IUseCase";
 import { ResolvePartnerRequestDto } from "../../../dto/admin/ManageRequestDto";
 import { ILogger } from "../../../interfaces/ILogger";
-import { ErrorMessages } from "../../../../../../shared/types/enums/ErrorMessages";
-import { LogEvents } from "../../../../../../shared/constants/LogEvents";
-import { PartnerRequestType } from "../../../../../../shared/types/enums/RequestResolutionEnums";
+import { ErrorMessages } from "../../../constants/ErrorMessages";
+import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
+import { PartnerRequestType } from "../../../../domain/enums/RequestResolutionEnums";
 import { Technician } from "../../../../domain/entities/Technician";
 import { INotificationService } from "../../../services/INotificationService";
 
@@ -24,10 +24,7 @@ export class ResolveServiceRequestUseCase
       throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
     }
 
-    this._logger.info(LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_INIT, {
-      techId,
-      type: PartnerRequestType.SERVICE,
-    });
+
 
     try {
       const requests = tech.getServiceRequests();
@@ -93,7 +90,6 @@ export class ResolveServiceRequestUseCase
         },
       });
 
-      this._logger.info(LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_SUCCESS, { techId, requestId: dto.requestId });
     } catch (error) {
       this._logger.error(LogEvents.ADMIN_RESOLVE_PARTNER_REQUEST_FAILED, error instanceof Error ? error.message : ErrorMessages.INTERNAL_ERROR);
       throw error;

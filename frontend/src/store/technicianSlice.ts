@@ -3,9 +3,9 @@ import type {
   ServiceRequest, 
   ZoneRequest, 
   BankUpdateRequest, 
-} from "../domain/types/TechnicianRequestTypes";
-
-import type {PayoutStatus}  from '../../../shared/types/value-objects/TechnicianTypes'
+} from "../features/profile/types/TechnicianRequestTypes";
+ 
+type PayoutStatus = "ACTIVE" | "ON_HOLD"; 
 export type VerificationStatus =
   | "PENDING"
   | "VERIFICATION_PENDING"

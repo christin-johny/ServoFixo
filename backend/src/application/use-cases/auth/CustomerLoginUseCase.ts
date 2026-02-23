@@ -2,10 +2,10 @@ import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepos
 import { IPasswordHasher } from "../../interfaces/IPasswordHasher";
 import { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
 import { AuthResultDto } from "../../dto/auth/AuthResultDto";
-import { ErrorMessages } from "../../../../../shared/types/enums/ErrorMessages";
+import { ErrorMessages } from "../../constants/ErrorMessages";
 import { ICacheService } from "../../interfaces/ICacheService";  
 import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../../../shared/constants/LogEvents";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 export interface CustomerLoginDto {
   email: string;
@@ -24,9 +24,6 @@ export class CustomerLoginUseCase {
   async execute(input: CustomerLoginDto): Promise<AuthResultDto> {
     const { email, password } = input;
     const normalizedEmail = email.toLowerCase().trim();
-    this._logger.info(
-      `${LogEvents.AUTH_LOGIN_INIT} (Customer) - Email: ${normalizedEmail}`
-    );
 
     const customer = await this._customerRepository.findByEmail(
       normalizedEmail
@@ -79,9 +76,6 @@ export class CustomerLoginUseCase {
       this._logger.error("Cache error during customer login", errorMessage);
     }
 
-    this._logger.info(
-      `${LogEvents.AUTH_LOGIN_SUCCESS} (Customer) - ID: ${customer.getId()}`
-    );
     return {
       accessToken,
       refreshToken,

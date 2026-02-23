@@ -48,10 +48,9 @@ export const extractErrorMessage = (error: unknown, defaultMessage: string = "So
   if (error instanceof Error) {
     return error.message;
   }
-
-  // If object has "message" property (e.g. from some custom error types)
+ 
   if (error && typeof error === "object" && "message" in error) {
-      return String((error as any).message);
+      return String(error.message);
   }
 
   return defaultMessage;

@@ -1,6 +1,7 @@
 import { ServiceItem, ServiceItemProps } from "../../domain/entities/ServiceItem";
 import { CreateServiceItemDto } from "../dto/serviceItem/CreateServiceItemDto";
 import { ServiceItemResponseDto } from "../dto/serviceItem/ServiceItemResponseDto";
+import { S3UrlHelper } from "../../infrastructure/storage/S3UrlHelper"; //
 
 export class ServiceItemMapper {
   static toDomain(dto: CreateServiceItemDto, imageUrls: string[]): ServiceItem {
@@ -11,7 +12,7 @@ export class ServiceItemMapper {
       description: dto.description,
       basePrice: dto.basePrice,
       specifications: dto.specifications,
-      imageUrls: imageUrls,
+      imageUrls: imageUrls, // Store array of KEYS
       isActive: dto.isActive,
       rating: 0,
       reviewCount: 0,
@@ -29,8 +30,9 @@ export class ServiceItemMapper {
     dto.name = entity.getName();
     dto.description = entity.getDescription();
     dto.basePrice = entity.getBasePrice();
-    dto.specifications = entity.getSpecifications();
-    dto.imageUrls = entity.getImageUrls();
+    dto.specifications = entity.getSpecifications(); 
+    dto.imageUrls = entity.getImageUrls().map(key => S3UrlHelper.getFullUrl(key));
+    
     dto.isActive = entity.getIsActive();
     dto.bookingCount = entity.getBookingCount();
     dto.rating = entity.getRating();

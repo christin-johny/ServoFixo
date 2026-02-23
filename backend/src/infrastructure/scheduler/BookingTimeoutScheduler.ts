@@ -4,7 +4,7 @@ import { ITechnicianRepository } from "../../domain/repositories/ITechnicianRepo
 import { INotificationService } from "../../application/services/INotificationService"; 
 import { ILogger } from "../../application/interfaces/ILogger";
 import { Booking } from "../../domain/entities/Booking";
-import { NotificationType } from "../../../../shared/types/value-objects/NotificationTypes";
+import { NotificationType } from "../../domain/value-objects/NotificationTypes";
 
 export class BookingTimeoutScheduler {
   constructor(
@@ -19,7 +19,6 @@ export class BookingTimeoutScheduler {
     cron.schedule("*/10 * * * * *", async () => {
       await this.handleTimeouts();
     });
-    this._logger.info("⏳ Booking Timeout Scheduler started.");
   }
 
   private async handleTimeouts() {
@@ -30,7 +29,6 @@ export class BookingTimeoutScheduler {
 
       if (expiredBookings.length === 0) return;
 
-      this._logger.info(`Found ${expiredBookings.length} expired bookings. Processing...`);
 
       for (const booking of expiredBookings) {
         await this.processTimeout(booking);
@@ -58,8 +56,6 @@ export class BookingTimeoutScheduler {
     const nextCandidateId = this.findNextCandidate(booking);
 
     if (nextCandidateId) {
-        // --- SCENARIO: TRY NEXT TECH ---
-        this._logger.info(`Booking ${booking.getId()}: Tech timed out. Trying next candidate ${nextCandidateId}.`);
         
         // Add new attempt
         booking.addAssignmentAttempt(nextCandidateId);

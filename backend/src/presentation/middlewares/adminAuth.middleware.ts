@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { IJwtService } from "../../application/interfaces/IJwtService";
-import { ErrorMessages } from "../../../../shared/types/enums/ErrorMessages";
-import { StatusCodes } from "../../../../shared/types/enums/StatusCodes";
+import { ErrorMessages } from "../../application/constants/ErrorMessages";
+import { StatusCodes } from "../utils/StatusCodes";
 
 export function makeAdminAuthMiddleware(jwtService: IJwtService) {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -35,7 +35,7 @@ export function makeAdminAuthMiddleware(jwtService: IJwtService) {
       (req as any).role = payload.type;
 
       return next();
-    } catch (err) {
+    } catch{
       return res.status(StatusCodes.UNAUTHORIZED).json({
         error: ErrorMessages.UNAUTHORIZED,
       });

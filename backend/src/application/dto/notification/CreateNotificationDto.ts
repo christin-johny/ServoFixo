@@ -2,7 +2,7 @@ import {
   NotificationType, 
   RecipientType, 
   NotificationPriority 
-} from "../../../../../shared/types/value-objects/NotificationTypes";
+} from "../../../domain/value-objects/NotificationTypes";
 
 export interface CreateNotificationDto {
   recipientId: string;
