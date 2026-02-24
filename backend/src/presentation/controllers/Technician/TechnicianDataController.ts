@@ -6,10 +6,10 @@ import { ILogger } from '../../../application/interfaces/services/ILogger';
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { ErrorMessages } from '../../../application/constants/ErrorMessages';
 import { CategoryQueryParams } from '../../../domain/repositories/IServiceCategoryRepository';
-import { PaginatedCategoriesResponse } from '../../../application/use-cases/service-categories/GetAllCategoriesUseCase';
 import { ZoneQueryParams } from '../../../domain/repositories/IZoneRepository';
-import { PaginatedZonesResponse } from '../../../application/use-cases/zones/GetAllZonesUseCase';
-import { RateCardItem } from '../../../application/use-cases/technician/profile/GetTechnicianRateCardUseCase';
+import { PaginatedCategoriesResponse } from '../../../application/dto/category/CategoryResponseDto';
+import { PaginatedZonesResponse } from '../../../application/dto/zone/ZoneResponseDto';
+import { RateCardItem } from '../../../application/dto/technician/TechnicianProfileDto';
 
 interface ServiceFilters {
   searchTerm: string;

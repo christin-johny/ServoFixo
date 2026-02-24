@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from "express";
 import { IUseCase } from "../../../application/interfaces/services/IUseCase"; 
 import { StatusCodes } from "../../utils/StatusCodes";
 import { ErrorMessages, SuccessMessages } from "../../../application/constants/ErrorMessages";
-import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 interface ICustomerEntity {
@@ -22,8 +21,7 @@ export class CustomerProfileController {
     private readonly _updateCustomerUseCase: IUseCase<ICustomerEntity, [string, unknown]>,
     private readonly _deleteCustomerUseCase: IUseCase<void, [string]>,
     private readonly _uploadAvatarUseCase: IUseCase<string, [string, { buffer: Buffer; originalName: string; mimeType: string }]>,
-    private readonly _changePasswordUseCase: IUseCase<void, [string, unknown]>,
-    private readonly _logger: ILogger
+    private readonly _changePasswordUseCase: IUseCase<void, [string, unknown]>
   ) {}
 
   getProfile = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {

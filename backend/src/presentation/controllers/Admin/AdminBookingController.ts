@@ -6,10 +6,10 @@ import { AdminForceAssignDto } from "../../../application/dto/admin/AdminForceAs
 import { AdminForceStatusDto } from "../../../application/dto/admin/AdminForceStatusDto"; 
 import { ErrorMessages } from "../../../application/constants/ErrorMessages";
 import { AdminUpdatePaymentDto } from "../../../application/dto/admin/AdminUpdatePaymentDto";
-import { GetAllBookingsDto } from "../../../application/use-cases/booking/GetAllBookingsUseCase";
 import { BookingMapper } from "../../../application/mappers/BookingMapper";
 import { PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
 import { BookingStatus } from "../../../domain/value-objects/BookingTypes";
+import { GetAllBookingsDto } from "../../../application/dto/booking/BookingDto";
 
 interface AuthenticatedRequest extends Request {
   userId?: string; // Admin ID

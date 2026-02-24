@@ -78,7 +78,7 @@ const AdminTechnicianProfilePage: React.FC = () => {
         try {
             await techRepo.updateTechnician(id, data);
             showSuccess("Profile Updated Successfully");
-            fetchTech(); 
+            setTech(prev => prev ? { ...prev, ...data } : null); 
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : "Failed to update";
             showError(msg);

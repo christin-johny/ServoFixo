@@ -7,7 +7,7 @@ import { useNotification } from "../../../../notifications/hooks/useNotification
 import { useDebounce } from "../../../../../hooks/useDebounce";
 import CustomerEditModal from "../../../components/admin/CustomerEditModal";
 import { SearchFilterBar, PaginationBar } from "../../../../../components/Table/DataTableControls";
-import { DataTable, type TableColumn } from "../../../../../components/Table/DataTable"; // Import Generic Table
+import { DataTable, type TableColumn } from "../../../../../components/Table/DataTable";  
 import ConfirmModal from "../../../../../components/Shared/ConfirmModal/ConfirmModal";
 
 const AdminCustomersPage: React.FC = () => {

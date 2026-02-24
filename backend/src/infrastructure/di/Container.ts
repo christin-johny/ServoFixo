@@ -208,7 +208,7 @@ const getCustomerProfileUseCase = new GetCustomerProfileUseCase( customerRepo,  
 const uploadAvatarUseCase = new UploadAvatarUseCase( customerRepo, imageService);
 const changePasswordUseCase = new ChangePasswordUseCase( customerRepo, passwordHasher, logger);
 
-export const customerProfileController = new CustomerProfileController( getCustomerProfileUseCase, updateCustomerUseCase, deleteCustomerUseCase, uploadAvatarUseCase, changePasswordUseCase, logger);
+export const customerProfileController = new CustomerProfileController( getCustomerProfileUseCase, updateCustomerUseCase, deleteCustomerUseCase, uploadAvatarUseCase, changePasswordUseCase);
 
 const getAddressesUseCase = new GetAddressesUseCase(addressRepo, logger);
 
@@ -257,7 +257,7 @@ export const adminAuthController = new AdminAuthController( adminLoginUseCase, l
 
 const refreshTokenUseCase = new RefreshTokenUseCase( jwtService, customerRepo, cacheService, technicianRepo, logger);
 
-export const authTokenController = new AuthTokenController(refreshTokenUseCase, logger);
+export const authTokenController = new AuthTokenController(refreshTokenUseCase);
 
 const technicianOnboardingUseCase = new TechnicianOnboardingUseCase( technicianRepo,logger);
 const getTechnicianProfileUseCase = new GetTechnicianProfileUseCase( technicianRepo, categoryRepo, serviceItemRepo,zoneRepo, logger);
@@ -292,7 +292,7 @@ const getNotificationHistoryUseCase = new GetNotificationHistoryUseCase(  notifi
 const markNotificationAsReadUseCase = new MarkNotificationAsReadUseCase(  notificationRepo);
 const markAllNotificationsAsReadUseCase = new MarkAllNotificationsAsReadUseCase(  notificationRepo);
 
-export const technicianNotificationController =  new TechnicianNotificationController(  getNotificationHistoryUseCase,    markNotificationAsReadUseCase,    markAllNotificationsAsReadUseCase,logger);
+export const technicianNotificationController =  new TechnicianNotificationController(  getNotificationHistoryUseCase,    markNotificationAsReadUseCase,    markAllNotificationsAsReadUseCase);
 
 const resolveServiceRequestUseCase = new ResolveServiceRequestUseCase(  technicianRepo,  notificationService,logger);
 const resolveZoneRequestUseCase = new ResolveZoneRequestUseCase(  technicianRepo,  notificationService,  logger);
@@ -329,4 +329,4 @@ export const adminBookingController = new AdminBookingController(adminForceAssig
 
 const processPaymentUseCase = new ProcessPaymentUseCase(bookingRepo,technicianRepo,notificationService,logger);
 
-export const paymentWebhookController = new PaymentWebhookController(processPaymentUseCase,logger);
+export const paymentWebhookController = new PaymentWebhookController(processPaymentUseCase);

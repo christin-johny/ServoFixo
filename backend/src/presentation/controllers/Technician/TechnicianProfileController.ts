@@ -5,8 +5,6 @@ import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { SuccessMessages, ErrorMessages } from "../../../application/constants/ErrorMessages";
 import { TechnicianResponseDto } from "../../../application/dto/technician/TechnicianResponseDto";
-import { UploadTechnicianFileInput } from "../../../application/use-cases/technician/profile/UploadTechnicianFileUseCase";
-import { ToggleStatusInput } from "../../../application/use-cases/technician/profile/ToggleOnlineStatusUseCase";
 import {
   TechnicianOnboardingInput,
   OnboardingStep1Dto,
@@ -22,6 +20,7 @@ import {
   RequestBankUpdateInput 
 } from "../../../application/dto/technician/TechnicianRequestDtos";
 import { StatusCodes } from "../../utils/StatusCodes";
+import { ToggleStatusInput, UploadTechnicianFileInput } from "../../../application/dto/technician/TechnicianProfileDto";
 
 interface AuthenticatedRequest extends Request {
   userId?: string;

@@ -10,9 +10,9 @@ import {
   TechnicianRegisterInitDto, 
   TechnicianRegisterVerifyDto,
   TechnicianForgotPasswordInitDto,   
-  TechnicianForgotPasswordVerifyDto  
+  TechnicianForgotPasswordVerifyDto,  
+  TechnicianLoginDto
 } from "../../../application/dto/technician/TechnicianAuthDtos";
-import { TechnicianLoginDto } from "../../../application/use-cases/technician/auth/TechnicianLoginUseCase";
 import { AuthResultDto } from "../../../application/dto/auth/AuthResultDto";
 
 interface OtpResponse {
@@ -27,7 +27,6 @@ export class TechnicianAuthController {
     private readonly _loginUseCase: IUseCase<AuthResultDto, [TechnicianLoginDto]>,
     private readonly _requestForgotOtpUseCase: IUseCase<OtpResponse, [TechnicianForgotPasswordInitDto]>,
     private readonly _verifyForgotOtpUseCase: IUseCase<{ message: string }, [TechnicianForgotPasswordVerifyDto]>,
-    
     private readonly _logger: ILogger
   ) {}
  

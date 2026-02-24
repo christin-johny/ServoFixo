@@ -1,15 +1,12 @@
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
-import { ILogger } from "../../interfaces/services/ILogger"; 
 import { BookingStatus } from "../../../domain/value-objects/BookingTypes"; 
 import { GetTechnicianHistoryDto } from "../../dto/booking/BookingDto";
 import { IGetTechnicianHistoryUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
-import { BookingMapper } from "../../mappers/BookingMapper"; 
 import { PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
 
 export class GetTechnicianHistoryUseCase implements IGetTechnicianHistoryUseCase {
   constructor(
-    private readonly _bookingRepo: IBookingRepository,
-    private readonly _logger: ILogger
+    private readonly _bookingRepo: IBookingRepository 
   ) {}
 
   async execute(input: GetTechnicianHistoryDto): Promise<PaginatedBookingResult> {
@@ -32,15 +29,10 @@ export class GetTechnicianHistoryUseCase implements IGetTechnicianHistoryUseCase
       }
     );
 
-    const mappedData = await Promise.all(
-  result.data.map(async (raw) => {
-    const entity = BookingMapper.toDomain(raw);
-    return await BookingMapper.toResponse(entity);
-  })
-);
+    
 
     return {
-      data: mappedData, 
+      data: result.data, 
       total: result.total,
       page: result.page,
       limit: result.limit,

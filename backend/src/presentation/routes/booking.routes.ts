@@ -8,12 +8,10 @@ import { makeTechnicianAuthMiddleware } from "../middlewares/technicianAuth.midd
 import { upload } from "../../infrastructure/middleware/uploadMiddleware";
 const router = Router();
 const jwtService = new JwtService();
-
-// Middleware instances
+ 
 const customerAuth = makeCustomerAuthMiddleware(jwtService);
 const technicianAuth = makeTechnicianAuthMiddleware(jwtService);
-  
-// --- 1. Creation & Handshake ---
+   
 
 router.post(
   "/", 

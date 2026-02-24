@@ -5,7 +5,7 @@ import { IUseCase } from '../../../application/interfaces/services/IUseCase';
 import { ILogger } from '../../../application/interfaces/services/ILogger';
 import { LogEvents } from '../../../infrastructure/logging/LogEvents';
 import { CategoryQueryParams } from '../../../domain/repositories/IServiceCategoryRepository';
-import { PaginatedCategoriesResponse } from '../../../application/use-cases/service-categories/GetAllCategoriesUseCase';
+import { PaginatedCategoriesResponse } from '../../../application/dto/category/CategoryResponseDto';
 
 export class CustomerCategoryController extends BaseController {
   constructor( 

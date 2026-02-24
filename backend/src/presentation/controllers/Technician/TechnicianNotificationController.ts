@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "../../utils/StatusCodes";
 import { ErrorMessages } from "../../../application/constants/ErrorMessages";
-import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { GetNotificationHistoryUseCase } from "../../../application/use-cases/notification/GetNotificationHistoryUseCase";
 import { MarkNotificationAsReadUseCase } from "../../../application/use-cases/notification/MarkNotificationAsReadUseCase";
 import { MarkAllNotificationsAsReadUseCase } from "../../../application/use-cases/notification/MarkAllNotificationsAsReadUseCase";
@@ -14,8 +13,7 @@ export class TechnicianNotificationController {
   constructor(
     private readonly _getHistoryUseCase: GetNotificationHistoryUseCase,
     private readonly _markAsReadUseCase: MarkNotificationAsReadUseCase, 
-    private readonly _markAllAsReadUseCase: MarkAllNotificationsAsReadUseCase, 
-    private readonly _logger: ILogger
+    private readonly _markAllAsReadUseCase: MarkAllNotificationsAsReadUseCase
   ) {}
 
   getNotifications = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
