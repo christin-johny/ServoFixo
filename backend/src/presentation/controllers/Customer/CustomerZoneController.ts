@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
-import { IUseCase } from "../../../application/interfaces/IUseCase";
-import { ILogger } from "../../../application/interfaces/ILogger";
+import { IUseCase } from "../../../application/interfaces/services/IUseCase";
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { StatusCodes } from "../../utils/StatusCodes"; 
 

@@ -1,21 +1,12 @@
-import { IUseCase } from "../../../interfaces/IUseCase";
-import { ILogger } from "../../../interfaces/ILogger"; 
+ 
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { BankUpdateRequest } from "../../../../domain/value-objects/TechnicianTypes";
+import { RequestBankUpdateInput } from "../../../dto/technician/TechnicianProfileDto";
+import { IRequestBankUpdateUseCase } from "../../../interfaces/use-cases/technician/ITechnicianProfileUseCases";
 
-export interface RequestBankUpdateInput {
-  accountHolderName: string;
-  accountNumber: string;
-  bankName: string;
-  ifscCode: string;
-  upiId?: string;
-  proofUrl: string;
-}
-
-export class RequestBankUpdateUseCase implements IUseCase<void, [string, RequestBankUpdateInput]> {
+export class RequestBankUpdateUseCase implements IRequestBankUpdateUseCase {
   constructor(
-    private readonly _technicianRepo: ITechnicianRepository,
-    private readonly _logger: ILogger
+    private readonly _technicianRepo: ITechnicianRepository 
   ) {}
 
   async execute(technicianId: string, input: RequestBankUpdateInput): Promise<void> {

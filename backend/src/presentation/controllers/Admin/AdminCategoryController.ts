@@ -1,14 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { RequestMapper } from "../../utils/RequestMapper";
-import { IUseCase } from "../../../application/interfaces/IUseCase";  
+import { IUseCase } from "../../../application/interfaces/services/IUseCase";  
 import { CreateCategoryDto } from "../../../application/dto/category/CreateCategoryDto";
 import { UpdateCategoryDto } from "../../../application/dto/category/UpdateCategoryDto";
 import { CategoryResponseDto } from "../../../application/dto/category/CategoryResponseDto";
 import { PaginatedCategoriesResponse } from "../../../application/use-cases/service-categories/GetAllCategoriesUseCase";
 import { CategoryQueryParams } from "../../../domain/repositories/IServiceCategoryRepository";
 import { SuccessMessages, ErrorMessages } from "../../../application/constants/ErrorMessages";
-import { ILogger } from "../../../application/interfaces/ILogger";
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { StatusCodes } from "../../utils/StatusCodes";
 

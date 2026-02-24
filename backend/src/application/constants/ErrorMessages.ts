@@ -1,5 +1,4 @@
-export enum ErrorMessages {
-  // ... (Keep your existing Auth/Tech/General errors) ...
+export enum ErrorMessages { 
   INVALID_CREDENTIALS = "Invalid email or password",
   ADMIN_NOT_FOUND = "Admin not found",
   CUSTOMER_NOT_FOUND = "Customer not found",

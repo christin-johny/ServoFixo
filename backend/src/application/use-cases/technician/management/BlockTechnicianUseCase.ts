@@ -1,14 +1,10 @@
-import { IUseCase } from "../../../interfaces/IUseCase";
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
-import { ILogger } from "../../../interfaces/ILogger";
-import { ErrorMessages } from "../../../constants/ErrorMessages";
-
-export class BlockTechnicianUseCase
-  implements IUseCase<void, [string, boolean, string | undefined]>
+import { IBlockTechnicianUseCase } from "../../../interfaces/use-cases/technician/ITechnicianManagementUseCases";
+ 
+export class BlockTechnicianUseCase implements IBlockTechnicianUseCase
 {
   constructor(
-    private readonly _technicianRepo: ITechnicianRepository,
-    private readonly _logger: ILogger
+    private readonly _technicianRepo: ITechnicianRepository 
   ) {}
 
   async execute(

@@ -2,10 +2,10 @@ import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "../../utils/StatusCodes";
 import { refreshCookieOptions } from "../../../infrastructure/config/Cookie";
 import {  SuccessMessages } from "../../../application/constants/ErrorMessages";
-import { ILogger } from "../../../application/interfaces/ILogger";
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import redis from "../../../infrastructure/redis/redisClient";
-import { IUseCase } from "../../../application/interfaces/IUseCase";
+import { IUseCase } from "../../../application/interfaces/services/IUseCase";
 import { 
   TechnicianRegisterInitDto, 
   TechnicianRegisterVerifyDto,

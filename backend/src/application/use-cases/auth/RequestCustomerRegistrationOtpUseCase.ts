@@ -1,13 +1,14 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { IOtpSessionRepository } from "../../../domain/repositories/IOtpSessionRepository";
-import { IEmailService } from "../../interfaces/IEmailService";
+import { IEmailService } from "../../interfaces/services/IEmailService";
 import { CustomerRegisterInitDto } from "../../dto/auth/AuthDtos";
 import { OtpContext } from "../../../domain/enums/OtpContext";
 import { ErrorMessages } from "../../constants/ErrorMessages";
 import { OtpSession } from "../../../domain/entities/OtpSession";
-import { ILogger } from "../../interfaces/ILogger"; 
+import { ILogger } from "../../interfaces/services/ILogger"; 
+import { IRequestCustomerRegistrationOtpUseCase } from "../../interfaces/use-cases/auth/IAuthUseCases";
 
-export class RequestCustomerRegistrationOtpUseCase {
+export class RequestCustomerRegistrationOtpUseCase implements IRequestCustomerRegistrationOtpUseCase{
   private readonly _otpExpiryMinutes = Number(process.env.OTP_EXPIRY_MINUTES) || 2;
 
   constructor(

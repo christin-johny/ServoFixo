@@ -1,25 +1,20 @@
-import { IUseCase } from "../../interfaces/IUseCase";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
-import { INotificationService } from "../../services/INotificationService"; 
-import { ILogger } from "../../interfaces/ILogger";
+import { INotificationService } from "../../services/INotificationService";  
 import { AddExtraChargeDto } from "../../dto/booking/AddExtraChargeDto"; 
 import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages"; 
 import { ExtraCharge } from "../../../domain/value-objects/BookingTypes";
-import { IImageService } from "../../interfaces/IImageService"; 
+import { IImageService } from "../../interfaces/services/IImageService"; 
 import { NotificationType } from "../../../domain/value-objects/NotificationTypes";  
+import { IFile } from "../../dto/file/FileDto";
+import { IAddExtraChargeUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
 
-export interface IFile {
-    buffer: Buffer;
-    originalName: string;
-    mimeType: string;
-}
 
-export class AddExtraChargeUseCase implements IUseCase<void, [AddExtraChargeDto, IFile?]> {
+
+export class AddExtraChargeUseCase implements IAddExtraChargeUseCase {
   constructor(
     private readonly _bookingRepo: IBookingRepository,
     private readonly _notificationService: INotificationService,
-    private readonly _imageService: IImageService,
-    private readonly _logger: ILogger
+    private readonly _imageService: IImageService
   ) {}
 
   async execute(input: AddExtraChargeDto, proofFile?: IFile): Promise<void> {

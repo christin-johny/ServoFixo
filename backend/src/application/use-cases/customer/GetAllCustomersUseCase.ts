@@ -1,25 +1,13 @@
 import { ICustomerRepository, PaginatedResult } from '../../../domain/repositories/ICustomerRepository';
 import { Customer } from '../../../domain/entities/Customer';
 import { CustomerFilterDto, CustomerResponseDto } from '../../dto/customer/AdminCustomerDtos';
-import { ILogger } from '../../interfaces/ILogger';
-import { LogEvents } from '../../../infrastructure/logging/LogEvents';
+import { IGetAllCustomersUseCase } from '../../interfaces/use-cases/customer/ICustomerUseCases';
+import { mapToResponseDto } from '../../mappers/CustomerMapper';
 
-export const mapToResponseDto = (customer: Customer): CustomerResponseDto => {
-  return {
-    id: customer.getId(),
-    name: customer.getName(),
-    email: customer.getEmail(),
-    phone: customer.getPhone(),
-    suspended: customer.isSuspended(), 
-    createdAt: customer.getCreatedAt(),
-    updatedAt: new Date(), 
-  };
-};
 
-export class GetAllCustomersUseCase {
+export class GetAllCustomersUseCase implements IGetAllCustomersUseCase {
   constructor(
-    private readonly _customerRepository: ICustomerRepository,
-    private readonly _logger: ILogger
+    private readonly _customerRepository: ICustomerRepository 
   ) {}
 
   async execute(filterDto: CustomerFilterDto): Promise<PaginatedResult<CustomerResponseDto>> {

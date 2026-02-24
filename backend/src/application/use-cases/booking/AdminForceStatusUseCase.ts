@@ -1,33 +1,27 @@
-import { IUseCase } from "../../interfaces/IUseCase";
+ 
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
-import { INotificationService } from "../../services/INotificationService"; 
-import { ILogger } from "../../interfaces/ILogger";
+import { INotificationService } from "../../services/INotificationService";  
 import { BookingStatus } from "../../../domain/value-objects/BookingTypes";
 import { ErrorMessages } from "../../constants/ErrorMessages";
 import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
 import { SocketServer } from "../../../infrastructure/socket/SocketServer";  
+import { AdminForceStatusDto } from "../../dto/booking/BookingDto";
+import { IAdminForceStatusUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
 
-export class AdminForceStatusDto {
-    bookingId!: string;
-    adminId!: string;
-    status!: BookingStatus;
-    reason!: string;
-}
 
-export class AdminForceStatusUseCase implements IUseCase<void, [AdminForceStatusDto]> {
+
+export class AdminForceStatusUseCase implements IAdminForceStatusUseCase  {
     constructor(
         private readonly _bookingRepo: IBookingRepository,
         private readonly _techRepo: ITechnicianRepository,
-        private readonly _notificationService: INotificationService,  
-        private readonly _logger: ILogger
+        private readonly _notificationService: INotificationService
     ) {}
 
     async execute(input: AdminForceStatusDto): Promise<void> {
         const booking = await this._bookingRepo.findById(input.bookingId);
         if (!booking) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
-
-        const previousStatus = booking.getStatus();
+ 
         const techId = booking.getTechnicianId();
         const customerId = booking.getCustomerId();
  

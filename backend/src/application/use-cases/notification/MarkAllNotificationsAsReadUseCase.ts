@@ -1,8 +1,9 @@
-import { IUseCase } from "../../interfaces/IUseCase";
+ 
 import { INotificationRepository } from "../../../domain/repositories/INotificationRepository";
+import { IMarkAllNotificationsAsReadUseCase } from "../../interfaces/use-cases/notification/INotificationUseCases";
  
 
-export class MarkAllNotificationsAsReadUseCase implements IUseCase<void, [string]> {
+export class MarkAllNotificationsAsReadUseCase implements IMarkAllNotificationsAsReadUseCase {
   constructor(
     private readonly _notificationRepo: INotificationRepository 
   ) {}

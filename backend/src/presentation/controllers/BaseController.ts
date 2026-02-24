@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { StatusCodes } from "../utils/StatusCodes";
-import { ILogger } from "../../application/interfaces/ILogger";
+import { ILogger } from "../../application/interfaces/services/ILogger";
 
 export abstract class BaseController {
   constructor(protected readonly _logger: ILogger) {}

@@ -1,12 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { RequestMapper } from "../../utils/RequestMapper";
-import { IUseCase } from "../../../application/interfaces/IUseCase"; 
+import { IUseCase } from "../../../application/interfaces/services/IUseCase"; 
 import { CreateZoneDto } from "../../../application/dto/zone/CreateZoneDto";
 import { UpdateZoneDto } from "../../../application/dto/zone/UpdateZoneDto";
 import { ZoneResponseDto } from "../../../application/dto/zone/ZoneResponseDto";
 import { PaginatedZonesResponse } from "../../../application/use-cases/zones/GetAllZonesUseCase";
-import { ILogger } from '../../../application/interfaces/ILogger';
+import { ILogger } from '../../../application/interfaces/services/ILogger';
 import { ZoneQueryParams } from "../../../domain/repositories/IZoneRepository";
 import { StatusCodes } from "../../utils/StatusCodes";
 import { ErrorMessages, SuccessMessages } from "../../../application/constants/ErrorMessages";

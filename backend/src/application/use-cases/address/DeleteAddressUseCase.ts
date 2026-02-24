@@ -1,9 +1,10 @@
 import { IAddressRepository } from "../../../domain/repositories/IAddressRepository";
 import { ErrorMessages } from "../../constants/ErrorMessages";
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { IDeleteAddressUseCase } from "../../interfaces/use-cases/address/IAddressUseCases";
 
-export class DeleteAddressUseCase {
+export class DeleteAddressUseCase implements IDeleteAddressUseCase {
   constructor(
     private _addressRepository: IAddressRepository,
     private _logger: ILogger 

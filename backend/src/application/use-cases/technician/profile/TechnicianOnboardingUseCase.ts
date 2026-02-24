@@ -1,16 +1,16 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
-import { IUseCase } from "../../../interfaces/IUseCase";
 import { TechnicianOnboardingInput } from "../../../dto/technician/TechnicianOnboardingDtos";
 import { ErrorMessages } from "../../../constants/ErrorMessages";
-import { ILogger } from "../../../interfaces/ILogger"; 
+import { ILogger } from "../../../interfaces/services/ILogger"; 
 import { Technician } from "../../../../domain/entities/Technician";
 import {
   TechnicianDocument,
   DocumentStatus,
 } from "../../../../domain/value-objects/TechnicianTypes";
+import { ITechnicianOnboardingUseCase } from "../../../interfaces/use-cases/technician/ITechnicianProfileUseCases";
 
 export class TechnicianOnboardingUseCase
-  implements IUseCase<boolean, [TechnicianOnboardingInput]>
+  implements ITechnicianOnboardingUseCase
 {
   constructor(
     private readonly _technicianRepository: ITechnicianRepository,

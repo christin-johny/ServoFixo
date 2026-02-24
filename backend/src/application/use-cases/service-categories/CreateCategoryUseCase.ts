@@ -1,19 +1,16 @@
 import { IServiceCategoryRepository } from "../../../domain/repositories/IServiceCategoryRepository";
-import { IImageService } from "../../interfaces/IImageService";
+import { IImageService } from "../../interfaces/services/IImageService";
 import { CreateCategoryDto } from "../../dto/category/CreateCategoryDto";
 import { CategoryResponseDto } from "../../dto/category/CategoryResponseDto";
 import { CategoryMapper } from "../../mappers/CategoryMapper";
 import { ErrorMessages } from "../../constants/ErrorMessages";
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { IFile } from "../../dto/file/FileDto";
+import { ICreateCategoryUseCase } from "../../interfaces/use-cases/category/ICategoryUseCases";
 
-export interface IFile {
-  buffer: Buffer;
-  originalName: string;
-  mimeType: string;
-}
 
-export class CreateCategoryUseCase {
+export class CreateCategoryUseCase implements ICreateCategoryUseCase {
   constructor(
     private readonly _categoryRepo: IServiceCategoryRepository,
     private readonly _imageService: IImageService,

@@ -23,3 +23,7 @@ export class TechnicianForgotPasswordVerifyDto {
   sessionId!: string;
   newPassword!: string;
 }
+export interface TechnicianLoginDto {
+  email: string;
+  password: string;
+}

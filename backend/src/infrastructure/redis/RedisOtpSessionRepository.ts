@@ -1,7 +1,7 @@
 import { IOtpSessionRepository } from "../../domain/repositories/IOtpSessionRepository";
 import { OtpSession } from "../../domain/entities/OtpSession";
 import { OtpContext } from "../../domain/enums/OtpContext";
-import { ICacheService } from "../../application/interfaces/ICacheService";
+import { ICacheService } from "../../application/interfaces/services/ICacheService";
 
 export class RedisOtpSessionRepository implements IOtpSessionRepository {
   constructor(private readonly _cacheService: ICacheService) {}

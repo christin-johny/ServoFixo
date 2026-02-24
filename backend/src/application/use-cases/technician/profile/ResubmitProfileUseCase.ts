@@ -1,13 +1,11 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
-import { IUseCase } from "../../../interfaces/IUseCase";
-import { ILogger } from "../../../interfaces/ILogger";
-import { ErrorMessages } from "../../../constants/ErrorMessages";
-import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
+ 
+import { ErrorMessages } from "../../../constants/ErrorMessages"; 
+import { IResubmitProfileUseCase } from "../../../interfaces/use-cases/technician/ITechnicianProfileUseCases";
 
-export class ResubmitProfileUseCase implements IUseCase<void, [string]> {
+export class ResubmitProfileUseCase implements IResubmitProfileUseCase{
   constructor(
-    private readonly _technicianRepo: ITechnicianRepository,
-    private readonly _logger: ILogger
+    private readonly _technicianRepo: ITechnicianRepository 
   ) {}
 
   async execute(technicianId: string): Promise<void> {

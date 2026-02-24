@@ -3,7 +3,7 @@ import { refreshCookieOptions } from "../../infrastructure/config/Cookie";
 import { RefreshTokenUseCase } from "../../application/use-cases/auth/RefreshTokenUseCase";
 import { ErrorMessages } from "../../application/constants/ErrorMessages";
 import { StatusCodes } from "../utils/StatusCodes";
-import { ILogger } from "../../application/interfaces/ILogger";
+import { ILogger } from "../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../infrastructure/logging/LogEvents";
 
 export class AuthTokenController {

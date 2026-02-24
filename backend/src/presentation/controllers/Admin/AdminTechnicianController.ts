@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { RequestMapper } from "../../utils/RequestMapper";
-import { IUseCase } from "../../../application/interfaces/IUseCase";
+import { IUseCase } from "../../../application/interfaces/services/IUseCase";
 import { PaginatedTechnicianQueueResponse } from "../../../application/dto/technician/TechnicianQueueDto";
 import {
   AdminTechnicianProfileDto,
@@ -15,7 +15,7 @@ import {
   QueueType,
 } from "../../../domain/repositories/ITechnicianRepository"; 
 import { SuccessMessages } from "../../../application/constants/ErrorMessages";
-import { ILogger } from "../../../application/interfaces/ILogger";
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { RequestAction, PartnerRequestType } from "../../../domain/enums/RequestResolutionEnums";
 import { GetRecommendedTechniciansDto } from "../../../application/use-cases/booking/GetRecommendedTechniciansUseCase";  

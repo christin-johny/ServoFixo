@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import crypto from "crypto";
-import { IUseCase } from "../../../application/interfaces/IUseCase";
-import { ILogger } from "../../../application/interfaces/ILogger";
+import { IUseCase } from "../../../application/interfaces/services/IUseCase";
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { ProcessPaymentDto } from "../../../application/dto/webhook/ProcessPaymentDto";
 import { StatusCodes } from "../../utils/StatusCodes";
 

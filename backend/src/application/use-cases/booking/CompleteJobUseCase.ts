@@ -1,27 +1,22 @@
-import { IUseCase } from "../../interfaces/IUseCase";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { INotificationService } from "../../services/INotificationService"; 
 import { IPaymentGateway } from "../../../domain/repositories/IPaymentGateway"; 
-import { IImageService } from "../../interfaces/IImageService"; 
-import { IServiceItemRepository } from "../../../domain/repositories/IServiceItemRepository"; 
-import { ILogger } from "../../interfaces/ILogger";
+import { IImageService } from "../../interfaces/services/IImageService"; 
+import { IServiceItemRepository } from "../../../domain/repositories/IServiceItemRepository";  
 import { CompleteJobDto } from "../../dto/booking/CompleteJobDto";
 import { ErrorMessages } from "../../constants/ErrorMessages"; 
+import { IFile } from "../../dto/file/FileDto";
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
+import { ICompleteJobUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
+
  
-export interface IFile {
-    buffer: Buffer;
-    originalName: string;
-    mimeType: string;
-}
- 
-export class CompleteJobUseCase implements IUseCase<void, [CompleteJobDto, IFile?]> {
+export class CompleteJobUseCase implements ICompleteJobUseCase  {
   constructor(
     private readonly _bookingRepo: IBookingRepository,
     private readonly _paymentGateway: IPaymentGateway,  
     private readonly _notificationService: INotificationService,
     private readonly _imageService: IImageService, 
-    private readonly _serviceRepo: IServiceItemRepository, 
-    private readonly _logger: ILogger
+    private readonly _serviceRepo: IServiceItemRepository,
   ) {}
  
   async execute(input: CompleteJobDto, proofFile?: IFile): Promise<void> {
@@ -76,7 +71,7 @@ export class CompleteJobUseCase implements IUseCase<void, [CompleteJobDto, IFile
     await this._notificationService.send({
         recipientId: booking.getCustomerId(),
         recipientType: "CUSTOMER",
-        type: "JOB_COMPLETED" as any, 
+        type: NotificationType.JOB_COMPLETED, 
         title: "Job Completed!  ",
         body: `Total Bill: ₹${finalAmount}. Please pay now.`,
         metadata: { 

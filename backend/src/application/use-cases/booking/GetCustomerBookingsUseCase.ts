@@ -1,13 +1,9 @@
-import { IUseCase } from "../../interfaces/IUseCase";
+import { IUseCase } from "../../interfaces/services/IUseCase";
 import { IBookingRepository, PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
 import { BookingStatus } from "../../../domain/value-objects/BookingTypes";
+import { GetCustomerBookingsDto } from "../../dto/booking/BookingDto";
 
-export interface GetCustomerBookingsDto {
-  customerId: string;
-  page: number;
-  limit: number;
-  status?: string;  
-}
+
 
 export class GetCustomerBookingsUseCase implements IUseCase<PaginatedBookingResult, [GetCustomerBookingsDto]> {
   constructor(private readonly _bookingRepo: IBookingRepository) {}

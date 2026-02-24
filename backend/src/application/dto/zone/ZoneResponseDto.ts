@@ -7,3 +7,10 @@ export class ZoneResponseDto {
   createdAt!: string; 
   updatedAt!: string; 
 }
+
+export interface PaginatedZonesResponse {
+  zones: ZoneResponseDto[];
+  total: number;
+  currentPage: number;
+  totalPages: number;
+}

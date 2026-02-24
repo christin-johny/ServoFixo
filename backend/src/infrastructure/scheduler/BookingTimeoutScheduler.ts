@@ -2,7 +2,7 @@ import cron from "node-cron";
 import { IBookingRepository } from "../../domain/repositories/IBookingRepository";
 import { ITechnicianRepository } from "../../domain/repositories/ITechnicianRepository";
 import { INotificationService } from "../../application/services/INotificationService"; 
-import { ILogger } from "../../application/interfaces/ILogger";
+import { ILogger } from "../../application/interfaces/services/ILogger";
 import { Booking } from "../../domain/entities/Booking";
 import { NotificationType } from "../../domain/value-objects/NotificationTypes";
 

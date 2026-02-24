@@ -1,9 +1,10 @@
 import { IServiceCategoryRepository } from '../../../domain/repositories/IServiceCategoryRepository';
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { ErrorMessages } from '../../constants/ErrorMessages';
+import { IDeleteCategoryUseCase } from '../../interfaces/use-cases/category/ICategoryUseCases';
 
-export class DeleteCategoryUseCase {
+export class DeleteCategoryUseCase implements IDeleteCategoryUseCase{
   constructor(
     private readonly _categoryRepo: IServiceCategoryRepository,
     private readonly _logger: ILogger

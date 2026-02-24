@@ -1,14 +1,14 @@
 import redis from "../../../infrastructure/redis/redisClient";
 import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
-import { IUseCase } from "../../../application/interfaces/IUseCase";
+import { IUseCase } from "../../../application/interfaces/services/IUseCase";
 import {
   ErrorMessages,
   SuccessMessages,
 } from "../../../application/constants/ErrorMessages";
 import { StatusCodes } from "../../utils/StatusCodes";
 import { refreshCookieOptions } from "../../../infrastructure/config/Cookie";
-import { ILogger } from "../../../application/interfaces/ILogger";
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 interface AdminLoginResult {

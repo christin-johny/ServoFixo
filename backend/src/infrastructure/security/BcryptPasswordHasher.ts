@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { IPasswordHasher } from "../../application/interfaces/IPasswordHasher";
+import { IPasswordHasher } from "../../application/interfaces/services/IPasswordHasher";
 
 export class BcryptPasswordHasher implements IPasswordHasher {
   private readonly _saltRounds: number;

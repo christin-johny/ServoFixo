@@ -1,17 +1,18 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { IOtpSessionRepository } from "../../../../domain/repositories/IOtpSessionRepository";
-import { IPasswordHasher } from "../../../interfaces/IPasswordHasher";
-import { IJwtService, JwtPayload } from "../../../interfaces/IJwtService";
+import { IPasswordHasher } from "../../../interfaces/services/IPasswordHasher";
+import { IJwtService, JwtPayload } from "../../../interfaces/services/IJwtService";
 import { TechnicianRegisterVerifyDto } from "../../../dto/technician/TechnicianAuthDtos";
 import { AuthResultDto } from "../../../dto/auth/AuthResultDto";
 import { ErrorMessages } from "../../../constants/ErrorMessages";
 import { OtpContext } from "../../../../domain/enums/OtpContext";
 import { Technician } from "../../../../domain/entities/Technician";
-import { ICacheService } from "../../../interfaces/ICacheService";
-import { ILogger } from "../../../interfaces/ILogger";
+import { ICacheService } from "../../../interfaces/services/ICacheService";
+import { ILogger } from "../../../interfaces/services/ILogger";
 import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
+import { IVerifyTechnicianRegistrationOtpUseCase } from "../../../interfaces/use-cases/technician/ITechnicianAuthUseCases";
 
-export class VerifyTechnicianRegistrationOtpUseCase {
+export class VerifyTechnicianRegistrationOtpUseCase implements IVerifyTechnicianRegistrationOtpUseCase {
   constructor(
     private readonly _technicianRepository: ITechnicianRepository,
     private readonly _otpSessionRepository: IOtpSessionRepository,

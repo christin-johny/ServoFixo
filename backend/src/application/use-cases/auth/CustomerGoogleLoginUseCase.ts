@@ -1,29 +1,14 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { IJwtService, JwtPayload } from "../../interfaces/IJwtService";  
-import { IGoogleAuthService } from "../../interfaces/IGoogleAuthService";  
-import { ICacheService } from "../../interfaces/ICacheService";  
+import { IJwtService, JwtPayload } from "../../interfaces/services/IJwtService";  
+import { IGoogleAuthService } from "../../interfaces/services/IGoogleAuthService";  
+import { ICacheService } from "../../interfaces/services/ICacheService";  
 import { Customer } from "../../../domain/entities/Customer";
 import { Email } from "../../../domain/value-objects/ContactTypes";
-import { ILogger } from "../../interfaces/ILogger";
-import { S3UrlHelper } from "../../../infrastructure/storage/S3UrlHelper";
+import { ILogger } from "../../interfaces/services/ILogger";
+import { S3UrlHelper } from "../../../infrastructure/storage/S3UrlHelper"; 
+import { GoogleLoginRequest, GoogleLoginResponse } from "../../dto/auth/GoogleLoginDto";
 
-interface GoogleLoginRequest {
-  token?: string;
-  customer?: object;
-}
-
-interface GoogleLoginResponse {
-  accessToken: string;
-  refreshToken: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    avatarUrl?: string;
-  };
-}
-
-export class CustomerGoogleLoginUseCase {
+export class CustomerGoogleLoginUseCase implements CustomerGoogleLoginUseCase{
   constructor(
     private readonly _customerRepository: ICustomerRepository,
     private readonly _jwtService: IJwtService,

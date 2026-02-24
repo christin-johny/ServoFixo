@@ -1,18 +1,11 @@
-import { IImageService } from "../../../interfaces/IImageService";
-import { ILogger } from "../../../interfaces/ILogger"; 
-import { IUseCase } from "../../../interfaces/IUseCase";
+import { UploadTechnicianFileInput } from "../../../dto/technician/TechnicianProfileDto";
+import { IImageService } from "../../../interfaces/services/IImageService";
+import { IUploadTechnicianFileUseCase } from "../../../interfaces/use-cases/technician/ITechnicianProfileUseCases";
+  
  
-export interface UploadTechnicianFileInput {
-  fileBuffer: Buffer;
-  fileName: string;
-  mimeType: string;
-  folder: "avatars" | "documents";
-}
- 
-export class UploadTechnicianFileUseCase implements IUseCase<string, [string, UploadTechnicianFileInput]> {
+export class UploadTechnicianFileUseCase implements IUploadTechnicianFileUseCase {
   constructor(
-    private readonly _imageService: IImageService,
-    private readonly _logger: ILogger
+    private readonly _imageService: IImageService 
   ) {}
 
   async execute(technicianId: string, input: UploadTechnicianFileInput): Promise<string> {

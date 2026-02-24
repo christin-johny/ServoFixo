@@ -1,16 +1,17 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { IOtpSessionRepository } from "../../../domain/repositories/IOtpSessionRepository";
-import { IPasswordHasher } from "../../interfaces/IPasswordHasher";
-import { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
+import { IPasswordHasher } from "../../interfaces/services/IPasswordHasher";
+import { IJwtService, JwtPayload } from "../../interfaces/services/IJwtService";
 import { CustomerRegisterVerifyDto } from "../../dto/auth/AuthDtos";
 import { AuthResultDto } from "../../dto/auth/AuthResultDto";
 import { ErrorMessages } from "../../constants/ErrorMessages";
 import { OtpContext } from "../../../domain/enums/OtpContext";
 import { Customer } from "../../../domain/entities/Customer";
-import { ICacheService } from "../../interfaces/ICacheService"; 
-import { ILogger } from "../../interfaces/ILogger"; 
+import { ICacheService } from "../../interfaces/services/ICacheService"; 
+import { ILogger } from "../../interfaces/services/ILogger"; 
+import { IVerifyCustomerRegistrationOtpUseCase } from "../../interfaces/use-cases/auth/IAuthUseCases";
 
-export class VerifyCustomerRegistrationOtpUseCase {
+export class VerifyCustomerRegistrationOtpUseCase implements IVerifyCustomerRegistrationOtpUseCase{
   constructor(
     private readonly _customerRepository: ICustomerRepository,
     private readonly _otpSessionRepository: IOtpSessionRepository,

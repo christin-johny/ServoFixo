@@ -1,20 +1,19 @@
-import { IUseCase } from "../../interfaces/IUseCase";
+ 
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
 import { IReviewRepository } from "../../../domain/repositories/IReviewRepository";
-import { IServiceItemRepository } from "../../../domain/repositories/IServiceItemRepository";  
-import { ILogger } from "../../interfaces/ILogger";
+import { IServiceItemRepository } from "../../../domain/repositories/IServiceItemRepository";   
 import { RateTechnicianDto } from "../../dto/booking/RateTechnicianDto";
 import { Review } from "../../../domain/entities/Review";
 import { ErrorMessages } from "../../constants/ErrorMessages";
+import { IRateTechnicianUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
 
-export class RateTechnicianUseCase implements IUseCase<void, [RateTechnicianDto]> {
+export class RateTechnicianUseCase implements IRateTechnicianUseCase {
   constructor(
     private readonly _bookingRepo: IBookingRepository,
     private readonly _technicianRepo: ITechnicianRepository,
     private readonly _reviewRepo: IReviewRepository,
-    private readonly _serviceRepo: IServiceItemRepository,  
-    private readonly _logger: ILogger
+    private readonly _serviceRepo: IServiceItemRepository 
   ) {}
 
 async execute(input: RateTechnicianDto): Promise<void> {

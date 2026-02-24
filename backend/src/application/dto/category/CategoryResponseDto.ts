@@ -7,3 +7,10 @@ export class CategoryResponseDto {
   createdAt!: string; 
   updatedAt!: string;
 }
+
+export interface PaginatedCategoriesResponse {
+  categories: CategoryResponseDto[]; 
+  total: number;
+  currentPage: number;
+  totalPages: number;
+}

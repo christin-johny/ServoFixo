@@ -1,14 +1,13 @@
-import { IUseCase } from "../../interfaces/IUseCase";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository"; 
 import { INotificationService } from "../../services/INotificationService"; 
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { CancelBookingDto } from "../../dto/booking/CancelBookingDto";
 import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
-import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
-import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes"; 
+import { ICustomerCancelBookingUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
 
-export class CustomerCancelBookingUseCase implements IUseCase<void, [CancelBookingDto]> {
+export class CustomerCancelBookingUseCase implements ICustomerCancelBookingUseCase  {
   constructor(
     private readonly _bookingRepo: IBookingRepository,
     private readonly _technicianRepo: ITechnicianRepository,
@@ -66,7 +65,7 @@ export class CustomerCancelBookingUseCase implements IUseCase<void, [CancelBooki
     await this._notificationService.send({
         recipientId: "ADMIN_BROADCAST_CHANNEL",
         recipientType: "ADMIN",
-        type: "ADMIN_STATUS_UPDATE" as any,
+        type:  NotificationType.ADMIN_STATUS_UPDATE ,
         title: NotificationMessages.TITLE_BOOKING_CANCELLED_ADMIN,
         body: `${NotificationMessages.BODY_BOOKING_CANCELLED_ADMIN_PREFIX}${booking.getId().slice(-6)}`,
         metadata: { 

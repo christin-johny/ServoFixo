@@ -3,7 +3,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
-import { IImageService } from "../../application/interfaces/IImageService";
+import { IImageService } from "../../application/interfaces/services/IImageService";
 
 export class S3ImageService implements IImageService {
   private _s3Client: S3Client;

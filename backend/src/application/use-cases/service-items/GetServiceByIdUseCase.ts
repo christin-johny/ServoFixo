@@ -1,11 +1,11 @@
 import { IServiceItemRepository } from '../../../domain/repositories/IServiceItemRepository';
-import { ILogger } from '../../interfaces/ILogger';
+import { ILogger } from '../../interfaces/services/ILogger';
 import { LogEvents } from '../../../infrastructure/logging/LogEvents';
 import { ServiceItemMapper } from '../../mappers/ServiceItemMapper';
-import { ServiceItemResponseDto } from '../../dto/serviceItem/ServiceItemResponseDto';
-import { ErrorMessages } from '../../constants/ErrorMessages';
+import { ServiceItemResponseDto } from '../../dto/serviceItem/ServiceItemResponseDto'; 
+import { IGetServiceByIdUseCase } from '../../interfaces/use-cases/serviceItem/IServiceItemUseCases';
 
-export class GetServiceByIdUseCase {
+export class GetServiceByIdUseCase implements IGetServiceByIdUseCase{
   constructor(
     private readonly _serviceRepo: IServiceItemRepository,
     private readonly _logger: ILogger

@@ -1,23 +1,22 @@
-import {
-  TechnicianBankDetails,
-  EmergencyContact,
-  TechnicianAvailability
-} from "../../../domain/value-objects/TechnicianTypes";
 
-export class UpdateTechnicianDto {
+
+export interface UpdateTechnicianDto {
   name?: string;
-  avatarUrl?: string;
-  bio?: string;
+  email?: string;
+  phone?: string;
   experienceSummary?: string;
-
+  
+  // Operations
+  zoneIds?: string[];
   categoryIds?: string[];
   subServiceIds?: string[];
-  zoneIds?: string[];
 
-  bankDetails?: TechnicianBankDetails;
-  availability?: TechnicianAvailability;  
-  
-  portfolioUrls?: string[];
-  deviceToken?: string;
-  emergencyContact?: EmergencyContact;
+  // Financials
+  bankDetails?: {
+    accountHolderName: string;
+    accountNumber: string;
+    ifscCode: string;
+    bankName: string;
+  };
 }
+

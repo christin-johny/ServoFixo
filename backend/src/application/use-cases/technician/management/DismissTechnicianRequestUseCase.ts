@@ -1,11 +1,11 @@
-import { IUseCase } from "../../../interfaces/IUseCase";
+
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
-import { ILogger } from "../../../interfaces/ILogger";
+import { ILogger } from "../../../interfaces/services/ILogger";
 import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
-import { ErrorMessages } from "../../../constants/ErrorMessages";
+import { IDismissTechnicianRequestUseCase } from "../../../interfaces/use-cases/technician/ITechnicianManagementUseCases";
 
 export class DismissTechnicianRequestUseCase
-  implements IUseCase<void, [string, string]>
+  implements IDismissTechnicianRequestUseCase
 {
   constructor(
     private readonly _technicianRepository: ITechnicianRepository,

@@ -1,14 +1,15 @@
 import { IAddressRepository } from "../../../domain/repositories/IAddressRepository"; 
-import { IZoneService } from "../../interfaces/IZoneService"; 
+import { IZoneService } from "../../interfaces/services/IZoneService"; 
 import { UpdateAddressDto } from "../../dto/address/UpdateAddressDto";
 import { AddressResponseDto } from "../../dto/address/AddressResponseDto";
 import { AddressMapper } from "../../mappers/AddressMapper";
 import { Address } from "../../../domain/entities/Address";
 import { ErrorMessages } from "../../constants/ErrorMessages";
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { IUpdateAddressUseCase } from "../../interfaces/use-cases/address/IAddressUseCases";
 
-export class UpdateAddressUseCase {
+export class UpdateAddressUseCase implements IUpdateAddressUseCase{
   constructor(
     private _addressRepository: IAddressRepository,
     private _zoneService: IZoneService, 

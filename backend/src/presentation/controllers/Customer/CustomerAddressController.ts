@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
-import { IUseCase } from "../../../application/interfaces/IUseCase"; 
+import { IUseCase } from "../../../application/interfaces/services/IUseCase"; 
 import { CreateAddressDto } from "../../../application/dto/address/CreateAddressDto";
 import { UpdateAddressDto } from "../../../application/dto/address/UpdateAddressDto"; 
 import { AddressResponseDto } from "../../../application/dto/address/AddressResponseDto"; 
-import { ILogger } from "../../../application/interfaces/ILogger"; 
+import { ILogger } from "../../../application/interfaces/services/ILogger"; 
 import { LogEvents } from "../../../infrastructure/logging/LogEvents"; 
 import { ErrorMessages, SuccessMessages } from "../../../application/constants/ErrorMessages"; 
 

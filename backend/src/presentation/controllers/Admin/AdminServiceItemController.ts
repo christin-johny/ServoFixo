@@ -1,14 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
 import { RequestMapper } from "../../utils/RequestMapper";
-import { IUseCase } from "../../../application/interfaces/IUseCase";  
+import { IUseCase } from "../../../application/interfaces/services/IUseCase";  
 import { CreateServiceItemDto } from "../../../application/dto/serviceItem/CreateServiceItemDto";
 import { UpdateServiceItemDto } from "../../../application/dto/serviceItem/UpdateServiceItemDto";
 import { ServiceItemResponseDto } from "../../../application/dto/serviceItem/ServiceItemResponseDto";
 import { PaginatedServiceResponse } from "../../../application/use-cases/service-items/GetAllServiceItemsUseCase";
 import { StatusCodes } from "../../utils/StatusCodes";
 import { ErrorMessages, SuccessMessages } from "../../../application/constants/ErrorMessages";
-import { ILogger } from "../../../application/interfaces/ILogger";
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 interface FileData {

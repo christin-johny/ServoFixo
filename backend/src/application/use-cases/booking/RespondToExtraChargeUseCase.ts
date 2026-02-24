@@ -1,17 +1,14 @@
-import { IUseCase } from "../../interfaces/IUseCase";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
-import { INotificationService } from "../../services/INotificationService"; 
-import { ILogger } from "../../interfaces/ILogger";
+import { INotificationService } from "../../services/INotificationService";  
 import { RespondToExtraChargeDto } from "../../dto/booking/RespondToExtraChargeDto";
 import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages"; 
-import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
-import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes"; 
+import { IRespondToExtraChargeUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
 
-export class RespondToExtraChargeUseCase implements IUseCase<void, [RespondToExtraChargeDto]> {
+export class RespondToExtraChargeUseCase implements IRespondToExtraChargeUseCase {
   constructor(
     private readonly _bookingRepo: IBookingRepository,
-    private readonly _notificationService: INotificationService,
-    private readonly _logger: ILogger
+    private readonly _notificationService: INotificationService 
   ) {}
 
   async execute(input: RespondToExtraChargeDto): Promise<void> {

@@ -1,9 +1,10 @@
 import { IZoneRepository } from '../../../domain/repositories/IZoneRepository';
-import { ILogger } from '../../interfaces/ILogger';
+import { ILogger } from '../../interfaces/services/ILogger';
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { ErrorMessages } from '../../constants/ErrorMessages';
+import { IDeleteZoneUseCase } from '../../interfaces/use-cases/zone/IZoneUseCases';
 
-export class DeleteZoneUseCase {
+export class DeleteZoneUseCase implements IDeleteZoneUseCase {
   constructor(
     private readonly _zoneRepository: IZoneRepository,
     private readonly _logger: ILogger

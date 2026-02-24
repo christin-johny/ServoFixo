@@ -70,3 +70,7 @@ export interface CustomerForgotPasswordVerifyDto {
   newPassword: string;
 }
 
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+}

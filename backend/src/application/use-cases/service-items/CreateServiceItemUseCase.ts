@@ -1,19 +1,16 @@
 import { IServiceItemRepository } from '../../../domain/repositories/IServiceItemRepository';
-import { IImageService } from '../../interfaces/IImageService';
+import { IImageService } from '../../interfaces/services/IImageService';
 import { CreateServiceItemDto } from '../../dto/serviceItem/CreateServiceItemDto';
 import { ServiceItemResponseDto } from '../../dto/serviceItem/ServiceItemResponseDto';
 import { ServiceItemMapper } from '../../mappers/ServiceItemMapper';
-import { ILogger } from '../../interfaces/ILogger';
+import { ILogger } from '../../interfaces/services/ILogger';
 import { LogEvents } from '../../../infrastructure/logging/LogEvents';
 import { ErrorMessages } from '../../constants/ErrorMessages';
+import { IFile } from '../../dto/file/FileDto';
+import { ICreateServiceItemUseCase } from '../../interfaces/use-cases/serviceItem/IServiceItemUseCases';
 
-export interface IFile {
-  buffer: Buffer;
-  originalName: string;
-  mimeType: string;
-}
 
-export class CreateServiceItemUseCase {
+export class CreateServiceItemUseCase implements ICreateServiceItemUseCase {
   constructor(
     private readonly _serviceRepo: IServiceItemRepository,
     private readonly _imageService: IImageService,

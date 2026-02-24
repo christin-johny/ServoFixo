@@ -1,11 +1,12 @@
 import { IAddressRepository } from "../../../domain/repositories/IAddressRepository";
-import { IZoneService } from "../../interfaces/IZoneService"; 
+import { IZoneService } from "../../interfaces/services/IZoneService"; 
 import { CreateAddressDto } from "../../dto/address/CreateAddressDto";
 import { AddressResponseDto } from "../../dto/address/AddressResponseDto";
 import { AddressMapper } from "../../mappers/AddressMapper";
-import { ILogger } from "../../interfaces/ILogger"; 
+import { ILogger } from "../../interfaces/services/ILogger"; 
+import { IAddAddressUseCase } from "../../interfaces/use-cases/address/IAddressUseCases";
 
-export class AddAddressUseCase {
+export class AddAddressUseCase implements IAddAddressUseCase {
   constructor(
     private _addressRepository: IAddressRepository,
     private _zoneService: IZoneService,  

@@ -1,21 +1,19 @@
-import { IUseCase } from "../../interfaces/IUseCase";
+ 
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
 import { RazorpayService } from "../../../infrastructure/payments/RazorpayService"; 
-import { INotificationService } from "../../services/INotificationService"; 
-import { ILogger } from "../../interfaces/ILogger";
+import { INotificationService } from "../../services/INotificationService";  
 import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
 import { VerifyPaymentDto } from "../../dto/booking/VerifyPaymentDto";
-import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
-import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes"; 
+import { IVerifyPaymentUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
 
-export class VerifyPaymentUseCase implements IUseCase<void, [VerifyPaymentDto]> {
+export class VerifyPaymentUseCase implements IVerifyPaymentUseCase{
   constructor(
     private readonly _bookingRepo: IBookingRepository,
     private readonly _technicianRepo: ITechnicianRepository,
     private readonly _paymentService: RazorpayService,
-    private readonly _notificationService: INotificationService,
-    private readonly _logger: ILogger
+    private readonly _notificationService: INotificationService 
   ) {}
 
   async execute(input: VerifyPaymentDto): Promise<void> {
@@ -61,7 +59,7 @@ export class VerifyPaymentUseCase implements IUseCase<void, [VerifyPaymentDto]> 
     await this._notificationService.send({
         recipientId: "ADMIN_BROADCAST_CHANNEL",
         recipientType: "ADMIN",
-        type: "ADMIN_STATUS_UPDATE" as any,
+        type: NotificationType.ADMIN_STATUS_UPDATE  ,
         title: NotificationMessages.TITLE_PAYMENT_RECEIVED_ADMIN,
         body: `Booking #${booking.getId().slice(-6)}${NotificationMessages.BODY_PAYMENT_RECEIVED_ADMIN_SUFFIX}`,
         metadata: { 

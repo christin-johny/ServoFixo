@@ -1,5 +1,5 @@
 import { Redis } from "ioredis";
-import { ICacheService } from "../../application/interfaces/ICacheService";
+import { ICacheService } from "../../application/interfaces/services/ICacheService";
 
 export class RedisCacheService implements ICacheService {
   constructor(private _redisClient: Redis) {}

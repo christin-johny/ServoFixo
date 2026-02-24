@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { ILogger } from "../../application/interfaces/ILogger";
+import { ILogger } from "../../application/interfaces/services/ILogger";
 import { StatusCodes } from "../utils/StatusCodes";
 import { ErrorMessages } from "../../application/constants/ErrorMessages";
  

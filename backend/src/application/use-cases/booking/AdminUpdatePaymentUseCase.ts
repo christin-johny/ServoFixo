@@ -1,21 +1,18 @@
-import { IUseCase } from "../../interfaces/IUseCase";
-import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
-import { ILogger } from "../../interfaces/ILogger";
+ import { IBookingRepository } from "../../../domain/repositories/IBookingRepository"; 
 import { AdminUpdatePaymentDto } from "../../dto/admin/AdminUpdatePaymentDto";
 import { ErrorMessages } from "../../constants/ErrorMessages";
 import { PaymentStatus } from "../../../domain/value-objects/BookingTypes"; 
+import { IAdminUpdatePaymentUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
 
-export class AdminUpdatePaymentUseCase implements IUseCase<void, [AdminUpdatePaymentDto]> {
+export class AdminUpdatePaymentUseCase implements IAdminUpdatePaymentUseCase {
   constructor(
-    private readonly _bookingRepo: IBookingRepository,
-    private readonly _logger: ILogger
+    private readonly _bookingRepo: IBookingRepository 
   ) {}
 
   async execute(input: AdminUpdatePaymentDto): Promise<void> {
     const booking = await this._bookingRepo.findById(input.bookingId);
     if (!booking) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
-
-    const previousStatus = booking.getPayment().status;
+ 
  
     let txnId = input.transactionId; 
     if (input.status === "PAID" as PaymentStatus && !txnId) { 

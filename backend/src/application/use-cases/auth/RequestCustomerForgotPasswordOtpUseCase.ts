@@ -1,13 +1,14 @@
 import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepository';
 import { IOtpSessionRepository } from '../../../domain/repositories/IOtpSessionRepository';
-import { IEmailService } from '../../interfaces/IEmailService';
+import { IEmailService } from '../../interfaces/services/IEmailService';
 import { OtpSession } from '../../../domain/entities/OtpSession';
 import { OtpContext } from '../../../domain/enums/OtpContext';
 import { CustomerForgotPasswordInitDto } from '../../dto/auth/AuthDtos';
 import { ErrorMessages } from '../../constants/ErrorMessages';
-import { ILogger } from '../../interfaces/ILogger'; 
+import { ILogger } from '../../interfaces/services/ILogger'; 
+import { IRequestCustomerForgotPasswordOtpUseCase } from '../../interfaces/use-cases/auth/IAuthUseCases';
 
-export class RequestCustomerForgotPasswordOtpUseCase {
+export class RequestCustomerForgotPasswordOtpUseCase implements IRequestCustomerForgotPasswordOtpUseCase {
   private readonly _otpExpiryMinutes = Number(process.env.OTP_EXPIRY_MINUTES) || 2;
   private readonly _rateLimitWindowMinutes = Number(process.env.OTP_RATE_LIMIT_WINDOW_MINUTES) || 60;
   private readonly _rateLimitMax = Number(process.env.OTP_RATE_LIMIT_MAX) || 10;

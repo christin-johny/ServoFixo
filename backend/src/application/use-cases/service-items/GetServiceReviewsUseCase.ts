@@ -1,11 +1,10 @@
 import { IReviewRepository } from "../../../domain/repositories/IReviewRepository";
-import { Review } from "../../../domain/entities/Review";
-import { ILogger } from "../../interfaces/ILogger";
+import { Review } from "../../../domain/entities/Review"; 
+import { IGetServiceReviewsUseCase } from "../../interfaces/use-cases/serviceItem/IServiceItemUseCases";
 
-export class GetServiceReviewsUseCase {
+export class GetServiceReviewsUseCase  implements IGetServiceReviewsUseCase{
   constructor(
-    private readonly _reviewRepo: IReviewRepository,
-    private readonly _logger: ILogger
+    private readonly _reviewRepo: IReviewRepository 
   ) {}
 
   async execute(serviceId: string, limit: number = 5): Promise<Review[]> {

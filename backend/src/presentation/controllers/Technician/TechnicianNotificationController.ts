@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "../../utils/StatusCodes";
 import { ErrorMessages } from "../../../application/constants/ErrorMessages";
-import { ILogger } from "../../../application/interfaces/ILogger";
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { GetNotificationHistoryUseCase } from "../../../application/use-cases/notification/GetNotificationHistoryUseCase";
 import { MarkNotificationAsReadUseCase } from "../../../application/use-cases/notification/MarkNotificationAsReadUseCase";
 import { MarkAllNotificationsAsReadUseCase } from "../../../application/use-cases/notification/MarkAllNotificationsAsReadUseCase";

@@ -1,9 +1,9 @@
-import { IUseCase } from "../../../interfaces/IUseCase";
+import { IUseCase } from "../../../interfaces/services/IUseCase";
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { IServiceCategoryRepository } from "../../../../domain/repositories/IServiceCategoryRepository";
 import { IServiceItemRepository } from "../../../../domain/repositories/IServiceItemRepository";
 import { IZoneRepository } from "../../../../domain/repositories/IZoneRepository";
-import { ILogger } from "../../../interfaces/ILogger"; 
+import { ILogger } from "../../../interfaces/services/ILogger"; 
 import { TechnicianResponseDto } from "../../../dto/technician/TechnicianResponseDto";
 import { TechnicianMapper } from "../../../mappers/TechnicianMapper";
 import { S3UrlHelper } from "../../../../infrastructure/storage/S3UrlHelper";

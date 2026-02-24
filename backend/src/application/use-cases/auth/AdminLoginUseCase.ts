@@ -1,14 +1,15 @@
 import { IAdminRepository } from "../../../domain/repositories/IAdminRepository";
-import { IPasswordHasher } from "../../interfaces/IPasswordHasher";
-import { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
+import { IPasswordHasher } from "../../interfaces/services/IPasswordHasher";
+import { IJwtService, JwtPayload } from "../../interfaces/services/IJwtService";
 import { AdminLoginDto } from "../../dto/auth/AuthDtos";
 import { AuthResultDto } from "../../dto/auth/AuthResultDto";
 import { ErrorMessages } from "../../constants/ErrorMessages";
-import { ICacheService } from "../../interfaces/ICacheService"; 
-import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { ICacheService } from "../../interfaces/services/ICacheService"; 
+import { ILogger } from "../../interfaces/services/ILogger";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents"; 
+import { IAdminLoginUseCase } from "../../interfaces/use-cases/auth/IAuthUseCases";
 
-export class AdminLoginUseCase {
+export class AdminLoginUseCase implements IAdminLoginUseCase {
   constructor(
     private readonly _adminRepository: IAdminRepository,
     private readonly _passwordHasher: IPasswordHasher,

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { IUseCase } from "../../../application/interfaces/IUseCase"; 
+import { IUseCase } from "../../../application/interfaces/services/IUseCase"; 
 import {
   ErrorMessages,
   SuccessMessages,
@@ -7,7 +7,7 @@ import {
 import { StatusCodes } from "../../utils/StatusCodes";
 import { refreshCookieOptions } from "../../../infrastructure/config/Cookie";
 import redis from "../../../infrastructure/redis/redisClient";
-import { ILogger } from "../../../application/interfaces/ILogger";
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
 interface AuthResult {

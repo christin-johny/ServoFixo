@@ -1,11 +1,9 @@
-import { IUseCase } from "../../../interfaces/IUseCase";
+import { IUseCase } from "../../../interfaces/services/IUseCase";
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
-import { ILogger } from "../../../interfaces/ILogger";
 
 export class DeleteTechnicianUseCase implements IUseCase<void, [string]> {
   constructor(
-    private readonly _technicianRepo: ITechnicianRepository,
-    private readonly _logger: ILogger
+    private readonly _technicianRepo: ITechnicianRepository
   ) {}
 
   async execute(id: string): Promise<void> {

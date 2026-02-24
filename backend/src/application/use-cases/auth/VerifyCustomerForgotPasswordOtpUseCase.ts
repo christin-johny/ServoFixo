@@ -1,13 +1,14 @@
 import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepository';
 import { IOtpSessionRepository } from '../../../domain/repositories/IOtpSessionRepository';
-import { IPasswordHasher } from '../../interfaces/IPasswordHasher';
+import { IPasswordHasher } from '../../interfaces/services/IPasswordHasher';
 import {CustomerForgotPasswordVerifyDto,} from '../../dto/auth/AuthDtos';
 import { ErrorMessages } from '../../constants/ErrorMessages';
 import { OtpContext } from '../../../domain/enums/OtpContext';
 import { Customer } from '../../../domain/entities/Customer';
-import { ILogger } from '../../interfaces/ILogger'; 
+import { ILogger } from '../../interfaces/services/ILogger'; 
+import { IVerifyCustomerForgotPasswordOtpUseCase } from '../../interfaces/use-cases/auth/IAuthUseCases';
 
-export class VerifyCustomerForgotPasswordOtpUseCase {
+export class VerifyCustomerForgotPasswordOtpUseCase implements IVerifyCustomerForgotPasswordOtpUseCase{
   constructor(
     private readonly _customerRepository: ICustomerRepository,
     private readonly _otpSessionRepository: IOtpSessionRepository,

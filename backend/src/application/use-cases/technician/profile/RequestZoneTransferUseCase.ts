@@ -1,25 +1,18 @@
-import { IUseCase } from "../../../interfaces/IUseCase";
-import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
-import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
+ import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { ZoneRequest } from "../../../../domain/value-objects/TechnicianTypes";
 import { ErrorMessages } from "../../../constants/ErrorMessages";
+import { RequestZoneTransferInput } from "../../../dto/technician/TechnicianProfileDto";
+import { IRequestZoneTransferUseCase } from "../../../interfaces/use-cases/technician/ITechnicianProfileUseCases";
 
-export interface RequestZoneTransferInput {
-  currentZoneId: string;
-  requestedZoneId: string;
-}
 
-export class RequestZoneTransferUseCase implements IUseCase<void, [string, RequestZoneTransferInput]> {
+
+export class RequestZoneTransferUseCase implements IRequestZoneTransferUseCase {
   constructor(
-    private readonly _technicianRepo: ITechnicianRepository,
-    private readonly _logger: ILogger
-    // TODO: Inject IJobRepository here to check for active jobs (PRD Rule 5.1)
+    private readonly _technicianRepo: ITechnicianRepository 
   ) {}
 
   async execute(technicianId: string, input: RequestZoneTransferInput): Promise<void> {
-    const logData = { technicianId, toZone: input.requestedZoneId };
-
+ 
     const technician = await this._technicianRepo.findById(technicianId);
     if (!technician) {
       throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);

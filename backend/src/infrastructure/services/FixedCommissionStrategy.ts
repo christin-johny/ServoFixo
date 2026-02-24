@@ -1,4 +1,4 @@
-import { ICommissionStrategy } from "../../application/interfaces/ICommissionStrategy";
+import { ICommissionStrategy } from "../../application/interfaces/services/ICommissionStrategy";
 
 export class FixedCommissionStrategy implements ICommissionStrategy {
   private readonly RATE = 10; 

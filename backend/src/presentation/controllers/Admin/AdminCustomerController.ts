@@ -1,16 +1,16 @@
 import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
-import { IUseCase } from "../../../application/interfaces/IUseCase";  
+import { IUseCase } from "../../../application/interfaces/services/IUseCase";  
 import {
   CustomerFilterSchema,
   CustomerUpdateSchema,
 } from "../../../application/dto/customer/AdminCustomerDtos";
 import { StatusCodes } from "../../utils/StatusCodes";
-import { ErrorMessages } from "../../../application/constants/ErrorMessages";
-import { mapToResponseDto } from "../../../application/use-cases/customer/GetAllCustomersUseCase";
-import { ILogger } from "../../../application/interfaces/ILogger";
+import { ErrorMessages } from "../../../application/constants/ErrorMessages"; 
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { Customer } from "../../../domain/entities/Customer";
+import { mapToResponseDto } from "../../../application/mappers/CustomerMapper";
 
 interface CustomerFilterDto {
   search?: string;

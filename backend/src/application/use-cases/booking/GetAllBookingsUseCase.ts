@@ -1,20 +1,11 @@
-import { IUseCase } from "../../interfaces/IUseCase";
-import { IBookingRepository, PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
+ import { IBookingRepository, PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
 import { BookingStatus } from "../../../domain/value-objects/BookingTypes";
+import { GetAllBookingsDto } from "../../dto/booking/BookingDto";
+import { IGetAllBookingsUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
 
-export interface GetAllBookingsDto {
-  page: number;
-  limit: number;
-  search?: string;  
-  status?: BookingStatus | BookingStatus[];
-  zoneId?: string;
-  categoryId?: string;  
-  startDate?: Date;
-  endDate?: Date;
-  sortBy?: "newest" | "oldest" | "updated";
-}
 
-export class GetAllBookingsUseCase implements IUseCase<PaginatedBookingResult, [GetAllBookingsDto]> {
+
+export class GetAllBookingsUseCase implements IGetAllBookingsUseCase {
   constructor(
     private readonly _bookingRepo: IBookingRepository
   ) {}

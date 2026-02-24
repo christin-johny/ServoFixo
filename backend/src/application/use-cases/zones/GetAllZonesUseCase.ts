@@ -2,19 +2,14 @@ import {
   IZoneRepository,
   ZoneQueryParams,
 } from "../../../domain/repositories/IZoneRepository";
-import { ZoneResponseDto } from "../../dto/zone/ZoneResponseDto";
+import { PaginatedZonesResponse } from "../../dto/zone/ZoneResponseDto";
 import { ZoneMapper } from "../../mappers/ZoneMapper";
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { IGetAllZonesUseCase } from "../../interfaces/use-cases/zone/IZoneUseCases";
 
-export interface PaginatedZonesResponse {
-  zones: ZoneResponseDto[];
-  total: number;
-  currentPage: number;
-  totalPages: number;
-}
 
-export class GetAllZonesUseCase {
+export class GetAllZonesUseCase implements IGetAllZonesUseCase {
   constructor(
     private readonly _zoneRepository: IZoneRepository,
     private readonly _logger: ILogger

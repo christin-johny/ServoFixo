@@ -1,7 +1,6 @@
 import { 
   NotificationType, 
-  NotificationStatus, 
-  RecipientType, 
+  NotificationStatus,  
   NotificationPriority 
 } from "../../../domain/value-objects/NotificationTypes";
 
@@ -24,4 +23,10 @@ export interface NotificationResponseDto {
   status: NotificationStatus;
   readAt?: Date;
   createdAt: Date;
+}
+
+export interface GetNotificationsInputDto {
+  recipientId: string;
+  page?: number;
+  limit?: number;
 }

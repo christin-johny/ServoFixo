@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
-import { IUseCase } from "../../../application/interfaces/IUseCase";
-import { ILogger } from "../../../application/interfaces/ILogger";
+import { IUseCase } from "../../../application/interfaces/services/IUseCase";
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { AdminForceAssignDto } from "../../../application/dto/admin/AdminForceAssignDto";
 import { AdminForceStatusDto } from "../../../application/dto/admin/AdminForceStatusDto"; 
 import { ErrorMessages } from "../../../application/constants/ErrorMessages";

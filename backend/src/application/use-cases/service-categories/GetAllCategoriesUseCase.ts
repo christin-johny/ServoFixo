@@ -1,20 +1,13 @@
 import { IServiceCategoryRepository, CategoryQueryParams } from '../../../domain/repositories/IServiceCategoryRepository';
-import { CategoryResponseDto } from '../../dto/category/CategoryResponseDto';
+import { PaginatedCategoriesResponse } from '../../dto/category/CategoryResponseDto';
+import { IGetAllCategoriesUseCase } from '../../interfaces/use-cases/category/ICategoryUseCases';
 import { CategoryMapper } from '../../mappers/CategoryMapper';
-import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 
-export interface PaginatedCategoriesResponse {
-  categories: CategoryResponseDto[]; 
-  total: number;
-  currentPage: number;
-  totalPages: number;
-}
+ 
 
-export class GetAllCategoriesUseCase {
+export class GetAllCategoriesUseCase implements IGetAllCategoriesUseCase{
   constructor(
-    private readonly _categoryRepo: IServiceCategoryRepository,
-    private readonly _logger: ILogger
+    private readonly _categoryRepo: IServiceCategoryRepository
   ) {}
 
   async execute(params: CategoryQueryParams): Promise<PaginatedCategoriesResponse> {    
