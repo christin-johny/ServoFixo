@@ -23,7 +23,9 @@ export const BOOKING_ENDPOINTS = {
   CANCEL: (id: string) => `${VERSION}/bookings/${id}/cancel/customer`,
   EXTRA_CHARGES: (bookingId: string, chargeId: string) => 
     `${VERSION}/bookings/${bookingId}/extras/${chargeId}/respond`, 
-  GET_REVIEWS: (serviceId: string) => `${VERSION}/customer/services/${serviceId}/reviews`
+  GET_REVIEWS: (serviceId: string) => `${VERSION}/customer/services/${serviceId}/reviews`,
+  VERIFY_PAYMENT: (id: string) => `${VERSION}/bookings/${id}/payment/verify`,
+  RATE: (id: string) => `${VERSION}/bookings/${id}/rate`
 };
 export const ADMIN_TECHNICIAN_ENDPOINTS = {
   

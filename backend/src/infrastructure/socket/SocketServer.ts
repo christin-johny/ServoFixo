@@ -1,6 +1,6 @@
 import { Server as SocketIOServer } from "socket.io";
 import { Server as HTTPServer } from "http";
-import { ILogger } from "../../application/interfaces/ILogger"; 
+import { ILogger } from "../../application/interfaces/services/ILogger"; 
 
 export class SocketServer {
   private static _io: SocketIOServer;

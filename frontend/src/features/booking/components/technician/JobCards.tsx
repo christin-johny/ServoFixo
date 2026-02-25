@@ -33,7 +33,7 @@ export const CustomerCard = ({ job }: { job: JobDetails }) => {
 export const LocationCard = ({ job, isWorking }: { job: JobDetails, isWorking: boolean }) => {
   const openMaps = () => {
     if (!job?.location?.coordinates) return;
-    window.open(`http://googleusercontent.com/maps.google.com/?q=${job.location.coordinates.lat},${job.location.coordinates.lng}`, '_blank');
+    window.open(`http://maps.google.com/?q=${job.location.coordinates.lat},${job.location.coordinates.lng}`, '_blank');
   };
 
   return (

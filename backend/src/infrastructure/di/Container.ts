@@ -155,8 +155,6 @@ import { GetAllBookingsUseCase } from "../../application/use-cases/booking/GetAl
 import { GetRecommendedTechniciansUseCase } from "../../application/use-cases/booking/GetRecommendedTechniciansUseCase";
 import { RedisOtpSessionRepository } from "../redis/RedisOtpSessionRepository";
 
-// INFRASTRUCTURE SERVICE INSTANTIATION
-
 const imageService = new S3ImageService();
 const emailService = new NodemailerEmailService();
 const passwordHasher = new BcryptPasswordHasher();
@@ -168,610 +166,167 @@ const googleAuthService = new GoogleAuthService(
   process.env.GOOGLE_CLIENT_ID || ""
 );
 const otpSessionRepo = new RedisOtpSessionRepository(cacheService);
-// ZONE MODULE WIRING
 const zoneRepo = new ZoneMongoRepository();
-const createZoneUseCase = new CreateZoneUseCase(zoneRepo, logger);
+const createZoneUseCase  = new CreateZoneUseCase(zoneRepo, logger);
 const getAllZonesUseCase = new GetAllZonesUseCase(zoneRepo, logger);
 const editZoneUseCase = new EditZoneUseCase(zoneRepo, logger);
 const deleteZoneUseCase = new DeleteZoneUseCase(zoneRepo, logger);
 
 export const zoneService = new ZoneService(zoneRepo);
-const findZoneByLocationUseCase = new FindZoneByLocationUseCase(
-  zoneService,
-  logger
-);
-export const customerZoneController = new CustomerZoneController(
-  findZoneByLocationUseCase,
-  logger
-);
-export const adminZoneController = new AdminZoneController(
-  createZoneUseCase,
-  getAllZonesUseCase,
-  deleteZoneUseCase,
-  editZoneUseCase,
-  logger
-);
 
-// CATEGORY MODULE WIRING
+const findZoneByLocationUseCase = new FindZoneByLocationUseCase(zoneService );
+
+export const customerZoneController = new CustomerZoneController(findZoneByLocationUseCase,logger);
+
+export const adminZoneController = new AdminZoneController(createZoneUseCase,getAllZonesUseCase,deleteZoneUseCase,editZoneUseCase,logger);
 
 const categoryRepo = new ServiceCategoryMongoRepository();
-const createCategoryUseCase = new CreateCategoryUseCase(
-  categoryRepo,
-  imageService,
-  logger
-);
-const getAllCategoriesUseCase = new GetAllCategoriesUseCase(
-  categoryRepo,
-  logger
-);
-const editCategoryUseCase = new EditCategoryUseCase(
-  categoryRepo,
-  imageService,
-  logger
-);
-
+const createCategoryUseCase = new CreateCategoryUseCase(categoryRepo,imageService,logger);
+const getAllCategoriesUseCase = new GetAllCategoriesUseCase(categoryRepo, );
+const editCategoryUseCase = new EditCategoryUseCase(categoryRepo,imageService,logger);
 const deleteCategoryUseCase = new DeleteCategoryUseCase(categoryRepo, logger);
+const toggleCategoryStatusUseCase = new ToggleCategoryStatusUseCase(categoryRepo,logger);
 
-const toggleCategoryStatusUseCase = new ToggleCategoryStatusUseCase(
-  categoryRepo,
-  logger
-);
-
-export const adminCategoryController = new AdminCategoryController(
-  createCategoryUseCase,
-  getAllCategoriesUseCase,
-  editCategoryUseCase,
-  deleteCategoryUseCase,
-  toggleCategoryStatusUseCase,
-  logger
-);
-
-// SERVICE ITEM MODULE WIRING
+export const adminCategoryController = new AdminCategoryController( createCategoryUseCase, getAllCategoriesUseCase, editCategoryUseCase, deleteCategoryUseCase, toggleCategoryStatusUseCase, logger);
 
 const serviceItemRepo = new ServiceItemMongoRepository();
-const createServiceItemUseCase = new CreateServiceItemUseCase(
-  serviceItemRepo,
-  imageService,
-  logger
-);
-const getAllServiceItemsUseCase = new GetAllServiceItemsUseCase(
-  serviceItemRepo,
-  logger
-);
+const createServiceItemUseCase = new CreateServiceItemUseCase( serviceItemRepo, imageService, logger);
+const getAllServiceItemsUseCase = new GetAllServiceItemsUseCase( serviceItemRepo, );
+const deleteServiceItemUseCase = new DeleteServiceItemUseCase( serviceItemRepo, logger);
+const editServiceItemUseCase = new EditServiceItemUseCase( serviceItemRepo, imageService, logger);
+const toggleServiceItemStatusUseCase = new ToggleServiceItemStatusUseCase( serviceItemRepo, logger);
 
-const deleteServiceItemUseCase = new DeleteServiceItemUseCase(
-  serviceItemRepo,
-  logger
-);
-const editServiceItemUseCase = new EditServiceItemUseCase(
-  serviceItemRepo,
-  imageService,
-  logger
-);
-
-const toggleServiceItemStatusUseCase = new ToggleServiceItemStatusUseCase(
-  serviceItemRepo,
-  logger
-);
-
-export const adminServiceItemController = new AdminServiceItemController(
-  createServiceItemUseCase,
-  getAllServiceItemsUseCase,
-  deleteServiceItemUseCase,
-  editServiceItemUseCase,
-  toggleServiceItemStatusUseCase,
-  logger
-);
-
-// CUSTOMER MODULE WIRING (Admin & Profile)
+export const adminServiceItemController = new AdminServiceItemController( createServiceItemUseCase, getAllServiceItemsUseCase, deleteServiceItemUseCase, editServiceItemUseCase, toggleServiceItemStatusUseCase, logger);
+ 
 const addressRepo = new AddressMongoRepository();
 const customerRepo = new CustomerMongoRepository();
-const getAllCustomersUseCase = new GetAllCustomersUseCase(customerRepo, logger);
+const getAllCustomersUseCase = new GetAllCustomersUseCase(customerRepo );
 const updateCustomerUseCase = new UpdateCustomerUseCase(customerRepo, logger);
 const getCustomerByIdUseCase = new GetCustomerByIdUseCase(customerRepo, logger);
-const deleteCustomerUseCase = new DeleteCustomerUseCase(customerRepo, logger);
-const getCustomerProfileUseCase = new GetCustomerProfileUseCase(
-  customerRepo,
-  addressRepo,
-  logger
-);
-const uploadAvatarUseCase = new UploadAvatarUseCase(
-  customerRepo,
-  imageService,
-  logger
-);
-const changePasswordUseCase = new ChangePasswordUseCase(
-  customerRepo,
-  passwordHasher,
-  logger
-);
-export const customerProfileController = new CustomerProfileController(
-  getCustomerProfileUseCase,
-  updateCustomerUseCase,
-  deleteCustomerUseCase,
-  uploadAvatarUseCase,
-  changePasswordUseCase,
-  logger
-);
+const deleteCustomerUseCase = new DeleteCustomerUseCase(customerRepo );
+const getCustomerProfileUseCase = new GetCustomerProfileUseCase( customerRepo,  logger);
+const uploadAvatarUseCase = new UploadAvatarUseCase( customerRepo, imageService);
+const changePasswordUseCase = new ChangePasswordUseCase( customerRepo, passwordHasher, logger);
+
+export const customerProfileController = new CustomerProfileController( getCustomerProfileUseCase, updateCustomerUseCase, deleteCustomerUseCase, uploadAvatarUseCase, changePasswordUseCase);
 
 const getAddressesUseCase = new GetAddressesUseCase(addressRepo, logger);
 
-export const adminCustomerController = new AdminCustomerController(
-  getAllCustomersUseCase,
-  updateCustomerUseCase,
-  getCustomerByIdUseCase,
-  deleteCustomerUseCase,
-  getAddressesUseCase,
-  logger
-);
+export const adminCustomerController = new AdminCustomerController( getAllCustomersUseCase,updateCustomerUseCase,getCustomerByIdUseCase, deleteCustomerUseCase, getAddressesUseCase, logger);
 
-// CUSTOMER AUTH MODULE WIRING
+const reqRegOtpUseCase = new RequestCustomerRegistrationOtpUseCase( customerRepo,otpSessionRepo, emailService, logger);
+const verRegOtpUseCase = new VerifyCustomerRegistrationOtpUseCase( customerRepo, otpSessionRepo, passwordHasher, jwtService, cacheService, logger);
+const custLoginUseCase = new CustomerLoginUseCase(  customerRepo, passwordHasher, jwtService, cacheService, logger);
+const reqForgotOtpUseCase = new RequestCustomerForgotPasswordOtpUseCase( customerRepo, otpSessionRepo, emailService, logger);
+const verForgotOtpUseCase = new VerifyCustomerForgotPasswordOtpUseCase( customerRepo,  otpSessionRepo,  passwordHasher, logger);
+const googleLoginUseCase = new CustomerGoogleLoginUseCase( customerRepo,jwtService, googleAuthService, cacheService, logger);
 
-const reqRegOtpUseCase = new RequestCustomerRegistrationOtpUseCase(
-  customerRepo,
-  otpSessionRepo,
-  emailService,
-  logger
-);
-const verRegOtpUseCase = new VerifyCustomerRegistrationOtpUseCase(
-  customerRepo,
-  otpSessionRepo,
-  passwordHasher,
-  jwtService,
-  cacheService,
-  logger
-);
-const custLoginUseCase = new CustomerLoginUseCase(
-  customerRepo,
-  passwordHasher,
-  jwtService,
-  cacheService,
-  logger
-);
-const reqForgotOtpUseCase = new RequestCustomerForgotPasswordOtpUseCase(
-  customerRepo,
-  otpSessionRepo,
-  emailService,
-  logger
-);
-const verForgotOtpUseCase = new VerifyCustomerForgotPasswordOtpUseCase(
-  customerRepo,
-  otpSessionRepo,
-  passwordHasher,
-  logger
-);
-const googleLoginUseCase = new CustomerGoogleLoginUseCase(
-  customerRepo,
-  jwtService,
-  googleAuthService,
-  cacheService,
-  logger
-);
+export const customerAuthController = new CustomerAuthController( reqRegOtpUseCase, verRegOtpUseCase, custLoginUseCase,reqForgotOtpUseCase,  verForgotOtpUseCase,  googleLoginUseCase, logger);
 
-export const customerAuthController = new CustomerAuthController(
-  reqRegOtpUseCase,
-  verRegOtpUseCase,
-  custLoginUseCase,
-  reqForgotOtpUseCase,
-  verForgotOtpUseCase,
-  googleLoginUseCase,
-  logger
-);
+const getMostBookedUseCase = new GetMostBookedServicesUseCase( serviceItemRepo, );
+const getServiceListingUseCase = new GetServiceListingUseCase( serviceItemRepo, );
+const getServiceByIdUseCase = new GetServiceByIdUseCase( serviceItemRepo, logger);
 
-// CUSTOMER SERVICE MODULE WIRING (Home/Listing)
-
-const getMostBookedUseCase = new GetMostBookedServicesUseCase(
-  serviceItemRepo,
-  logger
-);
-const getServiceListingUseCase = new GetServiceListingUseCase(
-  serviceItemRepo,
-  logger
-);
-const getServiceByIdUseCase = new GetServiceByIdUseCase(
-  serviceItemRepo,
-  logger
-);
-
-export const customerCategoryController = new CustomerCategoryController(
-  getAllCategoriesUseCase,
-  logger
-);
+export const customerCategoryController = new CustomerCategoryController( getAllCategoriesUseCase, logger);
 
 const reviewRepo = new ReviewMongoRepository();
+const getServiceReviewsUseCase = new GetServiceReviewsUseCase(reviewRepo);
 
-const getServiceReviewsUseCase = new GetServiceReviewsUseCase(reviewRepo, logger);
+export const customerServiceController = new CustomerServiceController( getMostBookedUseCase, getServiceListingUseCase, getServiceByIdUseCase, getServiceReviewsUseCase, logger);
 
-export const customerServiceController = new CustomerServiceController(
-  getMostBookedUseCase,
-  getServiceListingUseCase,
-  getServiceByIdUseCase,
-  getServiceReviewsUseCase,
-  logger
-);
-
-const addAddressUseCase = new AddAddressUseCase(
-  addressRepo,
-  zoneService,
-  logger
-);
-const updateAddressUseCase = new UpdateAddressUseCase(
-  addressRepo,
-  zoneService,
-  logger
-);
+const addAddressUseCase = new AddAddressUseCase( addressRepo, zoneService, logger);
+const updateAddressUseCase = new UpdateAddressUseCase( addressRepo, zoneService, logger);
 const deleteAddressUseCase = new DeleteAddressUseCase(addressRepo, logger);
-export const customerAddressController = new CustomerAddressController(
-  addAddressUseCase,
-  updateAddressUseCase,
-  getAddressesUseCase,
-  deleteAddressUseCase,
-  logger
-);
+
+export const customerAddressController = new CustomerAddressController(addAddressUseCase, updateAddressUseCase, getAddressesUseCase, deleteAddressUseCase, logger);
 
 export const technicianRepo = new TechnicianMongoRepository();
 
-const reqTechnicianRegOtpUseCase = new RequestTechnicianRegistrationOtpUseCase(
-  technicianRepo,
-  otpSessionRepo,
-  emailService,
-  logger
-);
-const verTechnicianRegOtpUseCase = new VerifyTechnicianRegistrationOtpUseCase(
-  technicianRepo,
-  otpSessionRepo,
-  passwordHasher,
-  jwtService,
-  cacheService,
-  logger
-);
-const technicianLoginUseCase = new TechnicianLoginUseCase(
-  technicianRepo,
-  passwordHasher,
-  jwtService,
-  cacheService,
-  logger
-);
-const reqTechForgotOtpUseCase = new RequestTechnicianForgotPasswordOtpUseCase(
-  technicianRepo,
-  otpSessionRepo,
-  emailService,
-  logger
-);
+const reqTechnicianRegOtpUseCase = new RequestTechnicianRegistrationOtpUseCase( technicianRepo, otpSessionRepo, emailService, logger);
+const verTechnicianRegOtpUseCase = new VerifyTechnicianRegistrationOtpUseCase( technicianRepo, otpSessionRepo, passwordHasher, jwtService, cacheService, logger);
+const technicianLoginUseCase = new TechnicianLoginUseCase( technicianRepo, passwordHasher,jwtService, cacheService, logger);
+const reqTechForgotOtpUseCase = new RequestTechnicianForgotPasswordOtpUseCase( technicianRepo, otpSessionRepo, emailService, logger);
+const verTechForgotOtpUseCase = new VerifyTechnicianForgotPasswordOtpUseCase( technicianRepo,otpSessionRepo, passwordHasher, logger);
 
-const verTechForgotOtpUseCase = new VerifyTechnicianForgotPasswordOtpUseCase(
-  technicianRepo,
-  otpSessionRepo,
-  passwordHasher,
-  logger
-);
+export const technicianAuthController = new TechnicianAuthController( reqTechnicianRegOtpUseCase, verTechnicianRegOtpUseCase, technicianLoginUseCase, reqTechForgotOtpUseCase, verTechForgotOtpUseCase, logger);
 
-export const technicianAuthController = new TechnicianAuthController(
-  reqTechnicianRegOtpUseCase,
-  verTechnicianRegOtpUseCase,
-  technicianLoginUseCase,
-  reqTechForgotOtpUseCase,
-  verTechForgotOtpUseCase,
-  logger
-);
-
-// --- ADMIN AUTH MODULE WIRING ---
 const adminRepo = new AdminMongoRepository();
+const adminLoginUseCase = new AdminLoginUseCase( adminRepo, passwordHasher, jwtService, cacheService, logger);
 
-const adminLoginUseCase = new AdminLoginUseCase(
-  adminRepo,
-  passwordHasher,
-  jwtService,
-  cacheService,
-  logger
-);
+export const adminAuthController = new AdminAuthController( adminLoginUseCase, logger);
 
-export const adminAuthController = new AdminAuthController(
-  adminLoginUseCase,
-  logger
-);
+const refreshTokenUseCase = new RefreshTokenUseCase( jwtService, customerRepo, cacheService, technicianRepo, logger);
 
-// TOKEN MANAGEMENT WIRING
+export const authTokenController = new AuthTokenController(refreshTokenUseCase);
 
-const refreshTokenUseCase = new RefreshTokenUseCase(
-  jwtService,
-  customerRepo,
-  cacheService,
-  technicianRepo,
-  logger
-);
+const technicianOnboardingUseCase = new TechnicianOnboardingUseCase( technicianRepo,logger);
+const getTechnicianProfileUseCase = new GetTechnicianProfileUseCase( technicianRepo, categoryRepo, serviceItemRepo,zoneRepo, logger);
+const uploadTechnicianFileUseCase = new UploadTechnicianFileUseCase( imageService);
+const toggleOnlineStatusUseCase = new ToggleOnlineStatusUseCase( technicianRepo, logger);
+const resubmitProfileUseCase = new ResubmitProfileUseCase( technicianRepo);
+const requestServiceAddUseCase = new RequestServiceAddUseCase( technicianRepo, logger);
+const requestZoneTransferUseCase = new RequestZoneTransferUseCase( technicianRepo);
+const requestBankUpdateUseCase = new RequestBankUpdateUseCase( technicianRepo);
+const dismissTechnicianRequestUseCase = new DismissTechnicianRequestUseCase( technicianRepo, logger);
 
-export const authTokenController = new AuthTokenController(
-  refreshTokenUseCase,
-  logger
-);
+export const technicianProfileController = new TechnicianProfileController(technicianOnboardingUseCase, getTechnicianProfileUseCase, uploadTechnicianFileUseCase,toggleOnlineStatusUseCase, resubmitProfileUseCase, requestServiceAddUseCase,  requestZoneTransferUseCase, requestBankUpdateUseCase,  dismissTechnicianRequestUseCase, logger);
 
-const technicianOnboardingUseCase = new TechnicianOnboardingUseCase(
-  technicianRepo,
-  logger
-);
-
-const getTechnicianProfileUseCase = new GetTechnicianProfileUseCase(
-  technicianRepo,
-  categoryRepo,
-  serviceItemRepo,
-  zoneRepo,
-  logger
-);
-const uploadTechnicianFileUseCase = new UploadTechnicianFileUseCase(
-  imageService,
-  logger
-);
-const toggleOnlineStatusUseCase = new ToggleOnlineStatusUseCase(
-  technicianRepo,
-  logger
-);
-const resubmitProfileUseCase = new ResubmitProfileUseCase(
-  technicianRepo,
-  logger
-);
-const requestServiceAddUseCase = new RequestServiceAddUseCase(
-  technicianRepo,
-  logger
-);
-const requestZoneTransferUseCase = new RequestZoneTransferUseCase(
-  technicianRepo,
-  logger
-);
-const requestBankUpdateUseCase = new RequestBankUpdateUseCase(
-  technicianRepo,
-  logger
-);
-
-const dismissTechnicianRequestUseCase = new DismissTechnicianRequestUseCase(
-  technicianRepo,
-  logger
-);
-// 2. Instantiate & Export Profile Controller
-export const technicianProfileController = new TechnicianProfileController(
-  technicianOnboardingUseCase,
-  getTechnicianProfileUseCase,
-  uploadTechnicianFileUseCase,
-  toggleOnlineStatusUseCase,
-  resubmitProfileUseCase,
-  requestServiceAddUseCase, // <--- Injected
-  requestZoneTransferUseCase,
-  requestBankUpdateUseCase, // <--- Injected
-  dismissTechnicianRequestUseCase,
-  logger
-);
-
-// --- RATE CARD & DATA MODULE ---
-
-// 3. Instantiate Commission Strategy
 const commissionStrategy = new FixedCommissionStrategy();
+const getTechnicianRateCardUseCase = new GetTechnicianRateCardUseCase( technicianRepo, serviceItemRepo, commissionStrategy, logger);
 
-// 4. Instantiate Rate Card Use Case (Injecting Strategy)
-const getTechnicianRateCardUseCase = new GetTechnicianRateCardUseCase(
-  technicianRepo,
-  serviceItemRepo,
-  commissionStrategy,
-  logger
-);
+export const technicianDataController = new TechnicianDataController(  getAllCategoriesUseCase,  getServiceListingUseCase,  getAllZonesUseCase,  getTechnicianRateCardUseCase,  logger);
 
-// 5. Instantiate Data Controller (Injecting Use Case)
-export const technicianDataController = new TechnicianDataController(
-  getAllCategoriesUseCase,
-  getServiceListingUseCase,
-  getAllZonesUseCase,
-  getTechnicianRateCardUseCase,
-  logger
+const getVerificationQueueUseCase = new GetVerificationQueueUseCase(technicianRepo);
+const getTechnicianFullProfileUseCase = new GetTechnicianFullProfileUseCase(  technicianRepo,  zoneRepo,  categoryRepo,  serviceItemRepo);
+const verifyTechnicianUseCase = new VerifyTechnicianUseCase(  technicianRepo);
+const getAllTechniciansUseCase = new GetAllTechniciansUseCase(  technicianRepo);
+const updateTechnicianUseCase = new UpdateTechnicianUseCase(technicianRepo
 );
-
-const getVerificationQueueUseCase = new GetVerificationQueueUseCase(
-  technicianRepo,
-  logger
-);
-
-const getTechnicianFullProfileUseCase = new GetTechnicianFullProfileUseCase(
-  technicianRepo,
-  zoneRepo,
-  categoryRepo,
-  serviceItemRepo,
-  logger
-);
-
-const verifyTechnicianUseCase = new VerifyTechnicianUseCase(
-  technicianRepo,
-  logger
-);
-const getAllTechniciansUseCase = new GetAllTechniciansUseCase(
-  technicianRepo,
-  logger
-);
-const updateTechnicianUseCase = new UpdateTechnicianUseCase(
-  technicianRepo,
-  logger
-);
-const deleteTechnicianUseCase = new DeleteTechnicianUseCase(
-  technicianRepo,
-  logger
-);
-const blockTechnicianUseCase = new BlockTechnicianUseCase(
-  technicianRepo,
-  logger
-);
+const deleteTechnicianUseCase = new DeleteTechnicianUseCase(  technicianRepo);
+const blockTechnicianUseCase = new BlockTechnicianUseCase(  technicianRepo);
 const notificationRepo = new NotificationMongoRepository();
 
-export const notificationService = new NotificationService(
-  notificationRepo,
-  logger
-);
+export const notificationService = new NotificationService(  notificationRepo,  logger);
 
-const getNotificationHistoryUseCase = new GetNotificationHistoryUseCase(
-  notificationRepo
-);
-const markNotificationAsReadUseCase = new MarkNotificationAsReadUseCase(
-  notificationRepo
-);
-const markAllNotificationsAsReadUseCase = new MarkAllNotificationsAsReadUseCase(
-  notificationRepo
-);
+const getNotificationHistoryUseCase = new GetNotificationHistoryUseCase(  notificationRepo);
+const markNotificationAsReadUseCase = new MarkNotificationAsReadUseCase(  notificationRepo);
+const markAllNotificationsAsReadUseCase = new MarkAllNotificationsAsReadUseCase(  notificationRepo);
 
-export const technicianNotificationController =
-  new TechnicianNotificationController(
-    getNotificationHistoryUseCase,
-    markNotificationAsReadUseCase,
-    markAllNotificationsAsReadUseCase,
-    logger
-  );
+export const technicianNotificationController =  new TechnicianNotificationController(  getNotificationHistoryUseCase,    markNotificationAsReadUseCase,    markAllNotificationsAsReadUseCase);
 
-  const resolveServiceRequestUseCase = new ResolveServiceRequestUseCase(
-  technicianRepo,
-  notificationService,
-  logger
-);
-
-const resolveZoneRequestUseCase = new ResolveZoneRequestUseCase(
-  technicianRepo,
-  notificationService,
-  logger
-);
-
-const resolveBankRequestUseCase = new ResolveBankRequestUseCase(
-  technicianRepo,
-  notificationService,
-  logger
-);
+const resolveServiceRequestUseCase = new ResolveServiceRequestUseCase(  technicianRepo,  notificationService,logger);
+const resolveZoneRequestUseCase = new ResolveZoneRequestUseCase(  technicianRepo,  notificationService,  logger);
+const resolveBankRequestUseCase = new ResolveBankRequestUseCase( technicianRepo,  notificationService,logger);
 const getRecommendedTechniciansUseCase = new GetRecommendedTechniciansUseCase(technicianRepo)
 
-export const adminTechnicianController = new AdminTechnicianController(
-  getVerificationQueueUseCase,
-  getTechnicianFullProfileUseCase,
-  verifyTechnicianUseCase,
-  getAllTechniciansUseCase,
-  updateTechnicianUseCase,
-  deleteTechnicianUseCase,
-  blockTechnicianUseCase,
-  resolveServiceRequestUseCase,
-  resolveZoneRequestUseCase,
-  resolveBankRequestUseCase,
-  getRecommendedTechniciansUseCase,
-  logger
-);
+export const adminTechnicianController = new AdminTechnicianController(getVerificationQueueUseCase,  getTechnicianFullProfileUseCase,  verifyTechnicianUseCase,  getAllTechniciansUseCase,  updateTechnicianUseCase,  deleteTechnicianUseCase,  blockTechnicianUseCase,  resolveServiceRequestUseCase,  resolveZoneRequestUseCase,  resolveBankRequestUseCase,  getRecommendedTechniciansUseCase,logger);
  
-
 export const bookingRepo = new BookingMongoRepository();
  
-const createBookingUseCase = new CreateBookingUseCase(
-  bookingRepo,
-  customerRepo,     
-  serviceItemRepo,  
-  technicianRepo, 
-  notificationService,  
-  zoneService,
-  logger
-);
-const respondToBookingUseCase = new RespondToBookingUseCase(
-  bookingRepo,
-  technicianRepo,
-  notificationService,
-  logger
-
-)
-const updateJobStatusUseCase = new UpdateJobStatusUseCase(
-  bookingRepo,
-  notificationService,
-  logger
-);
-const addExtraChargeUseCase = new AddExtraChargeUseCase(
-  bookingRepo,
-  notificationService,
-  imageService,
-  logger
-)
-const respondToExtraChargeUseCase = new RespondToExtraChargeUseCase(
-  bookingRepo,
-  notificationService,
-  logger
-)
-const completeJobUseCase = new CompleteJobUseCase(
-  bookingRepo,
-  paymentGateway,  
-  notificationService,
-  imageService,
-  serviceItemRepo,
-  logger  
-)
-
+const createBookingUseCase = new CreateBookingUseCase(bookingRepo,customerRepo,     serviceItemRepo,  technicianRepo, notificationService,  zoneService );
+const respondToBookingUseCase = new RespondToBookingUseCase(bookingRepo,technicianRepo,notificationService,logger)
+const updateJobStatusUseCase = new UpdateJobStatusUseCase(bookingRepo,notificationService,logger);
+const addExtraChargeUseCase = new AddExtraChargeUseCase(bookingRepo,notificationService,imageService )
+const respondToExtraChargeUseCase = new RespondToExtraChargeUseCase(  bookingRepo,  notificationService )
+const completeJobUseCase = new CompleteJobUseCase(bookingRepo,paymentGateway,  notificationService,imageService,serviceItemRepo )
 const getBookingDetailsUseCase = new GetBookingDetailsUseCase(bookingRepo);
 const customerCancelUseCase = new CustomerCancelBookingUseCase(bookingRepo, technicianRepo, notificationService, logger);
 const technicianCancelUseCase = new TechnicianCancelBookingUseCase(bookingRepo,technicianRepo, notificationService, logger);
-
-
-const rateTechnicianUseCase = new RateTechnicianUseCase(
-  bookingRepo,
-  technicianRepo,
-  reviewRepo, 
-  serviceItemRepo,
-  logger
-);
-const getTechnicianHistoryUseCase = new GetTechnicianHistoryUseCase(bookingRepo,logger)
+const rateTechnicianUseCase = new RateTechnicianUseCase(bookingRepo,technicianRepo,reviewRepo, serviceItemRepo );
+const getTechnicianHistoryUseCase = new GetTechnicianHistoryUseCase(bookingRepo )
 const getCustomerBookingsUseCase = new GetCustomerBookingsUseCase(bookingRepo)
-
 const paymentService = new RazorpayService();
+const verifyPaymentUseCase = new VerifyPaymentUseCase(bookingRepo,  technicianRepo,  paymentService,  notificationService );
 
-const verifyPaymentUseCase = new VerifyPaymentUseCase(
-  bookingRepo,
-  technicianRepo,
-  paymentService,
-  notificationService,
-  logger
-);
+export const bookingController = new BookingController(  createBookingUseCase,  respondToBookingUseCase,  updateJobStatusUseCase,  addExtraChargeUseCase,  respondToExtraChargeUseCase,  completeJobUseCase,  getBookingDetailsUseCase, customerCancelUseCase,  technicianCancelUseCase,  rateTechnicianUseCase, getTechnicianHistoryUseCase,  getCustomerBookingsUseCase,  verifyPaymentUseCase,  logger);
 
-export const bookingController = new BookingController(
-  createBookingUseCase,
-  respondToBookingUseCase,
-  updateJobStatusUseCase,
-  addExtraChargeUseCase,
-  respondToExtraChargeUseCase,
-  completeJobUseCase,
-  getBookingDetailsUseCase, 
-  customerCancelUseCase, 
-  technicianCancelUseCase,
-  rateTechnicianUseCase,
-  getTechnicianHistoryUseCase,
-  getCustomerBookingsUseCase,
-  verifyPaymentUseCase,
-  logger
-);
-const adminForceAssignUseCase = new AdminForceAssignUseCase(
-  bookingRepo,
-  technicianRepo,
-  notificationService,
-  logger
-);
-const adminForceStatusUseCase = new AdminForceStatusUseCase(
-    bookingRepo,
-    technicianRepo, 
-    notificationService,
-    logger
-);
-// 2. Initialize Controller
- 
-const adminUpdatePaymentUseCase = new AdminUpdatePaymentUseCase(bookingRepo, logger);
+const adminForceAssignUseCase = new AdminForceAssignUseCase(  bookingRepo,  technicianRepo,notificationService,logger);
+const adminForceStatusUseCase = new AdminForceStatusUseCase(bookingRepo,technicianRepo, notificationService );
+const adminUpdatePaymentUseCase = new AdminUpdatePaymentUseCase(bookingRepo );
 const getAllBookingsUseCase = new GetAllBookingsUseCase(bookingRepo)
-export const adminBookingController = new AdminBookingController(
-    adminForceAssignUseCase,
-    adminForceStatusUseCase, 
-    adminUpdatePaymentUseCase,
-    getAllBookingsUseCase,
-    logger
-);
-const processPaymentUseCase = new ProcessPaymentUseCase(
-  bookingRepo,
-  technicianRepo,
-  notificationService,
-  logger
-);
 
+export const adminBookingController = new AdminBookingController(adminForceAssignUseCase,adminForceStatusUseCase, adminUpdatePaymentUseCase,getAllBookingsUseCase,logger);
 
-export const paymentWebhookController = new PaymentWebhookController(
-  processPaymentUseCase,
-  logger
-);
+const processPaymentUseCase = new ProcessPaymentUseCase(bookingRepo,technicianRepo,notificationService,logger);
+
+export const paymentWebhookController = new PaymentWebhookController(processPaymentUseCase);

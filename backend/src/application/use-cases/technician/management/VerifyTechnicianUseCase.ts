@@ -1,13 +1,11 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
-import { IUseCase } from "../../../interfaces/IUseCase";
 import { VerifyTechnicianDto } from "../../../dto/technician/TechnicianVerificationDtos";
-import { ILogger } from "../../../interfaces/ILogger";
 import { ErrorMessages } from "../../../constants/ErrorMessages";
+import { IVerifyTechnicianUseCase } from "../../../interfaces/use-cases/technician/ITechnicianManagementUseCases";
 
-export class VerifyTechnicianUseCase implements IUseCase<void, [string, VerifyTechnicianDto]> {
+export class VerifyTechnicianUseCase implements IVerifyTechnicianUseCase{
   constructor(
-    private readonly _technicianRepo: ITechnicianRepository,
-    private readonly _logger: ILogger
+    private readonly _technicianRepo: ITechnicianRepository
   ) {}
 
   async execute(id: string, dto: VerifyTechnicianDto): Promise<void> {

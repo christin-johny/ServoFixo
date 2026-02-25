@@ -2,21 +2,16 @@ import {
   ITechnicianRepository,
   TechnicianFilterParams,
 } from "../../../../domain/repositories/ITechnicianRepository";
-import { IUseCase } from "../../../interfaces/IUseCase";
 import { TechnicianMapper } from "../../../mappers/TechnicianMapper";
-import { ILogger } from "../../../interfaces/ILogger";
 import { PaginatedTechnicianQueueResponse } from "../../../dto/technician/TechnicianQueueDto";
+import { IGetAllTechniciansUseCase } from "../../../interfaces/use-cases/technician/ITechnicianManagementUseCases";
 
 export class GetAllTechniciansUseCase
   implements
-    IUseCase<
-      PaginatedTechnicianQueueResponse,
-      [TechnicianFilterParams & { page: number; limit: number }]
-    >
+    IGetAllTechniciansUseCase
 {
   constructor(
-    private readonly _technicianRepo: ITechnicianRepository,
-    private readonly _logger: ILogger
+    private readonly _technicianRepo: ITechnicianRepository
   ) {}
 
   async execute(

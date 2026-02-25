@@ -1,12 +1,14 @@
 import { ErrorMessages } from "../../constants/ErrorMessages";
-import type { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
+import type { IJwtService, JwtPayload } from "../../interfaces/services/IJwtService";
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";  
-import { ICacheService } from "../../interfaces/ICacheService";
-import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { ICacheService } from "../../interfaces/services/ICacheService";
+import { ILogger } from "../../interfaces/services/ILogger";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents"; 
+import { RefreshTokenResponse } from "../../dto/auth/AuthDtos";
+import { IRefreshTokenUseCase } from "../../interfaces/use-cases/auth/IAuthUseCases";
 
-export class RefreshTokenUseCase {
+export class RefreshTokenUseCase implements IRefreshTokenUseCase {
   constructor(
     private readonly _jwtService: IJwtService,
     private readonly _customerRepository: ICustomerRepository, 
@@ -15,7 +17,7 @@ export class RefreshTokenUseCase {
     private readonly _logger: ILogger
   ) {}
 
-  async execute(refreshToken: string) {
+  async execute(refreshToken: string): Promise<RefreshTokenResponse> {
     if (!refreshToken) {
       throw new Error(ErrorMessages.UNAUTHORIZED);
     }

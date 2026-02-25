@@ -147,7 +147,15 @@ const Services: React.FC = () => {
             const newStatus = !categoryToToggle.isActive;
             await categoryRepo.toggleCategoryStatus(categoryToToggle.id, newStatus);
             showSuccess(`Category ${categoryToToggle.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
-            loadCategories();
+             
+            setCategories(prevCategories => 
+                prevCategories.map(cat => 
+                    cat.id === categoryToToggle.id 
+                        ? { ...cat, isActive: newStatus } 
+                        : cat
+                )
+            );
+
             setCategoryToToggle(null);
         } catch (err: unknown) {
             showError("Failed to update status. " + getErrorMessage(err));
@@ -201,8 +209,16 @@ const Services: React.FC = () => {
             const newStatus = !serviceToToggle.isActive;
             await serviceRepo.toggleServiceStatus(serviceToToggle.id, newStatus);
             showSuccess(`Service ${serviceToToggle.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
+ 
+            setServicesMap(prevMap => ({
+                ...prevMap,
+                [serviceToToggle.categoryId]: prevMap[serviceToToggle.categoryId].map(service => 
+                    service.id === serviceToToggle.id 
+                        ? { ...service, isActive: newStatus } 
+                        : service
+                )
+            }));
 
-            if (expandedId) loadServicesForCategory(expandedId);
             setServiceToToggle(null);
         } catch {
             showError("Failed to update status");
@@ -227,16 +243,29 @@ const Services: React.FC = () => {
         if (!deleteId || !deleteType) return;
         try {
             setIsDeleting(true);
+            
             if (deleteType === "CATEGORY") {
                 await categoryRepo.deleteCategory(deleteId);
                 showSuccess("Category deleted");
-                if (categories.length === 1 && page > 1) setPage(p => p - 1);
-                else loadCategories();
+                
+                if (categories.length === 1 && page > 1) {
+                    setPage(p => p - 1);
+                } else { 
+                    setCategories(prev => prev.filter(cat => cat.id !== deleteId));
+                    setTotal(prev => prev - 1);
+                }
             } else {
                 await serviceRepo.deleteService(deleteId);
                 showSuccess("Service deleted");
-                if (expandedId) loadServicesForCategory(expandedId);
+                 
+                if (expandedId) {
+                    setServicesMap(prevMap => ({
+                        ...prevMap,
+                        [expandedId]: prevMap[expandedId].filter(service => service.id !== deleteId)
+                    }));
+                }
             }
+            
             setDeleteId(null);
             setDeleteType(null);
         } catch (err: unknown) {

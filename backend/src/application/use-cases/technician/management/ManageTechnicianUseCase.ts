@@ -1,11 +1,10 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
-import { ILogger } from "../../../interfaces/ILogger";
 import { ErrorMessages } from "../../../constants/ErrorMessages";
+import { IManageTechnicianUseCase } from "../../../interfaces/use-cases/technician/ITechnicianManagementUseCases";
 
-export class ManageTechnicianUseCase {
+export class ManageTechnicianUseCase  implements IManageTechnicianUseCase{
   constructor(
-    private readonly _technicianRepo: ITechnicianRepository,
-    private readonly _logger: ILogger
+    private readonly _technicianRepo: ITechnicianRepository
   ) {}
 
   async toggleBlock(id: string, isSuspended: boolean, reason?: string): Promise<void> {

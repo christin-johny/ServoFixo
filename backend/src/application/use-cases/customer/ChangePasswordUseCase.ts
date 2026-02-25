@@ -1,18 +1,20 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { IPasswordHasher } from "../../interfaces/IPasswordHasher";
+import { IPasswordHasher } from "../../interfaces/services/IPasswordHasher";
 import { ErrorMessages } from "../../constants/ErrorMessages";
 import { Customer } from "../../../domain/entities/Customer";
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { IChangePasswordUseCase } from "../../interfaces/use-cases/customer/ICustomerUseCases";
+import { ChangePasswordRequestDto } from "../../dto/customer/CustomerAuthDto";
 
-export class ChangePasswordUseCase {
+export class ChangePasswordUseCase implements IChangePasswordUseCase{
   constructor(
     private readonly _customerRepository: ICustomerRepository,
     private readonly _passwordHasher: IPasswordHasher,
     private readonly _logger: ILogger
   ) {}
 
-  async execute(userId: string, data: any): Promise<void> {
+  async execute(userId: string, data: ChangePasswordRequestDto): Promise<void> {
     
 
     const { currentPassword, newPassword } = data;

@@ -1,16 +1,12 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
-import { IUseCase } from "../../../interfaces/IUseCase";
-import { ILogger } from "../../../interfaces/ILogger";
-import { ErrorMessages } from "../../../constants/ErrorMessages";
-import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
+import { ILogger } from "../../../interfaces/services/ILogger";
+import { ErrorMessages } from "../../../constants/ErrorMessages"; 
+import { IToggleOnlineStatusUseCase } from "../../../interfaces/use-cases/technician/ITechnicianProfileUseCases";
+import { ToggleStatusInput } from "../../../dto/technician/TechnicianProfileDto";
 
-export interface ToggleStatusInput {
-  technicianId: string;
-  lat?: number;
-  lng?: number;
-}
 
-export class ToggleOnlineStatusUseCase implements IUseCase<boolean, [ToggleStatusInput]> {
+
+export class ToggleOnlineStatusUseCase implements IToggleOnlineStatusUseCase {
   constructor(
     private readonly _technicianRepo: ITechnicianRepository,
     private readonly _logger: ILogger

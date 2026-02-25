@@ -1,23 +1,21 @@
 import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
-import { RequestMapper } from "../../utils/RequestMapper";
-import { IUseCase } from "../../../application/interfaces/IUseCase"; 
+import { RequestMapper } from "../../utils/RequestMapper"; 
 import { CreateZoneDto } from "../../../application/dto/zone/CreateZoneDto";
-import { UpdateZoneDto } from "../../../application/dto/zone/UpdateZoneDto";
-import { ZoneResponseDto } from "../../../application/dto/zone/ZoneResponseDto";
-import { PaginatedZonesResponse } from "../../../application/use-cases/zones/GetAllZonesUseCase";
-import { ILogger } from '../../../application/interfaces/ILogger';
+import { UpdateZoneDto } from "../../../application/dto/zone/UpdateZoneDto"; 
+import { ILogger } from '../../../application/interfaces/services/ILogger';
 import { ZoneQueryParams } from "../../../domain/repositories/IZoneRepository";
 import { StatusCodes } from "../../utils/StatusCodes";
 import { ErrorMessages, SuccessMessages } from "../../../application/constants/ErrorMessages";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { ICreateZoneUseCase, IGetAllZonesUseCase, IDeleteZoneUseCase, IEditZoneUseCase } from "../../../application/interfaces/use-cases/zone/IZoneUseCases";
 
 export class AdminZoneController extends BaseController {
   constructor(
-    private readonly _createZoneUseCase: IUseCase<ZoneResponseDto, [CreateZoneDto]>,
-    private readonly _getAllZonesUseCase: IUseCase<PaginatedZonesResponse, [ZoneQueryParams]>,
-    private readonly _deleteZoneUseCase: IUseCase<boolean, [string]>, 
-    private readonly _editZoneUseCase: IUseCase<ZoneResponseDto, [string, UpdateZoneDto]>,
+    private readonly _createZoneUseCase: ICreateZoneUseCase,
+    private readonly _getAllZonesUseCase: IGetAllZonesUseCase,
+    private readonly _deleteZoneUseCase: IDeleteZoneUseCase,
+    private readonly _editZoneUseCase: IEditZoneUseCase,
     _logger: ILogger
   ) {
     super(_logger);

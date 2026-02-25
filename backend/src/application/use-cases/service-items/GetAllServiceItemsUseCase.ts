@@ -1,20 +1,13 @@
 import { IServiceItemRepository, ServiceItemQueryParams } from '../../../domain/repositories/IServiceItemRepository';
-import { ServiceItemResponseDto } from '../../dto/serviceItem/ServiceItemResponseDto';
-import { ServiceItemMapper } from '../../mappers/ServiceItemMapper';
-import { ILogger } from '../../interfaces/ILogger';
-import { LogEvents } from '../../../infrastructure/logging/LogEvents';
+import { PaginatedServiceResponse } from '../../dto/serviceItem/ServiceItemResponseDto';
+import { IGetAllServiceItemsUseCase } from '../../interfaces/use-cases/serviceItem/IServiceItemUseCases';
+import { ServiceItemMapper } from '../../mappers/ServiceItemMapper'; 
 
-export interface PaginatedServiceResponse {
-    data: ServiceItemResponseDto[];
-    total: number;
-    currentPage: number;
-    totalPages: number;
-}
 
-export class GetAllServiceItemsUseCase {
+
+export class GetAllServiceItemsUseCase implements IGetAllServiceItemsUseCase{
   constructor(
-    private readonly _serviceRepo: IServiceItemRepository,
-    private readonly _logger: ILogger
+    private readonly _serviceRepo: IServiceItemRepository 
   ) {}
 
   async execute(params: ServiceItemQueryParams): Promise<PaginatedServiceResponse> {

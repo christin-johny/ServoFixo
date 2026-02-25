@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { IJwtService } from "../../application/interfaces/IJwtService";
+import { IJwtService } from "../../application/interfaces/services/IJwtService";
 import { ErrorMessages } from "../../application/constants/ErrorMessages";
 import { StatusCodes } from "../utils/StatusCodes";
 

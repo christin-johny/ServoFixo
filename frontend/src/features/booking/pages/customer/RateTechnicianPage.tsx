@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Star, CheckCircle2 } from 'lucide-react';
-import api from '../../../../lib/axiosClient';
+import { Star, CheckCircle2 } from 'lucide-react'; 
 import { useNotification } from '../../../notifications/hooks/useNotification';
 import Navbar from '../../../../layouts/customer/Navbar';
+import { rateBooking } from '../../api/customerBookingRepository';
 
 const RateTechnicianPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,10 +22,8 @@ const RateTechnicianPage: React.FC = () => {
 
     setSubmitting(true);
     try {
-        await api.post(`/bookings/${id}/rate`, {
-            rating,
-            comment
-        });
+        if (!id) return;
+        await rateBooking(id, { rating, comment });
         
         showSuccess("Thank you for your feedback!");
         navigate('/booking/history');  

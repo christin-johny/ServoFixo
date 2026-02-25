@@ -1,15 +1,15 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
-import { IUseCase } from "../../../interfaces/IUseCase";
 import { ResolvePartnerRequestDto } from "../../../dto/admin/ManageRequestDto";
-import { ILogger } from "../../../interfaces/ILogger";
+import { ILogger } from "../../../interfaces/services/ILogger";
 import { ErrorMessages } from "../../../constants/ErrorMessages";
 import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
 import { PartnerRequestType, RequestAction } from "../../../../domain/enums/RequestResolutionEnums";
 import { Technician } from "../../../../domain/entities/Technician";
 import { INotificationService } from "../../../services/INotificationService";
+import { IResolveBankRequestUseCase } from "../../../interfaces/use-cases/technician/ITechnicianManagementUseCases";
 
 export class ResolveBankRequestUseCase
-  implements IUseCase<void, [string, ResolvePartnerRequestDto]>
+  implements IResolveBankRequestUseCase
 {
   constructor(
     private readonly _technicianRepo: ITechnicianRepository,

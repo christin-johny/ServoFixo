@@ -1,20 +1,19 @@
 import { ICustomerRepository } from '../../../domain/repositories/ICustomerRepository';
 import { IOtpSessionRepository } from '../../../domain/repositories/IOtpSessionRepository';
-import { IEmailService } from '../../interfaces/IEmailService';
+import { IEmailService } from '../../interfaces/services/IEmailService';
 import { OtpContext } from '../../../domain/enums/OtpContext';
 import { OtpLoginInitDto, AuthResponse } from '../../dto/auth/AuthDtos';
 import { ErrorMessages } from '../../constants/ErrorMessages';
-import { OtpSession } from '../../../domain/entities/OtpSession';
-import { ILogger } from '../../interfaces/ILogger'; 
+import { OtpSession } from '../../../domain/entities/OtpSession'; 
+import { IRequestCustomerEmailOtpUseCase } from '../../interfaces/use-cases/auth/IAuthUseCases';
 
-export class RequestCustomerEmailOtpUseCase {
+export class RequestCustomerEmailOtpUseCase implements IRequestCustomerEmailOtpUseCase{
   private readonly _otpExpiryMinutes= Number(process.env.OTP_EXPIRY_MINUTES) || 5;
 
   constructor(
     private readonly _customerRepository: ICustomerRepository,
     private readonly _otpSessionRepository: IOtpSessionRepository,
-    private readonly _emailService: IEmailService,
-    private readonly _logger: ILogger
+    private readonly _emailService: IEmailService
   ) {}
 
   async execute(input: OtpLoginInitDto): Promise<AuthResponse> {

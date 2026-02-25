@@ -1,16 +1,18 @@
 import { ErrorMessages } from "../../constants/ErrorMessages";
 import { Customer } from "../../../domain/entities/Customer";
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { UpdateCustomerRequestDto } from "../../dto/customer/CustomerAuthDto";
+import { IUpdateCustomerUseCase } from "../../interfaces/use-cases/customer/ICustomerUseCases";
 
-export class UpdateCustomerUseCase {
+export class UpdateCustomerUseCase  implements IUpdateCustomerUseCase{
   constructor(
     private readonly _customerRepository: ICustomerRepository,
     private readonly _logger: ILogger
   ) {}
 
-  async execute(customerId: string, updateDto: any): Promise<Customer> {
+  async execute(customerId: string, updateDto:UpdateCustomerRequestDto) : Promise<Customer> {
     const existing = await this._customerRepository.findById(customerId);
     if (!existing) {
         this._logger.warn(LogEvents.PROFILE_UPDATE_FAILED, { customerId, reason: "Customer Not Found" });

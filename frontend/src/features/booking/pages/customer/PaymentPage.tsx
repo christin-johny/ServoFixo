@@ -5,7 +5,7 @@ import { ShieldCheck, Lock, CreditCard, ChevronRight, CheckCircle2 } from 'lucid
 import type { RootState } from '../../../../store/store';
 import { useNotification } from '../../../notifications/hooks/useNotification';
 import Navbar from '../../../../layouts/customer/Navbar';
-import { getBookingById } from '../../api/customerBookingRepository';
+import { getBookingById, verifyBookingPayment } from '../../api/customerBookingRepository';
 import api from '../../../../lib/axiosClient';
 import { setActiveBooking } from '../../../../store/customerSlice';
 
@@ -168,29 +168,25 @@ const PaymentPage: React.FC = () => {
       
       //   SUCCESS HANDLER
       handler: async function (response: RazorpayResponse) {
-        try {
-           if (!id) return;
-           
-           await api.post(`/bookings/${id}/payment/verify`, {
-             razorpay_order_id: response.razorpay_order_id,
-             razorpay_payment_id: response.razorpay_payment_id,
-             razorpay_signature: response.razorpay_signature
-           });
-           
-           dispatch(setActiveBooking({ id: id, status: 'PAID' }));
-           showSuccess("Payment Successful!");
-           navigate(`/booking/${id}/rate`);
-           
-        } catch (error: unknown) {
-           console.error("Verification failed", error);
-           
-           // If backend verification fails, we can check specific error types here if needed
-           showError("Payment verification failed. Please check your dashboard.");
-           
-           // Optional: Navigate to failure page if you want 'Hard Failure' handling
-           // navigate(`/booking/${id}/payment/failed`, { state: { amount: booking.payment.amount } });
-        }
-      },
+  try {
+    if (!id) return;
+
+    // Call the abstracted repository instead of hardcoding the URL
+    await verifyBookingPayment(id, {
+      orderId: response.razorpay_order_id,
+      paymentId: response.razorpay_payment_id,
+      signature: response.razorpay_signature
+    });
+
+    dispatch(setActiveBooking({ id: id, status: 'PAID' }));
+    showSuccess("Payment Successful!");
+    navigate(`/booking/${id}/rate`);
+
+  } catch (error: unknown) {
+    console.error("Verification failed", error);
+    showError("Payment verification failed. Please check your dashboard.");
+  }
+},
       
       //   USER CANCELLATION HANDLER (Correctly Typed)
       modal: {

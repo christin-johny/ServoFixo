@@ -1,13 +1,14 @@
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { INotificationService } from "../../services/INotificationService"; 
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { UpdateJobStatusDto } from "../../dto/booking/UpdateJobStatusDto";
 import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
 import { BookingStatus } from "../../../domain/value-objects/BookingTypes";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
+import { IUpdateJobStatusUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
 
-export class UpdateJobStatusUseCase {
+export class UpdateJobStatusUseCase implements IUpdateJobStatusUseCase {
   constructor(
     private readonly _bookingRepo: IBookingRepository,
     private readonly _notificationService: INotificationService,
@@ -43,7 +44,7 @@ export class UpdateJobStatusUseCase {
     await this._notificationService.send({
         recipientId: "ADMIN_BROADCAST_CHANNEL",
         recipientType: "ADMIN",
-        type: "ADMIN_STATUS_UPDATE" as any,
+        type: NotificationType.ADMIN_STATUS_UPDATE,
         title: `${NotificationMessages.TITLE_ADMIN_UPDATE}${input.status}`,
         body: `Tech ${input.technicianId} is now ${input.status}`,
         metadata: { 

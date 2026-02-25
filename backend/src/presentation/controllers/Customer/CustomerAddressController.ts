@@ -1,12 +1,10 @@
 import { NextFunction, Request, Response } from "express";
-import { BaseController } from "../BaseController";
-import { IUseCase } from "../../../application/interfaces/IUseCase"; 
-import { CreateAddressDto } from "../../../application/dto/address/CreateAddressDto";
-import { UpdateAddressDto } from "../../../application/dto/address/UpdateAddressDto"; 
-import { AddressResponseDto } from "../../../application/dto/address/AddressResponseDto"; 
-import { ILogger } from "../../../application/interfaces/ILogger"; 
+import { BaseController } from "../BaseController"; 
+import { CreateAddressDto } from "../../../application/dto/address/CreateAddressDto"; 
+import { ILogger } from "../../../application/interfaces/services/ILogger"; 
 import { LogEvents } from "../../../infrastructure/logging/LogEvents"; 
 import { ErrorMessages, SuccessMessages } from "../../../application/constants/ErrorMessages"; 
+import { IAddAddressUseCase, IUpdateAddressUseCase, IGetAddressesUseCase, IDeleteAddressUseCase } from "../../../application/interfaces/use-cases/address/IAddressUseCases";
 
 export interface AuthenticatedRequest extends Request {
   userId?: string; 
@@ -14,10 +12,10 @@ export interface AuthenticatedRequest extends Request {
 
 export class CustomerAddressController extends BaseController {
   constructor( 
-    private readonly _addAddressUseCase: IUseCase<AddressResponseDto, [CreateAddressDto, string]>, 
-    private readonly _updateAddressUseCase: IUseCase<AddressResponseDto, [string, string, UpdateAddressDto]>, 
-    private readonly _getAddressesUseCase: IUseCase<AddressResponseDto[], [string]>,  
-    private readonly _deleteAddressUseCase: IUseCase<boolean, [string, string]>,
+    private readonly _addAddressUseCase: IAddAddressUseCase,
+    private readonly _updateAddressUseCase: IUpdateAddressUseCase,
+    private readonly _getAddressesUseCase: IGetAddressesUseCase,
+    private readonly _deleteAddressUseCase: IDeleteAddressUseCase,
     _logger: ILogger 
   ) {
     super(_logger);

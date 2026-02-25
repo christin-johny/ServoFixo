@@ -1,18 +1,15 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
-import { IPasswordHasher } from "../../../interfaces/IPasswordHasher";
-import { IJwtService, JwtPayload } from "../../../interfaces/IJwtService";
+import { IPasswordHasher } from "../../../interfaces/services/IPasswordHasher";
+import { IJwtService, JwtPayload } from "../../../interfaces/services/IJwtService";
 import { AuthResultDto } from "../../../dto/auth/AuthResultDto";
 import { ErrorMessages } from "../../../constants/ErrorMessages";
-import { ICacheService } from "../../../interfaces/ICacheService";
-import { ILogger } from "../../../interfaces/ILogger";
+import { ICacheService } from "../../../interfaces/services/ICacheService";
+import { ILogger } from "../../../interfaces/services/ILogger";
 import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
+import { TechnicianLoginDto } from "../../../dto/technician/TechnicianAuthDtos";
+import { ITechnicianLoginUseCase } from "../../../interfaces/use-cases/technician/ITechnicianAuthUseCases";
 
-export interface TechnicianLoginDto {
-  email: string;
-  password: string;
-}
-
-export class TechnicianLoginUseCase {
+export class TechnicianLoginUseCase implements ITechnicianLoginUseCase {
   constructor(
     private readonly _technicianRepository: ITechnicianRepository,
     private readonly _passwordHasher: IPasswordHasher,

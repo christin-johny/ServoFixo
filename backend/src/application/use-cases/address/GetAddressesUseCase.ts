@@ -2,10 +2,11 @@ import { IAddressRepository } from "../../../domain/repositories/IAddressReposit
 import { AddressResponseDto } from "../../dto/address/AddressResponseDto";
 import { AddressMapper } from "../../mappers/AddressMapper";
 import { ErrorMessages } from "../../constants/ErrorMessages";
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { IGetAddressesUseCase } from "../../interfaces/use-cases/address/IAddressUseCases";
 
-export class GetAddressesUseCase {
+export class GetAddressesUseCase implements IGetAddressesUseCase {
   constructor(
     private _addressRepository: IAddressRepository,
     private _logger: ILogger 

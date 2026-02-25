@@ -1,6 +1,6 @@
-import { IUseCase } from "../../interfaces/IUseCase";
-import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
+ import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
 import { Technician } from "../../../domain/entities/Technician";
+import { IGetRecommendedTechniciansUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
 
 export interface GetRecommendedTechniciansDto {
   zoneId: string;
@@ -8,7 +8,7 @@ export interface GetRecommendedTechniciansDto {
   search?: string;
 }
 
-export class GetRecommendedTechniciansUseCase implements IUseCase<Technician[], [GetRecommendedTechniciansDto]> {
+export class GetRecommendedTechniciansUseCase implements IGetRecommendedTechniciansUseCase {
   constructor(private readonly _technicianRepo: ITechnicianRepository) {}
 
   async execute(input: GetRecommendedTechniciansDto): Promise<Technician[]> {

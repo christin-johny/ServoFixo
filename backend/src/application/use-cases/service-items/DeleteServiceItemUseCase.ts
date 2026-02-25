@@ -1,9 +1,10 @@
 import { IServiceItemRepository } from '../../../domain/repositories/IServiceItemRepository';
-import { ILogger } from '../../interfaces/ILogger';
+import { ILogger } from '../../interfaces/services/ILogger';
 import { LogEvents } from '../../../infrastructure/logging/LogEvents';
 import { ErrorMessages } from '../../constants/ErrorMessages';
+import { IDeleteServiceItemUseCase } from '../../interfaces/use-cases/serviceItem/IServiceItemUseCases';
 
-export class DeleteServiceItemUseCase {
+export class DeleteServiceItemUseCase implements IDeleteServiceItemUseCase {
   constructor(
     private readonly _serviceRepo: IServiceItemRepository,
     private readonly _logger: ILogger

@@ -2,8 +2,7 @@ import { IBookingRepository } from "../../../domain/repositories/IBookingReposit
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { IServiceItemRepository } from "../../../domain/repositories/IServiceItemRepository";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
-import { IZoneService } from "../../interfaces/IZoneService"; 
-import { ILogger } from "../../interfaces/ILogger";
+import { IZoneService } from "../../interfaces/services/IZoneService";  
 import { INotificationService } from "../../services/INotificationService"; 
 import { CreateBookingRequestDto } from "../../dto/booking/CreateBookingRequestDto";
 import { Booking } from "../../../domain/entities/Booking";
@@ -11,16 +10,16 @@ import { Technician } from "../../../domain/entities/Technician";
 import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
 import { NotificationType } from "../../../domain/value-objects/NotificationTypes"; 
 import { S3UrlHelper } from "../../../infrastructure/storage/S3UrlHelper"; 
+import { ICreateBookingUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
 
-export class CreateBookingUseCase {
+export class CreateBookingUseCase implements ICreateBookingUseCase {
   constructor(
     private readonly _bookingRepo: IBookingRepository,
     private readonly _customerRepo: ICustomerRepository,
     private readonly _serviceRepo: IServiceItemRepository,
     private readonly _technicianRepo: ITechnicianRepository,
     private readonly _notificationService: INotificationService,
-    private readonly _zoneService: IZoneService,
-    private readonly _logger: ILogger
+    private readonly _zoneService: IZoneService 
   ) {}
 
   async execute(input: CreateBookingRequestDto): Promise<Booking> {

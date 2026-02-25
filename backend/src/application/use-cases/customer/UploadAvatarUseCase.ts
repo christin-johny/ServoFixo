@@ -1,15 +1,14 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { IImageService } from "../../interfaces/IImageService";
+import { IImageService } from "../../interfaces/services/IImageService";
 import { ErrorMessages } from "../../constants/ErrorMessages";
-import { Customer } from "../../../domain/entities/Customer";
-import { ILogger } from "../../interfaces/ILogger";
+import { Customer } from "../../../domain/entities/Customer"; 
 import { S3UrlHelper } from "../../../infrastructure/storage/S3UrlHelper";
+import { IUploadAvatarUseCase } from "../../interfaces/use-cases/customer/ICustomerUseCases";
 
-export class UploadAvatarUseCase {
+export class UploadAvatarUseCase  implements IUploadAvatarUseCase{
   constructor(
     private readonly _customerRepository: ICustomerRepository,
-    private readonly _imageService: IImageService,
-    private readonly _logger: ILogger
+    private readonly _imageService: IImageService 
   ) {}
 
   async execute(
@@ -32,7 +31,7 @@ export class UploadAvatarUseCase {
       customer.getEmail(),
       customer.getPassword(),
       customer.getPhone(),
-      avatarKey, // Save the KEY to the database
+      avatarKey,  
       customer.getDefaultZoneId(),
       customer.isSuspended(),
       customer.getAdditionalInfo(),
@@ -43,8 +42,7 @@ export class UploadAvatarUseCase {
     );
 
     await this._customerRepository.update(updatedCustomer);
-    
-    // 2. Wrap the return value so the frontend gets a clickable URL
+     
     return S3UrlHelper.getFullUrl(avatarKey);
   }
 }

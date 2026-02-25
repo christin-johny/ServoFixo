@@ -70,7 +70,14 @@ const TechnicianList: React.FC = () => {
     try {
       await techRepo.updateTechnician(id, data);
       showSuccess("Technician profile updated successfully");
-      loadData();
+       
+      setItems(prevItems => 
+        prevItems.map(tech => 
+          tech.id === id 
+            ? { ...tech, ...data }  
+            : tech
+        )
+      ); 
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to update";
       showError(msg);
@@ -91,7 +98,16 @@ const TechnicianList: React.FC = () => {
       await techRepo.toggleBlockTechnician(techToSuspend.id, !isCurrentlySuspended);
 
       showSuccess(`Technician ${!isCurrentlySuspended ? 'Suspended' : 'Activated'}`);
-      loadData();
+      
+      // Update local state directly instead of calling loadData()
+      setItems(prevItems => 
+        prevItems.map(tech => 
+          tech.id === techToSuspend.id 
+            ? { ...tech, isSuspended: !isCurrentlySuspended } 
+            : tech
+        )
+      );
+
     } catch {
       showError("Failed to update status");
     } finally {

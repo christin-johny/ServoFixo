@@ -1,7 +1,8 @@
-import { ILogger } from "../../../interfaces/ILogger";
-import { IUseCase } from "../../../interfaces/IUseCase";
+import { ILogger } from "../../../interfaces/services/ILogger";
+import { IUseCase } from "../../../interfaces/services/IUseCase";
 import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
-import { ICommissionStrategy } from "../../../../application/interfaces/ICommissionStrategy";
+import { ICommissionStrategy } from "../../../interfaces/services/ICommissionStrategy";
+import { RateCardItem } from "../../../dto/technician/TechnicianProfileDto";
 
 export interface ITechnicianRepositoryForRateCard {
   findById(id: string): Promise<{ getSubServiceIds(): string[] } | null>;
@@ -11,14 +12,7 @@ export interface IServiceItemRepositoryForRateCard {
   findById(id: string): Promise<{ getId(): string; getName(): string; getBasePrice(): number } | null>;
 }
 
-export interface RateCardItem {
-  serviceId: string;
-  name: string;
-  basePrice: number;
-  platformFee: number;
-  technicianShare: number;
-  commissionPercentage: number;
-}
+
 
 export class GetTechnicianRateCardUseCase implements IUseCase<RateCardItem[], [string]> {
   constructor(

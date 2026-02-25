@@ -149,10 +149,22 @@ const ProfilePage: React.FC = () => {
   const handleAddAddress = async (formData: IAddressFormInput) => {
     setIsSaving(true);
     try {
-      if (editingAddress?.id) { await updateAddress(editingAddress.id, formData); showSuccess("Address updated successfully!"); } 
-      else { await addAddress(formData); showSuccess("Address added successfully!"); }
-      const updated = await getMyAddresses();
-      dispatch(setAddresses(updated));
+      if (editingAddress?.id) { 
+          await updateAddress(editingAddress.id, formData); 
+          showSuccess("Address updated successfully!"); 
+           
+          const updatedAddresses = addresses.map(addr => 
+              addr.id === editingAddress.id ? { ...addr, ...formData } : addr
+          );
+          dispatch(setAddresses(updatedAddresses));
+      } else { 
+          await addAddress(formData); 
+          showSuccess("Address added successfully!"); 
+           
+          const updated = await getMyAddresses();
+          dispatch(setAddresses(updated));
+      }
+      
       setIsAddressModalOpen(false);
       setEditingAddress(null);
     } catch (err: unknown) {
@@ -162,7 +174,9 @@ const ProfilePage: React.FC = () => {
           if (axiosErr.response?.data?.message) message = axiosErr.response.data.message;
        }
        showError(message);
-    } finally { setIsSaving(false); }
+    } finally { 
+        setIsSaving(false); 
+    }
   };
 
   const handleSetDefault = async (id: string) => {

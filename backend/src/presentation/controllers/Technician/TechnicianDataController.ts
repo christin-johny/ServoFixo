@@ -1,15 +1,15 @@
 import { NextFunction, Request, Response } from 'express';
 import { BaseController } from '../BaseController';
-import { RequestMapper } from '../../utils/RequestMapper';
-import { IUseCase } from '../../../application/interfaces/IUseCase';
-import { ILogger } from '../../../application/interfaces/ILogger';
+import { RequestMapper } from '../../utils/RequestMapper'; 
+import { ILogger } from '../../../application/interfaces/services/ILogger';
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { ErrorMessages } from '../../../application/constants/ErrorMessages';
 import { CategoryQueryParams } from '../../../domain/repositories/IServiceCategoryRepository';
-import { PaginatedCategoriesResponse } from '../../../application/use-cases/service-categories/GetAllCategoriesUseCase';
-import { ZoneQueryParams } from '../../../domain/repositories/IZoneRepository';
-import { PaginatedZonesResponse } from '../../../application/use-cases/zones/GetAllZonesUseCase';
-import { RateCardItem } from '../../../application/use-cases/technician/profile/GetTechnicianRateCardUseCase';
+import { ZoneQueryParams } from '../../../domain/repositories/IZoneRepository'; 
+import { IGetAllCategoriesUseCase } from '../../../application/interfaces/use-cases/category/ICategoryUseCases';
+import { IGetServiceListingUseCase } from '../../../application/interfaces/use-cases/serviceItem/IServiceItemUseCases';
+import { IGetAllZonesUseCase } from '../../../application/interfaces/use-cases/zone/IZoneUseCases';
+import { IGetTechnicianRateCardUseCase } from '../../../application/interfaces/use-cases/technician/ITechnicianProfileUseCases';
 
 interface ServiceFilters {
   searchTerm: string;
@@ -25,10 +25,10 @@ interface AuthenticatedRequest extends Request {
 
 export class TechnicianDataController extends BaseController {
   constructor(
-    private readonly _getAllCategoriesUseCase: IUseCase<PaginatedCategoriesResponse, [CategoryQueryParams]>,
-    private readonly _getServiceListingUseCase: IUseCase<unknown[], [ServiceFilters]>,
-    private readonly _getAllZonesUseCase: IUseCase<PaginatedZonesResponse, [ZoneQueryParams]>,
-    private readonly _getRateCardUseCase: IUseCase<RateCardItem[], [string]>,
+    private readonly _getAllCategoriesUseCase: IGetAllCategoriesUseCase,
+    private readonly _getServiceListingUseCase: IGetServiceListingUseCase,
+    private readonly _getAllZonesUseCase: IGetAllZonesUseCase,
+    private readonly _getRateCardUseCase: IGetTechnicianRateCardUseCase,
     _logger: ILogger
   ) {
     super(_logger);

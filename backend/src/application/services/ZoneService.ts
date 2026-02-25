@@ -1,6 +1,6 @@
 
 import { IZoneRepository } from "../../domain/repositories/IZoneRepository"; 
-import { IZoneService, ServiceabilityResult } from "../interfaces/IZoneService";
+import { IZoneService, ServiceabilityResult } from "../interfaces/services/IZoneService";
  
 export class ZoneService implements IZoneService {
   constructor(private _zoneRepository: IZoneRepository) {}

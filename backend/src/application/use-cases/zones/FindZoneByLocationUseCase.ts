@@ -1,12 +1,10 @@
-import { IZoneService } from "../../interfaces/IZoneService";
-import { ZoneServiceabilityDto } from "../../dto/zone/ZoneServiceabilityDto";
-import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { IZoneService } from "../../interfaces/services/IZoneService";
+import { ZoneServiceabilityDto } from "../../dto/zone/ZoneServiceabilityDto"; 
+import { IFindZoneByLocationUseCase } from "../../interfaces/use-cases/zone/IZoneUseCases";
 
-export class FindZoneByLocationUseCase {
+export class FindZoneByLocationUseCase implements IFindZoneByLocationUseCase {
   constructor(
-    private readonly _zoneService: IZoneService,
-    private readonly _logger: ILogger
+    private readonly _zoneService: IZoneService, 
   ) {}
 
   async execute(lat: number, lng: number): Promise<ZoneServiceabilityDto> {

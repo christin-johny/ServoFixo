@@ -1,18 +1,15 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { IPasswordHasher } from "../../interfaces/IPasswordHasher";
-import { IJwtService, JwtPayload } from "../../interfaces/IJwtService";
+import { IPasswordHasher } from "../../interfaces/services/IPasswordHasher";
+import { IJwtService, JwtPayload } from "../../interfaces/services/IJwtService";
 import { AuthResultDto } from "../../dto/auth/AuthResultDto";
 import { ErrorMessages } from "../../constants/ErrorMessages";
-import { ICacheService } from "../../interfaces/ICacheService";  
-import { ILogger } from "../../interfaces/ILogger";
-import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { ICacheService } from "../../interfaces/services/ICacheService";  
+import { ILogger } from "../../interfaces/services/ILogger";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents"; 
+import { CustomerLoginDto } from "../../dto/auth/CustomerLoginDto";
+import { ICustomerLoginUseCase } from "../../interfaces/use-cases/auth/IAuthUseCases";
 
-export interface CustomerLoginDto {
-  email: string;
-  password: string;
-}
-
-export class CustomerLoginUseCase {
+export class CustomerLoginUseCase implements ICustomerLoginUseCase {
   constructor(
     private readonly _customerRepository: ICustomerRepository,
     private readonly _passwordHasher: IPasswordHasher,

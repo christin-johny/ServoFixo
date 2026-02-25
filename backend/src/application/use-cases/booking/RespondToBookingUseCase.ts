@@ -1,14 +1,15 @@
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
 import { INotificationService } from "../../services/INotificationService"; 
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { RespondToBookingDto } from "../../dto/booking/RespondToBookingDto";
 import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
 import { Booking } from "../../../domain/entities/Booking";
 import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { IRespondToBookingUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
 
-export class RespondToBookingUseCase {
+export class RespondToBookingUseCase implements IRespondToBookingUseCase {
   constructor(
     private readonly _bookingRepo: IBookingRepository,
     private readonly _technicianRepo: ITechnicianRepository,

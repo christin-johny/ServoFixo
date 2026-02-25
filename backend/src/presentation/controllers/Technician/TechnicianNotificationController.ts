@@ -1,10 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "../../utils/StatusCodes";
 import { ErrorMessages } from "../../../application/constants/ErrorMessages";
-import { ILogger } from "../../../application/interfaces/ILogger";
-import { GetNotificationHistoryUseCase } from "../../../application/use-cases/notification/GetNotificationHistoryUseCase";
-import { MarkNotificationAsReadUseCase } from "../../../application/use-cases/notification/MarkNotificationAsReadUseCase";
-import { MarkAllNotificationsAsReadUseCase } from "../../../application/use-cases/notification/MarkAllNotificationsAsReadUseCase";
+import { IGetNotificationHistoryUseCase, IMarkNotificationAsReadUseCase, IMarkAllNotificationsAsReadUseCase } from "../../../application/interfaces/use-cases/notification/INotificationUseCases";
 
 interface AuthenticatedRequest extends Request {
   userId?: string;  
@@ -12,10 +9,9 @@ interface AuthenticatedRequest extends Request {
 
 export class TechnicianNotificationController {
   constructor(
-    private readonly _getHistoryUseCase: GetNotificationHistoryUseCase,
-    private readonly _markAsReadUseCase: MarkNotificationAsReadUseCase, 
-    private readonly _markAllAsReadUseCase: MarkAllNotificationsAsReadUseCase, 
-    private readonly _logger: ILogger
+    private readonly _getHistoryUseCase: IGetNotificationHistoryUseCase,
+private readonly _markAsReadUseCase: IMarkNotificationAsReadUseCase,
+private readonly _markAllAsReadUseCase: IMarkAllNotificationsAsReadUseCase,
   ) {}
 
   getNotifications = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {

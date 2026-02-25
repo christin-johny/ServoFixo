@@ -1,10 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
-import { RequestMapper } from "../../utils/RequestMapper";
-import { IUseCase } from "../../../application/interfaces/IUseCase";
-import { ILogger } from "../../../application/interfaces/ILogger";
-import { LogEvents } from "../../../infrastructure/logging/LogEvents";
-import { Review } from "../../../domain/entities/Review";  
+import { RequestMapper } from "../../utils/RequestMapper"; 
+import { ILogger } from "../../../application/interfaces/services/ILogger";
+import { LogEvents } from "../../../infrastructure/logging/LogEvents"; 
+import { IGetMostBookedServicesUseCase, IGetServiceListingUseCase, IGetServiceByIdUseCase, IGetServiceReviewsUseCase } from "../../../application/interfaces/use-cases/serviceItem/IServiceItemUseCases";
  
 interface ServiceFilters {
   searchTerm: string;
@@ -19,10 +18,10 @@ interface ServiceFilters {
 
 export class CustomerServiceController extends BaseController {
   constructor(
-    private readonly _getMostBookedUseCase: IUseCase<unknown[], [number]>,
-    private readonly _getServiceListingUseCase: IUseCase<unknown[], [ServiceFilters]>,
-    private readonly _getServiceByIdUseCase: IUseCase<unknown | null, [string]>,
-    private readonly _getServiceReviewsUseCase: IUseCase<Review[], [string, number]>, 
+    private readonly _getMostBookedUseCase: IGetMostBookedServicesUseCase,
+    private readonly _getServiceListingUseCase: IGetServiceListingUseCase,
+    private readonly _getServiceByIdUseCase: IGetServiceByIdUseCase,
+    private readonly _getServiceReviewsUseCase: IGetServiceReviewsUseCase,
     _logger: ILogger
   ) {
     super(_logger);

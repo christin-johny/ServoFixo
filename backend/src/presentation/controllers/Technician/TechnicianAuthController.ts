@@ -2,32 +2,20 @@ import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "../../utils/StatusCodes";
 import { refreshCookieOptions } from "../../../infrastructure/config/Cookie";
 import {  SuccessMessages } from "../../../application/constants/ErrorMessages";
-import { ILogger } from "../../../application/interfaces/ILogger";
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
-import redis from "../../../infrastructure/redis/redisClient";
-import { IUseCase } from "../../../application/interfaces/IUseCase";
-import { 
-  TechnicianRegisterInitDto, 
-  TechnicianRegisterVerifyDto,
-  TechnicianForgotPasswordInitDto,   
-  TechnicianForgotPasswordVerifyDto  
-} from "../../../application/dto/technician/TechnicianAuthDtos";
-import { TechnicianLoginDto } from "../../../application/use-cases/technician/auth/TechnicianLoginUseCase";
-import { AuthResultDto } from "../../../application/dto/auth/AuthResultDto";
-
-interface OtpResponse {
-  message: string;
-  sessionId: string;
-}
+import redis from "../../../infrastructure/redis/redisClient"; 
+import { IRequestTechnicianForgotPasswordOtpUseCase, IRequestTechnicianRegistrationOtpUseCase, ITechnicianLoginUseCase, IVerifyTechnicianForgotPasswordOtpUseCase } from "../../../application/interfaces/use-cases/technician/ITechnicianAuthUseCases";
+import { VerifyTechnicianRegistrationOtpUseCase } from "../../../application/use-cases/technician/auth/VerifyTechnicianRegistrationOtpUseCase";
+  
 
 export class TechnicianAuthController {
   constructor(
-    private readonly _requestOtpUseCase: IUseCase<OtpResponse, [TechnicianRegisterInitDto]>,
-    private readonly _verifyOtpUseCase: IUseCase<AuthResultDto, [TechnicianRegisterVerifyDto]>,
-    private readonly _loginUseCase: IUseCase<AuthResultDto, [TechnicianLoginDto]>,
-    private readonly _requestForgotOtpUseCase: IUseCase<OtpResponse, [TechnicianForgotPasswordInitDto]>,
-    private readonly _verifyForgotOtpUseCase: IUseCase<{ message: string }, [TechnicianForgotPasswordVerifyDto]>,
-    
+    private readonly _requestOtpUseCase: IRequestTechnicianRegistrationOtpUseCase,
+    private readonly _verifyOtpUseCase: VerifyTechnicianRegistrationOtpUseCase,
+    private readonly _loginUseCase: ITechnicianLoginUseCase,
+    private readonly _requestForgotOtpUseCase: IRequestTechnicianForgotPasswordOtpUseCase,
+    private readonly _verifyForgotOtpUseCase: IVerifyTechnicianForgotPasswordOtpUseCase,
     private readonly _logger: ILogger
   ) {}
  

@@ -1,14 +1,14 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { IOtpSessionRepository } from "../../../../domain/repositories/IOtpSessionRepository";
-import { IPasswordHasher } from "../../../interfaces/IPasswordHasher";
+import { IPasswordHasher } from "../../../interfaces/services/IPasswordHasher";
 import { TechnicianForgotPasswordVerifyDto } from "../../../dto/technician/TechnicianAuthDtos";
 import { ErrorMessages, SuccessMessages } from "../../../constants/ErrorMessages";
 import { OtpContext } from "../../../../domain/enums/OtpContext";
-import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
+import { ILogger } from "../../../interfaces/services/ILogger"; 
 import { Technician } from "../../../../domain/entities/Technician";
+import { IVerifyTechnicianForgotPasswordOtpUseCase } from "../../../interfaces/use-cases/technician/ITechnicianAuthUseCases";
 
-export class VerifyTechnicianForgotPasswordOtpUseCase {
+export class VerifyTechnicianForgotPasswordOtpUseCase  implements IVerifyTechnicianForgotPasswordOtpUseCase{
   constructor(
     private readonly _technicianRepository: ITechnicianRepository,
     private readonly _otpSessionRepository: IOtpSessionRepository,

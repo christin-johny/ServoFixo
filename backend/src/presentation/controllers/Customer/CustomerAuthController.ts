@@ -1,5 +1,4 @@
-import { NextFunction, Request, Response } from "express";
-import { IUseCase } from "../../../application/interfaces/IUseCase"; 
+import { NextFunction, Request, Response } from "express"; 
 import {
   ErrorMessages,
   SuccessMessages,
@@ -7,23 +6,19 @@ import {
 import { StatusCodes } from "../../utils/StatusCodes";
 import { refreshCookieOptions } from "../../../infrastructure/config/Cookie";
 import redis from "../../../infrastructure/redis/redisClient";
-import { ILogger } from "../../../application/interfaces/ILogger";
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
-
-interface AuthResult {
-  accessToken: string;
-  refreshToken?: string;
-  user?: unknown;
-}
+import { ICustomerLoginUseCase, ICustomerGoogleLoginUseCase, IRequestCustomerForgotPasswordOtpUseCase, IRequestCustomerRegistrationOtpUseCase, IVerifyCustomerForgotPasswordOtpUseCase, IVerifyCustomerRegistrationOtpUseCase } from "../../../application/interfaces/use-cases/auth/IAuthUseCases";
+ 
 
 export class CustomerAuthController {
   constructor(
-    private readonly _requestRegisterOtpUseCase: IUseCase<unknown, [{ email: string; phone: string }]>,
-    private readonly _verifyRegisterOtpUseCase: IUseCase<AuthResult, [{ email: string; otp: string; sessionId: string; name: string; password: string; phone: string }]>,
-    private readonly _customerLoginUseCase: IUseCase<AuthResult, [{ email: string; password: string }]>,
-    private readonly _requestForgotPasswordOtpUseCase: IUseCase<unknown, [{ email: string }]>,
-    private readonly _verifyForgotPasswordOtpUseCase: IUseCase<unknown, [{ email: string; otp: string; sessionId: string; newPassword: string }]>,
-    private readonly _customerGoogleLoginUseCase: IUseCase<AuthResult, [{ token?: string; customer?: unknown }]>,
+    private readonly _requestRegisterOtpUseCase: IRequestCustomerRegistrationOtpUseCase,
+    private readonly _verifyRegisterOtpUseCase: IVerifyCustomerRegistrationOtpUseCase,
+    private readonly _customerLoginUseCase: ICustomerLoginUseCase,
+    private readonly _requestForgotPasswordOtpUseCase: IRequestCustomerForgotPasswordOtpUseCase,
+    private readonly _verifyForgotPasswordOtpUseCase: IVerifyCustomerForgotPasswordOtpUseCase,
+    private readonly _customerGoogleLoginUseCase: ICustomerGoogleLoginUseCase,
     private readonly _logger: ILogger
   ) {}
 

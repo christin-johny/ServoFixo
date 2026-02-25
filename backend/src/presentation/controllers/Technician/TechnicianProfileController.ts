@@ -1,27 +1,19 @@
 import { NextFunction, Request, Response } from "express";
-import { BaseController } from "../BaseController";
-import { IUseCase } from "../../../application/interfaces/IUseCase";
-import { ILogger } from "../../../application/interfaces/ILogger";
+import { BaseController } from "../BaseController"; 
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
-import { SuccessMessages, ErrorMessages } from "../../../application/constants/ErrorMessages";
-import { TechnicianResponseDto } from "../../../application/dto/technician/TechnicianResponseDto";
-import { UploadTechnicianFileInput } from "../../../application/use-cases/technician/profile/UploadTechnicianFileUseCase";
-import { ToggleStatusInput } from "../../../application/use-cases/technician/profile/ToggleOnlineStatusUseCase";
-import {
-  TechnicianOnboardingInput,
+import { SuccessMessages, ErrorMessages } from "../../../application/constants/ErrorMessages"; 
+import { 
   OnboardingStep1Dto,
   OnboardingStep2Dto,
   OnboardingStep3Dto,
   OnboardingStep4Dto,
   OnboardingStep5Dto,
   OnboardingStep6Dto,
-} from "../../../application/dto/technician/TechnicianOnboardingDtos";
-import { 
-  RequestServiceAddInput, 
-  RequestZoneTransferInput, 
-  RequestBankUpdateInput 
-} from "../../../application/dto/technician/TechnicianRequestDtos";
+} from "../../../application/dto/technician/TechnicianOnboardingDtos"; 
 import { StatusCodes } from "../../utils/StatusCodes";
+import { IDismissTechnicianRequestUseCase } from "../../../application/interfaces/use-cases/technician/ITechnicianManagementUseCases";
+import { ITechnicianOnboardingUseCase, IGetTechnicianProfileUseCase, IUploadTechnicianFileUseCase, IRequestServiceAddUseCase, IRequestZoneTransferUseCase, IRequestBankUpdateUseCase, IResubmitProfileUseCase, IToggleOnlineStatusUseCase } from "../../../application/interfaces/use-cases/technician/ITechnicianProfileUseCases";
 
 interface AuthenticatedRequest extends Request {
   userId?: string;
@@ -30,15 +22,15 @@ interface AuthenticatedRequest extends Request {
 
 export class TechnicianProfileController extends BaseController {
   constructor(
-    private readonly _onboardingUseCase: IUseCase<boolean, [TechnicianOnboardingInput]>,
-    private readonly _getProfileUseCase: IUseCase<TechnicianResponseDto | null, [string]>,
-    private readonly _uploadFileUseCase: IUseCase<string, [string, UploadTechnicianFileInput]>,
-    private readonly _toggleStatusUseCase: IUseCase<boolean, [ToggleStatusInput]>,
-    private readonly _resubmitProfileUseCase: IUseCase<void, [string]>,
-    private readonly _requestServiceAddUseCase: IUseCase<void, [string, RequestServiceAddInput]>,
-    private readonly _requestZoneTransferUseCase: IUseCase<void, [string, RequestZoneTransferInput]>,
-    private readonly _requestBankUpdateUseCase: IUseCase<void, [string, RequestBankUpdateInput]>, 
-    private readonly _dismissRequestUseCase: IUseCase<void, [string, string]>,
+    private readonly _onboardingUseCase: ITechnicianOnboardingUseCase,
+    private readonly _getProfileUseCase: IGetTechnicianProfileUseCase,
+    private readonly _uploadFileUseCase: IUploadTechnicianFileUseCase,
+    private readonly _toggleStatusUseCase: IToggleOnlineStatusUseCase,
+    private readonly _resubmitProfileUseCase: IResubmitProfileUseCase,
+    private readonly _requestServiceAddUseCase: IRequestServiceAddUseCase,
+    private readonly _requestZoneTransferUseCase: IRequestZoneTransferUseCase,
+    private readonly _requestBankUpdateUseCase: IRequestBankUpdateUseCase,
+    private readonly _dismissRequestUseCase: IDismissTechnicianRequestUseCase,
     _logger: ILogger 
   ) {
     super(_logger);

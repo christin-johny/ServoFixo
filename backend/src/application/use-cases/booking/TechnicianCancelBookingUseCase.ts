@@ -1,14 +1,14 @@
-import { IUseCase } from "../../interfaces/IUseCase";
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { INotificationService } from "../../services/INotificationService"; 
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { CancelBookingDto } from "../../dto/booking/CancelBookingDto";
 import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
+import { ITechnicianCancelBookingUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
 
-export class TechnicianCancelBookingUseCase implements IUseCase<void, [CancelBookingDto]> {
+export class TechnicianCancelBookingUseCase implements ITechnicianCancelBookingUseCase {
   constructor(
     private readonly _bookingRepo: IBookingRepository,
     private readonly _technicianRepo: ITechnicianRepository,

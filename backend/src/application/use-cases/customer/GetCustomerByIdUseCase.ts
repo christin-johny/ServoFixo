@@ -1,11 +1,11 @@
 import { Customer } from "../../../domain/entities/Customer";
-import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { StatusCodes } from "../../../presentation/utils/StatusCodes";
+import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository"; 
 import { ErrorMessages } from "../../constants/ErrorMessages";
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { IGetCustomerByIdUseCase } from "../../interfaces/use-cases/customer/ICustomerUseCases";
 
-export class GetCustomerByIdUseCase {
+export class GetCustomerByIdUseCase implements IGetCustomerByIdUseCase{
   constructor(
     private readonly _customerRepository: ICustomerRepository,
     private readonly _logger: ILogger

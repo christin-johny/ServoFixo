@@ -1,10 +1,8 @@
-import { Request, Response, NextFunction } from "express";
-import { BaseController } from "../BaseController";
-import { IUseCase } from "../../../application/interfaces/IUseCase";
-import { ILogger } from "../../../application/interfaces/ILogger";
+ import { Request, Response, NextFunction } from "express";
+import { BaseController } from "../BaseController"; 
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
-import { SuccessMessages, ErrorMessages } from "../../../application/constants/ErrorMessages";
-import { Booking } from "../../../domain/entities/Booking";
+import { SuccessMessages, ErrorMessages } from "../../../application/constants/ErrorMessages"; 
 import { CreateBookingRequestDto } from "../../../application/dto/booking/CreateBookingRequestDto";
 import { RespondToBookingDto } from "../../../application/dto/booking/RespondToBookingDto";
 import { UpdateJobStatusDto } from "../../../application/dto/booking/UpdateJobStatusDto";
@@ -14,40 +12,34 @@ import { RespondToExtraChargeDto } from "../../../application/dto/booking/Respon
 import { CompleteJobDto } from "../../../application/dto/booking/CompleteJobDto";
 import { GetBookingDetailsDto } from "../../../application/dto/booking/GetBookingDetailsDto";
 import { CancelBookingDto } from "../../../application/dto/booking/CancelBookingDto";
-import { RateTechnicianDto } from "../../../application/dto/booking/RateTechnicianDto"; 
-import { GetTechnicianHistoryDto } from "../../../application/use-cases/booking/GetTechnicianHistoryUseCase";
-import { PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
+import { RateTechnicianDto } from "../../../application/dto/booking/RateTechnicianDto";  
 import { BookingStatus } from "../../../domain/value-objects/BookingTypes"; 
-import { GetCustomerBookingsDto } from "../../../application/use-cases/booking/GetCustomerBookingsUseCase";
 import { VerifyPaymentDto } from '../../../application/dto/booking/VerifyPaymentDto';
 import { UserRoleType } from "../../../domain/enums/UserRole";
+import { GetCustomerBookingsDto, GetTechnicianHistoryDto } from "../../../application/dto/booking/BookingDto";
+import { ICreateBookingUseCase, IRespondToBookingUseCase, IUpdateJobStatusUseCase, IAddExtraChargeUseCase, IRespondToExtraChargeUseCase, ICompleteJobUseCase, IGetBookingDetailsUseCase, ICustomerCancelBookingUseCase, ITechnicianCancelBookingUseCase, IRateTechnicianUseCase, IGetTechnicianHistoryUseCase, IGetCustomerBookingsUseCase, IVerifyPaymentUseCase } from "../../../application/interfaces/use-cases/booking/IBookingUseCases";
+import { IFile } from "../../../application/dto/file/FileDto";
 
 interface AuthenticatedRequest extends Request {
   userId?: string;
   role?: string;
 }
 
-interface IFile {
-  buffer: Buffer;
-  originalName: string;
-  mimeType: string;
-}
-
 export class BookingController extends BaseController {
   constructor(
-    private readonly _createBookingUseCase: IUseCase<Booking, [CreateBookingRequestDto]>,
-    private readonly _respondToBookingUseCase: IUseCase<void, [RespondToBookingDto]>, 
-    private readonly _updateJobStatusUseCase: IUseCase<void, [UpdateJobStatusDto]>,
-    private readonly _addExtraChargeUseCase: IUseCase<void, [AddExtraChargeDto, IFile?]>,
-    private readonly _respondToExtraChargeUseCase: IUseCase<void, [RespondToExtraChargeDto]>,
-    private readonly _completeJobUseCase: IUseCase<void, [CompleteJobDto, IFile?]>,
-    private readonly _getBookingDetailsUseCase: IUseCase<Booking, [GetBookingDetailsDto]>,
-    private readonly _customerCancelUseCase: IUseCase<void, [CancelBookingDto]>,
-    private readonly _technicianCancelUseCase: IUseCase<void, [CancelBookingDto]>,
-    private readonly _rateTechnicianUseCase: IUseCase<void, [RateTechnicianDto]>, 
-    private readonly _getTechnicianHistoryUseCase: IUseCase<PaginatedBookingResult, [GetTechnicianHistoryDto]>, 
-    private readonly _getCustomerBookingsUseCase: IUseCase<PaginatedBookingResult, [GetCustomerBookingsDto]>,
-    private readonly _verifyPaymentUseCase: IUseCase<void, [VerifyPaymentDto]>,
+    private readonly _createBookingUseCase: ICreateBookingUseCase,
+    private readonly _respondToBookingUseCase: IRespondToBookingUseCase,
+    private readonly _updateJobStatusUseCase: IUpdateJobStatusUseCase,
+    private readonly _addExtraChargeUseCase: IAddExtraChargeUseCase,
+    private readonly _respondToExtraChargeUseCase: IRespondToExtraChargeUseCase,
+    private readonly _completeJobUseCase: ICompleteJobUseCase,
+    private readonly _getBookingDetailsUseCase: IGetBookingDetailsUseCase,
+    private readonly _customerCancelUseCase: ICustomerCancelBookingUseCase,
+    private readonly _technicianCancelUseCase: ITechnicianCancelBookingUseCase,
+    private readonly _rateTechnicianUseCase: IRateTechnicianUseCase,
+    private readonly _getTechnicianHistoryUseCase: IGetTechnicianHistoryUseCase,
+    private readonly _getCustomerBookingsUseCase: IGetCustomerBookingsUseCase,
+    private readonly _verifyPaymentUseCase: IVerifyPaymentUseCase,
     _logger: ILogger
   ) {
     super(_logger);
@@ -79,7 +71,7 @@ export class BookingController extends BaseController {
       };
 
       const booking = await this._createBookingUseCase.execute(input);
-      const responseDto = BookingMapper.toResponse(booking);
+      const responseDto = await BookingMapper.toResponse(booking); 
       return this.created(res, responseDto, SuccessMessages.BOOKING_CREATED);
     } catch (err) {
       (err as Error & { logContext?: string }).logContext = LogEvents.BOOKING_CREATION_FAILED;
@@ -148,8 +140,11 @@ export class BookingController extends BaseController {
       };
 
       const result = await this._getCustomerBookingsUseCase.execute(input);
+      const mappedData = await Promise.all(
+  result.data.map(async (b) => await BookingMapper.toResponse(b))
+);
       return this.ok(res, {
-        data: result.data.map(b => BookingMapper.toResponse(b)), 
+        data: mappedData, 
         total: result.total,
         page: result.page,
         limit: result.limit,
@@ -232,35 +227,40 @@ export class BookingController extends BaseController {
       next(err);
     }
   };
+ 
+getTechnicianHistory = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+  try {
+    const technicianId = (req as AuthenticatedRequest).userId;
+    if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
-  getTechnicianHistory = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    try {
-      const technicianId = (req as AuthenticatedRequest).userId;
-      if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const input: GetTechnicianHistoryDto = {
+      technicianId,
+      page,
+      limit,
+      search: req.query.search as string,
+      status: req.query.status as BookingStatus
+    };
 
-      const page = Number(req.query.page) || 1;
-      const limit = Number(req.query.limit) || 10;
-      const input: GetTechnicianHistoryDto = {
-        technicianId,
-        page,
-        limit,
-        search: req.query.search as string,
-        status: req.query.status as BookingStatus
-      };
+    const result = await this._getTechnicianHistoryUseCase.execute(input);
 
-      const result = await this._getTechnicianHistoryUseCase.execute(input);
-      return this.ok(res, {
-        data: result.data.map(b => BookingMapper.toResponse(b)), 
-        total: result.total,
-        page: result.page,
-        limit: result.limit,
-        totalPages: Math.ceil(result.total / limit)
-      }, SuccessMessages.HISTORY_FETCHED);
-    } catch (err) {
-      (err as Error & { logContext?: string }).logContext = LogEvents.GET_TECH_HISTORY_FAILED;
-      next(err);
-    }
-  };
+    // FIX: Await the async mapping for the entire array
+    const mappedData = await Promise.all(
+      result.data.map(async (b) => await BookingMapper.toResponse(b))
+    );
+
+    return this.ok(res, {
+      data: mappedData, 
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages
+    }, SuccessMessages.HISTORY_FETCHED);
+  } catch (err) {
+    next(err);
+  }
+};
 
   completeJob = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
@@ -302,7 +302,8 @@ export class BookingController extends BaseController {
       };
 
       const booking = await this._getBookingDetailsUseCase.execute(input);
-      const responseDto = BookingMapper.toResponse(booking);
+      // FIX: Added await for async mapper
+      const responseDto = await BookingMapper.toResponse(booking); 
       return this.ok(res, responseDto, SuccessMessages.BOOKINGS_FETCHED);
     } catch (err) {
       (err as Error & { logContext?: string }).logContext = LogEvents.GET_BOOKING_DETAILS_FAILED;
@@ -336,14 +337,18 @@ export class BookingController extends BaseController {
     }
   };
 
-  verifyPayment = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+   verifyPayment = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const input: VerifyPaymentDto = {
         bookingId: req.params.id,
-        orderId: req.body.razorpay_order_id,
-        paymentId: req.body.razorpay_payment_id,
-        signature: req.body.razorpay_signature
+        orderId: req.body.orderId,      
+        paymentId: req.body.paymentId,  
+        signature: req.body.signature   
       };
+ 
+      if (!input.orderId || !input.paymentId || !input.signature) {
+          throw new Error("Missing payment verification data");
+      }
 
       await this._verifyPaymentUseCase.execute(input);
       return this.ok(res, null, SuccessMessages.PAYMENT_VERIFIED);

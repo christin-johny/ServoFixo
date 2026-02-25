@@ -1,18 +1,15 @@
-import { IUseCase } from "../../interfaces/IUseCase";
+ 
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
 import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository";
 import { INotificationService } from "../../services/INotificationService";
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { ErrorMessages, NotificationMessages } from "../../constants/ErrorMessages"; 
 import { SocketServer } from "../../../infrastructure/socket/SocketServer"; 
+import { IAdminForceAssignUseCase } from "../../interfaces/use-cases/booking/IBookingUseCases";
+import { AdminForceAssignDto } from "../../dto/booking/BookingDto";
+import { NotificationType } from "../../../domain/value-objects/NotificationTypes";
 
-export interface AdminForceAssignDto {
-  bookingId: string;
-  technicianId: string;
-  adminId: string;
-}
-
-export class AdminForceAssignUseCase implements IUseCase<void, [AdminForceAssignDto]> {
+export class AdminForceAssignUseCase implements IAdminForceAssignUseCase {
   constructor(
     private readonly _bookingRepo: IBookingRepository,
     private readonly _techRepo: ITechnicianRepository,
@@ -60,7 +57,7 @@ export class AdminForceAssignUseCase implements IUseCase<void, [AdminForceAssign
     await this._notificationService.send({
         recipientId: input.technicianId,
         recipientType: "TECHNICIAN",
-        type: "BOOKING_CONFIRMED" as any, 
+        type: NotificationType.BOOKING_CONFIRMED , 
         title: NotificationMessages.TITLE_ADMIN_ASSIGNED,
         body: NotificationMessages.BODY_ADMIN_ASSIGNED,
         metadata: { bookingId: booking.getId() }
@@ -69,7 +66,7 @@ export class AdminForceAssignUseCase implements IUseCase<void, [AdminForceAssign
     await this._notificationService.send({
         recipientId: booking.getCustomerId(),
         recipientType: "CUSTOMER",
-        type: "BOOKING_CONFIRMED" as any,
+        type: NotificationType.BOOKING_CONFIRMED,
         title: NotificationMessages.TITLE_TECH_ASSIGNED,
         body: `${techSnapshot.name}${NotificationMessages.BODY_TECH_ASSIGNED_SUFFIX}`,
         metadata: { bookingId: booking.getId() }

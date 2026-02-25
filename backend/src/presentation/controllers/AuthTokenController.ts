@@ -3,13 +3,11 @@ import { refreshCookieOptions } from "../../infrastructure/config/Cookie";
 import { RefreshTokenUseCase } from "../../application/use-cases/auth/RefreshTokenUseCase";
 import { ErrorMessages } from "../../application/constants/ErrorMessages";
 import { StatusCodes } from "../utils/StatusCodes";
-import { ILogger } from "../../application/interfaces/ILogger";
 import { LogEvents } from "../../infrastructure/logging/LogEvents";
 
 export class AuthTokenController {
   constructor(
-    private readonly _refreshTokenUseCase: RefreshTokenUseCase,
-    private readonly _logger: ILogger
+    private readonly _refreshTokenUseCase: RefreshTokenUseCase
   ) {}
 
   refresh = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {

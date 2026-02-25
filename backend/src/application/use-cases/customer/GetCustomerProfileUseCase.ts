@@ -1,14 +1,12 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { IAddressRepository } from "../../../domain/repositories/IAddressRepository";
 import { ErrorMessages } from "../../constants/ErrorMessages";
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { S3UrlHelper } from "../../../infrastructure/storage/S3UrlHelper";
 
 export class GetCustomerProfileUseCase {
   constructor(
     private readonly _customerRepository: ICustomerRepository,
-    private readonly _addressRepository: IAddressRepository,
     private readonly _logger: ILogger
   ) {}
 

@@ -72,9 +72,10 @@ const PartnerRequestQueue: React.FC = () => {
     const handleResolutionSuccess = useCallback((): void => {
         setResolutionModalOpen(false);
         setSelectedTechId(null);
-        loadQueue();
+        setItems(prev => prev.filter(item => item.id !== selectedTechId));
+        setTotal(prev => prev - 1);
         showSuccess("Maintenance request synchronized successfully");
-    }, [loadQueue, showSuccess]);
+    }, [loadQueue, showSuccess,selectedTechId]);
 
     const columns: TableColumn<TechnicianQueueItemDto>[] = useMemo(() => [
         {

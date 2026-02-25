@@ -1,6 +1,7 @@
 import { Booking } from "../entities/Booking";
 import { IBaseRepository } from "./IBaseRepository";
 import { BookingStatus, TechAssignmentAttempt, ExtraCharge, PaymentStatus } from "../value-objects/BookingTypes";
+import { BookingResponseDto } from "../../application/dto/booking/BookingResponseDto";
 
 export interface BookingFilterParams {
   customerId?: string;
@@ -15,10 +16,11 @@ export interface BookingFilterParams {
 }
 
 export interface PaginatedBookingResult {
-  data: Booking[];
+  data: BookingResponseDto[]; 
   total: number;
   page: number;
   limit: number;
+  totalPages: number;
 }
 
 export interface IBookingRepository extends IBaseRepository<Booking> {

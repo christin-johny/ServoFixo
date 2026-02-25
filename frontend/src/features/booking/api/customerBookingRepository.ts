@@ -1,4 +1,5 @@
 import api from "../../../lib/axiosClient";
+import type { VerifyPaymentDto } from "../types/JobDetails";
 import { BOOKING_ENDPOINTS } from "./endpoints";
  
 interface ApiResponse<T> {
@@ -145,4 +146,22 @@ export const respondToExtraCharge = async (
 export const getServiceReviews = async (serviceId: string): Promise<ReviewResponse[]> => { 
   const response = await api.get(BOOKING_ENDPOINTS.GET_REVIEWS(serviceId)); 
   return response.data.data;
+};
+
+export const verifyBookingPayment = async (
+  bookingId: string, 
+  paymentData: Omit<VerifyPaymentDto, 'bookingId'>
+): Promise<{ success: boolean; message: string }> => { 
+  const response = await api.post(
+    BOOKING_ENDPOINTS.VERIFY_PAYMENT(bookingId), 
+    paymentData
+  ); 
+  return response.data;
+};
+export const rateBooking = async (
+  bookingId: string, 
+  data: { rating: number; comment: string }
+) => {
+  const response = await api.post(BOOKING_ENDPOINTS.RATE(bookingId), data);
+  return response.data;
 };

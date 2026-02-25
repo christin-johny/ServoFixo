@@ -1,22 +1,16 @@
 import { IServiceItemRepository } from "../../../domain/repositories/IServiceItemRepository";
-import { IImageService } from "../../interfaces/IImageService";
-import { UpdateServiceItemDto } from "../../dto/serviceItem/UpdateServiceItemDto";
-import { ServiceItemResponseDto } from "../../dto/serviceItem/ServiceItemResponseDto";
+import { IImageService } from "../../interfaces/services/IImageService"; 
+import { EditServiceRequest, ServiceItemResponseDto } from "../../dto/serviceItem/ServiceItemResponseDto";
 import { ServiceItem } from "../../../domain/entities/ServiceItem";
 import { ServiceItemMapper } from "../../mappers/ServiceItemMapper";
-import { ILogger } from "../../interfaces/ILogger";
+import { ILogger } from "../../interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
-import { ErrorMessages } from "../../constants/ErrorMessages";
-import { IFile } from "./CreateServiceItemUseCase";
+import { ErrorMessages } from "../../constants/ErrorMessages"; 
+import { IEditServiceItemUseCase } from "../../interfaces/use-cases/serviceItem/IServiceItemUseCases";
 
-interface EditServiceRequest {
-  id: string;
-  dto: UpdateServiceItemDto;
-  newImageFiles: IFile[];
-  imagesToDelete?: string[];
-}
 
-export class EditServiceItemUseCase {
+
+export class EditServiceItemUseCase implements IEditServiceItemUseCase{
   constructor(
     private readonly _serviceRepo: IServiceItemRepository,
     private readonly _imageService: IImageService,

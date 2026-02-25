@@ -1,14 +1,15 @@
 import { ITechnicianRepository } from "../../../../domain/repositories/ITechnicianRepository";
 import { IOtpSessionRepository } from "../../../../domain/repositories/IOtpSessionRepository";
-import { IEmailService } from "../../../interfaces/IEmailService";
+import { IEmailService } from "../../../interfaces/services/IEmailService";
 import { TechnicianRegisterInitDto } from "../../../dto/technician/TechnicianAuthDtos";
 import { OtpContext } from "../../../../domain/enums/OtpContext";
 import { ErrorMessages } from "../../../constants/ErrorMessages";
 import { OtpSession } from "../../../../domain/entities/OtpSession";
-import { ILogger } from "../../../interfaces/ILogger";
+import { ILogger } from "../../../interfaces/services/ILogger";
 import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
+import { IRequestTechnicianRegistrationOtpUseCase } from "../../../interfaces/use-cases/technician/ITechnicianAuthUseCases";
 
-export class RequestTechnicianRegistrationOtpUseCase {
+export class RequestTechnicianRegistrationOtpUseCase implements IRequestTechnicianRegistrationOtpUseCase{
   private readonly _otpExpiryMinutes = Number(process.env.OTP_EXPIRY_MINUTES) || 2;
 
   constructor(

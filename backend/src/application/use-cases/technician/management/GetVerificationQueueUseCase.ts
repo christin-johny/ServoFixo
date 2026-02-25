@@ -1,14 +1,11 @@
 import { ITechnicianRepository, VerificationQueueFilters } from "../../../../domain/repositories/ITechnicianRepository";
-import { IUseCase } from "../../../interfaces/IUseCase";
 import { PaginatedTechnicianQueueResponse } from "../../../dto/technician/TechnicianQueueDto";
-import { TechnicianMapper } from "../../../mappers/TechnicianMapper";  
-import { ILogger } from "../../../interfaces/ILogger";
-import { LogEvents } from "../../../../infrastructure/logging/LogEvents";
+import { IGetVerificationQueueUseCase } from "../../../interfaces/use-cases/technician/ITechnicianManagementUseCases";
+import { TechnicianMapper } from "../../../mappers/TechnicianMapper";
 
-export class GetVerificationQueueUseCase implements IUseCase<PaginatedTechnicianQueueResponse, [VerificationQueueFilters]> {
+export class GetVerificationQueueUseCase implements IGetVerificationQueueUseCase {
   constructor(
-    private readonly _technicianRepo: ITechnicianRepository,
-    private readonly _logger: ILogger
+    private readonly _technicianRepo: ITechnicianRepository
   ) {}
 
   async execute(params: VerificationQueueFilters): Promise<PaginatedTechnicianQueueResponse> {

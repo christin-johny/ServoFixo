@@ -1,13 +1,13 @@
 import { NextFunction, Request, Response } from "express";
-import { BaseController } from "../BaseController";
-import { IUseCase } from "../../../application/interfaces/IUseCase";
-import { ILogger } from "../../../application/interfaces/ILogger";
+import { BaseController } from "../BaseController"; 
+import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { StatusCodes } from "../../utils/StatusCodes"; 
+import { IFindZoneByLocationUseCase } from "../../../application/interfaces/use-cases/zone/IZoneUseCases";
 
 export class CustomerZoneController extends BaseController {
   constructor(
-    private readonly _findZoneByLocationUseCase: IUseCase<unknown, [number, number]>,
+    private readonly _findZoneByLocationUseCase: IFindZoneByLocationUseCase,
     _logger: ILogger  
   ) {
     super(_logger);
@@ -28,8 +28,7 @@ export class CustomerZoneController extends BaseController {
       const resultDto = await this._findZoneByLocationUseCase.execute(lat, lng);
        
       return this.ok(res, resultDto);
-    } catch (error: unknown) {
-      // Attach the custom log event and pass to global middleware
+    } catch (error: unknown) { 
       (error as Error & { logContext?: string }).logContext = LogEvents.ZONE_FIND_FAILED;
       next(error);
     }

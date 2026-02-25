@@ -1,11 +1,10 @@
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
-import { ILogger } from "../../interfaces/ILogger"; 
-import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { IDeleteCustomerUseCase } from "../../interfaces/use-cases/customer/ICustomerUseCases";
 
-export class DeleteCustomerUseCase {
+
+export class DeleteCustomerUseCase  implements IDeleteCustomerUseCase{
     constructor(
         private _customerRepository: ICustomerRepository,
-        private _logger: ILogger
     ) {}
     
     async execute(customerId: string): Promise<void> {

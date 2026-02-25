@@ -1,4 +1,6 @@
+import { IFile } from "../file/FileDto";
 import { ServiceSpecificationDto } from "./ServiceSpecificationDto";
+import { UpdateServiceItemDto } from "./UpdateServiceItemDto";
 
 export class ServiceItemResponseDto {
   id!: string;
@@ -13,4 +15,18 @@ export class ServiceItemResponseDto {
   rating!: number;
   reviewCount!: number;
   createdAt!: Date;
+}
+
+export interface PaginatedServiceResponse {
+    data: ServiceItemResponseDto[];
+    total: number;
+    currentPage: number;
+    totalPages: number;
+}
+
+export interface EditServiceRequest {
+  id: string;
+  dto: UpdateServiceItemDto;
+  newImageFiles: IFile[];
+  imagesToDelete?: string[];
 }

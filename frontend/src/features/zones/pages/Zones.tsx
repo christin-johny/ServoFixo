@@ -143,6 +143,14 @@ const Zones: React.FC = () => {
         };
         await zoneRepo.updateZone(payload);
         showSuccess("Zone updated successfully");
+ 
+        setZones(prevZones => 
+          prevZones.map(zone => 
+            (zone.id === editingZoneId || zone._id === editingZoneId)
+              ? { ...zone, ...payload } 
+              : zone
+          )
+        );
       } else {
         await zoneRepo.createZone({
           name: validName,
@@ -151,9 +159,10 @@ const Zones: React.FC = () => {
           isActive: zoneIsActive
         });
         showSuccess("New zone created successfully");
+         
+        await loadZones();
       }
 
-      await loadZones();
       handleCancel();
     } catch (err: unknown) {
       const errMsg = getErrorMessage(err, "Failed to save zone");
@@ -187,8 +196,15 @@ const Zones: React.FC = () => {
       };
       await zoneRepo.updateZone(payload);
       showSuccess(`Zone ${zoneToToggle.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
-
-      await loadZones();
+ 
+      setZones(prevZones => 
+        prevZones.map(zone => 
+          (zone.id === zoneId || zone._id === zoneId) 
+            ? { ...zone, isActive: newStatus } 
+            : zone
+        )
+      );
+      
       setZoneToToggle(null);
     } catch {
       showError("Failed to update status");
@@ -208,12 +224,18 @@ const Zones: React.FC = () => {
     setIsDeleting(true);
     try {
       await zoneRepo.deleteZone(zoneToDelete);
+      showSuccess("Zone deleted successfully");
+      
       if (zones.length === 1 && page > 1) {
         setPage(prev => prev - 1);
       } else {
-        await loadZones();
+        // OPTIMIZATION: Filter out the deleted zone locally
+        setZones(prevZones => 
+          prevZones.filter(zone => (zone.id !== zoneToDelete && zone._id !== zoneToDelete))
+        );
+        setTotalZones(prev => prev - 1);
       }
-      showSuccess("Zone deleted successfully");
+      
       setDeleteModalOpen(false);
     } catch (err: unknown) {
       showError(getErrorMessage(err, "Failed to delete zone"));
