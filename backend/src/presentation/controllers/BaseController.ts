@@ -5,7 +5,6 @@ import { ILogger } from "../../application/interfaces/services/ILogger";
 export abstract class BaseController {
   constructor(protected readonly _logger: ILogger) {}
 
-  // SUCCESS RESPONSES  
 
   protected ok<T>(res: Response, data: T, message?: string): Response {
     return res.status(StatusCodes.OK).json({

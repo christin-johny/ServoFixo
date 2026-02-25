@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { BaseController } from "../BaseController";
-import { IUseCase } from "../../../application/interfaces/services/IUseCase";  
+import { BaseController } from "../BaseController"; 
 import {
   CustomerFilterSchema,
   CustomerUpdateSchema,
@@ -11,23 +10,18 @@ import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { Customer } from "../../../domain/entities/Customer";
 import { mapToResponseDto } from "../../../application/mappers/CustomerMapper";
+import { IGetAllCustomersUseCase, IUpdateCustomerUseCase, IGetCustomerByIdUseCase, IDeleteCustomerUseCase } from "../../../application/interfaces/use-cases/customer/ICustomerUseCases";
+import { IGetAddressesUseCase } from "../../../application/interfaces/use-cases/address/IAddressUseCases";
 
-interface CustomerFilterDto {
-  search?: string;
-  suspended?: boolean;
-}
 
-interface CustomerUpdateDto {
-  [key: string]: unknown;
-}
 
 export class AdminCustomerController extends BaseController {
   constructor(
-    private readonly _getAllCustomersUseCase: IUseCase<unknown,[CustomerFilterDto]>, 
-    private readonly _updateCustomerUseCase: IUseCase<unknown,[string, CustomerUpdateDto]>, 
-    private readonly _getCustomerByIdUseCase: IUseCase<unknown, [string]>, 
-    private readonly _deleteCustomerUseCase: IUseCase<void, [string]>, 
-    private readonly _getAddressesByUserIdUseCase: IUseCase<unknown[],[string]>,
+    private readonly _getAllCustomersUseCase: IGetAllCustomersUseCase,
+    private readonly _updateCustomerUseCase: IUpdateCustomerUseCase,
+    private readonly _getCustomerByIdUseCase: IGetCustomerByIdUseCase,
+    private readonly _deleteCustomerUseCase: IDeleteCustomerUseCase,
+    private readonly _getAddressesByUserIdUseCase: IGetAddressesUseCase,
     _logger: ILogger 
   ) {
     super(_logger);

@@ -1,15 +1,14 @@
 import { NextFunction, Request, Response } from 'express';
 import { BaseController } from '../BaseController';
-import { RequestMapper } from '../../utils/RequestMapper';
-import { IUseCase } from '../../../application/interfaces/services/IUseCase';
+import { RequestMapper } from '../../utils/RequestMapper'; 
 import { ILogger } from '../../../application/interfaces/services/ILogger';
 import { LogEvents } from '../../../infrastructure/logging/LogEvents';
-import { CategoryQueryParams } from '../../../domain/repositories/IServiceCategoryRepository';
-import { PaginatedCategoriesResponse } from '../../../application/dto/category/CategoryResponseDto';
+import { CategoryQueryParams } from '../../../domain/repositories/IServiceCategoryRepository'; 
+import { IGetAllCategoriesUseCase } from '../../../application/interfaces/use-cases/category/ICategoryUseCases';
 
 export class CustomerCategoryController extends BaseController {
   constructor( 
-    private readonly _getAllCategoriesUseCase: IUseCase<PaginatedCategoriesResponse, [CategoryQueryParams]>,
+    private readonly _getAllCategoriesUseCase: IGetAllCategoriesUseCase,
     _logger: ILogger  
   ) {
     super(_logger);

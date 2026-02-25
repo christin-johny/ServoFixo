@@ -1,37 +1,32 @@
 import { NextFunction, Request, Response } from "express";
-import { BaseController } from "../BaseController";
-import { IUseCase } from "../../../application/interfaces/services/IUseCase";
+import { BaseController } from "../BaseController"; 
 import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { AdminForceAssignDto } from "../../../application/dto/admin/AdminForceAssignDto";
 import { AdminForceStatusDto } from "../../../application/dto/admin/AdminForceStatusDto"; 
 import { ErrorMessages } from "../../../application/constants/ErrorMessages";
 import { AdminUpdatePaymentDto } from "../../../application/dto/admin/AdminUpdatePaymentDto";
-import { BookingMapper } from "../../../application/mappers/BookingMapper";
-import { PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
+import { BookingMapper } from "../../../application/mappers/BookingMapper"; 
 import { BookingStatus } from "../../../domain/value-objects/BookingTypes";
 import { GetAllBookingsDto } from "../../../application/dto/booking/BookingDto";
+import { IAdminForceAssignUseCase, IAdminForceStatusUseCase, IAdminUpdatePaymentUseCase, IGetAllBookingsUseCase } from "../../../application/interfaces/use-cases/booking/IBookingUseCases";
 
 interface AuthenticatedRequest extends Request {
-  userId?: string; // Admin ID
+  userId?: string; 
   role?: string;
 }
 
 export class AdminBookingController extends BaseController {
    
   constructor(
-    private readonly _adminForceAssignUseCase: IUseCase<void, [AdminForceAssignDto]>,
-    private readonly _adminForceStatusUseCase: IUseCase<void, [AdminForceStatusDto]>, // <--- Injected
-    private readonly _adminUpdatePaymentUseCase: IUseCase<void, [AdminUpdatePaymentDto]>,
-    private readonly _getAllBookingsUseCase: IUseCase<PaginatedBookingResult, [GetAllBookingsDto]>,
+    private readonly _adminForceAssignUseCase: IAdminForceAssignUseCase,
+  private readonly _adminForceStatusUseCase: IAdminForceStatusUseCase,
+  private readonly _adminUpdatePaymentUseCase: IAdminUpdatePaymentUseCase,
+  private readonly _getAllBookingsUseCase: IGetAllBookingsUseCase,
     _logger: ILogger
   ) {
     super(_logger);
   }
 
-  /**
-   * @route POST /api/admin/bookings/:id/assign
-   * @desc Admin manually assigns a technician (Bypasses acceptance flow)
-   */
   forceAssign = async (req: Request, res: Response,next: NextFunction): Promise<Response|void> => {
     try {
       const adminId = (req as AuthenticatedRequest).userId;
@@ -102,11 +97,7 @@ export class AdminBookingController extends BaseController {
       (err as Error & { logContext?: string }).logContext = "ADMIN_UPDATE_PAYMENT_FAILED";
       next(err);
     }
-  };
-  /**
-   * @route GET /api/admin/bookings
-   * @desc Global "God Mode" List - View ALL bookings with filters
-   */
+  }; 
 getAll = async (req: Request, res: Response,next: NextFunction): Promise<Response|void> => {
   try { 
     if ((req as AuthenticatedRequest).role !== "admin") {

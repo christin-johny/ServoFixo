@@ -1,16 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
-import { RequestMapper } from "../../utils/RequestMapper";
-import { IUseCase } from "../../../application/interfaces/services/IUseCase";
-import { PaginatedTechnicianQueueResponse } from "../../../application/dto/technician/TechnicianQueueDto";
-import {
-  AdminTechnicianProfileDto,
+import { RequestMapper } from "../../utils/RequestMapper"; 
+import { 
   VerifyTechnicianDto,
 } from "../../../application/dto/technician/TechnicianVerificationDtos";
 import { ResolvePartnerRequestDto } from "../../../application/dto/admin/ManageRequestDto";
-import {
-  TechnicianUpdatePayload,
-  TechnicianFilterParams,
+import { 
   VerificationQueueFilters,
   QueueType,
 } from "../../../domain/repositories/ITechnicianRepository"; 
@@ -18,21 +13,24 @@ import { SuccessMessages } from "../../../application/constants/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { RequestAction, PartnerRequestType } from "../../../domain/enums/RequestResolutionEnums";
-import { GetRecommendedTechniciansDto } from "../../../application/use-cases/booking/GetRecommendedTechniciansUseCase";  
+ import { IGetRecommendedTechniciansUseCase } from "../../../application/interfaces/use-cases/booking/IBookingUseCases";
+import { IVerifyTechnicianUseCase, IGetAllTechniciansUseCase, IUpdateTechnicianUseCase, IDeleteTechnicianUseCase, IBlockTechnicianUseCase, IResolveServiceRequestUseCase, IResolveZoneRequestUseCase, IResolveBankRequestUseCase, IGetVerificationQueueUseCase } from "../../../application/interfaces/use-cases/technician/ITechnicianManagementUseCases";
+import { IGetTechnicianFullProfileUseCase } from "../../../application/interfaces/use-cases/technician/ITechnicianProfileUseCases";
+import { Technician } from "../../../domain/entities/Technician";
 
 export class AdminTechnicianController extends BaseController {
   constructor(
-    private readonly _getQueueUseCase: IUseCase<PaginatedTechnicianQueueResponse, [VerificationQueueFilters]>,
-    private readonly _getFullProfileUseCase: IUseCase<AdminTechnicianProfileDto, [string]>,
-    private readonly _verifyTechnicianUseCase: IUseCase<void, [string, VerifyTechnicianDto]>,
-    private readonly _getAllTechniciansUseCase: IUseCase<PaginatedTechnicianQueueResponse, [TechnicianFilterParams & { page: number; limit: number }]>,
-    private readonly _updateTechnicianUseCase: IUseCase<void, [string, TechnicianUpdatePayload]>,
-    private readonly _deleteTechnicianUseCase: IUseCase<void, [string]>,
-    private readonly _blockTechnicianUseCase: IUseCase<void, [string, boolean, string | undefined]>,
-    private readonly _resolveServiceRequestUseCase: IUseCase<void, [string, ResolvePartnerRequestDto]>,
-    private readonly _resolveZoneRequestUseCase: IUseCase<void, [string, ResolvePartnerRequestDto]>,
-    private readonly _resolveBankRequestUseCase: IUseCase<void, [string, ResolvePartnerRequestDto]>,
-    private readonly _getRecommendedTechniciansUseCase: IUseCase<any[], [GetRecommendedTechniciansDto]>,
+    private readonly _getQueueUseCase: IGetVerificationQueueUseCase,
+    private readonly _getFullProfileUseCase: IGetTechnicianFullProfileUseCase,
+    private readonly _verifyTechnicianUseCase: IVerifyTechnicianUseCase,
+    private readonly _getAllTechniciansUseCase: IGetAllTechniciansUseCase,
+    private readonly _updateTechnicianUseCase: IUpdateTechnicianUseCase,
+    private readonly _deleteTechnicianUseCase: IDeleteTechnicianUseCase,
+    private readonly _blockTechnicianUseCase: IBlockTechnicianUseCase,
+    private readonly _resolveServiceRequestUseCase: IResolveServiceRequestUseCase,
+    private readonly _resolveZoneRequestUseCase: IResolveZoneRequestUseCase,
+    private readonly _resolveBankRequestUseCase: IResolveBankRequestUseCase,
+    private readonly _getRecommendedTechniciansUseCase: IGetRecommendedTechniciansUseCase,
     _logger: ILogger 
   ) {
     super(_logger);
@@ -97,7 +95,7 @@ export class AdminTechnicianController extends BaseController {
                search
            });
 
-           const data = techs.map((tech: any) => ({
+           const data = techs.map((tech: Technician) => ({
                 id: tech.getId(),
                 name: tech.getName(),
                 phone: tech.getPhone(),

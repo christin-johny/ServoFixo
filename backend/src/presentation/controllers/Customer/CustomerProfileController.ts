@@ -1,15 +1,10 @@
-import { NextFunction, Request, Response } from "express";
-import { IUseCase } from "../../../application/interfaces/services/IUseCase"; 
+import { NextFunction, Request, Response } from "express"; 
 import { StatusCodes } from "../../utils/StatusCodes";
 import { ErrorMessages, SuccessMessages } from "../../../application/constants/ErrorMessages";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { IChangePasswordUseCase, IDeleteCustomerUseCase, IGetCustomerProfileUseCase, IUpdateCustomerUseCase, IUploadAvatarUseCase } from "../../../application/interfaces/use-cases/customer/ICustomerUseCases";
 
-interface ICustomerEntity {
-  getId(): string;
-  getName(): string;
-  getEmail(): string;
-  getPhone(): string | undefined;  
-}
+ 
 
 export interface AuthenticatedRequest extends Request {
   userId?: string; 
@@ -17,11 +12,11 @@ export interface AuthenticatedRequest extends Request {
 
 export class CustomerProfileController {
   constructor(
-    private readonly _getCustomerProfileUseCase: IUseCase<unknown, [string]>,
-    private readonly _updateCustomerUseCase: IUseCase<ICustomerEntity, [string, unknown]>,
-    private readonly _deleteCustomerUseCase: IUseCase<void, [string]>,
-    private readonly _uploadAvatarUseCase: IUseCase<string, [string, { buffer: Buffer; originalName: string; mimeType: string }]>,
-    private readonly _changePasswordUseCase: IUseCase<void, [string, unknown]>
+    private readonly _getCustomerProfileUseCase: IGetCustomerProfileUseCase,
+private readonly _updateCustomerUseCase: IUpdateCustomerUseCase,
+private readonly _deleteCustomerUseCase: IDeleteCustomerUseCase,
+private readonly _uploadAvatarUseCase: IUploadAvatarUseCase,
+private readonly _changePasswordUseCase: IChangePasswordUseCase,
   ) {}
 
   getProfile = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {

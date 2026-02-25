@@ -1,10 +1,8 @@
  import { Request, Response, NextFunction } from "express";
-import { BaseController } from "../BaseController";
-import { IUseCase } from "../../../application/interfaces/services/IUseCase";
+import { BaseController } from "../BaseController"; 
 import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
-import { SuccessMessages, ErrorMessages } from "../../../application/constants/ErrorMessages";
-import { Booking } from "../../../domain/entities/Booking";
+import { SuccessMessages, ErrorMessages } from "../../../application/constants/ErrorMessages"; 
 import { CreateBookingRequestDto } from "../../../application/dto/booking/CreateBookingRequestDto";
 import { RespondToBookingDto } from "../../../application/dto/booking/RespondToBookingDto";
 import { UpdateJobStatusDto } from "../../../application/dto/booking/UpdateJobStatusDto";
@@ -14,39 +12,34 @@ import { RespondToExtraChargeDto } from "../../../application/dto/booking/Respon
 import { CompleteJobDto } from "../../../application/dto/booking/CompleteJobDto";
 import { GetBookingDetailsDto } from "../../../application/dto/booking/GetBookingDetailsDto";
 import { CancelBookingDto } from "../../../application/dto/booking/CancelBookingDto";
-import { RateTechnicianDto } from "../../../application/dto/booking/RateTechnicianDto"; 
-import { PaginatedBookingResult } from "../../../domain/repositories/IBookingRepository";
+import { RateTechnicianDto } from "../../../application/dto/booking/RateTechnicianDto";  
 import { BookingStatus } from "../../../domain/value-objects/BookingTypes"; 
 import { VerifyPaymentDto } from '../../../application/dto/booking/VerifyPaymentDto';
 import { UserRoleType } from "../../../domain/enums/UserRole";
 import { GetCustomerBookingsDto, GetTechnicianHistoryDto } from "../../../application/dto/booking/BookingDto";
+import { ICreateBookingUseCase, IRespondToBookingUseCase, IUpdateJobStatusUseCase, IAddExtraChargeUseCase, IRespondToExtraChargeUseCase, ICompleteJobUseCase, IGetBookingDetailsUseCase, ICustomerCancelBookingUseCase, ITechnicianCancelBookingUseCase, IRateTechnicianUseCase, IGetTechnicianHistoryUseCase, IGetCustomerBookingsUseCase, IVerifyPaymentUseCase } from "../../../application/interfaces/use-cases/booking/IBookingUseCases";
+import { IFile } from "../../../application/dto/file/FileDto";
 
 interface AuthenticatedRequest extends Request {
   userId?: string;
   role?: string;
 }
 
-interface IFile {
-  buffer: Buffer;
-  originalName: string;
-  mimeType: string;
-}
-
 export class BookingController extends BaseController {
   constructor(
-    private readonly _createBookingUseCase: IUseCase<Booking, [CreateBookingRequestDto]>,
-    private readonly _respondToBookingUseCase: IUseCase<void, [RespondToBookingDto]>, 
-    private readonly _updateJobStatusUseCase: IUseCase<void, [UpdateJobStatusDto]>,
-    private readonly _addExtraChargeUseCase: IUseCase<void, [AddExtraChargeDto, IFile?]>,
-    private readonly _respondToExtraChargeUseCase: IUseCase<void, [RespondToExtraChargeDto]>,
-    private readonly _completeJobUseCase: IUseCase<void, [CompleteJobDto, IFile?]>,
-    private readonly _getBookingDetailsUseCase: IUseCase<Booking, [GetBookingDetailsDto]>,
-    private readonly _customerCancelUseCase: IUseCase<void, [CancelBookingDto]>,
-    private readonly _technicianCancelUseCase: IUseCase<void, [CancelBookingDto]>,
-    private readonly _rateTechnicianUseCase: IUseCase<void, [RateTechnicianDto]>, 
-    private readonly _getTechnicianHistoryUseCase: IUseCase<PaginatedBookingResult, [GetTechnicianHistoryDto]>, 
-    private readonly _getCustomerBookingsUseCase: IUseCase<PaginatedBookingResult, [GetCustomerBookingsDto]>,
-    private readonly _verifyPaymentUseCase: IUseCase<void, [VerifyPaymentDto]>,
+    private readonly _createBookingUseCase: ICreateBookingUseCase,
+    private readonly _respondToBookingUseCase: IRespondToBookingUseCase,
+    private readonly _updateJobStatusUseCase: IUpdateJobStatusUseCase,
+    private readonly _addExtraChargeUseCase: IAddExtraChargeUseCase,
+    private readonly _respondToExtraChargeUseCase: IRespondToExtraChargeUseCase,
+    private readonly _completeJobUseCase: ICompleteJobUseCase,
+    private readonly _getBookingDetailsUseCase: IGetBookingDetailsUseCase,
+    private readonly _customerCancelUseCase: ICustomerCancelBookingUseCase,
+    private readonly _technicianCancelUseCase: ITechnicianCancelBookingUseCase,
+    private readonly _rateTechnicianUseCase: IRateTechnicianUseCase,
+    private readonly _getTechnicianHistoryUseCase: IGetTechnicianHistoryUseCase,
+    private readonly _getCustomerBookingsUseCase: IGetCustomerBookingsUseCase,
+    private readonly _verifyPaymentUseCase: IVerifyPaymentUseCase,
     _logger: ILogger
   ) {
     super(_logger);
@@ -78,7 +71,6 @@ export class BookingController extends BaseController {
       };
 
       const booking = await this._createBookingUseCase.execute(input);
-      // FIX: Added await for async mapper
       const responseDto = await BookingMapper.toResponse(booking); 
       return this.created(res, responseDto, SuccessMessages.BOOKING_CREATED);
     } catch (err) {

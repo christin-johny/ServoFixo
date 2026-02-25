@@ -1,14 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
-import { RequestMapper } from "../../utils/RequestMapper";
-import { IUseCase } from "../../../application/interfaces/services/IUseCase";  
+import { RequestMapper } from "../../utils/RequestMapper"; 
 import { CreateServiceItemDto } from "../../../application/dto/serviceItem/CreateServiceItemDto";
 import { UpdateServiceItemDto } from "../../../application/dto/serviceItem/UpdateServiceItemDto";
-import { PaginatedServiceResponse, ServiceItemResponseDto } from "../../../application/dto/serviceItem/ServiceItemResponseDto";
 import { StatusCodes } from "../../utils/StatusCodes";
 import { ErrorMessages, SuccessMessages } from "../../../application/constants/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
+import { ICreateServiceItemUseCase, IGetAllServiceItemsUseCase, IDeleteServiceItemUseCase, IEditServiceItemUseCase, IToggleServiceItemStatusUseCase } from "../../../application/interfaces/use-cases/serviceItem/IServiceItemUseCases";
 
 interface FileData {
   buffer: Buffer;
@@ -24,20 +23,13 @@ interface ServiceQueryParams {
   isActive?: boolean;
 }
 
-interface UpdateServiceParams {
-    id: string;
-    dto: UpdateServiceItemDto;
-    newImageFiles: FileData[];
-    imagesToDelete: string[];
-}
-
 export class AdminServiceItemController extends BaseController {
   constructor( 
-    private readonly _createUseCase: IUseCase<ServiceItemResponseDto, [CreateServiceItemDto, FileData[]]>, 
-    private readonly _getAllUseCase: IUseCase<PaginatedServiceResponse, [ServiceQueryParams]>, 
-    private readonly _deleteUseCase: IUseCase<void, [string]>, 
-    private readonly _editUseCase: IUseCase<ServiceItemResponseDto, [UpdateServiceParams]>, 
-    private readonly _toggleStatusUseCase: IUseCase<void, [string, boolean]>,
+    private readonly _createUseCase: ICreateServiceItemUseCase,
+    private readonly _getAllUseCase: IGetAllServiceItemsUseCase,
+    private readonly _deleteUseCase: IDeleteServiceItemUseCase,
+    private readonly _editUseCase: IEditServiceItemUseCase,
+    private readonly _toggleStatusUseCase: IToggleServiceItemStatusUseCase,
     _logger: ILogger
   ) {
     super(_logger);

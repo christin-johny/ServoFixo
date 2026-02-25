@@ -1,29 +1,23 @@
 import { NextFunction, Request, Response } from "express";
 import { BaseController } from "../BaseController";
-import { RequestMapper } from "../../utils/RequestMapper";
-import { IUseCase } from "../../../application/interfaces/services/IUseCase";  
+import { RequestMapper } from "../../utils/RequestMapper";  
 import { CreateCategoryDto } from "../../../application/dto/category/CreateCategoryDto";
 import { UpdateCategoryDto } from "../../../application/dto/category/UpdateCategoryDto";
-import { CategoryResponseDto, PaginatedCategoriesResponse } from "../../../application/dto/category/CategoryResponseDto";
 import { CategoryQueryParams } from "../../../domain/repositories/IServiceCategoryRepository";
 import { SuccessMessages, ErrorMessages } from "../../../application/constants/ErrorMessages";
 import { ILogger } from "../../../application/interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { StatusCodes } from "../../utils/StatusCodes";
+import { ICreateCategoryUseCase, IGetAllCategoriesUseCase, IEditCategoryUseCase, IDeleteCategoryUseCase, IToggleCategoryStatusUseCase } from "../../../application/interfaces/use-cases/category/ICategoryUseCases";
 
-interface FileData {
-  buffer: Buffer;
-  originalName: string;
-  mimeType: string;
-}
 
 export class AdminCategoryController extends BaseController {
   constructor(
-    private readonly _createUseCase: IUseCase<CategoryResponseDto, [CreateCategoryDto, FileData | undefined]>,
-    private readonly _getAllUseCase: IUseCase<PaginatedCategoriesResponse, [CategoryQueryParams]>,
-    private readonly _editUseCase: IUseCase<CategoryResponseDto, [string, UpdateCategoryDto, FileData | undefined]>,
-    private readonly _deleteUseCase: IUseCase<void, [string]>,
-    private readonly _toggleStatusUseCase: IUseCase<void, [string, boolean]>,
+    private readonly _createUseCase: ICreateCategoryUseCase,
+    private readonly _getAllUseCase: IGetAllCategoriesUseCase,
+    private readonly _editUseCase: IEditCategoryUseCase,
+    private readonly _deleteUseCase: IDeleteCategoryUseCase,
+    private readonly _toggleStatusUseCase: IToggleCategoryStatusUseCase,
     _logger: ILogger
   ) {
     super(_logger);

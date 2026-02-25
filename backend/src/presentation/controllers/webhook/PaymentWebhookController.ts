@@ -1,12 +1,12 @@
 import { NextFunction, Request, Response } from "express";
-import crypto from "crypto";
-import { IUseCase } from "../../../application/interfaces/services/IUseCase";
+import crypto from "crypto"; 
 import { ProcessPaymentDto } from "../../../application/dto/webhook/ProcessPaymentDto";
 import { StatusCodes } from "../../utils/StatusCodes";
+import { IProcessPaymentUseCase } from "../../../application/interfaces/use-cases/webhook/IWebhookUseCases";
 
 export class PaymentWebhookController {
   constructor( 
-    private readonly _processPaymentUseCase: IUseCase<void, [ProcessPaymentDto]>
+    private readonly _processPaymentUseCase: IProcessPaymentUseCase,
   ) {}
 
   handleRazorpayWebhook = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
