@@ -154,6 +154,16 @@ import { GetServiceReviewsUseCase } from "../../application/use-cases/service-it
 import { GetAllBookingsUseCase } from "../../application/use-cases/booking/GetAllBookingsUseCase";
 import { GetRecommendedTechniciansUseCase } from "../../application/use-cases/booking/GetRecommendedTechniciansUseCase";
 import { RedisOtpSessionRepository } from "../redis/RedisOtpSessionRepository";
+ 
+
+import { ChatSessionMongoRepository } from "../database/repositories/ChatSessionMongoRepository";
+import { GeminiChatService } from "../services/GeminiChatService";
+import { StartChatSessionUseCase } from "../../application/use-cases/chat/StartChatSessionUseCase";
+import { SendChatMessageUseCase } from "../../application/use-cases/chat/SendChatMessageUseCase";
+import { GetChatHistoryUseCase } from "../../application/use-cases/chat/GetChatHistoryUseCase";
+import { ResolveChatUseCase } from "../../application/use-cases/chat/ResolveChatUseCase";
+import { ChatController } from "../../presentation/controllers/Chat/ChatController";
+
 
 const imageService = new S3ImageService();
 const emailService = new NodemailerEmailService();
@@ -330,3 +340,12 @@ export const adminBookingController = new AdminBookingController(adminForceAssig
 const processPaymentUseCase = new ProcessPaymentUseCase(bookingRepo,technicianRepo,notificationService,logger);
 
 export const paymentWebhookController = new PaymentWebhookController(processPaymentUseCase);
+
+const chatRepo = new ChatSessionMongoRepository();
+const geminiChatService = new GeminiChatService();
+const startChatSessionUseCase = new StartChatSessionUseCase(chatRepo);
+const sendChatMessageUseCase = new SendChatMessageUseCase(chatRepo,geminiChatService);
+const getChatHistoryUseCase = new GetChatHistoryUseCase(chatRepo);
+const resolveChatUseCase = new ResolveChatUseCase(chatRepo,geminiChatService)
+
+export const chatController =  new ChatController(startChatSessionUseCase,sendChatMessageUseCase,getChatHistoryUseCase,resolveChatUseCase,logger)
