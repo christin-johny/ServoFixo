@@ -4,11 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { getAdminDashboardStats } from '../../api/dashboardRepository';
 import type { AdminDashboardData } from '../../types/DashboardTypes';
 
+
 const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<AdminDashboardData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
+  
   useEffect(() => {
     getAdminDashboardStats()
       .then(setStats)

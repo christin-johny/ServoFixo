@@ -6,29 +6,48 @@ export interface IncomingJob {
   earnings: number;
   distance: string;
   address: string;
-  expiresAt: string; // ISO timestamp from backend
+  expiresAt: string; 
+}
+
+export interface ActiveJob {
+  id: string;
+  status: string;
+  serviceName: string;
+  customerName: string;
+  location: string;
 }
 
 interface TechnicianBookingState {
   incomingJob: IncomingJob | null;
+  activeJob: ActiveJob | null;
   isModalOpen: boolean;
 }
 
 const initialState: TechnicianBookingState = {
   incomingJob: null,
   isModalOpen: false,
+  activeJob: null
 };
 
 const technicianBookingSlice = createSlice({
   name: "technicianBooking",
   initialState,
   reducers: {
-    // Called when Socket receives 'booking:assign_request'
+    setActiveJob(state, action: PayloadAction<ActiveJob>) {
+      state.activeJob = action.payload;
+    },
+    updateActiveJobStatus(state, action: PayloadAction<string>) {
+      if (state.activeJob) {
+        state.activeJob.status = action.payload;
+      }
+    },
+    clearActiveJob(state) {
+      state.activeJob = null;
+    },
     setIncomingJob(state, action: PayloadAction<IncomingJob>) {
       state.incomingJob = action.payload;
       state.isModalOpen = true;
-    },
-    // Called on Reject, Timeout, or Accept
+    }, 
     clearIncomingJob(state) {
       state.incomingJob = null;
       state.isModalOpen = false;
@@ -36,5 +55,5 @@ const technicianBookingSlice = createSlice({
   },
 });
 
-export const { setIncomingJob, clearIncomingJob } = technicianBookingSlice.actions;
+export const { setIncomingJob, clearIncomingJob,setActiveJob,updateActiveJobStatus } = technicianBookingSlice.actions;
 export default technicianBookingSlice.reducer;
