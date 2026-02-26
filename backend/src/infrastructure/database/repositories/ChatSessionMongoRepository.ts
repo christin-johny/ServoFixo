@@ -34,7 +34,7 @@ export class ChatSessionMongoRepository implements IChatSessionRepository {
 
   async findByCustomerId(customerId: string, limit: number = 20, skip: number = 0): Promise<ChatSession[]> {
     const docs = await ChatSessionModel.find({ customerId })
-      .sort({ "timestamps.createdAt": -1 })
+      .sort({ "timestamps.updatedAt": -1 })
       .skip(skip)
       .limit(limit)
       .exec();

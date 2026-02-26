@@ -8,6 +8,7 @@ interface ServiceCardProps {
 }
 
 
+
 const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
   const navigate = useNavigate()
   return (
@@ -24,7 +25,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
         />
         {/* Rating pill with slightly better contrast */}
         <div className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm text-gray-700">
-          <Star size={10} className="text-yellow-400 fill-yellow-400" /> 4.8
+          <Star size={10} className="text-yellow-400 fill-yellow-400" /> {service.rating || 0}
         </div>
       </div>
 

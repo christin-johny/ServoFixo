@@ -1,15 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom"; 
-import { User, Camera, ChevronRight, Mail, Phone, MapPin, Pencil, Trash2, type LucideIcon, Clock } from "lucide-react";
+import { User, Camera, ChevronRight, Mail, Phone, MapPin, Pencil, Trash2, type LucideIcon, Clock ,Bot} from "lucide-react";
 import type { IAddress, IAddressFormInput } from "../../types/AddressTypes";
 import type { RootState } from "../../../../store/store";
 import { fetchAddressesStart, setAddresses, clearCustomerData, updateAvatar, updateProfileSuccess } from "../../../../store/customerSlice";
-import { getMyAddresses, deleteAddress, setDefaultAddress, addAddress, updateAddress, updateProfile, uploadAvatar, changePassword } from "../../api/customerRepository";
+import { getMyAddresses, deleteAddress, setDefaultAddress, addAddress, updateAddress, updateProfile, uploadAvatar, changePassword,getMyChatHistory } from "../../api/customerRepository";
 import { logout } from "../../../../store/authSlice";
 import { useNotification } from "../../../notifications/hooks/useNotification";
-
-// History Imports
 import { getMyBookings,type BookingResponse } from "../../../booking/api/customerBookingRepository";
 import BookingHistoryCard from "../../../booking/components/customer/BookingHistoryCard";
 
@@ -21,6 +19,9 @@ import AddressModal from '../../components/customer/AddressModal';
 import UpdateDetailsModal from '../../components/customer/UpdateDetailsModal';
 import ChangePasswordModal from "../../components/customer/ChangePasswordModal";
 import ImageCropperModal from "../../../../components/Shared/ImageCropper/ImageCropperModal";
+import type { ChatSession } from "../../../chat/types/ChatTypes";
+import ConsultationCard from "../../../chat/components/ConsultationCard";
+import { ConsultationDetailModal } from "../../../chat/components/ConsultationDetailModal";
 
 interface ChangePasswordInput {
   currentPassword?: string;
@@ -60,24 +61,37 @@ const ProfilePage: React.FC = () => {
   const [isCropping, setIsCropping] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [imgError, setImgError] = useState(false);
+  
+  const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
+  const [chatLoading, setChatLoading] = useState(true);
 
-  // Recent Activity State
+  const [selectedSession, setSelectedSession] = useState<ChatSession | null>(null);
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
+
   const [recentBookings, setRecentBookings] = useState<BookingResponse[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(true);
 
   // 1. Fetch Addresses
   useEffect(() => {
-    const loadAddresses = async () => {
-      dispatch(fetchAddressesStart());
-      try {
-        const data = await getMyAddresses();
-        dispatch(setAddresses(data));
-      } catch (err) {
-        console.error("Failed to load addresses", err);
+  const loadAddresses = async () => {
+    dispatch(fetchAddressesStart());
+    try {
+      const response = await getMyAddresses();
+
+      if (response.success) {
+        dispatch(setAddresses(response.data));
+      } else {
+        dispatch(setAddresses([]));  
       }
-    };
-    loadAddresses();
-  }, [dispatch]);
+
+    } catch (err) {
+      console.error("Failed to load addresses", err);
+      dispatch(setAddresses([])); 
+    }
+  };
+
+  loadAddresses();
+}, [dispatch]);
 
   // 2. Fetch Recent Activity
   useEffect(() => {
@@ -92,8 +106,28 @@ const ProfilePage: React.FC = () => {
         }
     };
     loadRecentActivity();
-  }, []);
+  }, []); 
 
+useEffect(() => {
+  const loadChatHistory = async () => {
+    try {
+      const data = await getMyChatHistory();
+      setChatHistory(data);
+    } catch (err) {
+      console.error("Failed to load chat history", err);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+  loadChatHistory();
+}, []);
+
+
+// Handler for clicking a ConsultationCard
+const handleViewSummary = (session: ChatSession) => {
+    setSelectedSession(session);
+    setIsSummaryModalOpen(true);
+};
   useEffect(() => { setImgError(false); }, [profile?.avatarUrl]);
 
   // --- HANDLERS (Same as before) ---
@@ -238,7 +272,10 @@ const ProfilePage: React.FC = () => {
           {/* SECTION 1: ADDRESS (Moved Top) */}
           <section>
             <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-lg text-gray-900">Address</h3>
+             <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
+                <MapPin size={20} className="text-gray-600" />
+                Address
+              </h3>
               <button onClick={() => setIsAddressModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-semibold shadow transition-colors">Add address</button>
             </div>
 
@@ -267,15 +304,15 @@ const ProfilePage: React.FC = () => {
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="bg-white rounded-2xl shadow-sm p-10 text-center text-gray-500 border border-dashed border-gray-300">
-                <p className="font-medium">No address added.</p>
-                <p className="text-sm mt-1">Add your first address to continue.</p>
-              </div>
-            )}
+            ) :(
+  <div className="bg-white rounded-2xl shadow-sm p-10 text-center text-gray-500 border border-dashed border-gray-300">
+    <p className="font-medium">No address saved yet.</p>
+    <p className="text-sm mt-1">Add your first address to continue.</p>
+  </div>
+)}
           </section>
 
-          {/* SECTION 2: RECENT ACTIVITY (Moved Below) */}
+          {/* SECTION 2: RECENT ACTIVITY  */}
           <section>
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
@@ -305,6 +342,39 @@ const ProfilePage: React.FC = () => {
             )}
           </section>
 
+          {/* SECTION: AI CONSULTATIONS (Internal Scrollable) */}
+<section className="mt-8">
+  <div className="flex justify-between items-center mb-6">
+    <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
+       <Bot size={20} className="text-blue-600"/> AI Consultations
+    </h3>
+    <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-1 rounded-md font-black uppercase tracking-widest">
+      History Log
+    </span>
+  </div>
+
+  {chatLoading ? (
+    <div className="space-y-3">
+      {[1, 2].map(i => <div key={i} className="h-20 bg-gray-200 rounded-xl animate-pulse" />)}
+    </div>
+  ) : chatHistory.length > 0 ? (
+
+    <div className="max-h-[400px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+      {chatHistory.map(session => (
+        <ConsultationCard 
+            key={session.id} 
+            session={session} 
+            onOpen={handleViewSummary} 
+        />
+      ))}
+    </div>
+  ) : (
+    <div className="bg-white rounded-xl p-10 text-center text-gray-500 border border-dashed border-gray-300">
+      <p className="text-sm font-medium">No consultations found.</p>
+    </div>
+  )}
+</section>
+
           {/* LOGOUT BUTTON */}
           <section className="space-y-3">
             <button onClick={() => setShowLogoutModal(true)} className="w-full bg-white p-4 rounded-xl flex justify-between items-center shadow-sm border hover:bg-gray-50 transition-colors group">
@@ -313,6 +383,11 @@ const ProfilePage: React.FC = () => {
             </button>
           </section>
         </div>
+        <ConsultationDetailModal 
+            isOpen={isSummaryModalOpen} 
+            session={selectedSession} 
+            onClose={() => setIsSummaryModalOpen(false)} 
+        />
 
         {/* MODALS */}
         <ConfirmModal isOpen={showLogoutModal} onClose={() => setShowLogoutModal(false)} onConfirm={handleLogout} title="Logout Confirmation" message="Are you sure you want to log out?" confirmText="Yes, Logout" />
