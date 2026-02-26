@@ -7,7 +7,11 @@ import { ProcessPaymentDto } from "../../dto/webhook/ProcessPaymentDto";
 import { NotificationType } from "../../../domain/value-objects/NotificationTypes"; 
 import { IProcessPaymentUseCase } from "../../interfaces/use-cases/webhook/IWebhookUseCases";
 
-export class ProcessPaymentUseCase implements IProcessPaymentUseCase{
+
+
+import mongoose, { ClientSession } from "mongoose"; 
+
+export class ProcessPaymentUseCase implements IProcessPaymentUseCase {
   constructor(
     private readonly _bookingRepo: IBookingRepository,
     private readonly _technicianRepo: ITechnicianRepository,
@@ -16,32 +20,37 @@ export class ProcessPaymentUseCase implements IProcessPaymentUseCase{
   ) {}
 
   async execute(input: ProcessPaymentDto): Promise<void> {
- 
-    const booking = await this._bookingRepo.findByPaymentOrderId(input.orderId);
+    const session: ClientSession = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const booking = await this._bookingRepo.findByPaymentOrderId(input.orderId, session);
+        
+        if (!booking) {
+            this._logger.warn(`Webhook ignored: Booking not found for Order ID ${input.orderId}`);
+            await session.abortTransaction();
+            return;
+        }
     
-    if (!booking) {
-        this._logger.warn(`Webhook ignored: Booking not found for Order ID ${input.orderId}`);
-        return;
-    }
- 
-    if (booking.getStatus() === "PAID") {
-        return;
-    }
- 
-    booking.updateStatus("PAID", "system", "Payment confirmed via Webhook");
+        if (booking.getStatus() === "PAID") {
+            await session.abortTransaction();
+            return;
+        }
     
-    const payment = booking.getPayment();
-    payment.status = "PAID";
-    payment.razorpayPaymentId = input.transactionId;
+        booking.updateStatus("PAID", "system", "Payment confirmed via Webhook");
+        const payment = booking.getPayment();
+        payment.status = "PAID";
+        payment.razorpayPaymentId = input.transactionId;
+        
+        await this._bookingRepo.update(booking, session);
     
-    await this._bookingRepo.update(booking);
- 
-    const techId = booking.getTechnicianId();
-    if (techId) { 
-        await this._technicianRepo.updateAvailabilityStatus(techId, false);
-    }
- 
-    if (techId) {
+        const techId = booking.getTechnicianId();
+        if (techId) { 
+            await this._technicianRepo.updateAvailabilityStatus(techId, false, session);
+        }
+
+        await session.commitTransaction();
+       if (techId) {
         await this._notificationService.send({
             recipientId: techId,
             recipientType: "TECHNICIAN",
@@ -53,6 +62,14 @@ export class ProcessPaymentUseCase implements IProcessPaymentUseCase{
                 status: "PAID"
             }
         });
+    }
+
+    } catch (error) {
+        await session.abortTransaction();
+        this._logger.error(`Webhook Transaction Failed: ${error.message}`);
+        throw error;
+    } finally {
+        await session.endSession();
     }
   }
 }

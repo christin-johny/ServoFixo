@@ -1,4 +1,5 @@
-import  {FilterQuery } from "mongoose";
+import  {ClientSession,FilterQuery}  from "mongoose";
+
 import {
   IBookingRepository,
   BookingFilterParams,
@@ -30,7 +31,7 @@ export class BookingMongoRepository implements IBookingRepository {
 
   async update(booking: Booking): Promise<Booking> {
     const persistenceData = this.toPersistence(booking);
-    const { _id, ...updateData } = persistenceData as any;
+    const {  ...updateData } = persistenceData as any;
 
     const doc = await BookingModel.findByIdAndUpdate(
       booking.getId(),
@@ -59,11 +60,25 @@ export class BookingMongoRepository implements IBookingRepository {
       }).exec();
   }
 
-  async findById(id: string): Promise<Booking | null> {
+  async findById(id: string, session?: ClientSession): Promise<Booking | null> {
     const doc = await BookingModel.findOne({
       _id: id,
       isDeleted: { $ne: true }
-    }).exec();
+    }) .session(session || null) 
+    .exec();
+
+    if (!doc) return null;
+    return this.toDomain(doc);
+  }
+
+  async findByPaymentOrderId(orderId: string, session?: ClientSession): Promise<Booking | null> {
+    const doc = await BookingModel.findOne({
+      "payment.razorpayOrderId": orderId,
+      isDeleted: { $ne: true }
+    })
+    .session(session || null)
+    .exec();
+
     if (!doc) return null;
     return this.toDomain(doc);
   }
@@ -313,15 +328,7 @@ async addExtraCharge(bookingId: string, charge: ExtraCharge): Promise<ExtraCharg
         addedAt: addedItem.addedAt
     };
   }
-  async findByPaymentOrderId(orderId: string): Promise<Booking | null> {
-    const doc = await BookingModel.findOne({
-      "payment.razorpayOrderId": orderId,
-      isDeleted: { $ne: true }
-    }).exec();
-    if (!doc) return null;
-    return this.toDomain(doc);
-  }
-
+  
   private toDomain(doc: BookingDocument): Booking {
     if (!doc) throw new Error("Booking document is undefined");
 

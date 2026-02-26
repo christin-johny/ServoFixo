@@ -2,6 +2,7 @@ import { Booking } from "../entities/Booking";
 import { IBaseRepository } from "./IBaseRepository";
 import { BookingStatus, TechAssignmentAttempt, ExtraCharge, PaymentStatus } from "../value-objects/BookingTypes";
 import { BookingResponseDto } from "../../application/dto/booking/BookingResponseDto";
+import { ClientSession } from "mongoose";
 
 export interface BookingFilterParams {
   customerId?: string;
@@ -33,16 +34,9 @@ export interface IBookingRepository extends IBaseRepository<Booking> {
 
   findActiveBookingForTechnician(technicianId: string): Promise<Booking | null>;
   findActiveBookingForCustomer(customerId: string): Promise<Booking | null>;
-  
-  // --- Scheduler Queries ---
-  
-  /**
-   * Finds bookings that are stuck in ASSIGNED_PENDING and have passed their expiration time.
-   * Used by the Cron Job.
-   */
+   
   findExpiredAssignments(): Promise<Booking[]>; // <--- ADDED THIS
-
-  // --- Write Operations (Core Logic) ---
+ 
   
   create(booking: Booking): Promise<Booking>;
 
@@ -70,4 +64,10 @@ addExtraCharge(bookingId: string, charge: ExtraCharge): Promise<ExtraCharge>;
   findByPaymentOrderId(orderId: string): Promise<Booking | null>;
 
   markAsRated(bookingId: string): Promise<void>;
+
+  findById(id: string, session?: ClientSession): Promise<Booking | null>;
+  update(booking: Booking, session?: ClientSession): Promise<Booking>;
+
+  updatePaymentStatus(id: string, status: PaymentStatus, transactionId?: string, session?: ClientSession): Promise<void>;
+  findByPaymentOrderId(orderId: string, session?: ClientSession): Promise<Booking | null>;
 }
