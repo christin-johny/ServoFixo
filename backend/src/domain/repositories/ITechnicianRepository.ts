@@ -82,6 +82,12 @@ export interface ITechnicianRepository extends IBaseRepository<Technician> {
   dismissRequest(technicianId: string, requestId: string): Promise<void>;
   updateAvailabilityStatus(id: string, isOnJob: boolean, session?: ClientSession): Promise<void>;
   addRating(id: string, rating: number): Promise<void>;
+  getAdminTechnicianStats(): Promise<{
+    total: number;
+    online: number;
+    pending: number;
+    totalLiability: number;
+  }>;
 
 }
 
