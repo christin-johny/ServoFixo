@@ -69,7 +69,7 @@ app.use(makeErrorHandlerMiddleware(logger));
 export const startServer = async () => {
   await connectDatabase();
  
-  SocketServer.init(httpServer, logger);
+  SocketServer.init(httpServer);
 
   const PORT = process.env.PORT || 5000;
    

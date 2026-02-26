@@ -47,11 +47,7 @@ export class AdminBookingController extends BaseController {
       next(err);
     }
   };
-
-  /**
-   * @route POST /api/admin/bookings/:id/status
-   * @desc Admin manually updates booking status (e.g., Force Complete, Cancel)
-   */
+ 
   forceStatus = async (req: Request, res: Response,next: NextFunction): Promise<Response|void> => {
     try {
       const adminId = (req as AuthenticatedRequest).userId;
@@ -98,23 +94,22 @@ export class AdminBookingController extends BaseController {
       next(err);
     }
   }; 
-getAll = async (req: Request, res: Response,next: NextFunction): Promise<Response|void> => {
-  try { 
+getAll = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+  try {
     if ((req as AuthenticatedRequest).role !== "admin") {
-        return this.unauthorized(res, "Admins only.");
+      return this.unauthorized(res, "Admins only.");
     }
 
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
-    
-    // Map Query Params to DTO
+
     const input: GetAllBookingsDto = {
       page,
       limit,
       search: req.query.search as string,
-      status: req.query.status as BookingStatus, 
+      status: req.query.status as BookingStatus,
       zoneId: req.query.zoneId as string,
-      categoryId: req.query.categoryId as string, //   The new filter
+      categoryId: req.query.categoryId as string,
       startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
       endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
       sortBy: req.query.sortBy as "newest" | "oldest" | "updated",
@@ -122,17 +117,22 @@ getAll = async (req: Request, res: Response,next: NextFunction): Promise<Respons
 
     const result = await this._getAllBookingsUseCase.execute(input);
 
+    // FIX: Use Promise.all to resolve the async mapping for S3 URLs
+    const mappedData = await Promise.all(
+      result.data.map(async (booking) => await BookingMapper.toResponse(booking))
+    );
+
     return this.ok(res, {
-      data: result.data.map(b => BookingMapper.toResponse(b)),
+      data: mappedData, // This will now contain the actual data
       total: result.total,
       page: result.page,
       limit: result.limit,
-      totalPages: Math.ceil(result.total / limit)
+      totalPages: result.totalPages // Use the calculated value from the repository
     }, "All bookings fetched successfully");
 
-  } catch (err) { 
+  } catch (err) {
     (err as Error & { logContext?: string }).logContext = "ADMIN_GET_ALL_FAILED";
-      next(err);
+    next(err);
   }
 };
 }

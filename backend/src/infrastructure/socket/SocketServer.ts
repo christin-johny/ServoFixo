@@ -1,11 +1,10 @@
 import { Server as SocketIOServer } from "socket.io";
-import { Server as HTTPServer } from "http";
-import { ILogger } from "../../application/interfaces/services/ILogger"; 
+import { Server as HTTPServer } from "http"; 
 
 export class SocketServer {
   private static _io: SocketIOServer;
 
-  public static init(httpServer: HTTPServer, logger: ILogger): SocketIOServer {
+  public static init(httpServer: HTTPServer): SocketIOServer {
     this._io = new SocketIOServer(httpServer, {
       cors: {
         origin: process.env.FRONTEND_ORIGIN, 
@@ -22,16 +21,13 @@ this._io.on("connection", (socket) => {
  
   if (role === "ADMIN") { 
       socket.join("ADMIN_BROADCAST_CHANNEL");  
-      if (userId) socket.join(userId);
-      logger.info(`Admin Connected to Broadcast Channel: ${userId}`); 
+      if (userId) socket.join(userId); 
   } 
   else if (techId) { 
-    socket.join(techId);
-    logger.info(`Technician Connected: ${techId}`);
+    socket.join(techId); 
   } 
   else if (userId) { 
-    socket.join(userId);
-    logger.info(`Customer Connected: ${userId}`);
+    socket.join(userId); 
   }
 });
 

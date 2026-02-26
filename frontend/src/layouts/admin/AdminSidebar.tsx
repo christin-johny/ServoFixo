@@ -9,8 +9,6 @@ import {
   CheckCircle,
   MapPin,
   CreditCard,
-  FileText,
-  Settings,
   ChevronDown,
   ChevronRight,
   X,
@@ -64,13 +62,13 @@ const MENU_CONFIG: MenuSection[] = [
     sectionLabel: 'Finance',
     items: [{ label: 'Payments', icon: CreditCard, path: '/admin/payments' }]
   },
-  {
-    sectionLabel: 'System',
-    items: [
-      { label: 'Settings', icon: Settings, path: '/admin/settings' },
-      { label: 'Reports', icon: FileText, path: '/admin/reports' }
-    ]
-  }
+  // {
+  //   sectionLabel: 'System',
+  //   items: [
+  //     { label: 'Settings', icon: Settings, path: '/admin/settings' },
+  //     { label: 'Reports', icon: FileText, path: '/admin/reports' }
+  //   ]
+  // }
 ];
 
 interface AdminSidebarProps {

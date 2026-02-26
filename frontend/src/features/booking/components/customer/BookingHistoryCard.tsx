@@ -33,7 +33,6 @@ const BookingHistoryCard: React.FC<BookingHistoryCardProps> = ({ booking, compac
     }
   };
 
-  // Added Optional Chaining to all logic
   const status = booking?.status || 'PENDING';
   const isCompleted = status === 'COMPLETED' || status === 'PAID';
   const isPaid = status === 'PAID';

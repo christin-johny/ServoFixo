@@ -30,10 +30,7 @@ import { useTechnicianNotifications } from "../../features/notifications/hooks/u
  
 //   Updated Imports: Specific Event Types
 import { 
-  socketService, 
-  type BookingConfirmedEvent,
-  type BookingStatusEvent,
-  type BookingCancelledEvent
+  socketService
 } from "../../lib/socketClient"; 
 import IncomingJobModal from "../../features/booking/components/technician/IncomingJobModal";
 
@@ -49,11 +46,6 @@ interface JobStatusSummary {
   status: string;
 }
 
-//   Union Type for Global Socket Events
-type GlobalJobEvent = 
-  | BookingConfirmedEvent 
-  | BookingStatusEvent 
-  | BookingCancelledEvent;
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", path: "/technician", icon: LayoutDashboard },
@@ -192,31 +184,25 @@ const TechnicianLayout: React.FC = () => {
       console.error("Failed to check active job", error);
     }
   }, [accessToken]);
-
-  // Initial Check on Mount & Route Change
+ 
   useEffect(() => {
     checkActiveJob();
   }, [checkActiveJob, location.pathname]); 
-
-  //   LISTEN FOR SOCKET EVENTS (Strictly Typed)
+ 
   useEffect(() => {
     if (!user?.id) return;
-
-    // Handler accepts specific Union Type instead of 'any'
-    const handleGlobalUpdate = (data: GlobalJobEvent) => { 
-        
-        // Re-check the API to see if we have a new active job
+ 
+    const handleGlobalUpdate = () => { 
+         
         checkActiveJob();
     };
 
     // Bind Listeners
-    socketService.onBookingConfirmed(handleGlobalUpdate); // Force Assign
-    socketService.onBookingStatusUpdate(handleGlobalUpdate); // Status Change
-    socketService.onBookingCancelled(handleGlobalUpdate); // Cancelled
+    socketService.onBookingConfirmed(handleGlobalUpdate);  
+    socketService.onBookingStatusUpdate(handleGlobalUpdate);  
+    socketService.onBookingCancelled(handleGlobalUpdate);  
 
-    return () => {
-        // Cleanup listeners if necessary
-        // socketService.offTrackingListeners(); 
+    return () => { 
     };
   }, [user?.id, checkActiveJob]);
 

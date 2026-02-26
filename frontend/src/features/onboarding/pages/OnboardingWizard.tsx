@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector} from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Check, Loader2, AlertCircle } from "lucide-react";
-import type { RootState, AppDispatch } from "../../../store/store";
+import type { RootState } from "../../../store/store";
 import type { TechnicianProfile } from "../../../store/technicianSlice";
 
 // Import Steps
@@ -58,8 +58,6 @@ const RejectionBanner: React.FC<{ profile: TechnicianProfile }> = ({ profile }) 
 const OnboardingWizard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const dispatch = useDispatch<AppDispatch>();
   
   const { profile, loading } = useSelector((state: RootState) => state.technician);
   

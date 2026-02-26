@@ -42,14 +42,14 @@ export interface TechnicianDashboardData {
   performance: {
     averageRating: number;
     totalJobs: number;
-    completionRate: number; // Added for UI depth
+    completionRate: number;  
   };
   earnings: {
     totalEarnings: number;
     walletBalance: number;
-    thisWeekEarnings: number; // Added for "Weekly Progress"
+    thisWeekEarnings: number; 
   };
-  activeJob?: { // Changed from activeJobId to object for better UI info
+  activeJob?: { 
     id: string;
     serviceName: string;
     customerName: string;

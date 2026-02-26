@@ -17,7 +17,7 @@ export interface BookingFilterParams {
 }
 
 export interface PaginatedBookingResult {
-  data: BookingResponseDto[]; 
+  data: Booking[]; 
   total: number;
   page: number;
   limit: number;

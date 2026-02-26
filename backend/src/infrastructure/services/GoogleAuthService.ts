@@ -1,5 +1,5 @@
 import { OAuth2Client } from "google-auth-library";
-import { IGoogleAuthService, GoogleUserPayload } from "../../application/interfaces/IGoogleAuthService";
+import { IGoogleAuthService, GoogleUserPayload } from "../../application/interfaces/services/IGoogleAuthService";
 
 export class GoogleAuthService implements IGoogleAuthService {
   private _client: OAuth2Client;

@@ -138,9 +138,6 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     };
   }
 
-  /**
-   * "Verification Queue" Tabs (Onboarding vs Maintenance)
-   */
   async findPendingVerification(
     filters: VerificationQueueFilters
   ): Promise<{ technicians: Technician[]; total: number }> {
@@ -217,41 +214,39 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
   }
  
   async findRecommendedForAdmin(params: { 
-      zoneId: string; 
-      serviceId: string; 
-      search?: string 
-  }): Promise<Technician[]> {
-      
-      const query= { 
-          isDeleted: { $ne: true },
-          verificationStatus: "VERIFIED",  
-          zoneIds: params.zoneId,
-          subServiceIds: params.serviceId 
-      };
-  
-      if (params.search) {
-          const regex = new RegExp(params.search, 'i');
-          query.$or = [{ name: regex }, { phone: regex }];
-      }
-  
-      const docs = await TechnicianModel.find(query).exec();
-  
-      // Sort in memory (Available > Busy > Offline)
-      return docs.map(doc => this.toDomain(doc)).sort((a, b) => {
-          return this.getAvailabilityScore(b) - this.getAvailabilityScore(a);
-      });
-  }
+    zoneId: string; 
+    serviceId: string; 
+    search?: string 
+}): Promise<Technician[]> {
+     
+    const query: FilterQuery<TechnicianDocument> = { 
+        isDeleted: { $ne: true },
+        verificationStatus: "VERIFIED",  
+        zoneIds: params.zoneId,
+        subServiceIds: params.serviceId 
+    };
+
+    if (params.search) {
+        const regex = new RegExp(params.search, 'i'); 
+        query.$or = [{ name: regex }, { phone: regex }];
+    }
+
+    const docs = await TechnicianModel.find(query).exec();
+ 
+    return docs.map(doc => this.toDomain(doc)).sort((a, b) => {
+        return this.getAvailabilityScore(b) - this.getAvailabilityScore(a);
+    });
+}
   
   private getAvailabilityScore(tech: Technician): number {
       const isOnline = tech.getIsOnline(); 
       const isOnJob = tech.getIsOnJob();   
   
-      if (isOnline && !isOnJob) return 3; // Best
-      if (isOnline && isOnJob) return 2;  // Okay (Busy)
-      return 1;                           // Worst (Offline)
+      if (isOnline && !isOnJob) return 3;  
+      if (isOnline && isOnJob) return 2;   
+      return 1;                            
   }
-
-  // --- UPDATES & ACTIONS ---
+ 
 
   async updateAvailabilityStatus(id: string, isOnJob: boolean, session?: ClientSession): Promise<void> {
     await TechnicianModel.findByIdAndUpdate(

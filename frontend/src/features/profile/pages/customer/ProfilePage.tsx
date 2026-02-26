@@ -78,8 +78,8 @@ const ProfilePage: React.FC = () => {
     try {
       const response = await getMyAddresses();
 
-      if (response.success) {
-        dispatch(setAddresses(response.data));
+      if (response) {
+        dispatch(setAddresses(response));
       } else {
         dispatch(setAddresses([]));  
       }

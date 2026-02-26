@@ -1,5 +1,5 @@
-import  {ClientSession,FilterQuery}  from "mongoose";
-
+import type { ClientSession } from "mongoose";
+import type { FilterQuery } from "mongoose";
 import {
   IBookingRepository,
   BookingFilterParams,
@@ -169,12 +169,14 @@ export class BookingMongoRepository implements IBookingRepository {
         .exec(),
       BookingModel.countDocuments(query)
     ]);
+    const totalPages = Math.ceil(total / limit);
 
     return {
       data: docs.map(doc => this.toDomain(doc)),
       total,
       page,
-      limit
+      limit,
+      totalPages
     };
   }
 
