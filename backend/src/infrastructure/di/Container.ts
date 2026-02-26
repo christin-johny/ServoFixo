@@ -163,6 +163,9 @@ import { SendChatMessageUseCase } from "../../application/use-cases/chat/SendCha
 import { GetChatHistoryUseCase } from "../../application/use-cases/chat/GetChatHistoryUseCase";
 import { ResolveChatUseCase } from "../../application/use-cases/chat/ResolveChatUseCase";
 import { ChatController } from "../../presentation/controllers/Chat/ChatController";
+import { GetAdminDashboardUseCase } from "../../application/use-cases/dashboard/GetAdminDashboardUseCase";
+import { GetTechnicianDashboardUseCase } from "../../application/use-cases/dashboard/GetTechnicianDashboardUseCase";
+import { DashboardController } from "../../presentation/controllers/dashboard/DashboardController";
 
 
 const imageService = new S3ImageService();
@@ -349,3 +352,8 @@ const getChatHistoryUseCase = new GetChatHistoryUseCase(chatRepo);
 const resolveChatUseCase = new ResolveChatUseCase(chatRepo,geminiChatService)
 
 export const chatController =  new ChatController(startChatSessionUseCase,sendChatMessageUseCase,getChatHistoryUseCase,resolveChatUseCase,logger)
+
+const getAdminDashboardUseCase = new  GetAdminDashboardUseCase(bookingRepo,technicianRepo);
+const getTechnicianDashboardUseCase = new GetTechnicianDashboardUseCase(bookingRepo,technicianRepo)
+
+export const dashboardController = new DashboardController(getAdminDashboardUseCase,getTechnicianDashboardUseCase,logger)

@@ -85,7 +85,7 @@ export interface BookingSnapshots {
   technician?: {
     name: string;
     phone: string;
-    avatarUrl?: string; // Matches Tech Model
+    avatarUrl?: string; 
     rating: number;
   };
   customer: {

@@ -51,7 +51,7 @@ const Step4_Rates: React.FC<Step4Props> = ({ onNext, onBack, onSaveAndExit }) =>
       }
     };
     fetchRates();
-  }, [profile]); // Added profile dep to ensure we catch updates
+  }, [profile]);  
 
   // --- HANDLERS ---
   const submitAgreement = async () => {

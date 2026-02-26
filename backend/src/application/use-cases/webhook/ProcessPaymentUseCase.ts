@@ -64,11 +64,19 @@ export class ProcessPaymentUseCase implements IProcessPaymentUseCase {
         });
     }
 
-    } catch (error) {
+    } catch (error: unknown) {
         await session.abortTransaction();
-        this._logger.error(`Webhook Transaction Failed: ${error.message}`);
+
+        let message = "Unknown error";
+
+        if (error instanceof Error) {
+            message = error.message;
+        }
+
+        this._logger.error(`Webhook Transaction Failed: ${message}`);
+
         throw error;
-    } finally {
+        } finally {
         await session.endSession();
     }
   }

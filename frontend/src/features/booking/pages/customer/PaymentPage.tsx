@@ -6,7 +6,6 @@ import type { RootState } from '../../../../store/store';
 import { useNotification } from '../../../notifications/hooks/useNotification';
 import Navbar from '../../../../layouts/customer/Navbar';
 import { getBookingById, verifyBookingPayment } from '../../api/customerBookingRepository';
-import api from '../../../../lib/axiosClient';
 import { setActiveBooking } from '../../../../store/customerSlice';
 
 // --- 1. STRICT RAZORPAY TYPES ---

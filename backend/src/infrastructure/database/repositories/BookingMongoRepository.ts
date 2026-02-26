@@ -1,5 +1,5 @@
-import  {ClientSession,FilterQuery}  from "mongoose";
-
+import type { ClientSession } from "mongoose";
+import type { FilterQuery } from "mongoose";
 import {
   IBookingRepository,
   BookingFilterParams,
@@ -41,6 +41,25 @@ export class BookingMongoRepository implements IBookingRepository {
 
     if (!doc) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
     return this.toDomain(doc);
+  }
+  async getTechnicianEarnings(technicianId: string): Promise<number> {
+    const result = await BookingModel.aggregate([
+      { 
+        $match: { 
+          technicianId, 
+          status: { $in: ["PAID", "COMPLETED"] }, 
+          isDeleted: false 
+        } 
+      },
+      { 
+        $group: { 
+          _id: null, 
+          total: { $sum: "$pricing.final" } 
+        } 
+      }
+    ]).exec();
+
+    return result[0]?.total || 0;
   }
 
   async delete(id: string): Promise<boolean> {
@@ -150,12 +169,14 @@ export class BookingMongoRepository implements IBookingRepository {
         .exec(),
       BookingModel.countDocuments(query)
     ]);
+    const totalPages = Math.ceil(total / limit);
 
     return {
       data: docs.map(doc => this.toDomain(doc)),
       total,
       page,
-      limit
+      limit,
+      totalPages
     };
   }
 
@@ -250,6 +271,30 @@ export class BookingMongoRepository implements IBookingRepository {
     ).exec();
     return Boolean(result);
   }
+  async getAdminBookingStats(): Promise<{ revenue: number; statusCounts: Record<string, number> }> {
+  const result = await BookingModel.aggregate([
+    {
+      $facet: {
+        "revenue": [
+          { $match: { status: { $in: ["PAID", "COMPLETED"] }, isDeleted: false } },
+          { $group: { _id: null, total: { $sum: "$pricing.final" } } }
+        ],
+        "counts": [
+          { $match: { isDeleted: false } },
+          { $group: { _id: "$status", count: { $sum: 1 } } }
+        ]
+      }
+    }
+  ]).exec();
+
+  const revenue = result[0].revenue[0]?.total || 0;
+  const statusCounts = result[0].counts.reduce((acc: any, curr: any) => {
+    acc[curr._id] = curr.count;
+    return acc;
+  }, {});
+
+  return { revenue, statusCounts };
+}
 
   async updateExtraChargeStatus(
     bookingId: string, 

@@ -6,13 +6,15 @@ import authRoutes from "./auth.routes";
 import profileRoutes from'./profile.routes';
 import dataRoutes from'./data.routes';
 import notificationRoutes from "./notification.routes";
+import techDashboardRoutes from "./dashboard.routes";
 const router = Router();
 
 const jwtService = new JwtService();
 const technicianAuth = makeTechnicianAuthMiddleware(jwtService);
 
-// Public Routes
 router.use("/auth", authRoutes);
+
+router.use("/dashboard", technicianAuth, techDashboardRoutes);
 
 router.use("/profile", technicianAuth, profileRoutes);
 

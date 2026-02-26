@@ -11,7 +11,7 @@ import {
 import LoaderFallback from "../../../../components/LoaderFallback";
 import ConfirmModal from "../../../../components/Shared/ConfirmModal/ConfirmModal";
 import CancellationModal from "../../components/technician/CancellationModal";
-
+import { setActiveJob, updateActiveJobStatus, } from "../../../../store/technicianBookingSlice";
 // Components
 import { JobHeader } from "../../components/technician/JobHeader";
 import { JobFooter } from "../../components/technician/JobFooter";
@@ -27,7 +27,7 @@ import {
   type BookingConfirmedEvent,  
   type BookingCancelledEvent   
 } from "../../../../lib/socketClient"; 
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { type RootState } from "../../../../store/store";   
 
 // --- Strict Types ---
@@ -68,6 +68,7 @@ interface ModalConfig {
 const ActiveJobPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { showError, showSuccess } = useNotification();
 
   const [job, setJob] = useState<JobDetails | null>(null);
@@ -86,6 +87,14 @@ const ActiveJobPage: React.FC = () => {
     try {
       if (!id) return;
       const data = await getTechnicianBookingById(id) as JobDetails;
+      dispatch(setActiveJob({
+          id: data.id,
+          status: data.status,
+          serviceName: data.snapshots.service.name,
+          customerName: data.snapshots.customer.name,
+          location: data.location.address
+      }));
+      
       setJob(data);
  
       if (data.status === 'COMPLETED') {
@@ -116,10 +125,11 @@ const ActiveJobPage: React.FC = () => {
 
     //   Typed Handlers
     const handleStatusUpdate = (data: BookingStatusEvent) => { 
-        if (data.bookingId === id) { 
-            fetchJob();
-        }
-    };
+    if (data.bookingId === id) { 
+        dispatch(updateActiveJobStatus(data.status)); // Update Redux instantly
+        fetchJob();
+    }
+};
 
     const handleConfirm = (data: BookingConfirmedEvent) => {
         if (data.bookingId === id) fetchJob();
@@ -305,3 +315,6 @@ const ActiveJobPage: React.FC = () => {
 };
 
 export default ActiveJobPage;
+
+
+

@@ -1,5 +1,5 @@
 
-import { FilterQuery } from "mongoose";
+import { ClientSession, FilterQuery } from "mongoose";
 import {
   ITechnicianRepository,
   TechnicianFilterParams,
@@ -74,8 +74,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     if (!doc) return null;
     return this.toDomain(doc);
   }
-
-  // Used for Auth checks to see if email exists 
+ 
   async findByEmailOnly(email: string): Promise<Technician | null> {
     const doc = await TechnicianModel.findOne({
       email: email.toLowerCase(),
@@ -92,12 +91,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     if (!doc) return null;
     return this.toDomain(doc);
   }
-
-  // --- ADMIN LISTS ---
-
-  /**
-   * "All Technicians" Tab
-   */
+ 
   async findAllPaginated(
     page: number,
     limit: number,
@@ -144,9 +138,6 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     };
   }
 
-  /**
-   * "Verification Queue" Tabs (Onboarding vs Maintenance)
-   */
   async findPendingVerification(
     filters: VerificationQueueFilters
   ): Promise<{ technicians: Technician[]; total: number }> {
@@ -223,41 +214,39 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
   }
  
   async findRecommendedForAdmin(params: { 
-      zoneId: string; 
-      serviceId: string; 
-      search?: string 
-  }): Promise<Technician[]> {
-      
-      const query= { 
-          isDeleted: { $ne: true },
-          verificationStatus: "VERIFIED",  
-          zoneIds: params.zoneId,
-          subServiceIds: params.serviceId 
-      };
-  
-      if (params.search) {
-          const regex = new RegExp(params.search, 'i');
-          query.$or = [{ name: regex }, { phone: regex }];
-      }
-  
-      const docs = await TechnicianModel.find(query).exec();
-  
-      // Sort in memory (Available > Busy > Offline)
-      return docs.map(doc => this.toDomain(doc)).sort((a, b) => {
-          return this.getAvailabilityScore(b) - this.getAvailabilityScore(a);
-      });
-  }
+    zoneId: string; 
+    serviceId: string; 
+    search?: string 
+}): Promise<Technician[]> {
+     
+    const query: FilterQuery<TechnicianDocument> = { 
+        isDeleted: { $ne: true },
+        verificationStatus: "VERIFIED",  
+        zoneIds: params.zoneId,
+        subServiceIds: params.serviceId 
+    };
+
+    if (params.search) {
+        const regex = new RegExp(params.search, 'i'); 
+        query.$or = [{ name: regex }, { phone: regex }];
+    }
+
+    const docs = await TechnicianModel.find(query).exec();
+ 
+    return docs.map(doc => this.toDomain(doc)).sort((a, b) => {
+        return this.getAvailabilityScore(b) - this.getAvailabilityScore(a);
+    });
+}
   
   private getAvailabilityScore(tech: Technician): number {
       const isOnline = tech.getIsOnline(); 
       const isOnJob = tech.getIsOnJob();   
   
-      if (isOnline && !isOnJob) return 3; // Best
-      if (isOnline && isOnJob) return 2;  // Okay (Busy)
-      return 1;                           // Worst (Offline)
+      if (isOnline && !isOnJob) return 3;  
+      if (isOnline && isOnJob) return 2;   
+      return 1;                            
   }
-
-  // --- UPDATES & ACTIONS ---
+ 
 
   async updateAvailabilityStatus(id: string, isOnJob: boolean, session?: ClientSession): Promise<void> {
     await TechnicianModel.findByIdAndUpdate(
@@ -334,6 +323,32 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
       $push: { serviceRequests: request },
     }).exec();
   }
+
+  async getAdminTechnicianStats(): Promise<{ total: number; online: number; pending: number; totalLiability: number }> {
+  const result = await TechnicianModel.aggregate([
+    {
+      $facet: {
+        "counts": [
+          { $match: { isDeleted: false } },
+          { $group: { 
+              _id: null, 
+              total: { $sum: 1 },
+              online: { $sum: { $cond: [{ $eq: ["$availability.isOnline", true] }, 1, 0] } },
+              pending: { $sum: { $cond: [{ $eq: ["$verificationStatus", "VERIFICATION_PENDING"] }, 1, 0] } }
+          }}
+        ],
+        "liability": [
+          { $group: { _id: null, total: { $sum: "$walletBalance.currentBalance" } } }
+        ]
+      }
+    }
+  ]).exec();
+
+  const counts = result[0].counts[0] || { total: 0, online: 0, pending: 0 };
+  const totalLiability = result[0].liability[0]?.total || 0;
+
+  return { ...counts, totalLiability };
+}
 
   async addZoneRequest(id: string, request: ZoneRequest): Promise<void> {
     await TechnicianModel.findByIdAndUpdate(id, {

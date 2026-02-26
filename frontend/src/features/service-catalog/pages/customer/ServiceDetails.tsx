@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // Added useNavigate
-import { useSelector } from 'react-redux'; // Added useSelector
+import { useParams, useNavigate } from 'react-router-dom';   useNavigate
+import { useSelector } from 'react-redux';   useSelector
 import { type RootState } from '../../../../store/store'; 
 import {
    Star,

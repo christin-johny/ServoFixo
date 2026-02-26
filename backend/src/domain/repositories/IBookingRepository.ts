@@ -17,7 +17,7 @@ export interface BookingFilterParams {
 }
 
 export interface PaginatedBookingResult {
-  data: BookingResponseDto[]; 
+  data: Booking[]; 
   total: number;
   page: number;
   limit: number;
@@ -70,4 +70,9 @@ addExtraCharge(bookingId: string, charge: ExtraCharge): Promise<ExtraCharge>;
 
   updatePaymentStatus(id: string, status: PaymentStatus, transactionId?: string, session?: ClientSession): Promise<void>;
   findByPaymentOrderId(orderId: string, session?: ClientSession): Promise<Booking | null>;
+  getAdminBookingStats(): Promise<{
+    revenue: number;
+    statusCounts: Record<string, number>;
+  }>;
+  getTechnicianEarnings(technicianId: string): Promise<number>;
 }

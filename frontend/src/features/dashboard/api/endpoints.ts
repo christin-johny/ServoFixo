@@ -10,7 +10,7 @@ export const ADMIN_DASHBOARD_ENDPOINTS = {
 };
 
 export const TECHNICIAN_DASHBOARD_ENDPOINTS = {
-  SUMMARY: `${VERSION}/technician/dashboard/summary`, 
+  SUMMARY: `${VERSION}/technician/dashboard/stats`, 
 };
 
 export const CUSTOMER_SERVICE_ENDPOINTS = {

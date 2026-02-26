@@ -1,4 +1,3 @@
-import React from "react";
 import { User, Phone, Calendar, CreditCard, MapPin, AlertCircle, Navigation, ShieldCheck, Clock } from "lucide-react";
 import type { JobDetails } from "src/features/booking/types/JobDetails";
 
