@@ -297,4 +297,10 @@ export const LogEvents = {
   OTP_MISMATCH: "OTP Mismatch",
   BOOKING_STATUS_CHANGED: "Booking status changed",
   PAYMENT_VERIFIED_LOG: "Payment verified for Booking",
+
+  CHAT_SESSION_START_FAILED: "Failed to start chat session.",
+  CHAT_MESSAGE_SEND_FAILED: "Failed to send chat message.",
+  CHAT_HISTORY_FETCH_FAILED: "Failed to fetch chat history.",
+  CHAT_RESOLUTION_FAILED: "Failed to resolve chat session.",
+  CHAT_SUMMARY_GENERATION_FAILED: "Failed to generate chat summary.",
 };

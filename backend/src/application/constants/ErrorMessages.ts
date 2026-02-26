@@ -90,7 +90,14 @@ export enum ErrorMessages {
   INVALID_TRANSITION_START = "Cannot start job. Technician must be at location (REACHED) first.",
   PAYMENT_SIGNATURE_INVALID = "Payment verification failed. Invalid signature.",
 
-  TOO_MANY_OTP_REQUESTS='Too many otp requests try again after some time.'
+  TOO_MANY_OTP_REQUESTS='Too many otp requests try again after some time.',
+
+  EMPTY_CHAT_MESSAGE = "Message content cannot be empty.",
+  INVALID_RESOLUTION_TYPE = "Invalid resolution type. Must be RESOLVED or ESCALATED_TO_BOOKING.",
+  CHAT_SESSION_NOT_FOUND = "The requested chat session could not be found.",
+  CHAT_SESSION_ALREADY_CLOSED = "This chat session is already closed.",
+  UNAUTHORIZED_CHAT_ACCESS = "You do not have permission to access this chat session.",
+  CHAT_SESSION_CLOSED= "This chat session has already been closed.",
 }
 
 export enum SuccessMessages {
@@ -159,6 +166,11 @@ export enum SuccessMessages {
   PAYMENT_VERIFIED = "Payment verified successfully.",
   RATING_SUBMITTED = "Rating submitted successfully.",
   JOB_STATUS_UPDATED = "Job status updated successfully", 
+
+  CHAT_SESSION_STARTED = "Chat session started successfully.",
+  CHAT_MESSAGE_SENT = "Message sent successfully.",
+  CHAT_HISTORY_RETRIEVED = "Chat history retrieved successfully.",
+  CHAT_SESSION_CLOSED = "Chat session closed successfully."
   
 }
  

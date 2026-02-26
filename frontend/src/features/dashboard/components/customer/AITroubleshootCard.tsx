@@ -1,11 +1,13 @@
-
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
-interface Props {
-  onChat?: () => void;
-}
+const AITroubleshootCard: React.FC = () => {
+  const navigate = useNavigate();
 
-const AITroubleshootCard: React.FC<Props> = ({ onChat }) => {
+  const handleChatNavigation = () => {
+    navigate("/assistant");
+  };
+
   return (
     <section className="scroll-mt-40">
       <div
@@ -49,7 +51,7 @@ const AITroubleshootCard: React.FC<Props> = ({ onChat }) => {
 
           <div className="mt-8">
             <button
-              onClick={onChat}
+              onClick={handleChatNavigation}
               className="
                 px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800
                 text-white font-semibold text-lg rounded-2xl shadow-lg

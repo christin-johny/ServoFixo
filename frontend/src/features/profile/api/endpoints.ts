@@ -24,6 +24,7 @@ export const CUSTOMER_PROFILE_ENDPOINTS = {
   ADDRESS_BY_ID: (id: string) => `${VERSION}/customer/addresses/${id}`,
   SET_DEFAULT_ADDRESS: (id: string) => `${VERSION}/customer/addresses/${id}/default`,
   ZONE_BY_LOCATION: `${VERSION}/customer/zones/find-by-location`,
+  CHAT_HISTORY:`${VERSION}/customer/chat/history`
 };
 
 export const TECHNICIAN_PROFILE_ENDPOINTS = {

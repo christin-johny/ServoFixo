@@ -22,6 +22,7 @@ const RateTechnicianPage = lazy(() => import("../features/booking/pages/customer
 const PaymentFailedPage = lazy(() => import("../features/booking/pages/customer/PaymentFailedPage"));
 const BookingHistoryPage = lazy(() => import("../features/booking/pages/customer/BookingHistoryPage"));
 const BookingDetailsPage = lazy(() => import("../features/booking/pages/customer/BookingDetailsPage"));
+const ChatAssistantPage = lazy(() => import("../features/chat/pages/ChatAssistantPage"));
 
 const CustomerRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
@@ -43,6 +44,14 @@ const CustomerRoutes: React.FC = () => (
                 <BookingConfirm />
             </RoleProtectedRoute>
         } />
+        <Route 
+            path="assistant" 
+            element={
+                <RoleProtectedRoute requiredRole="customer" redirectTo="/login">
+                    <ChatAssistantPage />
+                </RoleProtectedRoute>
+            } 
+        />
         <Route path="booking/searching" element={
             <RoleProtectedRoute requiredRole="customer" redirectTo="/login">
                 <SearchingScreen />

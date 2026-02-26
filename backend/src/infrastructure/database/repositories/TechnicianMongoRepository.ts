@@ -1,4 +1,5 @@
-import  FilterQuery  from "mongoose";
+
+import { FilterQuery } from "mongoose";
 import {
   ITechnicianRepository,
   TechnicianFilterParams,
@@ -34,7 +35,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
 
   async update(technician: Technician): Promise<Technician> {
     const persistenceData = this.toPersistence(technician);
-    const { _id, ...updateData } = persistenceData as unknown as {
+    const {  ...updateData } = persistenceData as unknown as {
       _id?: unknown;
     } & Record<string, unknown>;
 
@@ -56,8 +57,6 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     return !!result;
   }
 
-  // --- FINDERS ---
-
   async findById(id: string): Promise<Technician | null> {
     const doc = await TechnicianModel.findOne({
       _id: id,
@@ -76,7 +75,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     return this.toDomain(doc);
   }
 
-  // Used for Auth checks to see if email exists (even if deleted/suspended)
+  // Used for Auth checks to see if email exists 
   async findByEmailOnly(email: string): Promise<Technician | null> {
     const doc = await TechnicianModel.findOne({
       email: email.toLowerCase(),
@@ -204,11 +203,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     };
   }
 
-  // --- MATCHMAKING & SMART LISTS ---
-
-  /**
-   * Used by Booking Creation Logic (Flow A)
-   */
+  
   async findAvailableInZone(
     zoneId: string,
     subServiceId: string,
@@ -226,21 +221,16 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     const docs = await TechnicianModel.find(query).limit(limit).exec();
     return docs.map((doc) => this.toDomain(doc));
   }
-
-  /**
-   *   NEW: Used by Admin Force Assign (God Mode)
-   * Shows a smart list: Verified + Correct Zone + Correct Service.
-   * Sorts by availability score.
-   */
+ 
   async findRecommendedForAdmin(params: { 
       zoneId: string; 
       serviceId: string; 
       search?: string 
   }): Promise<Technician[]> {
       
-      const query: any = { 
+      const query= { 
           isDeleted: { $ne: true },
-          verificationStatus: "VERIFIED", // Must be a valid tech
+          verificationStatus: "VERIFIED",  
           zoneIds: params.zoneId,
           subServiceIds: params.serviceId 
       };
@@ -269,14 +259,18 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
 
   // --- UPDATES & ACTIONS ---
 
-  async updateAvailabilityStatus(id: string, isOnJob: boolean): Promise<void> {
-    await TechnicianModel.findByIdAndUpdate(id, {
-      $set: { 
-        "availability.isOnJob": isOnJob,
-        ...(isOnJob === false ? { "availability.lastJobCompletedAt": new Date() } : {})
-      }
-    }).exec();
+  async updateAvailabilityStatus(id: string, isOnJob: boolean, session?: ClientSession): Promise<void> {
+    await TechnicianModel.findByIdAndUpdate(
+      id, 
+      {
+        $set: { 
+          "availability.isOnJob": isOnJob,
+          ...(isOnJob === false ? { "availability.lastJobCompletedAt": new Date() } : {})
+        }
+      }, { session }  
+    ).exec();
   }
+
 
   async updateTechnician(
     id: string,

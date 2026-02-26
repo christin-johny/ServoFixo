@@ -4,6 +4,7 @@ import {
   type Address,
 } from "../../../store/customerSlice";
 import { CUSTOMER_PROFILE_ENDPOINTS  } from "./endpoints";
+import type { ChatSession } from "../../chat/types/ChatTypes";
 
 export const getProfile = async (): Promise<CustomerProfile> => {
   const response = await api.get(CUSTOMER_PROFILE_ENDPOINTS .PROFILE);
@@ -69,5 +70,10 @@ export const deleteAddress = async (id: string): Promise<void> => {
 };
 
 export const setDefaultAddress = async (id: string): Promise<void> => {
-  await api.patch(CUSTOMER_PROFILE_ENDPOINTS .SET_DEFAULT_ADDRESS(id));
+  await api.patch(CUSTOMER_PROFILE_ENDPOINTS.SET_DEFAULT_ADDRESS(id));
+};
+
+export const getMyChatHistory = async (): Promise<ChatSession[]> => {
+  const response = await api.get(CUSTOMER_PROFILE_ENDPOINTS.CHAT_HISTORY);
+  return response.data.data;
 };
