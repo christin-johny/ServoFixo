@@ -17,6 +17,22 @@ export const refreshApi = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+interface FailedRequest {
+  resolve: (value: string | PromiseLike<string | null> | null) => void;
+  reject: (error?: unknown) => void;
+  config: InternalAxiosRequestConfig;
+}
+
+let isRefreshing = false;
+let failedQueue: FailedRequest[] = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach((p) => {
+    if (error) p.reject(error);
+    else p.resolve(token);
+  });
+  failedQueue = [];
+};
 
 api.interceptors.request.use(
   (config: any) => {
@@ -60,9 +76,23 @@ api.interceptors.response.use(
     if (isAuthEndpoint(originalConfig.url)) {
       return Promise.reject(error);
     }
- 
+
     if (error.response.status === 401 && !originalConfig._retry) {
+      if (isRefreshing) {
+        return new Promise<string | null>((resolve, reject) => {
+          failedQueue.push({ resolve, reject, config: originalConfig });
+        })
+          .then((token) => {
+            if (token && originalConfig.headers) {
+              originalConfig.headers.Authorization = `Bearer ${token}`;
+            }
+            return api(originalConfig);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
       originalConfig._retry = true;
+      isRefreshing = true;
 
       try {
         const resp = await refreshApi.post('/auth/refresh');
@@ -72,19 +102,20 @@ api.interceptors.response.use(
           throw new Error("Refresh failed: No token returned");
         }
 
-        // Update Store
         store.dispatch(setAccessToken(newToken));
+        processQueue(null, newToken);
 
-        // Update the original request header and retry immediately
         if (originalConfig.headers) {
           originalConfig.headers.Authorization = `Bearer ${newToken}`;
         }
         return api(originalConfig);
 
       } catch (refreshError) {
-        // If refresh fails, log out the user
+        processQueue(refreshError, null);
         store.dispatch(logout());
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 

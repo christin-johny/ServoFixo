@@ -347,7 +347,7 @@ export const paymentWebhookController = new PaymentWebhookController(processPaym
 const chatRepo = new ChatSessionMongoRepository();
 const geminiChatService = new GeminiChatService();
 const startChatSessionUseCase = new StartChatSessionUseCase(chatRepo);
-const sendChatMessageUseCase = new SendChatMessageUseCase(chatRepo,geminiChatService);
+const sendChatMessageUseCase = new SendChatMessageUseCase(chatRepo,geminiChatService,categoryRepo);
 const getChatHistoryUseCase = new GetChatHistoryUseCase(chatRepo);
 const resolveChatUseCase = new ResolveChatUseCase(chatRepo,geminiChatService)
 

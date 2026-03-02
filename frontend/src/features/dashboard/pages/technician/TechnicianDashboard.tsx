@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { 
-  Power, Star, CheckCircle, Award, Clock, 
+  Power, Star, CheckCircle, Clock, 
   ChevronRight, PlayCircle, Wallet, User, MapPin, Loader2, Briefcase
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -157,7 +157,7 @@ const TechnicianDashboard: React.FC = () => {
             Welcome, {profile?.name?.split(' ')[0] || 'Partner'}!
           </h1>
           <p className="text-slate-500 text-sm font-medium mt-1 flex items-center gap-2">
-            <Clock size={14} /> {isOnline ? 'Your shop is open' : 'You are currently offline'}
+            <Clock size={14} /> {isOnline ? 'Your are online. Searching for work' : 'You are currently offline'}
           </p>
         </div>
         <button 
@@ -255,7 +255,7 @@ const TechnicianDashboard: React.FC = () => {
       </div>
 
       {/* SECTION 3: BOTTOM PERFORMANCE METRICS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <MetricCard 
           icon={<Star className="text-orange-500" />} 
           label="Reputation" 
@@ -267,12 +267,6 @@ const TechnicianDashboard: React.FC = () => {
           label="Jobs Done" 
           value={data?.performance.totalJobs || 0} 
           sub="Total Lifetime Completed"
-        />
-        <MetricCard 
-          icon={<Award className="text-purple-500" />} 
-          label="Success Rate" 
-          value="98%" 
-          sub="Platform Performance"
         />
       </div>
     </div>

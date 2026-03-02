@@ -78,7 +78,6 @@ const CustomerHome: React.FC = () => {
 
                 </div>
             </div>
-
             <Footer />
             <BottomNav />
         </div>
