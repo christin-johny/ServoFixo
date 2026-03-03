@@ -166,6 +166,7 @@ import { ChatController } from "../../presentation/controllers/Chat/ChatControll
 import { GetAdminDashboardUseCase } from "../../application/use-cases/dashboard/GetAdminDashboardUseCase";
 import { GetTechnicianDashboardUseCase } from "../../application/use-cases/dashboard/GetTechnicianDashboardUseCase";
 import { DashboardController } from "../../presentation/controllers/dashboard/DashboardController";
+import { MongooseUnitOfWork } from "../database/mongoose/sessions/MongooseUnitOfWork";
 
 
 const imageService = new S3ImageService();
@@ -329,7 +330,8 @@ const rateTechnicianUseCase = new RateTechnicianUseCase(bookingRepo,technicianRe
 const getTechnicianHistoryUseCase = new GetTechnicianHistoryUseCase(bookingRepo )
 const getCustomerBookingsUseCase = new GetCustomerBookingsUseCase(bookingRepo)
 const paymentService = new RazorpayService();
-const verifyPaymentUseCase = new VerifyPaymentUseCase(bookingRepo,  technicianRepo,  paymentService,  notificationService );
+const mongooseUnitOfWork = new MongooseUnitOfWork()
+const verifyPaymentUseCase = new VerifyPaymentUseCase(bookingRepo,  technicianRepo,  paymentService,  notificationService,mongooseUnitOfWork );
 
 export const bookingController = new BookingController(  createBookingUseCase,  respondToBookingUseCase,  updateJobStatusUseCase,  addExtraChargeUseCase,  respondToExtraChargeUseCase,  completeJobUseCase,  getBookingDetailsUseCase, customerCancelUseCase,  technicianCancelUseCase,  rateTechnicianUseCase, getTechnicianHistoryUseCase,  getCustomerBookingsUseCase,  verifyPaymentUseCase,  logger);
 

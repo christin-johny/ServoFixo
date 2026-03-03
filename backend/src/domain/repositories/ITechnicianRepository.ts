@@ -7,7 +7,7 @@ import {
   BankUpdateRequest,
   PayoutStatus
 } from "../value-objects/TechnicianTypes";
-import { ClientSession } from "mongoose";
+import { IDatabaseSession } from "../../application/interfaces/services/IDatabaseSession";
 
 export interface TechnicianFilterParams {
   search?: string;
@@ -80,7 +80,7 @@ export interface ITechnicianRepository extends IBaseRepository<Technician> {
   addBankUpdateRequest(id: string, request: BankUpdateRequest): Promise<void>;
   updatePayoutStatus(id: string, status: PayoutStatus): Promise<void>;
   dismissRequest(technicianId: string, requestId: string): Promise<void>;
-  updateAvailabilityStatus(id: string, isOnJob: boolean, session?: ClientSession): Promise<void>;
+  updateAvailabilityStatus(id: string, isOnJob: boolean, session?: IDatabaseSession): Promise<void>;
   addRating(id: string, rating: number): Promise<void>;
   getAdminTechnicianStats(): Promise<{
     total: number;

@@ -1,5 +1,6 @@
 
 import { ClientSession, FilterQuery } from "mongoose";
+import { IDatabaseSession } from "../../../application/interfaces/services/IDatabaseSession";
 import {
   ITechnicianRepository,
   TechnicianFilterParams,
@@ -248,7 +249,8 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
   }
  
 
-  async updateAvailabilityStatus(id: string, isOnJob: boolean, session?: ClientSession): Promise<void> {
+  async updateAvailabilityStatus(id: string, isOnJob: boolean, session?: IDatabaseSession): Promise<void> {
+    const nativeSession: ClientSession | undefined = session ? session.getNativeSession() : undefined;
     await TechnicianModel.findByIdAndUpdate(
       id, 
       {
@@ -256,7 +258,7 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
           "availability.isOnJob": isOnJob,
           ...(isOnJob === false ? { "availability.lastJobCompletedAt": new Date() } : {})
         }
-      }, { session }  
+      }, { nativeSession}  
     ).exec();
   }
 

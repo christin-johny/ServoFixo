@@ -1,4 +1,5 @@
 import type { ClientSession } from "mongoose";
+import { IDatabaseSession } from "../../../application/interfaces/services/IDatabaseSession";
 import type { FilterQuery } from "mongoose";
 import {
   IBookingRepository,
@@ -79,23 +80,25 @@ export class BookingMongoRepository implements IBookingRepository {
       }).exec();
   }
 
-  async findById(id: string, session?: ClientSession): Promise<Booking | null> {
+  async findById(id: string, session?: IDatabaseSession): Promise<Booking | null> {
+    const nativeSession: ClientSession | undefined = session ? session.getNativeSession() : undefined;
     const doc = await BookingModel.findOne({
       _id: id,
       isDeleted: { $ne: true }
-    }) .session(session || null) 
+    }) .session(nativeSession || null) 
     .exec();
 
     if (!doc) return null;
     return this.toDomain(doc);
   }
 
-  async findByPaymentOrderId(orderId: string, session?: ClientSession): Promise<Booking | null> {
+  async findByPaymentOrderId(orderId: string, session?: IDatabaseSession): Promise<Booking | null> {
+    const nativeSession: ClientSession | undefined = session ? session.getNativeSession() : undefined;
     const doc = await BookingModel.findOne({
       "payment.razorpayOrderId": orderId,
       isDeleted: { $ne: true }
     })
-    .session(session || null)
+    .session(nativeSession || null)
     .exec();
 
     if (!doc) return null;
