@@ -5,7 +5,8 @@ export type TransactionCategory =
   | "PAYOUT" 
   | "REFUND_RECOUP" 
   | "BONUS" 
-  | "PENALTY";
+  | "PENALTY"
+  | "WEEKLY_PAYOUT";
 
 export type TransactionStatus = "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED";
 

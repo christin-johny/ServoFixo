@@ -173,6 +173,10 @@ import { CreditWalletOnJobCompletionUseCase } from "../../application/use-cases/
 import { GetTransactionHistoryUseCase } from "../../application/use-cases/wallet/GetTransactionHistoryUseCase";
 import { GetWalletDetailsUseCase } from "../../application/use-cases/wallet/GetWalletDetailsUseCase";
 import { WalletController } from "../../presentation/controllers/Wallet/WalletController";
+import { AdminPayoutController } from "../../presentation/controllers/Admin/AdminPayoutController";
+import { PayoutMongoRepository } from "../database/repositories/PayoutMongoRepository";
+import { GetPendingPayoutsUseCase } from "../../application/use-cases/wallet/GetPendingPayoutsUseCase";
+import { ApprovePayoutUseCase } from "../../application/use-cases/wallet/ApprovePayoutUseCase";
 
 
 const imageService = new S3ImageService();
@@ -350,7 +354,7 @@ const getAllBookingsUseCase = new GetAllBookingsUseCase(bookingRepo)
 
 export const adminBookingController = new AdminBookingController(adminForceAssignUseCase,adminForceStatusUseCase, adminUpdatePaymentUseCase,getAllBookingsUseCase,logger);
 
-const processPaymentUseCase = new ProcessPaymentUseCase(bookingRepo,technicianRepo,notificationService,logger);
+const processPaymentUseCase = new ProcessPaymentUseCase(bookingRepo,technicianRepo,notificationService,logger,mongooseUnitOfWork,creditWalletUseCase);
 
 export const paymentWebhookController = new PaymentWebhookController(processPaymentUseCase);
 
@@ -371,3 +375,8 @@ export const dashboardController = new DashboardController(getAdminDashboardUseC
 const getTransactionHistoryUseCase = new GetTransactionHistoryUseCase(walletRepo) 
 const getWalletDetailsUseCase = new GetWalletDetailsUseCase(walletRepo)
 export const walletController  = new WalletController(getWalletDetailsUseCase ,getTransactionHistoryUseCase,logger)
+
+const payoutRepo = new PayoutMongoRepository()
+const getPendingPayoutsUseCase = new GetPendingPayoutsUseCase(payoutRepo)
+const approvePayoutUseCase = new ApprovePayoutUseCase(payoutRepo,walletRepo,mongooseUnitOfWork)
+export const adminPayoutController = new AdminPayoutController(getPendingPayoutsUseCase,approvePayoutUseCase,logger)

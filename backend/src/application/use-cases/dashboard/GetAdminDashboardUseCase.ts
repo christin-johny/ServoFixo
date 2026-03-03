@@ -15,7 +15,7 @@ export class GetAdminDashboardUseCase implements IGetAdminDashboardUseCase {
       this._technicianRepo.getAdminTechnicianStats()
     ]);
 
-    const platformCommissionRate = 0.2; 
+    const platformCommissionRate = 0.1; 
     const platformEarnings = bookingStats.revenue * platformCommissionRate;
 
     return {
