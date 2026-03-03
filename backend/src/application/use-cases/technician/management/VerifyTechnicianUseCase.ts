@@ -2,16 +2,17 @@ import { ITechnicianRepository } from "../../../../domain/repositories/ITechnici
 import { VerifyTechnicianDto } from "../../../dto/technician/TechnicianVerificationDtos";
 import { ErrorMessages } from "../../../constants/ErrorMessages";
 import { IVerifyTechnicianUseCase } from "../../../interfaces/use-cases/technician/ITechnicianManagementUseCases";
+import { IInitializeWalletUseCase } from "../../../interfaces/use-cases/wallet/IWalletUseCases";
 
-export class VerifyTechnicianUseCase implements IVerifyTechnicianUseCase{
+export class VerifyTechnicianUseCase implements IVerifyTechnicianUseCase {
   constructor(
-    private readonly _technicianRepo: ITechnicianRepository
+    private readonly _technicianRepo: ITechnicianRepository,
+    private readonly _initializeWalletUseCase: IInitializeWalletUseCase
   ) {}
 
   async execute(id: string, dto: VerifyTechnicianDto): Promise<void> {
     const tech = await this._technicianRepo.findById(id);
     if (!tech) throw new Error(ErrorMessages.TECHNICIAN_NOT_FOUND);
-
 
     if (dto.action === "APPROVE") {
       tech.updateVerificationStatus("VERIFIED");
@@ -20,8 +21,10 @@ export class VerifyTechnicianUseCase implements IVerifyTechnicianUseCase{
       docs.forEach((d) => { d.status = "APPROVED"; });
       tech.updateDocuments(docs); 
 
+      // Initialize Wallet upon approval so they can start receiving payments
+      await this._initializeWalletUseCase.execute(id);
+
     } else if (dto.action === "REJECT") { 
-       
       let finalGlobalReason = dto.globalRejectionReason;
       const hasDocumentRejections = dto.documentDecisions?.some((d) => d.status === "REJECTED");
 
@@ -33,7 +36,6 @@ export class VerifyTechnicianUseCase implements IVerifyTechnicianUseCase{
       
       if (dto.documentDecisions && dto.documentDecisions.length > 0) {
         const currentDocs = tech.getDocuments();
-        
         dto.documentDecisions.forEach((decision) => {
           const docIndex = currentDocs.findIndex((d) => d.type === decision.type);
           if (docIndex !== -1) {

@@ -7,6 +7,7 @@ import profileRoutes from'./profile.routes';
 import dataRoutes from'./data.routes';
 import notificationRoutes from "./notification.routes";
 import techDashboardRoutes from "./dashboard.routes";
+import walletRoutes from "./wallet.routes";
 const router = Router();
 
 const jwtService = new JwtService();
@@ -21,6 +22,8 @@ router.use("/profile", technicianAuth, profileRoutes);
 router.use("/data", technicianAuth, dataRoutes);
 
 router.use("/notifications",technicianAuth, notificationRoutes);
+
+router.use("/wallet", technicianAuth, walletRoutes);
 
 
 export default router;

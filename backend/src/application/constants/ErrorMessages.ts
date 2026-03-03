@@ -100,6 +100,14 @@ export enum ErrorMessages {
   CHAT_SESSION_CLOSED= "This chat session has already been closed.",
 }
 
+export enum WalletErrorMessages {
+  WALLET_NOT_FOUND = "Technician wallet not found",
+  WALLET_ALREADY_EXISTS = "Wallet already initialized for this technician",
+  INSUFFICIENT_FUNDS = "Insufficient withdrawable balance",
+  TRANSACTION_FAILED = "Wallet transaction failed to process",
+  MINIMUM_PAYOUT_NOT_MET = "Minimum payout threshold of ₹500 not reached"
+}
+
 export enum SuccessMessages {
   LOGIN_SUCCESS = "Logged in successfully",
   GOOGLE_LOGIN_SUCCESS = "Google login successful",

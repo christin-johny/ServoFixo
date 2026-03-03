@@ -167,6 +167,12 @@ import { GetAdminDashboardUseCase } from "../../application/use-cases/dashboard/
 import { GetTechnicianDashboardUseCase } from "../../application/use-cases/dashboard/GetTechnicianDashboardUseCase";
 import { DashboardController } from "../../presentation/controllers/dashboard/DashboardController";
 import { MongooseUnitOfWork } from "../database/mongoose/sessions/MongooseUnitOfWork";
+import { InitializeWalletUseCase } from "../../application/use-cases/wallet/InitializeWalletUseCase";
+import { WalletMongoRepository } from "../database/repositories/WalletMongoRepository";
+import { CreditWalletOnJobCompletionUseCase } from "../../application/use-cases/wallet/CreditWalletOnJobCompletionUseCase";
+import { GetTransactionHistoryUseCase } from "../../application/use-cases/wallet/GetTransactionHistoryUseCase";
+import { GetWalletDetailsUseCase } from "../../application/use-cases/wallet/GetWalletDetailsUseCase";
+import { WalletController } from "../../presentation/controllers/Wallet/WalletController";
 
 
 const imageService = new S3ImageService();
@@ -289,10 +295,11 @@ const commissionStrategy = new FixedCommissionStrategy();
 const getTechnicianRateCardUseCase = new GetTechnicianRateCardUseCase( technicianRepo, serviceItemRepo, commissionStrategy, logger);
 
 export const technicianDataController = new TechnicianDataController(  getAllCategoriesUseCase,  getServiceListingUseCase,  getAllZonesUseCase,  getTechnicianRateCardUseCase,  logger);
-
+const walletRepo =new  WalletMongoRepository()
+const initializeWalletUseCase = new InitializeWalletUseCase(walletRepo)
 const getVerificationQueueUseCase = new GetVerificationQueueUseCase(technicianRepo);
 const getTechnicianFullProfileUseCase = new GetTechnicianFullProfileUseCase(  technicianRepo,  zoneRepo,  categoryRepo,  serviceItemRepo);
-const verifyTechnicianUseCase = new VerifyTechnicianUseCase(  technicianRepo);
+const verifyTechnicianUseCase = new VerifyTechnicianUseCase(technicianRepo,initializeWalletUseCase);
 const getAllTechniciansUseCase = new GetAllTechniciansUseCase(  technicianRepo);
 const updateTechnicianUseCase = new UpdateTechnicianUseCase(technicianRepo
 );
@@ -331,7 +338,8 @@ const getTechnicianHistoryUseCase = new GetTechnicianHistoryUseCase(bookingRepo 
 const getCustomerBookingsUseCase = new GetCustomerBookingsUseCase(bookingRepo)
 const paymentService = new RazorpayService();
 const mongooseUnitOfWork = new MongooseUnitOfWork()
-const verifyPaymentUseCase = new VerifyPaymentUseCase(bookingRepo,  technicianRepo,  paymentService,  notificationService,mongooseUnitOfWork );
+const creditWalletUseCase = new CreditWalletOnJobCompletionUseCase(walletRepo)
+const verifyPaymentUseCase = new VerifyPaymentUseCase(bookingRepo,  technicianRepo,  paymentService,  notificationService,mongooseUnitOfWork,creditWalletUseCase);
 
 export const bookingController = new BookingController(  createBookingUseCase,  respondToBookingUseCase,  updateJobStatusUseCase,  addExtraChargeUseCase,  respondToExtraChargeUseCase,  completeJobUseCase,  getBookingDetailsUseCase, customerCancelUseCase,  technicianCancelUseCase,  rateTechnicianUseCase, getTechnicianHistoryUseCase,  getCustomerBookingsUseCase,  verifyPaymentUseCase,  logger);
 
@@ -359,3 +367,7 @@ const getAdminDashboardUseCase = new  GetAdminDashboardUseCase(bookingRepo,techn
 const getTechnicianDashboardUseCase = new GetTechnicianDashboardUseCase(bookingRepo,technicianRepo)
 
 export const dashboardController = new DashboardController(getAdminDashboardUseCase,getTechnicianDashboardUseCase,logger)
+
+const getTransactionHistoryUseCase = new GetTransactionHistoryUseCase(walletRepo) 
+const getWalletDetailsUseCase = new GetWalletDetailsUseCase(walletRepo)
+export const walletController  = new WalletController(getWalletDetailsUseCase ,getTransactionHistoryUseCase,logger)
