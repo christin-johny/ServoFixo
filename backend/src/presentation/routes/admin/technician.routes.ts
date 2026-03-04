@@ -46,4 +46,10 @@ router.patch(
   adminAuth, 
   adminTechnicianController.resolvePartnerRequest.bind(adminTechnicianController)
 );
+
+router.get(
+  "/:id/transactions", 
+  adminAuth, 
+  adminTechnicianController.getTechnicianTransactions.bind(adminTechnicianController)
+);
 export default router;

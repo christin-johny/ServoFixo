@@ -9,12 +9,9 @@ export const getPayouts = async (params: {
   status?: string;
 }) => {
   const { data } = await api.get(ADMIN_PAYOUT_ENDPOINTS.LIST, { params });
-  
-  // Axios wraps the response in 'data'. 
-  // 'payload' is now your { success: true, data: [...] } content
+   
   const payload = data?.data; 
-
-  // CASE 1: Backend returns a direct array (This matches your current JSON)
+ 
   if (Array.isArray(payload)) {
     return {
       data: payload as AdminPayoutDto[],
@@ -22,8 +19,7 @@ export const getPayouts = async (params: {
       totalPages: 1
     };
   }
-  
-  // CASE 2: Fallback if you add backend pagination later { data: [], total: x }
+   
   return {
     data: (payload?.data || []) as AdminPayoutDto[],
     total: payload?.total || 0,
@@ -31,8 +27,7 @@ export const getPayouts = async (params: {
   };
 };
 
-export const processPayout = async (id: string, payload: PayoutProcessPayload) => {
-  // CHANGED to patch to match your backend router.patch("/:id/status")
+export const processPayout = async (id: string, payload: PayoutProcessPayload) => { 
   const { data } = await api.patch(ADMIN_PAYOUT_ENDPOINTS.PROCESS(id), payload);
   return data;
 };

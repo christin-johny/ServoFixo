@@ -34,7 +34,9 @@ const WalletProgressCard: React.FC<Props> = ({ data, onManageClick }) => {
             <div className="space-y-1 mb-8">
                 <p className="text-sm font-medium text-slate-500 flex items-center gap-2">
                     Withdrawable Balance 
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" title="Verified Earnings" />
+                    <span title="Verified Earnings">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                    </span>
                 </p>
                 <div className="flex items-baseline gap-1">
                     <IndianRupee className="w-6 h-6 text-slate-900" />

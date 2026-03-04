@@ -128,7 +128,7 @@ const AdminPayoutsPage: React.FC = () => {
             </span>
         </div>
       )
-    },,
+    },
     {
         header: "Bank Details",
         render: (payout) => (
@@ -171,7 +171,7 @@ const AdminPayoutsPage: React.FC = () => {
             </div>
         )
     }
-  ];
+  ] as TableColumn<AdminPayoutDto>[];
 
   return (
     <div className="flex flex-col h-full gap-4 sm:gap-6 overflow-hidden">

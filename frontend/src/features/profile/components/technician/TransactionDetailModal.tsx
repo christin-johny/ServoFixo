@@ -1,5 +1,5 @@
 import React from 'react';
-import {  Receipt, Briefcase, Landmark, CheckCircle2, Clock, AlertTriangle, ArrowUpRight } from 'lucide-react';
+import {  Receipt, Briefcase, Landmark, CheckCircle2, Clock, AlertTriangle  } from 'lucide-react';
 import Modal from '../../../../components/Shared/Modal/Modal';
 import { useNavigate } from 'react-router-dom';
 

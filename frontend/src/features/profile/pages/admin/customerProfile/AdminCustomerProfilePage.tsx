@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { User, ShoppingBag, MapPin, Loader2, ChevronLeft, Edit2, Trash2, XCircle, Mail, Phone, Calendar, Shield, Clock, CheckCircle } from 'lucide-react';
+import {  ArrowUpRight,User, ShoppingBag, MapPin, Loader2, ChevronLeft, Edit2, Trash2, XCircle, Mail, Phone, Calendar, Shield, Clock, CheckCircle } from 'lucide-react';
 
 import { useNotification } from '../../../../notifications/hooks/useNotification';
 import type { CustomerDto } from '../../../types/AdminCustomerDtos';
 import CustomerEditModal from '../../../components/admin/CustomerEditModal';
 import * as customerService from '../../../api/adminCustomerService';
 import ConfirmModal from '../../../../../components/Shared/ConfirmModal/ConfirmModal';
+
+import { } from 'lucide-react';
+import type { AdminBookingListDto } from '../../../../booking/api/adminBookingRepository';
 
 const TABS = [
     { key: 'profile', icon: User, label: 'Overview' },
@@ -268,15 +271,96 @@ const ProfileDetails: React.FC<{ customer: CustomerDto }> = ({ customer }) => (
     </div>
 );
 
-const OrdersList: React.FC<{ customerId: string }> = () => (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="bg-gray-50 p-4 rounded-full mb-4">
-            <ShoppingBag size={32} className="text-gray-300" />
+
+const OrdersList: React.FC<{ customerId: string }> = ({ customerId }) => {
+    const navigate = useNavigate();
+    const [orders, setOrders] = useState<AdminBookingListDto[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+
+    useEffect(() => {
+        const fetchOrders = async () => {
+            setLoading(true);
+            try {
+                const result = await customerService.getCustomerOrdersAdmin(customerId, page);
+                setOrders(result.data);
+                setTotalPages(result.totalPages);
+            } catch (err) {
+                console.error("Failed to load customer orders");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchOrders();
+    }, [customerId, page]);
+
+    if (loading) return <div className="p-10 text-center text-gray-500 animate-pulse">Loading Order History...</div>;
+
+    if (orders.length === 0) return (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="bg-gray-50 p-4 rounded-full mb-4">
+                <ShoppingBag size={32} className="text-gray-300" />
+            </div>
+            <h4 className="text-gray-900 font-semibold">No Orders Yet</h4>
+            <p className="text-sm text-gray-500 max-w-xs mt-1">This customer hasn't placed any service requests yet.</p>
         </div>
-        <h4 className="text-gray-900 font-semibold">No Orders Yet</h4>
-        <p className="text-sm text-gray-500 max-w-xs mt-1">This customer hasn't placed any service requests yet.</p>
-    </div>
-);
+    );
+
+    return (
+        <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4">
+                {orders.map(order => (
+                    <div 
+                        key={order.id} 
+                        onClick={() => navigate(`/admin/bookings/${order.id}`)}
+                        className="bg-white border border-gray-100 rounded-xl p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group"
+                    >
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className={`px-2.5 py-1 rounded-[6px] text-[10px] font-black uppercase tracking-wider ${
+                                    order.status === 'COMPLETED' ? 'bg-green-50 text-green-700' :
+                                    order.status === 'CANCELLED' ? 'bg-red-50 text-red-700' :
+                                    'bg-blue-50 text-blue-700'
+                                }`}>
+                                    {order.status.replace('_', ' ')}
+                                </span>
+                                <span className="text-xs text-gray-400 font-mono">ID: {order.id.slice(-6)}</span>
+                            </div>
+                            <h4 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{order.snapshots.service.name}</h4>
+                            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 font-medium">
+                                <span className="flex items-center gap-1">
+                                    <User size={14}/> {order.snapshots.technician?.name || "Unassigned"}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <MapPin size={14}/> {order.location.address.split(',')[0]}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="text-left sm:text-right flex items-center justify-between sm:block w-full sm:w-auto mt-2 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-0 border-gray-100">
+                            <div>
+                                <p className="text-lg font-black text-gray-900">₹{order.pricing.final || order.pricing.estimated}</p>
+                                <p className="text-xs text-gray-400 mt-1">{new Date(order.timestamps.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            <div className="sm:hidden bg-gray-50 p-2 rounded-lg group-hover:bg-blue-50 text-gray-400 group-hover:text-blue-600">
+                                <ArrowUpRight size={16} />
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                    <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="px-4 py-2 text-sm font-bold text-gray-600 bg-gray-50 rounded-lg disabled:opacity-50 hover:bg-gray-100 transition-colors">Previous</button>
+                    <span className="text-sm font-medium text-gray-500">Page {page} of {totalPages}</span>
+                    <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="px-4 py-2 text-sm font-bold text-gray-600 bg-gray-50 rounded-lg disabled:opacity-50 hover:bg-gray-100 transition-colors">Next</button>
+                </div>
+            )}
+        </div>
+    );
+};
 
 interface Address {
     id: string;

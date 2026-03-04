@@ -1,4 +1,4 @@
-export type PayoutStatus = "PENDING" | "PROCESSING" | "APPROVED" | "FAILED";
+export type PayoutStatus = "PENDING" | "PROCESSING" | "APPROVED" | "COMPLETED" | "FAILED" | "FLAGGED";
 
 export interface AdminPayoutDto {
   weekEnding: string;

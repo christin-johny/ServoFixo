@@ -31,11 +31,9 @@ const PayoutSettings: React.FC = () => {
     const [selectedTx, setSelectedTx] = useState<TransactionDto | null>(null);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-
-    // Add this near the top of your component with your other states
+ 
 const [activeTab, setActiveTab] = useState<'EARNINGS' | 'PAYOUTS'>('EARNINGS');
-
-    // Fetch BOTH Transactions and Wallet Balance when page loads
+ 
     useEffect(() => {
         const loadPayoutData = async () => {
             setLoading(true); 
@@ -45,36 +43,19 @@ const [activeTab, setActiveTab] = useState<'EARNINGS' | 'PAYOUTS'>('EARNINGS');
                     getWalletDetails()
                 ]);
 
-                // 1. BULLETPROOF TRANSACTION EXTRACTION
-                // The backend sends { data: { data: [...], total: 1 } }
-                // So we check multiple layers to find the actual array.
                 let txList: TransactionDto[] = [];
                 let totalItems = 0;
-                let limit = 10;
+                const limit = 10; 
 
-                if (txRes) {
-                    // If it's the middle wrapper { data: [], total: 1 }
-                    if (txRes.data && Array.isArray(txRes.data)) {
-                        txList = txRes.data;
-                        totalItems = txRes.total || 0;
-                        limit = txRes.limit || 10;
-                    } 
-                    // If it's directly the array [...]
-                    else if (Array.isArray(txRes)) {
-                        txList = txRes;
-                        totalItems = txRes.length;
-                    }
-                    // Fallback for nested 'transactions' key
-                    else if (txRes.transactions && Array.isArray(txRes.transactions)) {
-                        txList = txRes.transactions;
-                        totalItems = txRes.total || 0;
-                    }
+                // FIX: TypeScript now knows this is txRes.data
+                if (txRes && txRes.data && Array.isArray(txRes.data)) {
+                    txList = txRes.data;
+                    totalItems = txRes.total || 0;
                 }
                 
                 setTransactions(txList);
                 setTotalPages(Math.ceil(totalItems / limit) || 1);
 
-                // 2. Sync fresh wallet balance to Redux
                 if (walletRes) {
                     dispatch(setWalletData(walletRes));
                 }
@@ -88,7 +69,8 @@ const [activeTab, setActiveTab] = useState<'EARNINGS' | 'PAYOUTS'>('EARNINGS');
         
         loadPayoutData();
     }, [dispatch, page]);
-    // Prevent blank screen while Redux is loading
+    
+
     if (!profile) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">

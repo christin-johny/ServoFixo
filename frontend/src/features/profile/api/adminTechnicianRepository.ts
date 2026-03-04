@@ -4,7 +4,10 @@ import type { TechnicianProfileFull } from "../types/Technician";
 import type { 
   ResolvePartnerRequestDto 
 } from "../types/TechnicianVerificationDtos";
-import type { PaginatedTechnicianQueueResponse } from "src/features/profile/types/TechnicianQueueDto";
+import type { PaginatedTechnicianQueueResponse } from "../../profile/types/TechnicianQueueDto";
+import type { PaginatedAdminBookingResult } from "../../booking/api/adminBookingRepository";
+import { ADMIN_BOOKING_ENDPOINTS } from "../../booking/api/endpoints";
+import type { TransactionDto } from "../types/TechnicianTypes";
 
 export interface TechnicianListItem {
   id: string;
@@ -118,4 +121,24 @@ export const resolvePartnerRequest = async (
   payload: ResolvePartnerRequestDto
 ): Promise<void> => {
   await api.patch(ADMIN_TECHNICIAN_ENDPOINTS.RESOLVE_REQUEST(id), payload);
+};
+
+export const getTechnicianJobsAdmin = async (
+    technicianId: string, 
+    page = 1
+): Promise<PaginatedAdminBookingResult> => {
+    const res = await api.get(ADMIN_BOOKING_ENDPOINTS.BOOKINGS, { 
+        params: { technicianId, page, limit: 5 } 
+    });
+    return res.data.data;
+};
+
+export const getTechnicianTransactionsAdmin = async (
+    technicianId: string, 
+    page = 1
+): Promise<{ transactions: TransactionDto[], total: number }> => {
+    const res = await api.get(ADMIN_TECHNICIAN_ENDPOINTS.TRANSACTIONS(technicianId), { 
+        params: { page } 
+    });
+    return res.data.data;
 };

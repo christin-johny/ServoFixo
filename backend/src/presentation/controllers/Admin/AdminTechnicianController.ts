@@ -17,6 +17,7 @@ import { RequestAction, PartnerRequestType } from "../../../domain/enums/Request
 import { IVerifyTechnicianUseCase, IGetAllTechniciansUseCase, IUpdateTechnicianUseCase, IDeleteTechnicianUseCase, IBlockTechnicianUseCase, IResolveServiceRequestUseCase, IResolveZoneRequestUseCase, IResolveBankRequestUseCase, IGetVerificationQueueUseCase } from "../../../application/interfaces/use-cases/technician/ITechnicianManagementUseCases";
 import { IGetTechnicianFullProfileUseCase } from "../../../application/interfaces/use-cases/technician/ITechnicianProfileUseCases";
 import { Technician } from "../../../domain/entities/Technician";
+import { IGetTransactionHistoryUseCase } from "../../../application/interfaces/use-cases/wallet/IWalletUseCases";
 
 export class AdminTechnicianController extends BaseController {
   constructor(
@@ -31,6 +32,7 @@ export class AdminTechnicianController extends BaseController {
     private readonly _resolveZoneRequestUseCase: IResolveZoneRequestUseCase,
     private readonly _resolveBankRequestUseCase: IResolveBankRequestUseCase,
     private readonly _getRecommendedTechniciansUseCase: IGetRecommendedTechniciansUseCase,
+    private readonly _getTransactionsUseCase: IGetTransactionHistoryUseCase,
     _logger: ILogger 
   ) {
     super(_logger);
@@ -52,6 +54,19 @@ export class AdminTechnicianController extends BaseController {
       return this.ok(res, result);
     } catch (err) {
       (err as Error & { logContext?: string }).logContext = LogEvents.ADMIN_GET_TECH_QUEUE_FAILED;
+      next(err);
+    }
+  };
+
+  getTechnicianTransactions = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
+    try {
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 10;
+      // Assuming you inject IGetTransactionHistoryUseCase as _getTransactionsUseCase
+      const result = await this._getTransactionsUseCase.execute(req.params.id, page,limit);
+      return this.ok(res, result);
+    } catch (err) {
+      (err as Error & { logContext?: string }).logContext = "ADMIN_GET_TRANSACTIONS_FAILED";
       next(err);
     }
   };
@@ -112,7 +127,7 @@ export class AdminTechnicianController extends BaseController {
         page,
         limit,
         search,
-        status: req.query.status as any,
+        status: req.query.status as "PENDING" | "VERIFICATION_PENDING" | "VERIFIED" | "REJECTED" | undefined,
         zoneId: req.query.zoneId as string | undefined,
       };
 

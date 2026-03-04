@@ -325,7 +325,9 @@ const resolveZoneRequestUseCase = new ResolveZoneRequestUseCase(  technicianRepo
 const resolveBankRequestUseCase = new ResolveBankRequestUseCase( technicianRepo,  notificationService,logger);
 const getRecommendedTechniciansUseCase = new GetRecommendedTechniciansUseCase(technicianRepo)
 
-export const adminTechnicianController = new AdminTechnicianController(getVerificationQueueUseCase,  getTechnicianFullProfileUseCase,  verifyTechnicianUseCase,  getAllTechniciansUseCase,  updateTechnicianUseCase,  deleteTechnicianUseCase,  blockTechnicianUseCase,  resolveServiceRequestUseCase,  resolveZoneRequestUseCase,  resolveBankRequestUseCase,  getRecommendedTechniciansUseCase,logger);
+const getTransactionHistoryUseCase = new GetTransactionHistoryUseCase(walletRepo) 
+
+export const adminTechnicianController = new AdminTechnicianController(getVerificationQueueUseCase,  getTechnicianFullProfileUseCase,  verifyTechnicianUseCase,  getAllTechniciansUseCase,  updateTechnicianUseCase,  deleteTechnicianUseCase,  blockTechnicianUseCase,  resolveServiceRequestUseCase,  resolveZoneRequestUseCase,  resolveBankRequestUseCase,  getRecommendedTechniciansUseCase,getTransactionHistoryUseCase,logger);
  
 export const bookingRepo = new BookingMongoRepository();
  
@@ -373,7 +375,7 @@ const getTechnicianDashboardUseCase = new GetTechnicianDashboardUseCase(bookingR
 
 export const dashboardController = new DashboardController(getAdminDashboardUseCase,getTechnicianDashboardUseCase,logger)
 
-const getTransactionHistoryUseCase = new GetTransactionHistoryUseCase(walletRepo) 
+
 const getWalletDetailsUseCase = new GetWalletDetailsUseCase(walletRepo)
 export const walletController  = new WalletController(getWalletDetailsUseCase ,getTransactionHistoryUseCase,logger)
 
