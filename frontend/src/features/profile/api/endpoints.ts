@@ -39,4 +39,6 @@ export const TECHNICIAN_PROFILE_ENDPOINTS = {
   UPLOAD_AVATAR: `${VERSION}/technician/profile/onboarding/upload/avatar`,
   UPLOAD_DOCUMENT: `${VERSION}/technician/profile/onboarding/upload/document`,
   TOGGLE_ONLINE: `${VERSION}/technician/profile/status`,
+  WALLET_DETAILS: `${VERSION}/technician/wallet/balance`,       
+  WALLET_TRANSACTIONS: `${VERSION}/technician/wallet/transactions`,
 };

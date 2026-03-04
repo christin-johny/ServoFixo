@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Power, Star, CheckCircle, Clock, 
-  ChevronRight, PlayCircle, Wallet, User, MapPin, Loader2, Briefcase
+  ChevronRight, PlayCircle,   User, MapPin, Loader2, Briefcase
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -9,9 +9,11 @@ import type { RootState, AppDispatch } from '../../../../store/store';
 import { getTechnicianDashboardSummary } from '../../api/dashboardRepository';
 import { toggleOnlineStatus } from "../../../profile/api/technicianProfileRepository";
 import { setAvailability } from "../../../../store/technicianSlice";
-import { useNotification } from "../../../notifications/hooks/useNotification";
-import { setActiveJob, clearIncomingJob } from "../../../../store/technicianBookingSlice";
+import { useNotification } from "../../../notifications/hooks/useNotification"; 
 import type { TechnicianDashboardData } from '../../types/DashboardTypes';
+import { getWalletDetails } from "../../../profile/api/technicianWalletRepository";  
+import { setWalletData } from "../../../../store/technicianSlice";
+import WalletProgressCard from "../../../profile/components/technician/WalletProgressCard";
 
 const TechnicianDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -24,32 +26,28 @@ const TechnicianDashboard: React.FC = () => {
   const [isLocating, setIsLocating] = useState(false);
 
   // --- REDUX SELECTORS ---
-  const { profile } = useSelector((state: RootState) => state.technician);
+  const { profile,wallet  } = useSelector((state: RootState) => state.technician);
   const { activeJob } = useSelector((state: RootState) => state.technicianBooking);
 
   const isOnline = profile?.availability?.isOnline || false;
   const isVerified = profile?.verificationStatus === "VERIFIED";
 
-  // --- 1. SYNC DASHBOARD ON LOAD ---
-  useEffect(() => {
-    const syncDashboard = async () => {
+ useEffect(() => {
+    const loadDashboardData = async () => {
       try {
-        const summary = await getTechnicianDashboardSummary();
+        const [summary, walletDetails] = await Promise.all([
+          getTechnicianDashboardSummary(),
+          getWalletDetails() // Parallel fetch for speed
+        ]);
         setData(summary);
-        
-        if (summary.activeJob) {
-          dispatch(setActiveJob(summary.activeJob));
-        } else {
-          dispatch(clearIncomingJob());
-        }
+        dispatch(setWalletData(walletDetails)); // Update Redux
       } catch (err) {
-        console.error("Dashboard sync failed", err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
-    syncDashboard();
+    loadDashboardData();
   }, [dispatch]);
 
   // --- 2. ONLINE / OFFLINE TOGGLE LOGIC ---
@@ -233,25 +231,12 @@ const TechnicianDashboard: React.FC = () => {
           )}
         </div>
 
-        {/* Wallet Balance Card */}
-        <div className="lg:col-span-4 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-between">
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
-                <Wallet size={12} /> Wallet Balance
-            </p>
-            <h3 className="text-4xl font-black text-slate-900">₹{data?.earnings.walletBalance.toLocaleString()}</h3>
-            <div className="mt-4 p-3 bg-emerald-50 rounded-xl">
-              <p className="text-[10px] font-black text-emerald-700 uppercase">Lifetime Earnings</p>
-              <p className="text-lg font-black text-emerald-600">₹{data?.earnings.totalEarnings.toLocaleString()}</p>
-            </div>
-          </div>
-          <button 
-            onClick={() => navigate('/technician/profile/payouts')}
-            className="w-full mt-6 py-3.5 bg-slate-900 text-white rounded-xl font-black text-xs hover:bg-slate-800 transition-all active:scale-[0.98]"
-          >
-            Manage Wallet
-          </button>
-        </div>
+        {wallet && (
+        <WalletProgressCard 
+          data={wallet} 
+          onManageClick={() => navigate('/technician/profile/payouts')} 
+        />
+      )}
       </div>
 
       {/* SECTION 3: BOTTOM PERFORMANCE METRICS */}

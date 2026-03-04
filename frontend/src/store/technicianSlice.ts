@@ -4,6 +4,7 @@ import type {
   ZoneRequest, 
   BankUpdateRequest, 
 } from "../features/profile/types/TechnicianRequestTypes";
+import type { WalletDetailsDto } from "../features/profile/types/TechnicianTypes";  
  
 type PayoutStatus = "ACTIVE" | "ON_HOLD"; 
 export type VerificationStatus =
@@ -153,6 +154,7 @@ export interface TechnicianProfile {
 
 interface TechnicianState {
   profile: TechnicianProfile | null;
+  wallet: WalletDetailsDto | null;
   loading: boolean;
   saveLoading: boolean;
   error: string | null;
@@ -160,6 +162,7 @@ interface TechnicianState {
 
 const initialState: TechnicianState = {
   profile: null,
+  wallet: null,
   loading: false,
   saveLoading: false,
   error: null,
@@ -172,6 +175,9 @@ const technicianSlice = createSlice({
     fetchTechnicianStart(state) {
       state.loading = true;
       state.error = null;
+    },
+    setWalletData(state, action: PayloadAction<WalletDetailsDto>) {
+      state.wallet = action.payload;
     },
 
     fetchTechnicianSuccess(state, action: PayloadAction<TechnicianApiResponse>) {
@@ -314,6 +320,7 @@ const technicianSlice = createSlice({
 export const {
   fetchTechnicianStart,
   fetchTechnicianSuccess,
+  setWalletData,
   fetchTechnicianFailure,
   setOnboardingStep,
   updatePersonalDetails,

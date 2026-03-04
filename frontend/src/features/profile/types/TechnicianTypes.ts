@@ -108,3 +108,29 @@ export interface TechnicianUpdatePayload {
   phone?: string;
   experienceSummary?: string;
 }
+
+
+
+export interface WalletDetailsDto {
+  balances: {
+    pending: number;
+    withdrawable: number;
+    totalEarned: number;
+  };
+  insights: {
+    isEligible: boolean;
+    thresholdGap: number;
+    nextPayoutDate: string;
+    payoutProgressPercentage: number;
+  };
+}
+
+export interface TransactionDto {
+  id: string;
+  amount: number;
+  type: "CREDIT" | "DEBIT";
+  category: "SERVICE_EARNING" | "WEEKLY_PAYOUT" | "REFUND_ADJUSTMENT" | "BONUS";
+  description: string;
+  status: "COMPLETED" | "PENDING" | "FAILED";
+  createdAt: string;
+}
