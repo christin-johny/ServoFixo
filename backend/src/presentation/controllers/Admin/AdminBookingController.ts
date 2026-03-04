@@ -110,6 +110,8 @@ getAll = async (req: Request, res: Response, next: NextFunction): Promise<Respon
       status: req.query.status as BookingStatus,
       zoneId: req.query.zoneId as string,
       categoryId: req.query.categoryId as string,
+      technicianId: req.query.technicianId as string,
+      customerId: req.query.customerId as string,
       startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
       endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
       sortBy: req.query.sortBy as "newest" | "oldest" | "updated",

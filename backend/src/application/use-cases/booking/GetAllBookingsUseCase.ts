@@ -24,6 +24,7 @@ export class GetAllBookingsUseCase implements IGetAllBookingsUseCase {
         status: statusFilter,
         zoneId: input.zoneId,
         categoryId: input.categoryId,  
+        customerId: input.customerId,
         startDate: input.startDate,
         endDate: input.endDate,
         sortBy: input.sortBy || "newest"

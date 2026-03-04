@@ -12,7 +12,9 @@ export interface GetAllBookingsDto {
     search?: string;  
     status?: BookingStatus | BookingStatus[];
     zoneId?: string;
-    categoryId?: string;  
+    categoryId?: string;
+    customerId?: string;
+    technicianId?: string;  
     startDate?: Date;
     endDate?: Date;
     sortBy?: "newest" | "oldest" | "updated";

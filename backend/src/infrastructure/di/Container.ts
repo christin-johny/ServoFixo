@@ -166,6 +166,18 @@ import { ChatController } from "../../presentation/controllers/Chat/ChatControll
 import { GetAdminDashboardUseCase } from "../../application/use-cases/dashboard/GetAdminDashboardUseCase";
 import { GetTechnicianDashboardUseCase } from "../../application/use-cases/dashboard/GetTechnicianDashboardUseCase";
 import { DashboardController } from "../../presentation/controllers/dashboard/DashboardController";
+import { MongooseUnitOfWork } from "../database/mongoose/sessions/MongooseUnitOfWork";
+import { InitializeWalletUseCase } from "../../application/use-cases/wallet/InitializeWalletUseCase";
+import { WalletMongoRepository } from "../database/repositories/WalletMongoRepository";
+import { CreditWalletOnJobCompletionUseCase } from "../../application/use-cases/wallet/CreditWalletOnJobCompletionUseCase";
+import { GetTransactionHistoryUseCase } from "../../application/use-cases/wallet/GetTransactionHistoryUseCase";
+import { GetWalletDetailsUseCase } from "../../application/use-cases/wallet/GetWalletDetailsUseCase";
+import { WalletController } from "../../presentation/controllers/Wallet/WalletController";
+import { AdminPayoutController } from "../../presentation/controllers/Admin/AdminPayoutController";
+import { PayoutMongoRepository } from "../database/repositories/PayoutMongoRepository";
+import { GetPendingPayoutsUseCase } from "../../application/use-cases/wallet/GetPendingPayoutsUseCase";
+import { ApprovePayoutUseCase } from "../../application/use-cases/wallet/ApprovePayoutUseCase";
+import { ProcessWeeklyPayoutBatchUseCase } from "../../application/use-cases/wallet/ProcessWeeklyPayoutBatchUseCase";
 
 
 const imageService = new S3ImageService();
@@ -288,10 +300,11 @@ const commissionStrategy = new FixedCommissionStrategy();
 const getTechnicianRateCardUseCase = new GetTechnicianRateCardUseCase( technicianRepo, serviceItemRepo, commissionStrategy, logger);
 
 export const technicianDataController = new TechnicianDataController(  getAllCategoriesUseCase,  getServiceListingUseCase,  getAllZonesUseCase,  getTechnicianRateCardUseCase,  logger);
-
+const walletRepo =new  WalletMongoRepository()
+const initializeWalletUseCase = new InitializeWalletUseCase(walletRepo)
 const getVerificationQueueUseCase = new GetVerificationQueueUseCase(technicianRepo);
 const getTechnicianFullProfileUseCase = new GetTechnicianFullProfileUseCase(  technicianRepo,  zoneRepo,  categoryRepo,  serviceItemRepo);
-const verifyTechnicianUseCase = new VerifyTechnicianUseCase(  technicianRepo);
+const verifyTechnicianUseCase = new VerifyTechnicianUseCase(technicianRepo,initializeWalletUseCase);
 const getAllTechniciansUseCase = new GetAllTechniciansUseCase(  technicianRepo);
 const updateTechnicianUseCase = new UpdateTechnicianUseCase(technicianRepo
 );
@@ -312,7 +325,9 @@ const resolveZoneRequestUseCase = new ResolveZoneRequestUseCase(  technicianRepo
 const resolveBankRequestUseCase = new ResolveBankRequestUseCase( technicianRepo,  notificationService,logger);
 const getRecommendedTechniciansUseCase = new GetRecommendedTechniciansUseCase(technicianRepo)
 
-export const adminTechnicianController = new AdminTechnicianController(getVerificationQueueUseCase,  getTechnicianFullProfileUseCase,  verifyTechnicianUseCase,  getAllTechniciansUseCase,  updateTechnicianUseCase,  deleteTechnicianUseCase,  blockTechnicianUseCase,  resolveServiceRequestUseCase,  resolveZoneRequestUseCase,  resolveBankRequestUseCase,  getRecommendedTechniciansUseCase,logger);
+const getTransactionHistoryUseCase = new GetTransactionHistoryUseCase(walletRepo) 
+
+export const adminTechnicianController = new AdminTechnicianController(getVerificationQueueUseCase,  getTechnicianFullProfileUseCase,  verifyTechnicianUseCase,  getAllTechniciansUseCase,  updateTechnicianUseCase,  deleteTechnicianUseCase,  blockTechnicianUseCase,  resolveServiceRequestUseCase,  resolveZoneRequestUseCase,  resolveBankRequestUseCase,  getRecommendedTechniciansUseCase,getTransactionHistoryUseCase,logger);
  
 export const bookingRepo = new BookingMongoRepository();
  
@@ -329,7 +344,9 @@ const rateTechnicianUseCase = new RateTechnicianUseCase(bookingRepo,technicianRe
 const getTechnicianHistoryUseCase = new GetTechnicianHistoryUseCase(bookingRepo )
 const getCustomerBookingsUseCase = new GetCustomerBookingsUseCase(bookingRepo)
 const paymentService = new RazorpayService();
-const verifyPaymentUseCase = new VerifyPaymentUseCase(bookingRepo,  technicianRepo,  paymentService,  notificationService );
+const mongooseUnitOfWork = new MongooseUnitOfWork()
+const creditWalletUseCase = new CreditWalletOnJobCompletionUseCase(walletRepo)
+const verifyPaymentUseCase = new VerifyPaymentUseCase(bookingRepo,  technicianRepo,  paymentService,  notificationService,mongooseUnitOfWork,creditWalletUseCase);
 
 export const bookingController = new BookingController(  createBookingUseCase,  respondToBookingUseCase,  updateJobStatusUseCase,  addExtraChargeUseCase,  respondToExtraChargeUseCase,  completeJobUseCase,  getBookingDetailsUseCase, customerCancelUseCase,  technicianCancelUseCase,  rateTechnicianUseCase, getTechnicianHistoryUseCase,  getCustomerBookingsUseCase,  verifyPaymentUseCase,  logger);
 
@@ -340,14 +357,14 @@ const getAllBookingsUseCase = new GetAllBookingsUseCase(bookingRepo)
 
 export const adminBookingController = new AdminBookingController(adminForceAssignUseCase,adminForceStatusUseCase, adminUpdatePaymentUseCase,getAllBookingsUseCase,logger);
 
-const processPaymentUseCase = new ProcessPaymentUseCase(bookingRepo,technicianRepo,notificationService,logger);
+const processPaymentUseCase = new ProcessPaymentUseCase(bookingRepo,technicianRepo,notificationService,logger,mongooseUnitOfWork,creditWalletUseCase);
 
 export const paymentWebhookController = new PaymentWebhookController(processPaymentUseCase);
 
 const chatRepo = new ChatSessionMongoRepository();
 const geminiChatService = new GeminiChatService();
 const startChatSessionUseCase = new StartChatSessionUseCase(chatRepo);
-const sendChatMessageUseCase = new SendChatMessageUseCase(chatRepo,geminiChatService);
+const sendChatMessageUseCase = new SendChatMessageUseCase(chatRepo,geminiChatService,categoryRepo);
 const getChatHistoryUseCase = new GetChatHistoryUseCase(chatRepo);
 const resolveChatUseCase = new ResolveChatUseCase(chatRepo,geminiChatService)
 
@@ -357,3 +374,13 @@ const getAdminDashboardUseCase = new  GetAdminDashboardUseCase(bookingRepo,techn
 const getTechnicianDashboardUseCase = new GetTechnicianDashboardUseCase(bookingRepo,technicianRepo)
 
 export const dashboardController = new DashboardController(getAdminDashboardUseCase,getTechnicianDashboardUseCase,logger)
+
+
+const getWalletDetailsUseCase = new GetWalletDetailsUseCase(walletRepo)
+export const walletController  = new WalletController(getWalletDetailsUseCase ,getTransactionHistoryUseCase,logger)
+
+const payoutRepo = new PayoutMongoRepository()
+const getPendingPayoutsUseCase = new GetPendingPayoutsUseCase(payoutRepo,technicianRepo)
+const approvePayoutUseCase = new ApprovePayoutUseCase(payoutRepo,walletRepo,mongooseUnitOfWork)
+const processWeeklyPayoutBatchUseCase = new ProcessWeeklyPayoutBatchUseCase(walletRepo,payoutRepo,technicianRepo)
+export const adminPayoutController = new AdminPayoutController(getPendingPayoutsUseCase,approvePayoutUseCase,processWeeklyPayoutBatchUseCase,logger)

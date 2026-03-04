@@ -1,23 +1,35 @@
 import { ISendChatMessageUseCase } from "../../interfaces/use-cases/chat/IChatUseCases";
 import { IChatSessionRepository } from "../../../domain/repositories/IChatSessionRepository";
 import { IChatAiService } from "../../interfaces/services/IChatAiService";
+import { IServiceCategoryRepository } from "../../../domain/repositories/IServiceCategoryRepository";
+import { getFixitSystemPrompt } from "../../constants/ChatSystemPrompt";
 import { ChatSessionMapper } from "../../mappers/ChatSessionMapper";
 import { ChatSessionResponseDto } from "../../dto/chat/ChatSessionDtos";
-import { FIXIT_SYSTEM_PROMPT } from "../../constants/ChatSystemPrompt";
 import { ErrorMessages } from "../../constants/ErrorMessages";
-
+ 
 export class SendChatMessageUseCase implements ISendChatMessageUseCase {
   constructor(
     private readonly _chatRepo: IChatSessionRepository,
-    private readonly _aiService: IChatAiService
+    private readonly _aiService: IChatAiService,
+    private readonly _categoryRepo: IServiceCategoryRepository
   ) {}
 
-  async execute(customerId: string, sessionId: string, message: string): Promise<ChatSessionResponseDto> {
+  async execute(
+    customerId: string, 
+    sessionId: string, 
+    message: string
+  ): Promise<ChatSessionResponseDto> { 
     const session = await this._chatRepo.findById(sessionId);
-    
-    if (!session) throw new Error(ErrorMessages.CHAT_SESSION_NOT_FOUND);
-    if (session.getCustomerId() !== customerId) throw new Error(ErrorMessages.UNAUTHORIZED_CHAT_ACCESS);
-    if (session.getStatus() !== "ACTIVE") throw new Error(ErrorMessages.CHAT_SESSION_CLOSED);
+     
+    if (!session) {
+        throw new Error(ErrorMessages.CHAT_SESSION_NOT_FOUND);
+    }
+    if (session.getCustomerId() !== customerId) {
+        throw new Error(ErrorMessages.UNAUTHORIZED_CHAT_ACCESS);
+    }
+    if (session.getStatus() !== "ACTIVE") {
+        throw new Error(ErrorMessages.CHAT_SESSION_CLOSED);
+    }
  
     session.addMessage({
       role: "user",
@@ -27,16 +39,22 @@ export class SendChatMessageUseCase implements ISendChatMessageUseCase {
  
     const allMessages = session.getMessages();
     const firstUserIndex = allMessages.findIndex(m => m.role === "user");
-     
     const historyForAi = firstUserIndex !== -1 ? allMessages.slice(firstUserIndex) : [];
-
-    // 3. Call the AI Service 
+     
     const historyExcludingCurrent = historyForAi.slice(0, -1);
-
+ 
+    const { categories } = await this._categoryRepo.findAll({ 
+        page: 1, 
+        limit: 100,  
+        isActive: true 
+    });
+ 
+    const dynamicPrompt = getFixitSystemPrompt(categories);
+ 
     const aiResponse = await this._aiService.sendMessage(
       historyExcludingCurrent,
       message,
-      FIXIT_SYSTEM_PROMPT
+      dynamicPrompt
     );
  
     session.addMessage({
@@ -44,14 +62,14 @@ export class SendChatMessageUseCase implements ISendChatMessageUseCase {
       content: aiResponse.text,
       timestamp: new Date()
     });
-
-    // 5. Update token tracking
+ 
     session.updateTokenUsage(
       aiResponse.tokenUsage.promptTokens, 
       aiResponse.tokenUsage.completionTokens
     );
-
+ 
     const updatedSession = await this._chatRepo.update(session);
+ 
     return ChatSessionMapper.toResponse(updatedSession);
   }
 }

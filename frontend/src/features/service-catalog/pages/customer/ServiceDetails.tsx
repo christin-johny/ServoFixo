@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';   useNavigate
-import { useSelector } from 'react-redux';   useSelector
+import { useParams, useNavigate } from 'react-router-dom';    
+import { useSelector } from 'react-redux';    
 import { type RootState } from '../../../../store/store'; 
 import {
    Star,
@@ -9,6 +9,7 @@ import {
    Heart,
    CheckCircle2,
    MapPin,
+   User
 } from 'lucide-react';
 
 import Navbar from '../../../../layouts/customer/Navbar';
@@ -257,12 +258,8 @@ useEffect(() => {
                               .map((review) => (
                                  <div key={review.id} className="flex gap-4 mb-6 pb-6 border-b border-gray-50 last:border-0 last:pb-0">
                                     {/* Avatar */}
-                                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-bold text-gray-500 shrink-0 overflow-hidden shadow-sm border border-gray-200">
-                                       {review.customerAvatar ? (
-                                          <img src={review.customerAvatar} className="w-full h-full object-cover" alt="avatar" />
-                                       ) : (
-                                          (review.customerName || "U").charAt(0).toUpperCase()
-                                       )}
+                                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center shrink-0 shadow-sm border border-gray-200">
+                                       <User className="w-5 h-5 text-gray-500" />
                                     </div>
                                     
                                     {/* Content */}

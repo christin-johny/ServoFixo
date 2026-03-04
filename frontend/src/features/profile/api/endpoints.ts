@@ -5,6 +5,7 @@ export const ADMIN_CUSTOMER_ENDPOINTS = {
   CUSTOMERS: `${VERSION}/admin/customers`,
   CUSTOMER_BY_ID: (id: string) => `${VERSION}/admin/customers/${id}`,
   CUSTOMER_ADDRESSES: (id: string) => `${VERSION}/admin/customers/${id}/addresses`,
+  CUSTOMER_ORDERS: `${VERSION}/admin/bookings`,
 };
 
 export const ADMIN_TECHNICIAN_ENDPOINTS = {
@@ -14,6 +15,7 @@ export const ADMIN_TECHNICIAN_ENDPOINTS = {
   LIST: `${VERSION}/admin/technicians`,
   BLOCK: (id: string) => `${VERSION}/admin/technicians/${id}/block`,
   RESOLVE_REQUEST: (id: string) => `${VERSION}/admin/technicians/${id}/requests/resolve`,
+  TRANSACTIONS: (id: string) => `${VERSION}/admin/technicians/${id}/transactions`,
 };
 
 export const CUSTOMER_PROFILE_ENDPOINTS = {
@@ -39,4 +41,6 @@ export const TECHNICIAN_PROFILE_ENDPOINTS = {
   UPLOAD_AVATAR: `${VERSION}/technician/profile/onboarding/upload/avatar`,
   UPLOAD_DOCUMENT: `${VERSION}/technician/profile/onboarding/upload/document`,
   TOGGLE_ONLINE: `${VERSION}/technician/profile/status`,
+  WALLET_DETAILS: `${VERSION}/technician/wallet/balance`,       
+  WALLET_TRANSACTIONS: `${VERSION}/technician/wallet/transactions`,
 };

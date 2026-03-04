@@ -1,8 +1,7 @@
 import { Booking } from "../entities/Booking";
 import { IBaseRepository } from "./IBaseRepository";
 import { BookingStatus, TechAssignmentAttempt, ExtraCharge, PaymentStatus } from "../value-objects/BookingTypes";
-import { BookingResponseDto } from "../../application/dto/booking/BookingResponseDto";
-import { ClientSession } from "mongoose";
+import { IDatabaseSession } from "../../application/interfaces/services/IDatabaseSession";
 
 export interface BookingFilterParams {
   customerId?: string;
@@ -65,11 +64,11 @@ addExtraCharge(bookingId: string, charge: ExtraCharge): Promise<ExtraCharge>;
 
   markAsRated(bookingId: string): Promise<void>;
 
-  findById(id: string, session?: ClientSession): Promise<Booking | null>;
-  update(booking: Booking, session?: ClientSession): Promise<Booking>;
+  findById(id: string, session?: IDatabaseSession): Promise<Booking | null>;
+  update(booking: Booking, session?: IDatabaseSession): Promise<Booking>;
 
-  updatePaymentStatus(id: string, status: PaymentStatus, transactionId?: string, session?: ClientSession): Promise<void>;
-  findByPaymentOrderId(orderId: string, session?: ClientSession): Promise<Booking | null>;
+  updatePaymentStatus(id: string, status: PaymentStatus, transactionId?: string, session?: IDatabaseSession): Promise<void>;
+  findByPaymentOrderId(orderId: string, session?: IDatabaseSession): Promise<Booking | null>;
   getAdminBookingStats(): Promise<{
     revenue: number;
     statusCounts: Record<string, number>;

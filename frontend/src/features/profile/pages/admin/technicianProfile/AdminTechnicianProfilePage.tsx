@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
+
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   User, Briefcase, Wallet, ChevronLeft, Ban, Shield, CheckCircle, 
-  Star, Edit2, FileText, AlertCircle
+  Star, Edit2, FileText, AlertCircle,ArrowDownRight, ArrowUpRight,  MapPin, ReceiptText 
 } from 'lucide-react';
 
 import { useNotification } from '../../../../notifications/hooks/useNotification';
@@ -13,8 +14,12 @@ import type { UpdateTechnicianPayload } from '../../../api/adminTechnicianReposi
 import ConfirmModal from '../../../../../components/Shared/ConfirmModal/ConfirmModal';
 import TechnicianEditModal from '../../../components/admin/TechnicianEditModal';
 import TechnicianProfileSummary from '../../../components/admin/TechnicianProfileSummary';
- 
 import { FileLightbox } from '../../../../../components/Shared/FileLightbox/FileLightbox';
+ 
+import { getTechnicianJobsAdmin, getTechnicianTransactionsAdmin } from '../../../api/adminTechnicianRepository';
+import type { AdminBookingListDto } from '../../../../booking/api/adminBookingRepository';
+import type { TransactionDto } from '../../../types/TechnicianTypes';
+
 
 const TABS = [
     { key: 'overview', icon: User, label: 'Overview' },
@@ -252,8 +257,8 @@ const AdminTechnicianProfilePage: React.FC = () => {
                                 </div>
                             )}
                             
-                            {activeTab === 'jobs' && <JobsPlaceholder />}
-                            {activeTab === 'financials' && <FinancialsPlaceholder tech={tech} />}
+                            {activeTab === 'jobs' && <JobsTab techId={tech.id} />}
+                            {activeTab === 'financials' && <FinancialsTab tech={tech} />}
                         </div>
                     </div>
                 </div>
@@ -289,40 +294,204 @@ const AdminTechnicianProfilePage: React.FC = () => {
         </div>
     );
 };
+ 
+const JobsTab: React.FC<{ techId: string }> = ({ techId }) => {
+    const navigate = useNavigate(); // ADDED: Initialize the navigate hook
+    
+    const [jobs, setJobs] = useState<AdminBookingListDto[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
-const JobsPlaceholder: React.FC = () => (
-    <div className="text-center py-12 sm:py-24 px-4">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-            <Briefcase size={28} className="sm:w-8 sm:h-8" />
+    useEffect(() => {
+        const fetchJobs = async () => {
+            setLoading(true);
+            try {
+                const result = await getTechnicianJobsAdmin(techId, page);
+                setJobs(result.data);
+                setTotalPages(result.totalPages);
+            } catch   {
+                console.error("Failed to load jobs");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchJobs();
+    }, [techId, page]);
+
+    if (loading) return <div className="p-10 text-center text-gray-500 animate-pulse">Loading Job History...</div>;
+
+    if (jobs.length === 0) return (
+        <div className="text-center py-16 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+            <Briefcase size={32} className="mx-auto text-gray-400 mb-3" />
+            <h4 className="text-gray-900 font-bold mb-1">No Jobs Found</h4>
+            <p className="text-gray-500 font-medium text-sm">This technician has not completed any jobs yet.</p>
         </div>
-        <h3 className="text-lg sm:text-xl font-bold text-gray-900">Job History Module</h3>
-        <p className="text-gray-500 max-w-md mx-auto mt-2 sm:mt-3 text-sm leading-relaxed">
-            This tab will show past and active bookings once the Booking Module is integrated. You'll see earnings, customer ratings, and job details here.
-        </p>
-    </div>
-);
+    );
 
-const FinancialsPlaceholder: React.FC<{ tech: TechnicianProfileFull }> = ({ tech }) => (
-    <div className="space-y-6 sm:space-y-8">
-        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 md:p-8 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center shadow-xl gap-4 sm:gap-6">
-             <div>
-                 <p className="text-gray-400 text-sm font-medium uppercase tracking-wider">Current Wallet Balance</p>
-                 <h2 className="text-3xl sm:text-4xl font-extrabold mt-2 tracking-tight">₹{tech.walletBalance?.currentBalance || 0}</h2>
-                 <p className="text-xs text-gray-500 mt-2">Available for payout</p>
-             </div>
-             <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-sm self-end sm:self-auto border border-white/10">
-                 <Wallet size={32} />
-             </div>
-        </div>
-
-        <div className="text-center py-12 sm:py-16 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50 px-4">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-200 shadow-sm">
-                <Wallet size={24} className="text-gray-400"/>
+    return (
+        <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4">
+                {jobs.map(job => (
+                    <div 
+                        key={job.id} 
+                        onClick={() => navigate(`/admin/bookings/${job.id}`)} // ADDED: The redirect logic
+                        className="bg-white border border-gray-100 rounded-xl p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group" // ADDED: cursor-pointer and hover effects
+                    >
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className={`px-2.5 py-1 rounded-[6px] text-[10px] font-black uppercase tracking-wider ${
+                                    job.status === 'COMPLETED' ? 'bg-green-50 text-green-700' :
+                                    job.status === 'CANCELLED' ? 'bg-red-50 text-red-700' :
+                                    'bg-blue-50 text-blue-700'
+                                }`}>
+                                    {job.status.replace('_', ' ')}
+                                </span>
+                                <span className="text-xs text-gray-400 font-mono">ID: {job.id.slice(-6)}</span>
+                            </div>
+                            <h4 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{job.snapshots.service.name}</h4>
+                            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 font-medium">
+                                <span className="flex items-center gap-1"><User size={14}/> {job.snapshots.customer.name}</span>
+                                <span className="flex items-center gap-1"><MapPin size={14}/> {job.location.address.split(',')[0]}</span>
+                            </div>
+                        </div>
+                        <div className="text-left sm:text-right flex items-center justify-between sm:block w-full sm:w-auto mt-2 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-0 border-gray-100">
+                            <div>
+                                <p className="text-lg font-black text-gray-900">₹{job.pricing.final || job.pricing.estimated}</p>
+                                <p className="text-xs text-gray-400 mt-1">{new Date(job.timestamps.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            {/* ADDED: A small arrow to visually indicate it's clickable */}
+                            <div className="sm:hidden bg-gray-50 p-2 rounded-lg group-hover:bg-blue-50 text-gray-400 group-hover:text-blue-600">
+                                <ArrowUpRight size={16} />
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
-            <h4 className="text-gray-900 font-bold mb-1">No Transactions Yet</h4>
-            <p className="text-gray-500 font-medium text-sm">Transaction History & Payouts Coming Soon...</p>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                    <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="px-4 py-2 text-sm font-bold text-gray-600 bg-gray-50 rounded-lg disabled:opacity-50 hover:bg-gray-100 transition-colors">Previous</button>
+                    <span className="text-sm font-medium text-gray-500">Page {page} of {totalPages}</span>
+                    <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="px-4 py-2 text-sm font-bold text-gray-600 bg-gray-50 rounded-lg disabled:opacity-50 hover:bg-gray-100 transition-colors">Next</button>
+                </div>
+            )}
         </div>
-    </div>
-);
+    );
+};
+
+const FinancialsTab: React.FC<{ tech: TechnicianProfileFull }> = ({ tech }) => {
+    const [transactions, setTransactions] = useState<TransactionDto[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+
+    useEffect(() => {
+        const fetchLedger = async () => {
+            setLoading(true);
+            try {
+                const result = await getTechnicianTransactionsAdmin(tech.id, page);
+                setTransactions(result.transactions || []);
+                setTotalPages(Math.ceil((result.total || 0) / 10)); 
+            } catch  {
+                console.error("Failed to load transactions");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchLedger();
+    }, [tech.id, page]);
+
+    return (
+        <div className="space-y-8">
+            {/* Wallet Balances Card */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+                     <div className="absolute right-0 top-0 w-32 h-32 bg-green-50 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                     <p className="text-gray-500 text-xs font-bold uppercase tracking-wider relative z-10">Withdrawable Balance</p>
+                     <h2 className="text-4xl font-black text-gray-900 mt-2 relative z-10">₹{tech.walletBalance?.currentBalance || 0}</h2>
+                     <p className="text-xs text-gray-400 mt-2 relative z-10">Available for next payout batch</p>
+                 </div>
+                 <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+                     <div className="absolute right-0 top-0 w-32 h-32 bg-orange-50 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                     <p className="text-gray-500 text-xs font-bold uppercase tracking-wider relative z-10">Pending / Frozen</p>
+                     <h2 className="text-4xl font-black text-gray-900 mt-2 relative z-10">₹{tech.walletBalance?.frozenAmount || 0}</h2>
+                     <p className="text-xs text-gray-400 mt-2 relative z-10">Currently locked in processing</p>
+                 </div>
+            </div>
+
+            {/* Transactions Ledger */}
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h3 className="font-bold text-gray-900 flex items-center gap-2"><ReceiptText size={18} className="text-blue-600"/> Transaction Ledger</h3>
+                </div>
+                
+                {loading ? (
+                    <div className="p-10 text-center text-gray-500 animate-pulse">Loading Ledger...</div>
+                ) : transactions.length === 0 ? (
+                    <div className="text-center py-16 bg-gray-50/50">
+                        <Wallet size={32} className="mx-auto text-gray-400 mb-3" />
+                        <h4 className="text-gray-900 font-bold">No Transactions</h4>
+                        <p className="text-gray-500 text-sm mt-1">This wallet has no history.</p>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-gray-50 text-xs text-gray-500 font-bold uppercase tracking-wider">
+                                <tr>
+                                    <th className="px-6 py-4">Transaction</th>
+                                    <th className="px-6 py-4">Category</th>
+                                    <th className="px-6 py-4">Date</th>
+                                    <th className="px-6 py-4 text-right">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {transactions.map(txn => {
+                                    const isCredit = txn.type === 'CREDIT';
+                                    return (
+                                        <tr key={txn.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-lg ${isCredit ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                                                        {isCredit ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-gray-900">{txn.description}</p>
+                                                        <p className="text-[10px] font-mono text-gray-400 mt-0.5">ID: {txn.id.slice(-8)}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-md text-[10px] font-bold tracking-wider">{txn.category.replace(/_/g, ' ')}</span>
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-500 font-medium">
+                                                {new Date(txn.createdAt).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-black">
+                                                <span className={isCredit ? 'text-green-600' : 'text-gray-900'}>
+                                                    {isCredit ? '+' : '-'} ₹{txn.amount.toLocaleString()}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+                
+                {/* Pagination Controls */}
+                {totalPages > 1 && !loading && (
+                    <div className="flex justify-between items-center p-4 border-t border-gray-100 bg-gray-50/50">
+                        <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="px-4 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-gray-50 transition-colors">Previous</button>
+                        <span className="text-sm font-medium text-gray-500">Page {page} of {totalPages}</span>
+                        <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="px-4 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-gray-50 transition-colors">Next</button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
 
 export default AdminTechnicianProfilePage;

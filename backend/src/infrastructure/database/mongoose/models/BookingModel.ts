@@ -66,7 +66,7 @@ isRated: boolean;
   
   assignmentExpiresAt?: Date;
 
-  extraCharges: Array<any>; // Simplified for brevity, keep your full schema
+  extraCharges: Array<any>; 
   timeline: Array<any>;
   chatId?: string;
   meta: any;

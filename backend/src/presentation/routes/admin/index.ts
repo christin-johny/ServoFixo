@@ -10,6 +10,7 @@ import adminCustomerRoutes from './customer.routes'
 import adminTechnicianRoutes from "./technician.routes";
 import adminBookingRoutes from "./bookings.routes";
 import adminDashboardRoutes from "./dashboard.routes";
+import adminPayoutRoutes from "./payout.routes";
 
 const router = Router();
 
@@ -24,4 +25,5 @@ router.use('/services', adminAuth, serviceItemRoutes);
 router.use('/customers', adminAuth, adminCustomerRoutes);
 router.use("/technicians", adminAuth, adminTechnicianRoutes); 
 router.use("/bookings", adminAuth, adminBookingRoutes);
+router.use("/payouts", adminAuth, adminPayoutRoutes);
 export default router;
