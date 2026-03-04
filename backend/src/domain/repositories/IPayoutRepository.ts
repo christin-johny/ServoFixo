@@ -6,4 +6,5 @@ export interface IPayoutRepository {
   update(payout: Payout): Promise<void>;
   findPending(): Promise<Payout[]>;
   findAllGroupedByWeek(): Promise<Payout[] | null>; 
+  findFiltered(filters: { page: number; limit: number; status?: string; technicianIds?: string[] }): Promise<{ data: Payout[]; total: number }>;
 }

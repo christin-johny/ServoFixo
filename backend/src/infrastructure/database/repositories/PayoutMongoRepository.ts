@@ -51,6 +51,29 @@ export class PayoutMongoRepository implements IPayoutRepository {
       },
       { $sort: { "_id": -1 } }
     ]);
+  } 
+  async findFiltered(filters: { page: number; limit: number; status?: string; technicianIds?: string[] }): Promise<{ data: Payout[]; total: number }> {
+    const query: any = {};
+     
+    if (filters.status) {
+      query.status = filters.status;
+    }
+     
+    if (filters.technicianIds && filters.technicianIds.length > 0) {
+      query.technicianId = { $in: filters.technicianIds };
+    }
+
+    const skip = (filters.page - 1) * filters.limit;
+
+    const [docs, total] = await Promise.all([
+      PayoutModel.find(query).sort({ createdAt: -1 }).skip(skip).limit(filters.limit).exec(),
+      PayoutModel.countDocuments(query)
+    ]);
+
+    return {
+      data: docs.map(doc => this.toDomain(doc)),
+      total
+    };
   }
 
   private toDomain(doc:any): Payout {

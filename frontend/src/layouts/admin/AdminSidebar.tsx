@@ -60,7 +60,7 @@ const MENU_CONFIG: MenuSection[] = [
   },
   {
     sectionLabel: 'Finance',
-    items: [{ label: 'Payments', icon: CreditCard, path: '/admin/payments' }]
+    items: [{ label: 'Payments', icon: CreditCard, path: '/admin/payouts' }]
   },
   // {
   //   sectionLabel: 'System',

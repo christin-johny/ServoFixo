@@ -11,12 +11,12 @@ export class ApprovePayoutUseCase implements IApprovePayoutUseCase {
     private readonly _unitOfWork: IUnitOfWork
   ) {}
 
-  async execute(payoutId: string, action: "APPROVE" | "FLAG", adminId: string): Promise<void> {
+  // THE FIX: Add referenceId parameter
+  async execute(payoutId: string, action: "APPROVE" | "FLAG", adminId: string, referenceId?: string): Promise<void> {
     const session = await this._unitOfWork.createSession();
     session.startTransaction();
 
-    try {
-      // 1. Fetch Payout record
+    try { 
       const payout = await this._payoutRepo.findById(payoutId);
       if (!payout) throw new Error("PAYOUT_NOT_FOUND");
       
@@ -24,35 +24,30 @@ export class ApprovePayoutUseCase implements IApprovePayoutUseCase {
       if (payoutProps.status !== "PENDING") {
         throw new Error(`Cannot ${action} a payout that is already ${payoutProps.status}`);
       }
-
-      // 2. Fetch Wallet
+ 
       const wallet = await this._walletRepo.findById(payoutProps.walletId);
       if (!wallet) throw new Error("WALLET_NOT_FOUND");
 
-      if (action === "APPROVE") {
-        // 3. Update Wallet (Debit the withdrawable balance)
+      if (action === "APPROVE") { 
         wallet.finalizePayout(payoutProps.amount);
-
-        // 4. Update Payout Status
-        payout.approve(adminId);
-
-        // 5. Create Ledger Entry for Audit Trail
+ 
+        payout.approve(adminId); 
+        
+        // THE FIX: Add the Reference ID to the transaction ledger so the Tech sees it
         const debitTx = new Transaction({
           walletId: wallet.id!,
           amount: payoutProps.amount,
           type: "DEBIT",
-          category: "WEEKLY_PAYOUT",
+          category: "PAYOUT", // Note: Matches your Transaction schema enum
           status: "COMPLETED",
-          description: `Weekly payout processed by Admin: ${adminId}`
+          description: `Bank Transfer Completed. UTR: ${referenceId || "N/A"}`
         });
 
         await this._walletRepo.createTransaction(debitTx, session);
-      } else {
-        // Just flag the payout for review
+      } else { 
         payout.markAsFlagged(adminId);
       }
-
-      // 6. Persist changes atomically
+ 
       await this._payoutRepo.update(payout);
       await this._walletRepo.update(wallet, session);
 

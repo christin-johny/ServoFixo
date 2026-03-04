@@ -177,6 +177,7 @@ import { AdminPayoutController } from "../../presentation/controllers/Admin/Admi
 import { PayoutMongoRepository } from "../database/repositories/PayoutMongoRepository";
 import { GetPendingPayoutsUseCase } from "../../application/use-cases/wallet/GetPendingPayoutsUseCase";
 import { ApprovePayoutUseCase } from "../../application/use-cases/wallet/ApprovePayoutUseCase";
+import { ProcessWeeklyPayoutBatchUseCase } from "../../application/use-cases/wallet/ProcessWeeklyPayoutBatchUseCase";
 
 
 const imageService = new S3ImageService();
@@ -377,6 +378,7 @@ const getWalletDetailsUseCase = new GetWalletDetailsUseCase(walletRepo)
 export const walletController  = new WalletController(getWalletDetailsUseCase ,getTransactionHistoryUseCase,logger)
 
 const payoutRepo = new PayoutMongoRepository()
-const getPendingPayoutsUseCase = new GetPendingPayoutsUseCase(payoutRepo)
+const getPendingPayoutsUseCase = new GetPendingPayoutsUseCase(payoutRepo,technicianRepo)
 const approvePayoutUseCase = new ApprovePayoutUseCase(payoutRepo,walletRepo,mongooseUnitOfWork)
-export const adminPayoutController = new AdminPayoutController(getPendingPayoutsUseCase,approvePayoutUseCase,logger)
+const processWeeklyPayoutBatchUseCase = new ProcessWeeklyPayoutBatchUseCase(walletRepo,payoutRepo,technicianRepo)
+export const adminPayoutController = new AdminPayoutController(getPendingPayoutsUseCase,approvePayoutUseCase,processWeeklyPayoutBatchUseCase,logger)

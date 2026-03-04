@@ -42,16 +42,32 @@ export class Wallet {
   }
 
   /**
-   * Stage C: Payout Finalization (Debit)
-   * This is called by ApprovePayoutUseCase when the bank transfer is confirmed.
+   * Stage B: Generate Weekly Batch (Freeze)
+   * Called by ProcessWeeklyPayoutBatchUseCase
    */
-  public finalizePayout(amount: number): void {
+  public freezeForPayout(amount: number): void {
+    // FIX 1: Use this._balances instead of this.props
     if (this._balances.withdrawable < amount) {
-      throw new Error("INSUFFICIENT_FUNDS_FOR_PAYOUT");
+      throw new Error("Insufficient withdrawable funds for payout.");
     }
     
-    // Deduct the amount being sent to the bank
+    // Deduct from withdrawable and move to pending
     this._balances.withdrawable -= amount;
+    this._balances.pending += amount;
+  }
+
+  /**
+   * Stage C: Payout Finalization (Debit)
+   * Called by ApprovePayoutUseCase when the bank transfer is confirmed.
+   */
+  public finalizePayout(amount: number): void {
+    // FIX 2: Check and deduct from 'pending', because the money was frozen here in Stage B
+    if (this._balances.pending < amount) {
+      throw new Error("INSUFFICIENT_PENDING_FUNDS_FOR_PAYOUT");
+    }
+    
+    // Deduct the amount being sent to the bank officially from the system
+    this._balances.pending -= amount;
   }
 
   public toProps(): WalletProps {

@@ -1,4 +1,4 @@
-export type PayoutStatus = "PENDING" | "APPROVED" | "COMPLETED" | "FAILED" | "FLAGGED";
+export type PayoutStatus = "PENDING" | "APPROVED" | "FAILED" | "FLAGGED";
 
 export interface PayoutProps {
   id?: string;
