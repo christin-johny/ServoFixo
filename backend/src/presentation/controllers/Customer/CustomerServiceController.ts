@@ -65,7 +65,7 @@ export class CustomerServiceController extends BaseController {
 
   getById = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      const { id } = req.params;
+     const id = req.params.id as string;
       
       const service = await this._getServiceByIdUseCase.execute(id);
       return this.ok(res, service);
@@ -78,9 +78,9 @@ export class CustomerServiceController extends BaseController {
   getReviews = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { id } = req.params;
-      const limit = Number(req.query.limit) || 5;
+      const limit = Number(req.query.limit as string) || 5;
 
-      const reviews = await this._getServiceReviewsUseCase.execute(id, limit);
+      const reviews = await this._getServiceReviewsUseCase.execute(id as string, limit);
       
       const response = reviews.map(r => {
           const snapshot = r.getCustomerSnapshot(); 

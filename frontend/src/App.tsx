@@ -2,7 +2,7 @@ import React, { useEffect, useState, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Provider, useDispatch } from "react-redux";
 import store from "./store/store";
-import { setAccessToken, setUser, logout } from "./store/authSlice";
+import { setAccessToken, setUser, logout ,setInitializing} from "./store/authSlice";
 import * as authRepo from "./features/auth/api/authRepository";
 import AdminRoutes from "./routes/AdminRoutes";
 import CustomerRoutes from "./routes/CustomerRoutes";
@@ -15,7 +15,7 @@ import type { RefreshResponse } from "./features/auth/types/auth";
 
 const AppInner: React.FC = () => {
   const dispatch = useDispatch();
-  const [initializing, setInitializing] = useState(true);
+  const [initializing, setInitializingState] = useState(true);
 
   useEffect(() => {
     let aborted = false;
@@ -52,7 +52,8 @@ const AppInner: React.FC = () => {
           dispatch(logout());
         }
       } finally {
-        if (!aborted) setInitializing(false);
+        if (!aborted) setInitializingState(false);
+        dispatch(setInitializing(false));
       }
     };
 

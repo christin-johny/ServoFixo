@@ -8,11 +8,14 @@ interface User {
 interface AuthState {
   accessToken: string | null; 
   user: User | null;
+  isInitializing: boolean;
 }
 
 const initialState: AuthState = {
   accessToken: null,
   user: null,
+  isInitializing: true,
+  
 };
 
 const authSlice = createSlice({
@@ -29,8 +32,11 @@ const authSlice = createSlice({
       state.accessToken = null;
       state.user = null;
     },
+    setInitializing(state, action: PayloadAction<boolean>) {
+  state.isInitializing = action.payload;
+}
   },
 });
 
-export const { setAccessToken, setUser, logout } = authSlice.actions;
+export const { setAccessToken, setUser, logout,setInitializing } = authSlice.actions;
 export default authSlice.reducer;

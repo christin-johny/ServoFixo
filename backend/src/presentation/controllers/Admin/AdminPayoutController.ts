@@ -39,7 +39,7 @@ export class AdminPayoutController extends BaseController {
 
   updatePayoutStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const { action, referenceId } = req.body; // THE FIX: Extract referenceId
       const adminId = (req as any).userId; 
 

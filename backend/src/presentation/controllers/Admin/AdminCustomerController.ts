@@ -52,7 +52,7 @@ export class AdminCustomerController extends BaseController {
   }
 
   updateCustomer = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const customerId = req.params.id;
+    const customerId = req.params.id as string;
     try {
       const validationResult = CustomerUpdateSchema.safeParse(req.body);
 
@@ -73,7 +73,7 @@ export class AdminCustomerController extends BaseController {
   }
 
   getCustomerById = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const customerId = req.params.id;
+    const customerId = req.params.id as string;
     try {
 
       const customer = await this._getCustomerByIdUseCase.execute(customerId);
@@ -86,7 +86,7 @@ export class AdminCustomerController extends BaseController {
   }
 
   deleteCustomer = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const customerId = req.params.id;
+    const customerId = req.params.id as string;
     try {
       await this._deleteCustomerUseCase.execute(customerId);
       
@@ -98,7 +98,7 @@ export class AdminCustomerController extends BaseController {
   }
 
   getCustomerAddresses = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
-    const customerId = req.params.id;
+    const customerId = req.params.id as string;
     try {
 
       const addresses = await this._getAddressesByUserIdUseCase.execute(customerId);

@@ -1,5 +1,5 @@
 import { User, Phone, Calendar, CreditCard, MapPin, AlertCircle, Navigation, ShieldCheck, Clock } from "lucide-react";
-import type { JobDetails } from "src/features/booking/types/JobDetails";
+import type { JobDetails } from "../../types/JobDetails";
 
 // --- 1. CUSTOMER CARD ---
 export const CustomerCard = ({ job }: { job: JobDetails }) => {

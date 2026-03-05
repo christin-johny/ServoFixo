@@ -10,7 +10,11 @@ interface Props {
 }
 
 const RoleProtectedRoute: React.FC<Props> = ({ children, requiredRole, redirectTo }) => {
-  const { accessToken, user } = useSelector((s: RootState) => s.auth);
+  const { accessToken, user,isInitializing } = useSelector((s: RootState) => s.auth);
+
+  if (isInitializing) {
+    return null; 
+  }
 
   if (!accessToken || user?.role !== requiredRole) {
     return <Navigate to={redirectTo} replace />;

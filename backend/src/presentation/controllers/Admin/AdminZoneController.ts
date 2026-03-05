@@ -45,7 +45,7 @@ export class AdminZoneController extends BaseController {
     try {
       const params: ZoneQueryParams = {
         ...RequestMapper.toPagination(req.query),
-        isActive: RequestMapper.toBoolean(req.query.isActive)
+        isActive: RequestMapper.toBoolean(req.query.isActive as string)
       };
 
       const result = await this._getAllZonesUseCase.execute(params);
@@ -59,7 +59,7 @@ export class AdminZoneController extends BaseController {
 
   update = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const dto = req.body as UpdateZoneDto;
 
       if (dto.boundaries && (!Array.isArray(dto.boundaries) || dto.boundaries.length < 3)) {
@@ -80,7 +80,7 @@ export class AdminZoneController extends BaseController {
 
   delete = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
 
       await this._deleteZoneUseCase.execute(id);
       

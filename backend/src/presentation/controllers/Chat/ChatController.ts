@@ -53,7 +53,7 @@ export class ChatController extends BaseController {
         return this.forbidden(res, ErrorMessages.UNAUTHORIZED );
       }
 
-      const { sessionId } = req.params;
+      const sessionId = req.params.sessionId as string;
       const message = req.body.message as string | undefined;
 
       if (!message || message.trim() === "") {
@@ -98,7 +98,7 @@ export class ChatController extends BaseController {
         return this.forbidden(res, ErrorMessages.UNAUTHORIZED);
       }
 
-      const { sessionId } = req.params;
+      const sessionId = req.params.sessionId as string;
       const resolutionType = req.body.resolutionType as string | undefined;
 
       if (resolutionType !== "RESOLVED" && resolutionType !== "ESCALATED_TO_BOOKING") {

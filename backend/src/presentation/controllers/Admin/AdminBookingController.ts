@@ -33,7 +33,7 @@ export class AdminBookingController extends BaseController {
       if ((req as AuthenticatedRequest).role !== "admin") throw new Error(ErrorMessages.UNAUTHORIZED);
 
       const input: AdminForceAssignDto = {
-        bookingId: req.params.id,
+        bookingId: req.params.id as string,
         technicianId: req.body.technicianId,
         adminId: adminId!
       };
@@ -55,7 +55,7 @@ export class AdminBookingController extends BaseController {
       if ((req as AuthenticatedRequest).role !== "admin") throw new Error(ErrorMessages.UNAUTHORIZED);
       
       const input: AdminForceStatusDto = {
-        bookingId: req.params.id,
+        bookingId: req.params.id as string,
         adminId: adminId!,
         status: req.body.status,
         reason: req.body.reason || "Admin Override"
@@ -79,7 +79,7 @@ export class AdminBookingController extends BaseController {
       }
 
       const input: AdminUpdatePaymentDto = {
-        bookingId: req.params.id,
+        bookingId: req.params.id as string,
         adminId: adminId!,
         status: req.body.status, // "PAID", "PENDING", etc.
         transactionId: req.body.transactionId // Optional
@@ -100,8 +100,8 @@ getAll = async (req: Request, res: Response, next: NextFunction): Promise<Respon
       return this.unauthorized(res, "Admins only.");
     }
 
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
+    const page = Number(req.query.page as string) || 1;
+    const limit = Number(req.query.limit as string) || 10;
 
     const input: GetAllBookingsDto = {
       page,

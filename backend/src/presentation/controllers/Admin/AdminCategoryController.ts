@@ -55,7 +55,7 @@ export class AdminCategoryController extends BaseController {
     try {
       const params: CategoryQueryParams = {
         ...RequestMapper.toPagination(req.query),
-        isActive: RequestMapper.toBoolean(req.query.isActive),
+        isActive: RequestMapper.toBoolean(req.query.isActive as string),
       };
 
       const result = await this._getAllUseCase.execute(params);
@@ -68,7 +68,7 @@ export class AdminCategoryController extends BaseController {
 
   update = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
 
       const dto: UpdateCategoryDto = {
         name: req.body.name,
@@ -98,7 +98,7 @@ export class AdminCategoryController extends BaseController {
 
   toggleStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      const { id } = req.params;
+     const id = req.params.id as string;
       const isActive = RequestMapper.toBoolean(req.body.isActive);
 
       if (isActive === undefined) {
@@ -115,7 +115,7 @@ export class AdminCategoryController extends BaseController {
 
   delete = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       await this._deleteUseCase.execute(id);
       return this.ok(res, null, SuccessMessages.CATEGORY_DELETED);
     } catch (err) {

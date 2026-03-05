@@ -188,7 +188,7 @@ export class TechnicianProfileController extends BaseController {
   dismissNotification = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const technicianId = this.getTechId(req);
-      const { requestId } = req.params;
+      const requestId  = req.params.requestId as string;
       await this._dismissRequestUseCase.execute(technicianId, requestId);
       return this.ok(res, null, SuccessMessages.TECH_REQUEST_DISMISSED);
     } catch (err) {
