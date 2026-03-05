@@ -18,6 +18,7 @@ export interface BookingResponseDto {
   zoneId: string;
   
   status: BookingStatus;
+  scheduledAt?: string;
   
   location: BookingLocation;
   pricing: BookingPricing;

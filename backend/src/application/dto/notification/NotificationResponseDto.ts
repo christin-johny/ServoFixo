@@ -23,6 +23,7 @@ export interface NotificationResponseDto {
   status: NotificationStatus;
   readAt?: Date;
   createdAt: Date;
+scheduledAt?: Date;
 }
 
 export interface GetNotificationsInputDto {

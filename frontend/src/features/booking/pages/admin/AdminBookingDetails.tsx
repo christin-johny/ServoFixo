@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, Calendar, User, Phone, 
   AlertTriangle, CreditCard, Truck, AlertCircle,
-  Briefcase, CheckCircle2, XCircle, Clock, Ban
+  Briefcase, CheckCircle2, XCircle, Clock, Ban, CalendarDays
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -24,7 +24,7 @@ import LoaderFallback from "../../../../components/LoaderFallback";
 import BookingTimeline from "../../components/admin/BookingTimeline"; 
 import BookingMap from "../../components/admin/BookingMap"; 
  
-import { ForceCancelModal,  } from "../../components/admin/ActionModals"; 
+import { ForceCancelModal } from "../../components/admin/ActionModals"; 
 import ForceStatusModal from "../../components/admin/ForceStatusModal";
 import ForceAssignModal from "../../components/admin/ForceAssignModal";
 
@@ -36,7 +36,7 @@ const AdminBookingDetails: React.FC = () => {
   const [booking, setBooking] = useState<AdminBookingDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
 
-  //   Modal States
+  // Modal States
   const [isAssignOpen, setAssignOpen] = useState(false);
   const [isCancelOpen, setCancelOpen] = useState(false);
   const [isStatusOpen, setStatusOpen] = useState(false);
@@ -44,7 +44,6 @@ const AdminBookingDetails: React.FC = () => {
   // --- 1. Initial Fetch ---
   useEffect(() => {
     fetchDetails();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchDetails = async () => {
@@ -78,7 +77,6 @@ const AdminBookingDetails: React.FC = () => {
     return () => {
       socketService.offAdminDataUpdate();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, booking]);
 
   // --- 3. Handlers (God Mode) ---
@@ -107,7 +105,6 @@ const AdminBookingDetails: React.FC = () => {
   const handleForceStatusChange = async (newStatus: string, reason: string) => {
     if (!booking) return;
     try {
-        //   Calls the generic endpoint
         await forceStatusUpdate(booking.id, newStatus, reason);
         showSuccess(`Status updated to ${newStatus}`);
         setStatusOpen(false);
@@ -117,23 +114,35 @@ const AdminBookingDetails: React.FC = () => {
     }
   };
 
+  // --- 4. HYBRID FIX: Status Badge ---
+  const renderStatusBadge = (b: AdminBookingDetailDto) => {
+     // Check if scheduled future
+     if (b.timestamps?.scheduledAt && ["ACCEPTED", "REQUESTED", "ASSIGNED_PENDING"].includes(b.status)) {
+         const schedTime = new Date(b.timestamps.scheduledAt);
+         if (schedTime.getTime() > Date.now()) {
+             return (
+                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold border bg-purple-50 text-purple-700 border-purple-200 ml-3 align-middle">
+                     <CalendarDays size={14} />
+                     Upcoming
+                 </span>
+             );
+         }
+     }
 
-  // --- 4. Helper: Status Badge ---
-  const renderStatusBadge = (status: BookingStatus) => {
-     const s = status.replace(/_/g, " ");
+     const s = b.status.replace(/_/g, " ");
      let colorClass = "bg-gray-100 text-gray-700 border-gray-200";
      let Icon = Clock;
  
-     if (["COMPLETED", "PAID"].includes(status)) {
+     if (["COMPLETED", "PAID"].includes(b.status)) {
        colorClass = "bg-green-50 text-green-700 border-green-200";
        Icon = CheckCircle2;
-     } else if (["CANCELLED", "FAILED_ASSIGNMENT", "TIMEOUT", "CANCELLED_BY_TECH"].includes(status)) {
+     } else if (["CANCELLED", "FAILED_ASSIGNMENT", "TIMEOUT", "CANCELLED_BY_TECH"].includes(b.status)) {
        colorClass = "bg-red-50 text-red-700 border-red-200";
        Icon = XCircle;
-     } else if (["IN_PROGRESS", "ACCEPTED", "EN_ROUTE"].includes(status)) {
+     } else if (["IN_PROGRESS", "ACCEPTED", "EN_ROUTE"].includes(b.status)) {
        colorClass = "bg-blue-50 text-blue-700 border-blue-200 animate-pulse";
        Icon = Briefcase;
-     } else if (status === "REQUESTED") {
+     } else if (b.status === "REQUESTED") {
        colorClass = "bg-orange-50 text-orange-700 border-orange-200 animate-pulse";
        Icon = AlertCircle;
      }
@@ -148,12 +157,16 @@ const AdminBookingDetails: React.FC = () => {
 
   if (loading) return <LoaderFallback />;
   if (!booking) return <div className="p-8 text-center text-gray-500">Booking not found.</div>;
-    const showForceAssign = [
+  
+  const showForceAssign = [
       "REQUESTED", 
       "FAILED_ASSIGNMENT", 
       "TIMEOUT", 
       "ASSIGNED_PENDING"  
   ].includes(booking.status);
+
+  // --- HYBRID FIX: Future check for Banner ---
+  const isScheduledFuture = booking.timestamps?.scheduledAt && new Date(booking.timestamps.scheduledAt).getTime() > Date.now();
 
   return (
     <div className="h-full flex flex-col gap-4 sm:gap-6 overflow-hidden bg-gray-50/30">
@@ -171,7 +184,7 @@ const AdminBookingDetails: React.FC = () => {
             <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight flex items-center flex-wrap gap-y-2">
                     Booking #{booking.id.slice(-6).toUpperCase()}
-                    {renderStatusBadge(booking.status)}
+                    {renderStatusBadge(booking)}
                 </h1>
                 <p className="text-xs sm:text-sm text-gray-500 mt-1 flex items-center gap-2">
                     <Calendar size={14} /> 
@@ -180,7 +193,7 @@ const AdminBookingDetails: React.FC = () => {
             </div>
          </div>
 
-         {/*   God Mode Actions */}
+         {/* God Mode Actions */}
          <div className="flex flex-wrap items-center gap-3 self-start sm:self-center">
              
              {/* 1. FORCE ASSIGN (Rescue Mode) */}
@@ -216,9 +229,24 @@ const AdminBookingDetails: React.FC = () => {
          </div>
       </div>
 
+      {/* --- SCHEDULED BANNER --- */}
+      {isScheduledFuture && (
+           <div className="mx-4 sm:mx-0 mt-2 bg-purple-50 border border-purple-200 rounded-xl p-4 flex items-start gap-4 shadow-sm animate-in fade-in-up">
+               <div className="p-2 bg-purple-100 rounded-full text-purple-600 shrink-0">
+                   <CalendarDays size={20} />
+               </div>
+               <div>
+                   <h4 className="text-sm font-bold text-purple-900">Upcoming Appointment</h4>
+                   <p className="text-sm text-purple-800/80 mt-1">
+                       This service is scheduled for <strong>{format(new Date(booking.timestamps.scheduledAt!), "PPP 'at' p")}</strong>. The technician will be notified closer to the start time.
+                   </p>
+               </div>
+           </div>
+      )}
+
       {/* CONTENT */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-0 pb-6">
-         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 max-w-[1600px] mx-auto">
+         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 max-w-[1600px] mx-auto mt-4">
 
             {/* COL 1: Map & Order */}
             <div className="xl:col-span-2 space-y-6">
@@ -378,7 +406,7 @@ const AdminBookingDetails: React.FC = () => {
          </div>
       </div>
 
-      {/*   Render Modals */}
+      {/* Render Modals */}
       {booking && (
         <ForceAssignModal 
             isOpen={isAssignOpen} 

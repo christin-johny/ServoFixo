@@ -33,6 +33,7 @@ export interface INotificationService {
       distance: string;
       address: string;
       expiresAt: Date;
+      scheduledAt?: Date;
     }
   ): Promise<void>;
 }

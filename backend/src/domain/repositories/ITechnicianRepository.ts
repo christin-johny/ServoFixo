@@ -50,6 +50,8 @@ export interface ITechnicianRepository extends IBaseRepository<Technician> {
     subServiceId: string,
     limit?: number
   ): Promise<Technician[]>;
+  
+  findEligibleForScheduledJob(zoneId: string, subServiceId: string, limit?: number): Promise<Technician[]>;
 
   findPendingVerification(
     filters: VerificationQueueFilters

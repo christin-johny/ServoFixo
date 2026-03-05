@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { Clock, Info, ChevronRight, Plus, MapPin } from 'lucide-react';
+import { Clock, Info, ChevronRight, Plus, MapPin, Calendar } from 'lucide-react';
 
 // Store & Repos
 import type { RootState } from '../../../../store/store';
 import { fetchAddressesStart, setAddresses } from '../../../../store/customerSlice';
-import { getMyAddresses,addAddress  } from '../../../profile/api/customerRepository';
+import { getMyAddresses, addAddress } from '../../../profile/api/customerRepository';
 import { createBooking } from '../../api/customerBookingRepository';
 import { useNotification } from '../../../notifications/hooks/useNotification';
 
@@ -40,6 +40,14 @@ const BookingConfirm: React.FC = () => {
   const [isBookLoading, setIsBookLoading] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
 
+  // --- HYBRID BOOKING STATES ---
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduledTime, setScheduledTime] = useState<string>(() => {
+      const now = new Date();
+      now.setHours(now.getHours() + 2); // Default to 2 hours from now
+      return now.toISOString().slice(0, 16);
+  });
+
   // 3. Load Addresses on Mount
   useEffect(() => {
     if (!serviceId) {
@@ -61,7 +69,6 @@ const BookingConfirm: React.FC = () => {
     loadData();
   }, [dispatch, serviceId, navigate]);
 
- 
   const handleConfirmBooking = async () => {
     // 1. Basic Checks
     if (!selectedAddressId) {
@@ -82,8 +89,7 @@ const BookingConfirm: React.FC = () => {
         return;
     }
 
-    // 3. Validate Phone (CRITICAL FIX)
-    // We check this BEFORE calling the backend
+    // 3. Validate Phone
     if (!addressObj.phone || addressObj.phone.trim().length < 10) {
         showError("The selected address must have a valid phone number.");
         return;
@@ -94,12 +100,10 @@ const BookingConfirm: React.FC = () => {
       const response = await createBooking({
         serviceId: serviceId!,
         customerId: user.id,
- 
         contact: {
             name: addressObj.name,
             phone: addressObj.phone 
         }, 
-
         location: {
             address: `${addressObj.houseNumber}, ${addressObj.street}, ${addressObj.city}`,
             coordinates: {
@@ -107,14 +111,15 @@ const BookingConfirm: React.FC = () => {
                 lng: addressObj.location.lng
             }
         },
-        requestedTime: new Date().toISOString(),
+        // --- HYBRID FIX: Pass chosen time or Current Time for ASAP ---
+        requestedTime: isScheduled ? new Date(scheduledTime).toISOString() : new Date().toISOString(),
         meta: {
             instructions
         }
       });
 
-      showSuccess("Searching for technicians...");
-      
+      // UI FIX: We no longer show "Searching..." success here. 
+      // The SearchingScreen handles the "Search" notification logic.
       navigate('/booking/searching', { 
         state: { bookingId: response.id } 
       });
@@ -191,25 +196,46 @@ const BookingConfirm: React.FC = () => {
                         </div>
                     </div>
                 ))}
-                
-                {!addressLoading && addresses.length === 0 && (
-                    <div className="text-center p-8 bg-white rounded-xl border border-dashed border-gray-300">
-                        <p className="text-gray-500">No addresses found.</p>
-                        <button onClick={() => setIsAddressModalOpen(true)} className="text-blue-600 font-bold mt-2">Add your first address</button>
-                    </div>
-                )}
             </div>
         </div>
 
-        {/* TIME SLOT */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex items-center gap-4">
-            <div className="bg-green-100 p-2.5 rounded-full text-green-700">
-                <Clock size={20} />
+        {/* --- TIME SLOT TOGGLE & PICKER --- */}
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                    <div className="bg-green-100 p-2.5 rounded-full text-green-700">
+                        <Clock size={20} />
+                    </div>
+                    <div>
+                        <p className="font-bold text-gray-900">{isScheduled ? "Scheduled Service" : "Immediate Service"}</p>
+                        <p className="text-sm text-gray-500">
+                            {isScheduled ? "Technician will arrive at selected time" : "Technician will arrive within 45-60 mins"}
+                        </p>
+                    </div>
+                </div>
+                {/* TOGGLE BUTTON */}
+                <button 
+                    onClick={() => setIsScheduled(!isScheduled)}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${isScheduled ? 'bg-blue-600' : 'bg-gray-500'}`}
+                >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${isScheduled ? 'left-7' : 'left-1'}`} />
+                </button>
             </div>
-            <div>
-                <p className="font-bold text-gray-900">Immediate Service</p>
-                <p className="text-sm text-gray-500">Technician will arrive within 45-60 mins</p>
-            </div>
+
+            {isScheduled && (
+                <div className="mt-2 animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-center gap-2 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                        <Calendar size={14} /> Select Date & Time
+                    </div>
+                    <input 
+                        type="datetime-local" 
+                        value={scheduledTime}
+                        onChange={(e) => setScheduledTime(e.target.value)}
+                        min={new Date().toISOString().slice(0, 16)}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    />
+                </div>
+            )}
         </div>
 
         {/* INSTRUCTIONS */}
@@ -239,7 +265,7 @@ const BookingConfirm: React.FC = () => {
                     disabled={isBookLoading || !selectedAddressId}
                     className="bg-black hover:bg-gray-900 text-white px-8 py-3.5 rounded-xl font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all shadow-lg shadow-gray-200"
                 >
-                    {isBookLoading ? 'Booking...' : 'FIND TECHNICIAN'}
+                    {isBookLoading ? 'Booking...' : (isScheduled ? 'SCHEDULE BOOKING' : 'FIND TECHNICIAN')}
                     {!isBookLoading && <ChevronRight size={18} />}
                 </button>
             </div>
@@ -252,16 +278,12 @@ const BookingConfirm: React.FC = () => {
           onSubmit={async (formData) => {
               try { 
                   await addAddress(formData);
-                   
                   const data = await getMyAddresses();
                   dispatch(setAddresses(data));
-                   
                   showSuccess("Address added successfully!");
                   setIsAddressModalOpen(false);
-                   
                   const newAddr = data[data.length - 1];  
                   if (newAddr) setSelectedAddressId(newAddr.id);
-
               } catch (err) {
                   showError("Failed to save address");
                   console.error(err);

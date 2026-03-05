@@ -11,7 +11,8 @@ import {
     Truck,
     Wrench,
     Check,
-    XCircle, 
+    XCircle,
+    CalendarDays 
 } from 'lucide-react';
 
 import type { RootState } from '../../../../store/store';
@@ -276,6 +277,19 @@ const BookingTrackingPage: React.FC = () => {
         ? (status === 'PAID' ? 5 : (status === 'EXTRAS_PENDING' ? 4 : 0)) 
         : currentStepIndex;
 
+  // --- HYBRID FIX: SCHEDULED CHECK ---
+  let isScheduledFuture = false;
+  let scheduledTimeString = "";
+  if (bookingData?.timestamps?.scheduledAt && status === "ACCEPTED") {
+      const schedDate = new Date(bookingData.timestamps.scheduledAt);
+      if (schedDate.getTime() > Date.now()) {
+          isScheduledFuture = true;
+          scheduledTimeString = schedDate.toLocaleString('en-IN', {
+             weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+      }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 pb-32 font-sans">
       <Navbar />
@@ -309,7 +323,8 @@ const BookingTrackingPage: React.FC = () => {
                    : (status === 'EXTRAS_PENDING' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-blue-50 text-blue-700 border-blue-200')
                }`}>
                   <span className="relative flex h-2.5 w-2.5">
-                    {(status !== 'COMPLETED' && status !== 'PAID') && (
+                    {/* Disable ping animation if it's a future scheduled job */}
+                    {(status !== 'COMPLETED' && status !== 'PAID' && !isScheduledFuture) && (
                         <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
                             status === 'EXTRAS_PENDING' ? 'bg-orange-400' : 'bg-blue-400'
                         }`}></span>
@@ -322,6 +337,21 @@ const BookingTrackingPage: React.FC = () => {
                </span>
             </div>
         </div>
+
+        {/* --- SCHEDULED BANNER --- */}
+        {isScheduledFuture && (
+             <div className="mb-8 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-4 shadow-sm">
+                 <div className="p-2 bg-blue-100 rounded-full text-blue-600 shrink-0">
+                     <CalendarDays className="w-5 h-5" />
+                 </div>
+                 <div>
+                     <h4 className="text-sm font-bold text-blue-900">Upcoming Appointment</h4>
+                     <p className="text-sm text-blue-800/80 mt-1">
+                         Your service is scheduled for <strong>{scheduledTimeString}</strong>. The live tracker and start code will activate closer to your appointment time.
+                     </p>
+                 </div>
+             </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
@@ -392,17 +422,21 @@ const BookingTrackingPage: React.FC = () => {
                     </div>
 
                     {['ACCEPTED', 'EN_ROUTE', 'REACHED', 'IN_PROGRESS'].includes(status) && (
-                        <div className="mt-6 bg-blue-600 rounded-xl p-4 flex items-center justify-between text-white shadow-lg shadow-blue-200">
+                        <div className={`mt-6 rounded-xl p-4 flex items-center justify-between text-white shadow-lg ${isScheduledFuture ? 'bg-slate-400' : 'bg-blue-600 shadow-blue-200'}`}>
                             <div className="flex items-center gap-3">
                                 <div className="bg-white/20 p-2 rounded-lg">
                                     <ShieldCheck size={20} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] uppercase font-bold text-blue-100 tracking-wider">Start Code</p>
-                                    <p className="text-xs text-blue-50 opacity-90">Share with technician</p>
+                                    <p className="text-[10px] uppercase font-bold text-white/90 tracking-wider">Start Code</p>
+                                    <p className="text-xs text-white/80">
+                                        {isScheduledFuture ? 'Will unlock closer to time' : 'Share with technician'}
+                                    </p>
                                 </div>
                             </div>
-                            <div className="text-3xl font-mono font-bold tracking-[0.15em]">{otp}</div>
+                            <div className="text-3xl font-mono font-bold tracking-[0.15em]">
+                                {isScheduledFuture ? '----' : otp}
+                            </div>
                         </div>
                     )}
                 </div>

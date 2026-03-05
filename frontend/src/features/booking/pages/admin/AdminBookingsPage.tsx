@@ -4,30 +4,28 @@ import {
   CalendarClock, Clock, ArrowUpDown, RefreshCw,
   MapPin, User, Briefcase, ChevronRight, AlertCircle,
   CheckCircle2, XCircle, IndianRupee, Filter, X,
-  Layers
+  Layers,
+  CalendarDays
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useDebounce } from "../../../../hooks/useDebounce";
-//import { useNotification } from "../../../hooks/useNotification";
 import { 
   getAllBookings, 
   type AdminBookingListDto, 
   type BookingStatus 
 } from "../../api/adminBookingRepository";
 
-//   Reuse your existing components
+// Reuse your existing components
 import { SearchFilterBar, PaginationBar } from "../../../../components/Table/DataTableControls";
 import LoaderFallback from "../../../../components/LoaderFallback";
 import { getCategories } from "../../../service-catalog/api/categoryRepository";  
 import type { ServiceCategory } from "../../../service-catalog/types/ServiceCategory";
 
 import { socketService, type AdminUpdateEvent } from "../../../../lib/socketClient";
- 
 
 const AdminBookingsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  //const { showError } = useNotification();
 
   // --- Logic: Determine Mode (Live vs History) ---
   const isHistory = location.pathname.includes("history");
@@ -47,17 +45,15 @@ const AdminBookingsPage: React.FC = () => {
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   
-  //   ADDED: All 4 Required Filters
   const [filterStatus, setFilterStatus] = useState<string>(""); 
   const [filterCategory, setFilterCategory] = useState<string>(""); 
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
   
-  const [showFilters, setShowFilters] = useState(false); // Toggle visibility
+  const [showFilters, setShowFilters] = useState(false); 
 
   const debouncedSearch = useDebounce(search, 500);
-
 
   useEffect(() => {
     const loadCats = async () => {
@@ -76,6 +72,7 @@ const AdminBookingsPage: React.FC = () => {
     };
     loadCats();
   }, []);
+
   useEffect(() => {
     setFilterStatus("");
     setFilterCategory("");
@@ -89,7 +86,6 @@ const AdminBookingsPage: React.FC = () => {
     fetchBookings();
   }, [debouncedSearch, page, sortOrder, isHistory, filterStatus, filterCategory, startDate, endDate]);
  
-  
   const fetchBookings = useCallback(async () => {
     try { 
       if (items.length === 0) setLoading(true);
@@ -122,13 +118,12 @@ const AdminBookingsPage: React.FC = () => {
       setTotalPages(result.totalPages);
 
     } catch {
-       //showError("Failed to load bookings."); 
+       console.error("Failed to load bookings."); 
     } finally {
       setLoading(false);
     }
   }, [page, debouncedSearch, sortOrder, isHistory, filterStatus, filterCategory, startDate, endDate]); 
 
- 
   useEffect(() => {
     const handleSocketUpdate = (event: AdminUpdateEvent) => {
         if (event.type === "ADMIN_NEW_BOOKING" || event.type === "NEW_BOOKING") {
@@ -146,10 +141,8 @@ const AdminBookingsPage: React.FC = () => {
         }
     };
 
-    // 2. Register Listener
     socketService.onAdminDataUpdate(handleSocketUpdate);
 
-    // 3. Cleanup: Remove ONLY this listener
     return () => {
         socketService.offAdminDataUpdate(handleSocketUpdate);
     };
@@ -163,24 +156,35 @@ const AdminBookingsPage: React.FC = () => {
     return ["REQUESTED", "ASSIGNED_PENDING", "ACCEPTED", "EN_ROUTE", "REACHED", "IN_PROGRESS", "EXTRAS_PENDING"];
   };
 
+  // --- HYBRID FIX: Status Badges ---
+  const renderStatusBadge = (item: AdminBookingListDto) => {
+    // Check if it's a scheduled job in the future
+    if (item.timestamps?.scheduledAt && ["ACCEPTED", "REQUESTED", "ASSIGNED_PENDING"].includes(item.status)) {
+        const schedTime = new Date(item.timestamps.scheduledAt);
+        if (schedTime.getTime() > Date.now()) {
+            return (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border bg-purple-50 text-purple-700 border-purple-200">
+                    <CalendarDays size={12} />
+                    Upcoming
+                </span>
+            );
+        }
+    }
 
-
-  // --- Helper: Status Badges ---
-  const renderStatusBadge = (status: string) => {
-    const s = status.replace(/_/g, " ");
+    const s = item.status.replace(/_/g, " ");
     let colorClass = "bg-gray-100 text-gray-700 border-gray-200";
     let Icon = Clock;
 
-    if (["COMPLETED", "PAID"].includes(status)) {
+    if (["COMPLETED", "PAID"].includes(item.status)) {
       colorClass = "bg-green-50 text-green-700 border-green-200";
       Icon = CheckCircle2;
-    } else if (["CANCELLED", "FAILED_ASSIGNMENT", "TIMEOUT", "CANCELLED_BY_TECH", "REJECTED"].includes(status)) {
+    } else if (["CANCELLED", "FAILED_ASSIGNMENT", "TIMEOUT", "CANCELLED_BY_TECH", "REJECTED"].includes(item.status)) {
       colorClass = "bg-red-50 text-red-700 border-red-200";
       Icon = XCircle;
-    } else if (["IN_PROGRESS", "ACCEPTED", "EN_ROUTE"].includes(status)) {
+    } else if (["IN_PROGRESS", "ACCEPTED", "EN_ROUTE"].includes(item.status)) {
       colorClass = "bg-blue-50 text-blue-700 border-blue-200 animate-pulse";
       Icon = Briefcase;
-    } else if (status === "REQUESTED") {
+    } else if (item.status === "REQUESTED") {
       colorClass = "bg-orange-50 text-orange-700 border-orange-200 animate-pulse";
       Icon = AlertCircle;
     }
@@ -198,7 +202,7 @@ const AdminBookingsPage: React.FC = () => {
   return (
     <div className="h-full flex flex-col gap-4 sm:gap-6 overflow-hidden bg-gray-50/30">
 
-      {/* 1. HEADER (Identical to Verification Queue) */}
+      {/* 1. HEADER */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end shrink-0 border-b border-gray-200 pb-4 gap-4 sm:gap-0 bg-white px-4 pt-4 sm:px-0 sm:pt-0 sm:bg-transparent">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
@@ -272,25 +276,22 @@ const AdminBookingsPage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* 2. Category Filter (  ADDED) */}
+                {/* 2. Category Filter */}
                 <div>
-        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Category</label>
-        <div className="relative">
-             <select 
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 appearance-none"
-            >
-                <option value="">All Services</option>
-                
-                {/* 4. Map the Real Data */}
-                {categories.map(c => (
-                    // Note: Ensure 'c.id' or 'c._id' matches your ServiceCategory type
-                    <option key={c.id  } value={c.id }> 
-                        {c.name}
-                    </option>
-                ))}
-            </select>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Category</label>
+                    <div className="relative">
+                        <select 
+                            value={filterCategory}
+                            onChange={(e) => setFilterCategory(e.target.value)}
+                            className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 appearance-none"
+                        >
+                            <option value="">All Services</option>
+                            {categories.map(c => (
+                                <option key={c.id} value={c.id}> 
+                                    {c.name}
+                                </option>
+                            ))}
+                        </select>
                         <Layers className="w-4 h-4 text-gray-400 absolute left-3 top-2.5 pointer-events-none"/>
                         <ChevronRight className="w-4 h-4 text-gray-400 absolute right-3 top-2.5 rotate-90 pointer-events-none"/>
                     </div>
@@ -333,7 +334,7 @@ const AdminBookingsPage: React.FC = () => {
              </div>
           )}
 
-          {/* B. Reusable Search Bar (Reused as requested) */}
+          {/* B. Reusable Search Bar */}
           <SearchFilterBar 
              search={search}
              onSearchChange={(val) => { setSearch(val); setPage(1); }}
@@ -414,20 +415,27 @@ const AdminBookingsPage: React.FC = () => {
                      </div>
                   </div>
 
-                  {/* 3. Date & Price */}
+                  {/* 3. Date & Price - HYBRID LOGIC */}
                   <div className="col-span-1 md:col-span-2">
                      <p className="text-sm font-bold text-gray-900 flex items-center">
                         <IndianRupee size={12} />
                         {item.pricing.final || item.pricing.estimated}
                      </p>
-                     <p className="text-xs text-gray-500 mt-1">
-                        {formatDistanceToNow(new Date(item.timestamps.createdAt), { addSuffix: true })} ago
-                     </p>
+                     {item.timestamps?.scheduledAt ? (
+                         <p className="text-xs text-purple-600 mt-1 font-medium flex items-center gap-1">
+                             <CalendarDays size={10} />
+                             {new Date(item.timestamps.scheduledAt).toLocaleDateString([], { month: 'short', day: 'numeric' })} at {new Date(item.timestamps.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                         </p>
+                     ) : (
+                         <p className="text-xs text-gray-500 mt-1">
+                            {formatDistanceToNow(new Date(item.timestamps.createdAt), { addSuffix: true })} ago
+                         </p>
+                     )}
                   </div>
 
                   {/* 4. Status */}
                   <div className="col-span-1 md:col-span-2">
-                     {renderStatusBadge(item.status)}
+                     {renderStatusBadge(item)}
                   </div>
 
                   {/* 5. Action */}
@@ -461,4 +469,3 @@ const AdminBookingsPage: React.FC = () => {
 };
 
 export default AdminBookingsPage;
- 

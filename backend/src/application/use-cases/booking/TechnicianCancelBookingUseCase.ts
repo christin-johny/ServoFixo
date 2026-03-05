@@ -69,6 +69,7 @@ export class TechnicianCancelBookingUseCase implements ITechnicianCancelBookingU
         booking.updateStatus("FAILED_ASSIGNMENT", "system", ErrorMessages.REASON_TECH_CANCELLED_NO_REPLACEMENT);
         await this._bookingRepo.update(booking);
 
+       setTimeout(async () => {
         await this._notificationService.send({
             recipientId: booking.getCustomerId(),
             recipientType: "CUSTOMER",
@@ -77,6 +78,9 @@ export class TechnicianCancelBookingUseCase implements ITechnicianCancelBookingU
             body: NotificationMessages.BODY_TECH_CANCEL_NO_CANDIDATES,
             metadata: { bookingId: booking.getId() }
         });
+        }, 3000);
+        
+
         await this._notificationService.send({
             recipientId: "ADMIN_BROADCAST_CHANNEL",
             recipientType: "ADMIN",

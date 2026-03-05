@@ -43,6 +43,7 @@ export interface AdminBookingListDto {
     coordinates?: { lat: number; lng: number };  
   };
   timestamps: {
+    scheduledAt: any;
     createdAt: string;
     updatedAt: string;
   };

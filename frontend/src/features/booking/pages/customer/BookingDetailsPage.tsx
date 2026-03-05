@@ -48,9 +48,12 @@ const BookingDetailsPage: React.FC = () => {
   // Invoice Calculations
   const basePrice = pricing?.estimated || 0;
   const finalPrice = pricing?.final || basePrice;
-  // Assuming a standard platform fee or tax if not explicitly in backend yet
   const platformFee = 0; 
   const total = finalPrice + platformFee;
+
+  // --- HYBRID FIX: Determine which timestamp to show ---
+  const displayDate = booking.timestamps?.scheduledAt || booking.timestamps?.createdAt || '';
+  const isScheduled = !!booking.timestamps?.scheduledAt;
 
   return (
     <div className="min-h-screen bg-[#F5F7FB] pb-24 print:bg-white print:pb-0">
@@ -71,7 +74,7 @@ const BookingDetailsPage: React.FC = () => {
           <h1 className="text-xl font-bold text-gray-900">Booking Details</h1>
         </div>
 
-        {/* --- MAIN INVOICE CARD --- */}
+        {/* MAIN INVOICE CARD */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden print:shadow-none print:border-none print:rounded-none">
           
           {/* Status Banner */}
@@ -96,13 +99,14 @@ const BookingDetailsPage: React.FC = () => {
                 <h2 className="text-2xl font-bold text-gray-900">{service?.name}</h2> 
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-500">Date</p>
+                {/* --- UPDATED FOR SCHEDULED JOBS --- */}
+                <p className="text-sm text-gray-500">{isScheduled ? "Scheduled For" : "Date"}</p>
                 <p className="font-medium text-gray-900">
-                  {new Date(booking.timestamps?.scheduledAt || booking.timestamps?.createdAt || '').toDateString()}
+                  {new Date(displayDate).toDateString()}
                 </p>
                 <p className="text-sm text-gray-500 mt-2">Time</p>
                 <p className="font-medium text-gray-900">
-                  {new Date(booking.timestamps?.createdAt || '').toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' })}
+                  {new Date(displayDate).toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' })}
                 </p>
               </div>
             </div>
@@ -138,7 +142,6 @@ const BookingDetailsPage: React.FC = () => {
                   <span>Base Charge</span>
                   <span>₹{basePrice}</span>
                 </div>
-                {/* Add logic here if you have extra charges in the future */}
                 {platformFee > 0 && (
                    <div className="flex justify-between text-gray-600">
                      <span>Platform Fee</span>
@@ -162,10 +165,9 @@ const BookingDetailsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* --- ACTION BUTTONS (Hidden in Print) --- */}
+        {/* ACTION BUTTONS (Hidden in Print) */}
         <div className="mt-6 flex flex-col gap-3 print:hidden">
           
-          {/* Rate Button */}
           {isPaid && (
             booking.isRated ? ( 
               <div className="w-full bg-gray-100 text-gray-500 font-medium py-3.5 rounded-xl flex items-center justify-center gap-2 cursor-default">
@@ -183,7 +185,6 @@ const BookingDetailsPage: React.FC = () => {
             )
           )}
 
-          {/* Download Invoice Button */}
           {isPaid && (
             <button 
               onClick={handlePrintInvoice}
@@ -194,7 +195,6 @@ const BookingDetailsPage: React.FC = () => {
             </button>
           )}
 
-          {/* Pay Button (If completed but not paid) */}
           {booking.status === 'COMPLETED' && (
              <button
                onClick={() => navigate(`/booking/${id}/payment`)}

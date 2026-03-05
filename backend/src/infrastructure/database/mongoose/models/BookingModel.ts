@@ -157,8 +157,7 @@ const BookingSchema: Schema<BookingDocument> = new Schema(
     extraCharges: [{ title: String, amount: Number, status: String, addedByTechId: String }],
     timeline: [{ status: String, changedBy: String, timestamp: Date, reason: String }],
     meta: { otp: String, instructions: String },
-    timestamps: { createdAt: Date, updatedAt: Date, acceptedAt: Date, startedAt: Date, completedAt: Date, cancelledAt: Date },
-    isDeleted: { type: Boolean, default: false }
+    timestamps: { createdAt: Date, scheduledAt: Date, updatedAt: Date, acceptedAt: Date, startedAt: Date, completedAt: Date, cancelledAt: Date },isDeleted: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

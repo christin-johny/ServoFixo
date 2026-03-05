@@ -29,11 +29,13 @@ export class CreateBookingUseCase implements ICreateBookingUseCase {
     if (!customer) {
       throw new Error(ErrorMessages.CUSTOMER_NOT_FOUND);
     }
+
     // 2. Validation: Service
     const service = await this._serviceRepo.findById(input.serviceId);
     if (!service) {
       throw new Error(ErrorMessages.SERVICE_NOT_FOUND);
     } 
+
     // 3. Validation: Zone Integrity 
     const { lat, lng } = input.location.coordinates;
     const zoneResult = await this._zoneService.checkServiceability(lat, lng);
@@ -49,11 +51,42 @@ export class CreateBookingUseCase implements ICreateBookingUseCase {
     const estimatedPrice = Math.round(rawPrice * 100) / 100; 
     const deliveryFee = 0; 
 
+    // --- HYBRID LOGIC: Determine Scheduling Threshold ---
+    const now = new Date();
+    let isScheduled = false;
+    let assignmentTimerSeconds = 60; // Default: 60s for ASAP
+
+    if (input.requestedTime) {
+        const timeDiffMs = input.requestedTime.getTime() - now.getTime();
+        const hoursDiff = timeDiffMs / (1000 * 60 * 60);
+        
+        if (hoursDiff >= 2) {
+            isScheduled = true;
+            assignmentTimerSeconds = 30 * 60; // 30 minutes for scheduled jobs
+        }
+    }
+
     // 5. Matchmaking
-    const availableTechs = await this._technicianRepo.findAvailableInZone(
-      resolvedZoneId, 
-      input.serviceId 
-    );
+    let availableTechs: Technician[] = [];
+
+    if (isScheduled) {
+        // Path B: Scheduled (Fetch all verified in zone, then filter calendar conflicts)
+        const potentialTechs = await this._technicianRepo.findEligibleForScheduledJob(resolvedZoneId, input.serviceId);
+        
+        for (const tech of potentialTechs) {
+            // Check for overlaps with a 2-hour buffer
+            const hasOverlap = await this._bookingRepo.hasOverlappingBooking(tech.getId(), input.requestedTime!, 2);
+            if (!hasOverlap) {
+                availableTechs.push(tech);
+            }
+        }
+    } else {
+        // Path A: ASAP (Strictly online and not currently on a job)
+        availableTechs = await this._technicianRepo.findAvailableInZone(
+          resolvedZoneId, 
+          input.serviceId 
+        );
+    }
 
     // 6. Sort Candidates
     const sortedCandidates = this.sortCandidates(
@@ -106,55 +139,91 @@ export class CreateBookingUseCase implements ICreateBookingUseCase {
         { name: service.getName ? service.getName() : (service as any).name, categoryId: service.getCategoryId() }
     );
 
-    // 9. Prepare Assignment 
+    // 9. Prepare Assignment (Blast for Scheduled, Waterfall for ASAP)
     if (candidateIds.length > 0) {
-      const firstCandidateId = candidateIds[0];
-      booking.addAssignmentAttempt(firstCandidateId);
+      if (isScheduled) {
+          // BLAST: Register attempts for every candidate immediately
+          for (const techId of candidateIds) {
+              booking.addAssignmentAttempt(techId, assignmentTimerSeconds);
+          }
+      } else {
+          // WATERFALL: Register only the first candidate
+          booking.addAssignmentAttempt(candidateIds[0], assignmentTimerSeconds);
+      }
     } else {
       booking.updateStatus("FAILED_ASSIGNMENT", "system", "No available technicians in zone");
       
-      await this._notificationService.send({
-          recipientId: booking.getCustomerId(),
-          recipientType: "CUSTOMER",
-          type: NotificationType.BOOKING_FAILED,
-          title: NotificationMessages.TITLE_BOOKING_FAILED,
-          body: NotificationMessages.BODY_NO_TECHS,
-          metadata: { bookingId: booking.getId() }
-      });
+      setTimeout(async () => {
+    await this._notificationService.send({
+      recipientId: booking.getCustomerId(),
+      recipientType: "CUSTOMER",
+      type: NotificationType.BOOKING_FAILED,
+      title: NotificationMessages.TITLE_BOOKING_FAILED,
+      body: NotificationMessages.BODY_NO_TECHS,
+      metadata: { bookingId: booking.getId() }
+    });
+  }, 3000);
     } 
 
     // 10. Persist
     const createdBooking = await this._bookingRepo.create(booking);
 
-
     // 11. Trigger Real-Time Notification 
     if (candidateIds.length > 0) {
-        const firstCandidateId = candidateIds[0];
-        const tech = sortedCandidates[0]; 
+        const serviceName = service.getName ? service.getName() : "Service Request";
+        const earnings = Math.round((estimatedPrice * 0.9) * 100) / 100;
 
-        let distKm = "0.0";
-        if (tech.getCurrentLocation()?.coordinates) {
-             const dist = this.calculateDistance(
-                input.location.coordinates.lat,
-                input.location.coordinates.lng,
-                tech.getCurrentLocation()!.coordinates[1],
-                tech.getCurrentLocation()!.coordinates[0]
-            );
-            distKm = dist.toFixed(1);
+        if (isScheduled) {
+            // BLAST: Notify all candidates simultaneously
+            for (const tech of sortedCandidates) {
+                let distKm = "0.0";
+                const techLoc = tech.getCurrentLocation()?.coordinates;
+                if (techLoc) {
+                     const dist = this.calculateDistance(
+                        input.location.coordinates.lat,
+                        input.location.coordinates.lng,
+                        techLoc[1],
+                        techLoc[0]
+                    );
+                    distKm = dist.toFixed(1);
+                }
+
+                await this._notificationService.sendBookingRequest(tech.getId(), {
+                    bookingId: createdBooking.getId(),
+                    serviceName: serviceName,
+                    earnings: earnings, 
+                    distance: `${distKm} km`,
+                    address: input.location.address,
+                    expiresAt: createdBooking.getAssignmentExpiresAt() || new Date(Date.now() + (assignmentTimerSeconds * 1000)),
+                    scheduledAt: input.requestedTime  
+                });
+            }
+        } else {
+            // WATERFALL: Only notify the first candidate
+            const tech = sortedCandidates[0]; 
+            let distKm = "0.0";
+            const techLoc = tech.getCurrentLocation()?.coordinates;
+            if (techLoc) {
+                 const dist = this.calculateDistance(
+                    input.location.coordinates.lat,
+                    input.location.coordinates.lng,
+                    techLoc[1],
+                    techLoc[0]
+                );
+                distKm = dist.toFixed(1);
+            }
+
+            await this._notificationService.sendBookingRequest(tech.getId(), {
+                bookingId: createdBooking.getId(),
+                serviceName: serviceName,
+                earnings: earnings, 
+                distance: `${distKm} km`,
+                address: input.location.address,
+                expiresAt: createdBooking.getAssignmentExpiresAt() || new Date(Date.now() + 60000)
+            });
         }
 
-        const earnings = Math.round((estimatedPrice * 0.9) * 100) / 100;
-        const serviceName = service.getName ? service.getName() : "Service Request";
-
-        await this._notificationService.sendBookingRequest(firstCandidateId, {
-            bookingId: createdBooking.getId(),
-            serviceName: serviceName,
-            earnings: earnings, 
-            distance: `${distKm} km`,
-            address: input.location.address,
-            expiresAt: createdBooking.getAssignmentExpiresAt() || new Date(Date.now() + 60000)
-        });
-
+        // Admin Notification
         await this._notificationService.send({
             recipientId: "ADMIN_BROADCAST_CHANNEL", 
             recipientType: "ADMIN",
