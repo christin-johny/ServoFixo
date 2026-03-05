@@ -3,7 +3,7 @@ services:
     image: redis:alpine
     container_name: servofixo_redis
     ports:
-      - "6380:6379"
+      - "6379:6379"
     networks:
       - servofixo_net
     healthcheck:
