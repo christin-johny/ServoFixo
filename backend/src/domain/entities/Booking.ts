@@ -163,7 +163,13 @@ export class Booking {
       if (pendingAttempt) {
           pendingAttempt.status = "TIMEOUT";
       } 
-  }
+  } 
+public setScheduledTime(time: Date): void {
+    if (!this._timestamps) {
+        this._timestamps = { createdAt: new Date(), updatedAt: new Date() };
+    }
+    this._timestamps.scheduledAt = time;
+}
 
   public acceptAssignment(techId: string): void {
     if (this._status !== "ASSIGNED_PENDING" && this._status !== "REQUESTED") {

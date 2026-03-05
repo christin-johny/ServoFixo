@@ -213,6 +213,21 @@ export class BookingMongoRepository implements IBookingRepository {
     return this.toDomain(doc);
   }
 
+  async hasOverlappingBooking(technicianId: string, requestedTime: Date, bufferHours: number): Promise<boolean> {
+    const bufferMs = bufferHours * 60 * 60 * 1000;
+    const startTime = new Date(requestedTime.getTime() - bufferMs);
+    const endTime = new Date(requestedTime.getTime() + bufferMs);
+
+    const count = await BookingModel.countDocuments({
+      technicianId,
+      status: { $in: ["ACCEPTED", "EN_ROUTE", "REACHED", "IN_PROGRESS", "EXTRAS_PENDING"] },
+      isDeleted: { $ne: true }, 
+      "timestamps.scheduledAt": { $gte: startTime, $lte: endTime }
+    }).exec();
+
+    return count > 0;
+  }
+
   async findExpiredAssignments(): Promise<Booking[]> {
     const now = new Date();
     const docs = await BookingModel.find({

@@ -20,6 +20,19 @@ export class RespondToBookingUseCase implements IRespondToBookingUseCase {
   async execute(input: RespondToBookingDto): Promise<void> {
     const booking = await this._bookingRepo.findById(input.bookingId);
     if (!booking) throw new Error(ErrorMessages.BOOKING_NOT_FOUND);
+
+    const scheduledTime = booking.getTimestamps()?.scheduledAt;
+ 
+    if (input.response === "ACCEPT" && scheduledTime) {
+        const hasOverlap = await this._bookingRepo.hasOverlappingBooking(
+            input.technicianId, 
+            scheduledTime,  
+            2
+        );
+        if (hasOverlap) {
+            throw new Error("Conflict: You already accepted another job at this time.");
+        }
+    }
  
     if (booking.getStatus() !== "ASSIGNED_PENDING") {
         this._logger.warn(`${LogEvents.BOOKING_LATE_RESPONSE} ${input.bookingId}`);
@@ -71,7 +84,22 @@ export class RespondToBookingUseCase implements IRespondToBookingUseCase {
         throw new Error(ErrorMessages.BOOKING_ALREADY_ASSIGNED); 
     }
  
-    await this._technicianRepo.updateAvailabilityStatus(techId, true);
+    // --- HYBRID FIX: Only lock calendar if ASAP ---
+    const scheduledTime = booking.getTimestamps()?.scheduledAt;
+    let isScheduledForLater = false;
+    
+    if (scheduledTime) {
+        const timeDiffMs = new Date(scheduledTime).getTime() - new Date().getTime();
+        const hoursDiff = timeDiffMs / (1000 * 60 * 60);
+        if (hoursDiff >= 2) {
+            isScheduledForLater = true;
+        }
+    }
+
+    // Lock the technician ONLY if the job is an immediate ASAP job
+    if (!isScheduledForLater) {
+        await this._technicianRepo.updateAvailabilityStatus(techId, true);
+    }
 
     const currentSnapshots = booking.getSnapshots();
     if (currentSnapshots) {
@@ -94,6 +122,7 @@ export class RespondToBookingUseCase implements IRespondToBookingUseCase {
 
     await this._bookingRepo.update(booking);
 
+    // Notifications remain the same
     await this._notificationService.send({
         recipientId: booking.getCustomerId(),
         recipientType: "CUSTOMER",
@@ -163,15 +192,21 @@ export class RespondToBookingUseCase implements IRespondToBookingUseCase {
     } else {
         booking.updateStatus("FAILED_ASSIGNMENT", "system", "All candidates rejected");
         await this._bookingRepo.update(booking);
+        setTimeout(async () => {
+          try {
+            await this._notificationService.send({
+              recipientId: booking.getCustomerId(),
+              recipientType: "CUSTOMER",
+              type: NotificationType.BOOKING_FAILED,
+              title: NotificationMessages.TITLE_BOOKING_FAILED,
+              body: NotificationMessages.BODY_ALL_TECHS_BUSY,
+              metadata: { bookingId: booking.getId() }
+            });
+          } catch (error) {
+            console.error("Failed to send notification:", error);
+          }
+        }, 3000); 
         
-        await this._notificationService.send({
-            recipientId: booking.getCustomerId(),
-            recipientType: "CUSTOMER",
-            type: NotificationType.BOOKING_FAILED, 
-            title: NotificationMessages.TITLE_BOOKING_FAILED,
-            body: NotificationMessages.BODY_ALL_TECHS_BUSY,
-            metadata: { bookingId: booking.getId() }
-        });
         this._logger.warn(`${LogEvents.BOOKING_FAILED_NO_CANDIDATES} ID: ${booking.getId()}`);
     }
   }

@@ -5,6 +5,7 @@ import { INotificationService } from "../../application/services/INotificationSe
 import { ILogger } from "../../application/interfaces/services/ILogger";
 import { Booking } from "../../domain/entities/Booking";
 import { NotificationType } from "../../domain/value-objects/NotificationTypes";
+import { NotificationMessages } from "../../application/constants/ErrorMessages";
 
 export class BookingTimeoutScheduler {
   constructor(
@@ -15,7 +16,6 @@ export class BookingTimeoutScheduler {
   ) {}
 
   public start() {
-    // Run every 10 seconds to ensure we catch expirations quickly
     cron.schedule("*/10 * * * * *", async () => {
       await this.handleTimeouts();
     });
@@ -68,23 +68,23 @@ export class BookingTimeoutScheduler {
         await this.notifyNextTech(nextCandidateId, booking);
 
     } else {
-        // --- SCENARIO: NO ONE LEFT (TOTAL FAILURE) ---
+      
         this._logger.warn(`Booking ${booking.getId()}: All candidates exhausted.`);
         
         booking.updateStatus("FAILED_ASSIGNMENT", "system", "All candidates timed out");
         await this._bookingRepo.update(booking);
 
-        // Notify Customer
-        await this._notificationService.send({
-            recipientId: booking.getCustomerId(),
-            recipientType: "CUSTOMER",
-            type: NotificationType.BOOKING_FAILED,
-            title: "Booking Failed 😔",
-            body: "Sorry, all nearby technicians are busy. Please try again later.",
-            metadata: { bookingId: booking.getId() }
-        });
+        setTimeout(async () => {
+  await this._notificationService.send({
+    recipientId: booking.getCustomerId(),
+    recipientType: "CUSTOMER",
+    type: NotificationType.BOOKING_FAILED,
+    title: NotificationMessages.TITLE_BOOKING_FAILED,
+    body: "Sorry, all nearby technicians are busy. Please try again later.",
+    metadata: { bookingId: booking.getId() }
+  });
+}, 3000);  
         
-        // Notify Admin (Critical Alert)
         await this._notificationService.send({
              recipientId: "ADMIN_BROADCAST_CHANNEL",
              recipientType: "ADMIN",

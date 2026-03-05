@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { AlertCircle, RefreshCw, ArrowLeft, XCircle } from 'lucide-react'; 
+import { AlertCircle, RefreshCw, ArrowLeft, XCircle, Clock } from 'lucide-react'; 
 import type { RootState } from '../../../../store/store';
 import { socketService, type BookingConfirmedEvent, type BookingFailedEvent } from '../../../../lib/socketClient';
 import { getBookingById, cancelBooking } from '../../api/customerBookingRepository'; 
 import { setActiveBooking, clearActiveBooking } from '../../../../store/customerSlice';
 import Navbar from '../../../../layouts/customer/Navbar';
 import ConfirmModal from '../../../../components/Shared/ConfirmModal/ConfirmModal';  
+import { useNotification } from '../../../notifications/hooks/useNotification';
 
 interface LocationState {
     bookingId: string;
@@ -17,6 +18,8 @@ const SearchingScreen: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const { showError } = useNotification();
+  
   const state = location.state as LocationState | null;
   const bookingId = state?.bookingId;
   
@@ -24,6 +27,7 @@ const SearchingScreen: React.FC = () => {
   
   const [hasFailed, setHasFailed] = useState(false);
   const [failReason, setFailReason] = useState("");
+  const [isScheduled, setIsScheduled] = useState(false);
   
   // ✅ UX: Minimum Loading Time State
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
@@ -48,8 +52,12 @@ const SearchingScreen: React.FC = () => {
  
   const triggerFailureUI = (reason: string) => {
       setHasFailed(true);
-      setFailReason(reason);
+      const message = reason || "We couldn't find a technician for your request at this time.";
+      setFailReason(message);
       dispatch(clearActiveBooking());
+      
+      // FIX: Use showError for failure notifications
+      showError(message);
   };
  
   const minTimeRef = useRef(minTimeElapsed);
@@ -72,6 +80,14 @@ const SearchingScreen: React.FC = () => {
     const syncInitialStatus = async () => {
         try {
             const booking = await getBookingById(bookingId);
+            
+            // HYBRID LOGIC: Check if it's a scheduled job
+            if (booking.timestamps?.scheduledAt) {
+                const now = new Date();
+                const sched = new Date(booking.timestamps.scheduledAt);
+                const diff = (sched.getTime() - now.getTime()) / (1000 * 60 * 60);
+                if (diff >= 2) setIsScheduled(true);
+            }
              
             if (['ACCEPTED', 'EN_ROUTE', 'REACHED', 'IN_PROGRESS'].includes(booking.status)) {
                 const techSnapshot = booking.snapshots?.technician; 
@@ -90,9 +106,11 @@ const SearchingScreen: React.FC = () => {
                 });
             }
             
-            // Failure: Use delayed handler
-            if (booking.status === 'FAILED_ASSIGNMENT' || booking.status === 'CANCELLED') {
-                handleSystemFailure("Booking was cancelled or failed.");
+            // Failure: Use delayed handler with exact reason
+            if (booking.status === 'FAILED_ASSIGNMENT') {
+                handleSystemFailure("No available technicians found in your area.");
+            } else if (booking.status === 'CANCELLED') {
+                handleSystemFailure("This booking has been cancelled.");
             }
 
         } catch (err) {
@@ -109,16 +127,15 @@ const SearchingScreen: React.FC = () => {
     });
 
     socketService.onBookingFailed((data: BookingFailedEvent) => {
+        // Use the exact reason sent via Socket
         handleSystemFailure(data.reason);
     });
 
     return () => {
         socketService.offTrackingListeners();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId, user, navigate, dispatch]);
 
-  //  Cancel Handler
   const handleCancelSearch = async () => {
       if (!bookingId) return;
       setIsCancelling(true);
@@ -142,8 +159,12 @@ const SearchingScreen: React.FC = () => {
                 <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6">
                     <AlertCircle size={48} className="text-red-500" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">Booking Failed</h2>
-                <p className="text-gray-500 max-w-xs mb-8">{failReason}</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-3">Booking Not Possible</h2>
+                
+                {/* DISPLAY EXACT REASON */}
+                <div className="bg-red-50 p-4 rounded-xl border border-red-100 mb-8 w-full max-w-xs">
+                    <p className="text-red-600 text-sm font-semibold">{failReason}</p>
+                </div>
                 
                 <div className="space-y-3 w-full max-w-xs">
                     <button 
@@ -174,12 +195,23 @@ const SearchingScreen: React.FC = () => {
             </div>
             
             <div className="relative z-10 bg-white p-6 rounded-full shadow-xl mb-10 border-4 border-blue-50 animate-pulse">
-                <img src="https://cdn-icons-png.flaticon.com/512/3208/3208728.png" className="w-24 h-24 object-contain opacity-80" alt="Searching" />
+                {isScheduled ? (
+                    <Clock size={48} className="text-blue-600 mx-auto" />
+                ) : (
+                    <img src="https://cdn-icons-png.flaticon.com/512/3208/3208728.png" className="w-24 h-24 object-contain opacity-80" alt="Searching" />
+                )}
             </div>
-            <h2 className="relative z-10 text-2xl font-bold text-gray-900 mb-3 tracking-tight">Finding your expert...</h2>
-            <p className="relative z-10 text-gray-500 max-w-xs leading-relaxed font-medium mb-8">Please wait while we match you with a nearby technician.</p>
             
-            {/* Cancel Button */}
+            {/* HYBRID MESSAGING */}
+            <h2 className="relative z-10 text-2xl font-bold text-gray-900 mb-3 tracking-tight">
+                {isScheduled ? "Requesting your slot..." : "Finding your expert..."}
+            </h2>
+            <p className="relative z-10 text-gray-500 max-w-xs leading-relaxed font-medium mb-8">
+                {isScheduled 
+                    ? "We've sent your request to all available experts. You'll be notified once someone accepts your scheduled time."
+                    : "Please wait while we match you with a nearby technician."}
+            </p>
+            
             <button 
                 onClick={() => setIsCancelModalOpen(true)}
                 className="relative z-10 flex items-center gap-2 px-6 py-3 bg-white border-2 border-red-100 text-red-600 rounded-full font-bold shadow-sm hover:bg-red-50 transition-all"
@@ -188,7 +220,6 @@ const SearchingScreen: React.FC = () => {
             </button>
         </div>
 
-        {/* Confirm Modal */}
         <ConfirmModal 
             isOpen={isCancelModalOpen}
             onClose={() => setIsCancelModalOpen(false)}

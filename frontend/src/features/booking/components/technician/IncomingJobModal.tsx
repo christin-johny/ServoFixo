@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { MapPin, IndianRupee,   X } from "lucide-react";
+import { MapPin, IndianRupee, X, Calendar as CalendarIcon, Clock } from "lucide-react";
 import { type RootState } from "../../../../store/store";
 import { clearIncomingJob } from "../../../../store/technicianBookingSlice";
 import { respondToBooking } from "../../api/technicianBookingRepository";
@@ -19,7 +19,24 @@ const IncomingJobModal: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState(60);
   const [loading, setLoading] = useState(false);
 
-  // 1. Timer Logic
+  // --- HYBRID LOGIC: Determine if it's scheduled ---
+  const isScheduled = incomingJob?.scheduledAt ? true : false;
+  let scheduledTimeString = "";
+  let isFarFuture = false;
+
+  if (isScheduled && incomingJob?.scheduledAt) {
+      const schedDate = new Date(incomingJob.scheduledAt);
+      scheduledTimeString = schedDate.toLocaleString('en-IN', {
+          weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+      
+      const diffMs = schedDate.getTime() - new Date().getTime();
+      if (diffMs > (2 * 60 * 60 * 1000)) { // More than 2 hours away
+          isFarFuture = true;
+      }
+  }
+
+  // 1. Timer Logic (Only auto-reject ASAP jobs if they time out. Scheduled jobs have 30 mins)
   useEffect(() => {
     if (!isModalOpen || !incomingJob) return;
 
@@ -27,7 +44,7 @@ const IncomingJobModal: React.FC = () => {
     
     const interval = setInterval(() => {
       const secondsRemaining = Math.round((expiryTime - Date.now()) / 1000);
-      setTimeLeft(secondsRemaining);
+      setTimeLeft(secondsRemaining > 0 ? secondsRemaining : 0);
 
       if (secondsRemaining <= 0) {
         handleReject("TIMEOUT"); // Auto-reject on timeout
@@ -43,11 +60,16 @@ const IncomingJobModal: React.FC = () => {
     setLoading(true);
     try {
       await respondToBooking(incomingJob.bookingId, "ACCEPT");
-      showSuccess("Job Accepted!");
       dispatch(clearIncomingJob()); 
       
-      // Navigate to Active Job Dashboard (Flow C)
-      navigate(`/technician/jobs/${incomingJob.bookingId}`); 
+      // --- HYBRID ROUTING ---
+      if (isFarFuture) {
+          showSuccess("Job added to your schedule!");
+          navigate(`/technician/jobs`); // Go to dashboard
+      } else {
+          showSuccess("Job Accepted! Head to location.");
+          navigate(`/technician/jobs/${incomingJob.bookingId}`); // Go to live tracking
+      }
       
     } catch  {
       showError("Failed to accept job. It might be expired.");
@@ -72,19 +94,38 @@ const IncomingJobModal: React.FC = () => {
 
   if (!isModalOpen || !incomingJob) return null;
 
+  // Format Timer for display
+  const formatTime = (seconds: number) => {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-gray-100">
         
-        {/* HEADER: TIMER */}
-        <div className="bg-slate-900 p-6 text-center relative overflow-hidden">
-            <div className={`absolute top-0 left-0 h-1 bg-yellow-400 transition-all duration-1000 ease-linear`} style={{ width: `${(timeLeft / 60) * 100}%` }} />
-            
-            <p className="text-gray-400 text-xs font-bold tracking-widest uppercase mb-1">Incoming Request</p>
-            <h2 className="text-4xl font-black text-white tabular-nums tracking-tight">
-                00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}
-            </h2>
-        </div>
+        {/* HEADER: HYBRID (Blue for Scheduled, Slate for ASAP) */}
+        {isScheduled ? (
+            <div className="bg-blue-600 p-6 text-center relative overflow-hidden">
+                <p className="text-blue-200 text-xs font-bold tracking-widest uppercase mb-1">New Scheduled Job</p>
+                <div className="flex items-center justify-center gap-2 text-white mt-2">
+                    <CalendarIcon size={24} />
+                    <h2 className="text-2xl font-black tracking-tight">{scheduledTimeString}</h2>
+                </div>
+                <div className="absolute top-2 right-3 flex items-center gap-1 text-blue-200 text-xs">
+                    <Clock size={12} /> {formatTime(timeLeft)}
+                </div>
+            </div>
+        ) : (
+            <div className="bg-slate-900 p-6 text-center relative overflow-hidden">
+                <div className={`absolute top-0 left-0 h-1 bg-yellow-400 transition-all duration-1000 ease-linear`} style={{ width: `${(timeLeft / 60) * 100}%` }} />
+                <p className="text-gray-400 text-xs font-bold tracking-widest uppercase mb-1">ASAP Request</p>
+                <h2 className="text-4xl font-black text-white tabular-nums tracking-tight">
+                    {formatTime(timeLeft)}
+                </h2>
+            </div>
+        )}
 
         {/* BODY: JOB DETAILS */}
         <div className="p-6 space-y-6">

@@ -1,4 +1,5 @@
 import { IBookingRepository } from "../../../domain/repositories/IBookingRepository";
+import { ITechnicianRepository } from "../../../domain/repositories/ITechnicianRepository"; // ADDED
 import { INotificationService } from "../../services/INotificationService"; 
 import { ILogger } from "../../interfaces/services/ILogger";
 import { UpdateJobStatusDto } from "../../dto/booking/UpdateJobStatusDto";
@@ -11,6 +12,7 @@ import { IUpdateJobStatusUseCase } from "../../interfaces/use-cases/booking/IBoo
 export class UpdateJobStatusUseCase implements IUpdateJobStatusUseCase {
   constructor(
     private readonly _bookingRepo: IBookingRepository,
+    private readonly _technicianRepo: ITechnicianRepository,  
     private readonly _notificationService: INotificationService,
     private readonly _logger: ILogger
   ) {}
@@ -33,6 +35,11 @@ export class UpdateJobStatusUseCase implements IUpdateJobStatusUseCase {
             this._logger.warn(`${LogEvents.OTP_MISMATCH} for Booking ${booking.getId()}. Expected: ${requiredOtp}, Got: ${input.otp}`);
             throw new Error(ErrorMessages.OTP_INVALID_INPUT);
         }
+    }
+
+    // --- HYBRID FIX: Lock Technician when they actually start traveling ---
+    if (input.status === "EN_ROUTE") {
+        await this._technicianRepo.updateAvailabilityStatus(input.technicianId, true);
     }
 
     booking.updateStatus(input.status, `tech:${input.technicianId}`, "Status update by technician");

@@ -213,6 +213,22 @@ export class TechnicianMongoRepository implements ITechnicianRepository {
     const docs = await TechnicianModel.find(query).limit(limit).exec();
     return docs.map((doc) => this.toDomain(doc));
   }
+
+  async findEligibleForScheduledJob(
+    zoneId: string,
+    subServiceId: string,
+    limit: number = 50 
+  ): Promise<Technician[]> {
+    const query: FilterQuery<TechnicianDocument> = {
+      isDeleted: { $ne: true },
+      verificationStatus: "VERIFIED",
+      isSuspended: false,
+      zoneIds: zoneId,
+      subServiceIds: subServiceId, 
+    };
+    const docs = await TechnicianModel.find(query).limit(limit).exec();
+    return docs.map((doc) => this.toDomain(doc));
+  }
  
   async findRecommendedForAdmin(params: { 
     zoneId: string; 

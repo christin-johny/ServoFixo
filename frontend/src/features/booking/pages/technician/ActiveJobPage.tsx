@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CalendarDays } from "lucide-react";
 import { useNotification } from "../../../notifications/hooks/useNotification";
 import {
   getTechnicianBookingById,
@@ -46,14 +46,13 @@ export interface JobDetails {
   service: { name: string; categoryId: string };
   customer: { name: string; phone: string; avatarUrl?: string };
   location: { address: string; coordinates: { lat: number; lng: number } };
-  pricing: {
-      final: number; estimated: number 
-};
+  pricing: { final: number; estimated: number };
   snapshots: { 
     customer: { name: string; phone: string }; 
     service: { name: string }; 
   };
   meta?: { instructions?: string };
+  timestamps?: { scheduledAt?: string }; // ADDED FOR HYBRID LOGIC
 }
 
 interface ModalConfig {
@@ -123,13 +122,12 @@ const ActiveJobPage: React.FC = () => {
 
     socketService.connect(user.id, "TECHNICIAN");
 
-    //   Typed Handlers
     const handleStatusUpdate = (data: BookingStatusEvent) => { 
-    if (data.bookingId === id) { 
-        dispatch(updateActiveJobStatus(data.status)); // Update Redux instantly
-        fetchJob();
-    }
-};
+        if (data.bookingId === id) { 
+            dispatch(updateActiveJobStatus(data.status)); 
+            fetchJob();
+        }
+    };
 
     const handleConfirm = (data: BookingConfirmedEvent) => {
         if (data.bookingId === id) fetchJob();
@@ -139,7 +137,6 @@ const ActiveJobPage: React.FC = () => {
         if (data.bookingId === id) fetchJob();
     };
 
-    // Listeners
     socketService.onBookingStatusUpdate(handleStatusUpdate);
     socketService.onBookingConfirmed(handleConfirm);
     socketService.onBookingCancelled(handleCancel);
@@ -203,7 +200,6 @@ const ActiveJobPage: React.FC = () => {
     }
   };
 
-  // --- UI Handlers ---
   const triggers = {
     enRoute: () => setModalConfig({
       isOpen: true, title: "Start Travel?", message: "Notify customer you are en route?", confirmText: "Yes, Leaving", variant: "primary", action: () => executeStatusUpdate("EN_ROUTE")
@@ -221,6 +217,19 @@ const ActiveJobPage: React.FC = () => {
 
   const isWorking = job.status === "IN_PROGRESS";
 
+  // --- HYBRID BANNER LOGIC ---
+  let isTooEarlyToStart = false;
+  let scheduledTimeString = "";
+  if (job.status === "ACCEPTED" && job.timestamps?.scheduledAt) {
+      const schedDate = new Date(job.timestamps.scheduledAt);
+      if (schedDate.getTime() > Date.now()) {
+          isTooEarlyToStart = true;
+          scheduledTimeString = schedDate.toLocaleString('en-IN', {
+             weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+      }
+  }
+
   return (
     <div className="w-full min-h-screen space-y-6 animate-fade-in pb-32 md:pb-12 font-sans relative rounded-[20px] ">
       
@@ -228,7 +237,7 @@ const ActiveJobPage: React.FC = () => {
       <div className="space-y-4 pt-2 px-4 md:px-8">
         <div>
             <button
-                onClick={() => navigate("/technician/dashboard")}
+                onClick={() => navigate("/technician/jobs")}
                 className="group flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors px-1"
             >
                 <div className="p-1 rounded-full bg-white border border-gray-200 group-hover:border-gray-300 shadow-sm transition-all">
@@ -247,6 +256,21 @@ const ActiveJobPage: React.FC = () => {
             </p>
         </div>
       </div>
+
+      {/* --- HYBRID WARNING BANNER --- */}
+      {isTooEarlyToStart && (
+         <div className="mx-4 md:mx-8 bg-purple-50 border border-purple-200 rounded-xl p-4 flex gap-4 shadow-sm animate-in fade-in-up">
+             <div className="p-2 bg-purple-100 rounded-full text-purple-600 h-fit">
+                 <CalendarDays className="w-5 h-5" />
+             </div>
+             <div>
+                 <h4 className="text-sm font-bold text-purple-900">Upcoming Appointment</h4>
+                 <p className="text-xs text-purple-700 mt-1 leading-relaxed">
+                     This job is scheduled for <strong>{scheduledTimeString}</strong>. Please do not start travel until it's closer to the appointment time.
+                 </p>
+             </div>
+         </div>
+      )}
 
       {/* --- 2. MAIN CONTENT GRID --- */}
       <div className="px-4 md:px-8">
@@ -292,6 +316,7 @@ const ActiveJobPage: React.FC = () => {
       <JobFooter 
         status={job.status} 
         loading={actionLoading}
+        isScheduledFuture={isTooEarlyToStart} // <--- ADD THIS LINE
         onEnRoute={triggers.enRoute}
         onReached={triggers.reached}
         onStart={triggers.start}
@@ -315,6 +340,3 @@ const ActiveJobPage: React.FC = () => {
 };
 
 export default ActiveJobPage;
-
-
-

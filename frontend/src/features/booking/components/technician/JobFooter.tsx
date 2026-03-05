@@ -1,9 +1,10 @@
 import React from "react";
-import { Bike, ChevronRight, Map as MapIcon, PlusCircle,   Lock } from "lucide-react";
+import { Bike, ChevronRight, Map as MapIcon, PlusCircle, Lock, CalendarDays } from "lucide-react";
 
 interface JobFooterProps {
   status: string;
   loading: boolean;
+  isScheduledFuture?: boolean; // Added this prop
   onEnRoute: () => void;
   onReached: () => void;
   onStart: () => void;
@@ -12,7 +13,7 @@ interface JobFooterProps {
 }
 
 export const JobFooter: React.FC<JobFooterProps> = ({ 
-  status, loading, onEnRoute, onReached, onStart, onExtras, onComplete 
+  status, loading, isScheduledFuture, onEnRoute, onReached, onStart, onExtras, onComplete 
 }) => {
   
   // Logic: Show footer controls for both normal work AND when waiting for extras approval
@@ -26,15 +27,24 @@ export const JobFooter: React.FC<JobFooterProps> = ({
         
         {/* --- TRAVEL STATUSES --- */}
         {status === "ACCEPTED" && (
-          <button onClick={onEnRoute} disabled={loading} className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.98] flex items-center justify-center gap-3 group">
-            {loading ? "Starting..." : <><Bike className="w-6 h-6 group-hover:translate-x-1 transition-transform" /> Start Travel </>}
-          </button>
+          isScheduledFuture ? (
+             <button disabled className="w-full bg-gray-100 text-gray-400 font-bold py-4 rounded-xl border border-gray-200 cursor-not-allowed flex items-center justify-center gap-2">
+                <CalendarDays className="w-5 h-5" /> 
+                <span>Cannot Start Travel Yet</span>
+             </button>
+          ) : (
+             <button onClick={onEnRoute} disabled={loading} className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-[0.98] flex items-center justify-center gap-3 group">
+               {loading ? "Starting..." : <><Bike className="w-6 h-6 group-hover:translate-x-1 transition-transform" /> Start Travel </>}
+             </button>
+          )
         )}
+
         {status === "EN_ROUTE" && (
           <button onClick={onReached} disabled={loading} className="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 active:scale-[0.98] flex items-center justify-center gap-3">
             {loading ? 'Updating...' : <><MapIcon className="w-5 h-5" /> Confirm Arrival at Location</>}
           </button>
         )}
+
         {status === "REACHED" && (
           <button onClick={onStart} disabled={loading} className="w-full bg-green-600 text-white font-bold py-4 rounded-xl hover:bg-green-700 shadow-lg shadow-green-200 active:scale-[0.98] flex items-center justify-center gap-2">
             {loading ? 'Verifying...' : <>Verify & Start Job <ChevronRight className="w-5 h-5 opacity-80" /></>}
@@ -51,7 +61,6 @@ export const JobFooter: React.FC<JobFooterProps> = ({
                 className="bg-white text-gray-700 font-bold py-4 rounded-xl border border-gray-200 shadow-sm hover:bg-gray-50 flex items-center justify-center gap-2 active:scale-[0.98]"
             >
               {isPendingExtras ? (
-                 // Show indicator if pending
                  <div className="relative">
                     <PlusCircle className="w-5 h-5 text-gray-500" />
                     <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-yellow-400 rounded-full border border-white"></span>

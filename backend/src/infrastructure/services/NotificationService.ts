@@ -146,41 +146,64 @@ export class NotificationService implements INotificationService {
   }
   
 async sendBookingRequest(
-    technicianId: string, 
-    payload: {
-      bookingId: string;
-      serviceName: string;
-      earnings: number;
-      distance: string;
-      address: string;
-      expiresAt: Date;
-    }
-  ): Promise<void> {
-    try {
-      const io = SocketServer.getInstance();
-      
-      // 1. Emit the critical Real-Time Event (Popup Trigger)
-      io.to(technicianId).emit("booking:assign_request", payload);
-
-      // 2. Create Persisted Notification
-      await this.send({
-        recipientId: technicianId,
-        recipientType: "TECHNICIAN",
-          
-        type: NotificationType.BOOKING_REQUEST, 
-        
-        title: "New Job Request! 🚀",
-        body: `New ${payload.serviceName} job nearby. Earn ₹${payload.earnings}.`,
-        metadata: {
-          bookingId: payload.bookingId,
-          expiresAt: payload.expiresAt.toISOString()
-        },
-        clickAction: `/technician/bookings/${payload.bookingId}`,
-        priority: "URGENT"
-      });
-
-    } catch (error) {
-      this._logger.error(`Failed to send booking request socket to ${technicianId}`, error);
-    }
+  technicianId: string, 
+  payload: {
+    bookingId: string;
+    serviceName: string;
+    earnings: number;
+    distance: string;
+    address: string;
+    expiresAt: Date;
+    scheduledAt?: Date; // Added to the parameter list
   }
+): Promise<void> {
+  try {
+    const io = SocketServer.getInstance();
+    
+    // 1. Emit the Real-Time Event (Popup Trigger)
+    // We pass the full payload so the mobile app can show the date/time in the popup
+    io.to(technicianId).emit("booking:assign_request", payload);
+
+    // 2. Dynamic Content Logic
+    const isScheduled = !!payload.scheduledAt;
+    
+    // Format: "Mar 05, 04:00 PM"
+    const timeString = payload.scheduledAt 
+      ? payload.scheduledAt.toLocaleString('en-IN', { 
+          day: 'numeric', 
+          month: 'short', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        })
+      : "ASAP";
+
+    const title = isScheduled 
+      ? `Scheduled Job: ${timeString} 📅` 
+      : "New Job Request! 🚀";
+
+    const body = isScheduled
+      ? `Job: ${payload.serviceName} scheduled for ${timeString}. Earn ₹${payload.earnings}.`
+      : `New ${payload.serviceName} job nearby. Earn ₹${payload.earnings}.`;
+
+    // 3. Create Persisted Notification
+    await this.send({
+      recipientId: technicianId,
+      recipientType: "TECHNICIAN",
+      type: NotificationType.BOOKING_REQUEST, 
+      title,
+      body,
+      metadata: {
+        bookingId: payload.bookingId,
+        expiresAt: payload.expiresAt.toISOString(),
+        // Pass the raw date string in metadata for frontend logic
+        scheduledAt: payload.scheduledAt?.toISOString() || ""
+      },
+      clickAction: `/technician/bookings/${payload.bookingId}`,
+      priority: "URGENT"
+    });
+
+  } catch (error) {
+    this._logger.error(`Failed to send booking request to ${technicianId}`, error);
+  }
+}
 }

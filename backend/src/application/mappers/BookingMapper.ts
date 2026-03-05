@@ -1,6 +1,6 @@
 import { Booking } from "../../domain/entities/Booking";
 import { BookingResponseDto } from "../dto/booking/BookingResponseDto";
-import { S3UrlHelper } from "../../infrastructure/storage/S3UrlHelper"; //
+import { S3UrlHelper } from "../../infrastructure/storage/S3UrlHelper"; 
 
 export class BookingMapper {
   static async toResponse(entity: Booking): Promise<BookingResponseDto> {
@@ -29,6 +29,9 @@ export class BookingMapper {
       zoneId: entity.getZoneId(),
       status: entity.getStatus(),
       
+      // FIX: Convert Date to ISO String for JSON serialization
+      scheduledAt: entity.getTimestamps()?.scheduledAt?.toISOString(),
+      
       location: entity.getLocation(),
       pricing: entity.getPricing(),
       payment: entity.getPayment(),
@@ -45,19 +48,30 @@ export class BookingMapper {
         ...snapshots,
         customer: {
           ...snapshots.customer,
-          avatarUrl: S3UrlHelper.getFullUrl(snapshots.customer.avatarUrl) // Public
+          avatarUrl: S3UrlHelper.getFullUrl(snapshots.customer.avatarUrl) 
         },
         technician: snapshots.technician ? {
           ...snapshots.technician,
-          avatarUrl: S3UrlHelper.getFullUrl(snapshots.technician.avatarUrl) // Public
+          avatarUrl: S3UrlHelper.getFullUrl(snapshots.technician.avatarUrl) 
         } : undefined,
         service: snapshots.service
       },
       
       meta: entity.getMeta(),
-      timestamps: entity.getTimestamps()
+      
+      // Safely map timestamps block 
+      timestamps: {
+          createdAt: entity.getTimestamps()?.createdAt || new Date(),
+          scheduledAt: entity.getTimestamps()?.scheduledAt,
+          updatedAt: entity.getTimestamps()?.updatedAt || new Date(),
+          acceptedAt: entity.getTimestamps()?.acceptedAt,
+          startedAt: entity.getTimestamps()?.startedAt,
+          completedAt: entity.getTimestamps()?.completedAt,
+          cancelledAt: entity.getTimestamps()?.cancelledAt,
+      }
     };
   }
+
   static toDomain(raw: any): Booking {
     if (!raw) throw new Error("Booking data is null/undefined");
     

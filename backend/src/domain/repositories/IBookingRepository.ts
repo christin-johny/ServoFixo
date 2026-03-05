@@ -33,6 +33,7 @@ export interface IBookingRepository extends IBaseRepository<Booking> {
 
   findActiveBookingForTechnician(technicianId: string): Promise<Booking | null>;
   findActiveBookingForCustomer(customerId: string): Promise<Booking | null>;
+  hasOverlappingBooking(technicianId: string, requestedTime: Date, bufferHours: number): Promise<boolean>;
    
   findExpiredAssignments(): Promise<Booking[]>; // <--- ADDED THIS
  

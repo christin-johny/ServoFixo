@@ -333,7 +333,7 @@ export const bookingRepo = new BookingMongoRepository();
  
 const createBookingUseCase = new CreateBookingUseCase(bookingRepo,customerRepo,     serviceItemRepo,  technicianRepo, notificationService,  zoneService );
 const respondToBookingUseCase = new RespondToBookingUseCase(bookingRepo,technicianRepo,notificationService,logger)
-const updateJobStatusUseCase = new UpdateJobStatusUseCase(bookingRepo,notificationService,logger);
+const updateJobStatusUseCase = new UpdateJobStatusUseCase(bookingRepo,technicianRepo,notificationService,logger);
 const addExtraChargeUseCase = new AddExtraChargeUseCase(bookingRepo,notificationService,imageService )
 const respondToExtraChargeUseCase = new RespondToExtraChargeUseCase(  bookingRepo,  notificationService )
 const completeJobUseCase = new CompleteJobUseCase(bookingRepo,paymentGateway,  notificationService,imageService,serviceItemRepo )

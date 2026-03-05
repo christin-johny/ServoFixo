@@ -53,6 +53,16 @@ const BookingHistoryCard: React.FC<BookingHistoryCardProps> = ({ booking, compac
     navigate(`/booking/${booking?.id}/rate`);
   };
 
+  // --- HYBRID FIX: CHECK IF SCHEDULED FOR FUTURE ---
+  let isScheduledFuture = false;
+  if (booking?.timestamps?.scheduledAt && status === 'ACCEPTED') {
+      const schedDate = new Date(booking.timestamps.scheduledAt);
+      // eslint-disable-next-line react-hooks/purity
+      if (schedDate.getTime() > Date.now()) {
+          isScheduledFuture = true;
+      }
+  }
+
   return (
     <div 
       onClick={handleViewDetails}
@@ -84,10 +94,17 @@ const BookingHistoryCard: React.FC<BookingHistoryCardProps> = ({ booking, compac
         </div>
 
         <div className="flex flex-col items-end gap-2">
-            {/* Added null check for status.replace */}
-            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(status)}`}>
-            {status.replace('_', ' ')}
-            </span>
+            {/* HYBRID FIX: DISPLAY UPCOMING BADGE OR STANDARD STATUS */}
+            {isScheduledFuture ? (
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold border bg-purple-100 text-purple-700 border-purple-200 flex items-center gap-1">
+                    <Calendar size={10} /> Upcoming
+                </span>
+            ) : (
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(status)}`}>
+                    {status.replace('_', ' ')}
+                </span>
+            )}
+            
             {!compact && price && (
                 <span className="font-semibold text-gray-900 text-sm">₹{price}</span>
             )}

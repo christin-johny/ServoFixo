@@ -1,4 +1,4 @@
-import { createSlice,type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export interface IncomingJob {
   bookingId: string;
@@ -7,6 +7,7 @@ export interface IncomingJob {
   distance: string;
   address: string;
   expiresAt: string; 
+  scheduledAt?: string; // ADDED THIS LINE
 }
 
 export interface ActiveJob {
@@ -55,5 +56,5 @@ const technicianBookingSlice = createSlice({
   },
 });
 
-export const { setIncomingJob, clearIncomingJob,setActiveJob,updateActiveJobStatus } = technicianBookingSlice.actions;
+export const { setIncomingJob, clearIncomingJob, setActiveJob, updateActiveJobStatus } = technicianBookingSlice.actions;
 export default technicianBookingSlice.reducer;

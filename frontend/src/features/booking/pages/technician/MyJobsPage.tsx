@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { 
   Briefcase, Calendar, MapPin, IndianRupee, 
   ChevronRight, CheckCircle2, XCircle, Clock, 
-  ArrowLeft
+  ArrowLeft, AlertTriangle, CalendarDays
 } from "lucide-react";
 import { getTechnicianJobs } from "../../api/technicianBookingRepository";
 import { useNotification } from "../../../notifications/hooks/useNotification";
@@ -25,7 +25,7 @@ interface JobData {
     final?: number; 
     estimated: number; 
   };
-  timestamps: { createdAt: string; completedAt?: string };
+  timestamps: { createdAt: string; completedAt?: string; scheduledAt?: string }; // ADDED scheduledAt
 }
 
 interface JobsApiResponse {
@@ -59,14 +59,11 @@ const MyJobsPage: React.FC = () => {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      //   LOGIC FIX: Explicitly define status arrays
       let statuses: string | string[] | undefined;
 
       if (statusFilter === "ACTIVE") {
-         // Backend handles the string 'active' specially to include [ACCEPTED...COMPLETED]
          statuses = "active"; 
       } else {
-         // For History, we explicitly ask for these statuses
          statuses = [
              "PAID", 
              "CANCELLED", 
@@ -96,10 +93,28 @@ const MyJobsPage: React.FC = () => {
     }
   };
 
-  // --- Helpers & Columns (Keep existing) ---
-  const renderStatus = (status: string) => {
-    const s = status.replace(/_/g, " "); // Fix: Replace ALL underscores
-    switch (status) {
+  // --- HYBRID STATUS RENDERER ---
+  const renderStatus = (item: JobData) => {
+    const s = item.status.replace(/_/g, " ");
+
+    // 1. Check if it's a scheduled job in the future
+    if (item.status === "ACCEPTED" && item.timestamps.scheduledAt) {
+        const schedTime = new Date(item.timestamps.scheduledAt);
+        const isFuture = schedTime.getTime() > Date.now();
+        
+        if (isFuture) {
+            const timeString = schedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const dateString = schedTime.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            return (
+                <span className="bg-purple-100 text-purple-700 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 border border-purple-200">
+                    <CalendarDays className="w-3 h-3" /> Upcoming: {dateString} at {timeString}
+                </span>
+            );
+        }
+    }
+
+    // 2. Standard Statuses
+    switch (item.status) {
       case "PAID": 
         return <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3"/> {s}</span>;
       case "COMPLETED": 
@@ -109,8 +124,11 @@ const MyJobsPage: React.FC = () => {
       case "TIMEOUT":
       case "CANCELLED_BY_TECH":
         return <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5"><XCircle className="w-3 h-3"/> {s}</span>;
+      case "ACCEPTED":
+        // ASAP job needs immediate travel
+        return <span className="bg-orange-100 text-orange-700 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 animate-pulse"><AlertTriangle className="w-3 h-3"/> Action Required</span>;
       default: 
-        return <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 animate-pulse"><Clock className="w-3 h-3"/> {s}</span>;
+        return <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5"><Clock className="w-3 h-3"/> {s}</span>;
     }
   };
 
@@ -154,7 +172,7 @@ const MyJobsPage: React.FC = () => {
     },
     {
       header: "Status",
-      render: (item) => renderStatus(item.status)
+      render: (item) => renderStatus(item)
     },
     {
       header: "Earnings",
@@ -189,7 +207,7 @@ const MyJobsPage: React.FC = () => {
             <span className="text-[10px] font-bold text-gray-400 font-mono tracking-wider">#{item.id.slice(-6).toUpperCase()}</span>
             <h3 className="font-bold text-gray-900 text-base leading-tight">{item.snapshots?.service?.name || "Unknown Service"}</h3>
           </div>
-          {renderStatus(item.status)}
+          {renderStatus(item)}
        </div>
 
        <div className="flex items-start gap-3 bg-gray-50/50 p-3 rounded-xl border border-gray-50">
