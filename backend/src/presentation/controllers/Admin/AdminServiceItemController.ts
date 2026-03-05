@@ -74,7 +74,7 @@ export class AdminServiceItemController extends BaseController {
       const params: ServiceQueryParams = {
         ...RequestMapper.toPagination(req.query),
         categoryId: req.query.categoryId as string,
-        isActive: RequestMapper.toBoolean(req.query.isActive)
+        isActive: RequestMapper.toBoolean(req.query.isActive as string)
       };
 
       const result = await this._getAllUseCase.execute(params);
@@ -88,7 +88,7 @@ export class AdminServiceItemController extends BaseController {
 
   public update = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const { specifications, imagesToDelete, basePrice, isActive, ...rest } = req.body;
       const files = req.files as Express.Multer.File[];
 
@@ -131,7 +131,7 @@ export class AdminServiceItemController extends BaseController {
 
   public toggleStatus = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const isActive = RequestMapper.toBoolean(req.body.isActive);
 
       if (typeof isActive !== "boolean") {
@@ -148,7 +148,7 @@ export class AdminServiceItemController extends BaseController {
 
   public delete = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      await this._deleteUseCase.execute(req.params.id);
+      await this._deleteUseCase.execute(req.params.id as string);
       return this.ok(res, null, SuccessMessages.SERVICE_DELETED);
     } catch (err) {
       (err as Error & { logContext?: string }).logContext = LogEvents.SERVICE_DELETE_FAILED;

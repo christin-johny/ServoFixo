@@ -43,7 +43,7 @@ private readonly _markAllAsReadUseCase: IMarkAllNotificationsAsReadUseCase,
 
   markAsRead = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      const { notificationId } = req.params;
+      const notificationId = req.params.notificationId as string;
       const techId = (req as AuthenticatedRequest).userId;
 
       if (!techId) {

@@ -60,10 +60,10 @@ export class AdminTechnicianController extends BaseController {
 
   getTechnicianTransactions = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      const page = Number(req.query.page) || 1;
-      const limit = Number(req.query.limit) || 10;
+      const page = Number(req.query.page as string) || 1;
+      const limit = Number(req.query.limit as string) || 10;
       // Assuming you inject IGetTransactionHistoryUseCase as _getTransactionsUseCase
-      const result = await this._getTransactionsUseCase.execute(req.params.id, page,limit);
+      const result = await this._getTransactionsUseCase.execute(req.params.id as string as string, page,limit);
       return this.ok(res, result);
     } catch (err) {
       (err as Error & { logContext?: string }).logContext = "ADMIN_GET_TRANSACTIONS_FAILED";
@@ -73,7 +73,7 @@ export class AdminTechnicianController extends BaseController {
 
   getTechnicianProfile = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      const result = await this._getFullProfileUseCase.execute(req.params.id);
+      const result = await this._getFullProfileUseCase.execute(req.params.id as string);
       return this.ok(res, result);
     } catch (err) {
       (err as Error & { logContext?: string }).logContext = LogEvents.PROFILE_FETCH_FAILED;
@@ -84,7 +84,7 @@ export class AdminTechnicianController extends BaseController {
   verifyTechnician = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const dto = req.body as VerifyTechnicianDto;
-      await this._verifyTechnicianUseCase.execute(req.params.id, dto);
+      await this._verifyTechnicianUseCase.execute(req.params.id as string, dto);
 
       const message = dto.action === "APPROVE" 
         ? "Technician Approved Successfully" 
@@ -141,7 +141,7 @@ export class AdminTechnicianController extends BaseController {
 
   updateTechnician = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      await this._updateTechnicianUseCase.execute(req.params.id, req.body);
+      await this._updateTechnicianUseCase.execute(req.params.id as string, req.body);
       return this.ok(res, null, SuccessMessages.TECH_UPDATED);
     } catch (err) {
       (err as Error & { logContext?: string }).logContext = LogEvents.CATEGORY_UPDATE_FAILED;  
@@ -152,7 +152,7 @@ export class AdminTechnicianController extends BaseController {
   toggleBlockTechnician = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const { isSuspended, reason } = req.body;
-      await this._blockTechnicianUseCase.execute(req.params.id, isSuspended, reason);
+      await this._blockTechnicianUseCase.execute(req.params.id as string, isSuspended, reason);
 
       return this.ok(res, null, isSuspended ? SuccessMessages.TECH_SUSPENDED : SuccessMessages.TECH_ACTIVATED);
     } catch (err) {
@@ -163,7 +163,7 @@ export class AdminTechnicianController extends BaseController {
 
   deleteTechnician = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
-      await this._deleteTechnicianUseCase.execute(req.params.id);
+      await this._deleteTechnicianUseCase.execute(req.params.id as string);
       return this.ok(res, null, SuccessMessages.TECH_DELETED);
     } catch (err) {
       (err as Error & { logContext?: string }).logContext = LogEvents.CATEGORY_DELETE_FAILED;
@@ -184,7 +184,7 @@ export class AdminTechnicianController extends BaseController {
       const useCase = routes[dto.requestType];
       if (!useCase) throw new Error("Invalid request type");
 
-      await useCase.execute(req.params.id, dto);
+      await useCase.execute(req.params.id as string, dto);
 
       const message = dto.action === RequestAction.APPROVE
         ? "Request approved and technician notified."

@@ -84,7 +84,7 @@ export class BookingController extends BaseController {
       const technicianId = (req as AuthenticatedRequest).userId;
       if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
-      const bookingId = req.params.id;
+      const bookingId = req.params.id as string;
       const { otp } = req.body;
 
       if (!otp) return this.clientError(res, ErrorMessages.OTP_MISSING);
@@ -110,7 +110,7 @@ export class BookingController extends BaseController {
       if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
       const input: RespondToBookingDto = {
-        bookingId: req.params.id,
+        bookingId: req.params.id as string,
         technicianId,
         response: req.body.response,
         reason: req.body.reason
@@ -130,8 +130,8 @@ export class BookingController extends BaseController {
       const customerId = (req as AuthenticatedRequest).userId;
       if (!customerId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
-      const page = Number(req.query.page) || 1;
-      const limit = Number(req.query.limit) || 10;
+      const page = Number(req.query.page as string) || 1;
+      const limit = Number(req.query.limit as string) || 10;
       const input: GetCustomerBookingsDto = {
         customerId,
         page,
@@ -162,7 +162,7 @@ export class BookingController extends BaseController {
       if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
       const input: UpdateJobStatusDto = {
-        bookingId: req.params.id,
+        bookingId: req.params.id as string,
         technicianId,
         status: req.body.status, 
         location: req.body.location,
@@ -183,7 +183,7 @@ export class BookingController extends BaseController {
       if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
       const input: AddExtraChargeDto = {
-        bookingId: req.params.id,
+        bookingId: req.params.id as string,
         technicianId,
         title: req.body.title,
         amount: req.body.amount,
@@ -214,9 +214,9 @@ export class BookingController extends BaseController {
       if (!customerId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
       const input: RespondToExtraChargeDto = {
-        bookingId: req.params.id,
+        bookingId: req.params.id as string,
         customerId,
-        chargeId: req.params.chargeId,
+        chargeId: req.params.chargeId as string,
         response: req.body.response
       };
 
@@ -233,8 +233,8 @@ getTechnicianHistory = async (req: Request, res: Response, next: NextFunction): 
     const technicianId = (req as AuthenticatedRequest).userId;
     if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
+    const page = Number(req.query.page as string) || 1;
+    const limit = Number(req.query.limit as string) || 10;
     const input: GetTechnicianHistoryDto = {
       technicianId,
       page,
@@ -268,7 +268,7 @@ getTechnicianHistory = async (req: Request, res: Response, next: NextFunction): 
       if (!technicianId) throw new Error(ErrorMessages.UNAUTHORIZED);
       
       const input: CompleteJobDto = {
-        bookingId: req.params.id,
+        bookingId: req.params.id as string,
         technicianId
       }; 
 
@@ -296,7 +296,7 @@ getTechnicianHistory = async (req: Request, res: Response, next: NextFunction): 
       if (!userId || !role) throw new Error(ErrorMessages.UNAUTHORIZED);
 
       const input: GetBookingDetailsDto = {
-        bookingId: req.params.id,
+        bookingId: req.params.id as string,
         userId,
         role: role as UserRoleType
       };
@@ -317,7 +317,7 @@ getTechnicianHistory = async (req: Request, res: Response, next: NextFunction): 
       if (!userId) throw new Error(ErrorMessages.UNAUTHORIZED);
 
       const input: CancelBookingDto = {
-        bookingId: req.params.id,
+        bookingId: req.params.id as string,
         userId,
         reason: req.body.reason
       }; 
@@ -340,7 +340,7 @@ getTechnicianHistory = async (req: Request, res: Response, next: NextFunction): 
    verifyPayment = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const input: VerifyPaymentDto = {
-        bookingId: req.params.id,
+        bookingId: req.params.id as string,
         orderId: req.body.orderId,      
         paymentId: req.body.paymentId,  
         signature: req.body.signature   
@@ -366,7 +366,7 @@ getTechnicianHistory = async (req: Request, res: Response, next: NextFunction): 
       }
 
       const input: RateTechnicianDto = {
-        bookingId: req.params.id,
+        bookingId: req.params.id as string,
         customerId: userId,
         rating: req.body.rating,
         comment: req.body.comment

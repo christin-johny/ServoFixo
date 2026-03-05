@@ -4,7 +4,9 @@ import { useSelector } from "react-redux";
 import type { RootState } from "../store/store";
 
 const GuestOnlyGuard: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-  const { accessToken, user } = useSelector((s: RootState) => s.auth);
+  const { accessToken, user ,isInitializing} = useSelector((s: RootState) => s.auth);
+
+  if (isInitializing) return null;
 
   if (accessToken && user?.role) {
     switch (user.role) {

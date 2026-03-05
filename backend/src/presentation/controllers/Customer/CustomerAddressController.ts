@@ -59,7 +59,7 @@ export class CustomerAddressController extends BaseController {
   deleteAddress = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const userId = this.getUserId(req);
-      await this._deleteAddressUseCase.execute(req.params.id, userId);
+      await this._deleteAddressUseCase.execute(req.params.id as string, userId);
       return this.ok(res, null, SuccessMessages.ADDRESS_DELETED);
     } catch (error: unknown) {
       (error as Error & { logContext?: string }).logContext = LogEvents.ADDRESS_DELETE_FAILED;
@@ -70,7 +70,7 @@ export class CustomerAddressController extends BaseController {
   updateAddress = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const userId = this.getUserId(req);
-      const resultDto = await this._updateAddressUseCase.execute(req.params.id, userId, req.body);
+      const resultDto = await this._updateAddressUseCase.execute(req.params.id as string, userId, req.body);
       return this.ok(res, resultDto, SuccessMessages.ADDRESS_UPDATED);
     } catch (error: unknown) {
       (error as Error & { logContext?: string }).logContext = LogEvents.ADDRESS_UPDATE_FAILED;
@@ -81,7 +81,7 @@ export class CustomerAddressController extends BaseController {
   setDefaultAddress = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const userId = this.getUserId(req);
-      await this._updateAddressUseCase.execute(req.params.id, userId, { isDefault: true });
+      await this._updateAddressUseCase.execute(req.params.id as string, userId, { isDefault: true });
       return this.ok(res, null, SuccessMessages.DEFAULT_ADDRESS_UPDATED);
     } catch (error: unknown) {
       (error as Error & { logContext?: string }).logContext = LogEvents.ADDRESS_UPDATE_FAILED;
