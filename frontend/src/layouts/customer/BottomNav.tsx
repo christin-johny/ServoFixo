@@ -35,8 +35,8 @@ const BottomNav: React.FC = () => {
       <NavButton 
         icon={ShoppingBag} 
         label="Bookings" 
-        active={isActive('/bookings')} 
-        onClick={() => handleAuthAction('/bookings')} 
+        active={isActive('/booking/history')} 
+        onClick={() => handleAuthAction('/booking/history')} 
       />
       <NavButton 
         icon={isLoggedIn ? User : LogIn} 
