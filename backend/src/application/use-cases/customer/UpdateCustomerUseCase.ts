@@ -3,7 +3,7 @@ import { Customer } from "../../../domain/entities/Customer";
 import { ICustomerRepository } from "../../../domain/repositories/ICustomerRepository";
 import { ILogger } from "../../interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
-import { UpdateCustomerRequestDto } from "../../dto/customer/CustomerAuthDto";
+import { UpdateCustomerRequestDto } from "../../dto/customers/CustomerAuthDto";
 import { IUpdateCustomerUseCase } from "../../interfaces/use-cases/customer/ICustomerUseCases";
 
 export class UpdateCustomerUseCase  implements IUpdateCustomerUseCase{

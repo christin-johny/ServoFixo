@@ -1,7 +1,7 @@
 import { Customer } from "../../../../domain/entities/Customer";
 import { PaginatedResult } from "../../../../domain/repositories/ICustomerRepository";
-import { CustomerFilterDto, CustomerResponseDto } from "../../../dto/customer/AdminCustomerDtos";
-import { ChangePasswordRequestDto, CustomerProfileResponse, IUploadAvatarFile, UpdateCustomerRequestDto } from "../../../dto/customer/CustomerAuthDto";
+import { CustomerFilterDto, CustomerResponseDto } from "../../../dto/customers/AdminCustomerDtos";
+import { ChangePasswordRequestDto, CustomerProfileResponse, IUploadAvatarFile, UpdateCustomerRequestDto } from "../../../dto/customers/CustomerAuthDto";
  
 
 

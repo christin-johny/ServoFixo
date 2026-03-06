@@ -1,6 +1,6 @@
 import { ICustomerRepository, PaginatedResult } from '../../../domain/repositories/ICustomerRepository';
 import { Customer } from '../../../domain/entities/Customer';
-import { CustomerFilterDto, CustomerResponseDto } from '../../dto/customer/AdminCustomerDtos';
+import { CustomerFilterDto, CustomerResponseDto } from '../../dto/customers/AdminCustomerDtos';
 import { IGetAllCustomersUseCase } from '../../interfaces/use-cases/customer/ICustomerUseCases';
 import { mapToResponseDto } from '../../mappers/CustomerMapper';
 

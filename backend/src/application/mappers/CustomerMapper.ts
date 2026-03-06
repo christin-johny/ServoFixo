@@ -1,5 +1,5 @@
 import { Customer } from "../../domain/entities/Customer";
-import { CustomerResponseDto } from "../dto/customer/AdminCustomerDtos";
+import { CustomerResponseDto } from "../dto/customers/AdminCustomerDtos";
 
 export const mapToResponseDto = (customer: Customer): CustomerResponseDto => {
   return {

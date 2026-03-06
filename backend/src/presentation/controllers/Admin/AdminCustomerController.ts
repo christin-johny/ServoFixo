@@ -3,7 +3,7 @@ import { BaseController } from "../BaseController";
 import {
   CustomerFilterSchema,
   CustomerUpdateSchema,
-} from "../../../application/dto/customer/AdminCustomerDtos";
+} from "../../../application/dto/customers/AdminCustomerDtos";
 import { StatusCodes } from "../../utils/StatusCodes";
 import { ErrorMessages } from "../../../application/constants/ErrorMessages"; 
 import { ILogger } from "../../../application/interfaces/services/ILogger";

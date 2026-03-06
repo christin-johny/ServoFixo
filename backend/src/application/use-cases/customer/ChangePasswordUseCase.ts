@@ -5,7 +5,7 @@ import { Customer } from "../../../domain/entities/Customer";
 import { ILogger } from "../../interfaces/services/ILogger";
 import { LogEvents } from "../../../infrastructure/logging/LogEvents";
 import { IChangePasswordUseCase } from "../../interfaces/use-cases/customer/ICustomerUseCases";
-import { ChangePasswordRequestDto } from "../../dto/customer/CustomerAuthDto";
+import { ChangePasswordRequestDto } from "../../dto/customers/CustomerAuthDto";
 
 export class ChangePasswordUseCase implements IChangePasswordUseCase{
   constructor(
