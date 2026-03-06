@@ -10,7 +10,7 @@ import { IEditServiceItemUseCase } from "../../interfaces/use-cases/serviceItem/
 
 
 
-export class EditServiceItemUseCase implements IEditServiceItemUseCase{
+export class EditServiceItemUseCase implements IEditServiceItemUseCase {
   constructor(
     private readonly _serviceRepo: IServiceItemRepository,
     private readonly _imageService: IImageService,
@@ -18,7 +18,6 @@ export class EditServiceItemUseCase implements IEditServiceItemUseCase{
   ) {}
 
   async execute(request: EditServiceRequest): Promise<ServiceItemResponseDto> {
-
     const existingService = await this._serviceRepo.findById(request.id);
     if (!existingService) {
       this._logger.error(
@@ -29,14 +28,19 @@ export class EditServiceItemUseCase implements IEditServiceItemUseCase{
 
     let currentImages = [...existingService.getImageUrls()];
 
+    // FIX: Remove images from the array FIRST to prevent broken links in DB
     if (request.imagesToDelete && request.imagesToDelete.length > 0) {
-      const deletePromises = request.imagesToDelete.map(async (url) => {
+      const toDelete = request.imagesToDelete;
+      
+      // Update the array once globally instead of inside the loop
+      currentImages = currentImages.filter((img) => !toDelete.includes(img));
+
+      // Execute S3 deletions
+      const deletePromises = toDelete.map(async (url) => {
         try {
           await this._imageService.deleteImage(url);
-          currentImages = currentImages.filter((img) => img !== url);
         } catch (e: unknown) {
           const errorMessage = e instanceof Error ? e.message : String(e);
-
           this._logger.error(
             LogEvents.SERVICE_IMAGE_DELETE_FAILED,
             errorMessage
@@ -46,7 +50,7 @@ export class EditServiceItemUseCase implements IEditServiceItemUseCase{
       await Promise.all(deletePromises);
     }
 
-    if (request.newImageFiles.length > 0) {
+    if (request.newImageFiles && request.newImageFiles.length > 0) {
       const uploadPromises = request.newImageFiles.map((file) =>
         this._imageService.uploadImage(
           file.buffer,
@@ -79,7 +83,6 @@ export class EditServiceItemUseCase implements IEditServiceItemUseCase{
 
     const savedService = await this._serviceRepo.update(updatedEntity);
     
-
     return ServiceItemMapper.toResponse(savedService);
   }
 }

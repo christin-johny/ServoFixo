@@ -3,8 +3,10 @@ import Navbar from '../../../../layouts/customer/Navbar';
 import BottomNav from '../../../../layouts/customer/BottomNav';
 import Footer from '../../../../layouts/customer/Footer';
 import { ShieldCheck,   Zap,  Award, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const AboutPage: React.FC = () => {
+    const navigate = useNavigate()
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
             <Navbar />
@@ -121,7 +123,7 @@ const AboutPage: React.FC = () => {
                             Ready to experience <br /> the new standard?
                         </h2>
                         <button 
-                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                            onClick={() => navigate('/services')}
                             className="bg-blue-600 hover:bg-blue-500 text-white font-black px-10 py-4 rounded-2xl shadow-xl transition-all hover:scale-105 relative z-10"
                         >
                             Book Your First Service
