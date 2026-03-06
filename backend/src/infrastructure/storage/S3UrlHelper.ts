@@ -17,19 +17,46 @@ export class S3UrlHelper {
     if (key.startsWith("http")) return key;
     return `${this.BASE_URL}/${key}`;
   }
+
+  static getCleanKey(urlOrKey: string | undefined | null): string {
+  if (!urlOrKey) return "";
+ 
+  if (!urlOrKey.startsWith("http")) return urlOrKey;
+
+  try {
+    const url = new URL(urlOrKey);  
+    let key = url.pathname.substring(1);
+    return decodeURIComponent(key);
+  } catch (e) {
+    return urlOrKey;
+  }
+}
    
-static async getPrivateUrl(key: string | undefined | null, isDownload: boolean = false): Promise<string> {
+static async getPrivateUrl(
+  key: string | undefined | null,
+  isDownload: boolean = false
+): Promise<string> {
   if (!key) return "";
   if (key.startsWith("http")) return key;
 
   const expiresIn = parseInt(process.env.S3_SIGNED_URL_EXPIRES_IN || "3600", 10);
 
+  const extension = key.split(".").pop()?.toLowerCase();
+
+  let contentType = "application/octet-stream";
+
+  if (extension === "pdf") contentType = "application/pdf";
+  if (["png","jpg","jpeg","webp"].includes(extension || "")) contentType = `image/${extension === "jpg" ? "jpeg" : extension}`;
+
   const command = new GetObjectCommand({
     Bucket: process.env.AWS_BUCKET_NAME,
-    Key: key,  
-    ResponseContentDisposition: isDownload 
-      ? `attachment; filename="${key.split('/').pop()}"` 
-      : 'inline',
+    Key: key,
+
+    ResponseContentDisposition: isDownload
+      ? `attachment; filename="${key.split("/").pop()}"`
+      : "inline",
+
+    ResponseContentType: contentType
   });
 
   return await getSignedUrl(this._s3Client, command, { expiresIn });

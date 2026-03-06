@@ -1,8 +1,8 @@
 import { UploadTechnicianFileInput } from "../../../dto/technician/TechnicianProfileDto";
 import { IImageService } from "../../../interfaces/services/IImageService";
 import { IUploadTechnicianFileUseCase } from "../../../interfaces/use-cases/technician/ITechnicianProfileUseCases";
-  
- 
+import { S3UrlHelper } from "../../../../infrastructure/storage/S3UrlHelper"
+
 export class UploadTechnicianFileUseCase implements IUploadTechnicianFileUseCase {
   constructor(
     private readonly _imageService: IImageService 
@@ -10,13 +10,13 @@ export class UploadTechnicianFileUseCase implements IUploadTechnicianFileUseCase
 
   async execute(technicianId: string, input: UploadTechnicianFileInput): Promise<string> {
     const { fileBuffer, fileName, mimeType, folder } = input;
-     
+    
+
     const cleanFileName = fileName.replace(/\s+/g, "-");
     const key = `technician/${technicianId}/${folder}/${Date.now()}-${cleanFileName}`;
 
- 
-    const fileUrl = await this._imageService.uploadImage(fileBuffer, key, mimeType);
+    const result = await this._imageService.uploadImage(fileBuffer, key, mimeType);
 
-    return fileUrl;
+    return S3UrlHelper.getCleanKey(result);
   }
 }

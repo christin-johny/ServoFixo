@@ -15,40 +15,41 @@ export const FileLightbox: React.FC<FileLightboxProps> = ({ url, title = "Docume
   const isPdf = url.toLowerCase().includes(".pdf") || type === "application/pdf";
 
   const handleDownload = useCallback(async (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDownloading(true);
-    setError(null);
- 
-    try {
-      // Fetch the file as a blob to bypass "inline" headers and force a true download
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Network response was not ok");
-      
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.setAttribute("download", title || "service-file");
-      
-      document.body.appendChild(link);
-      link.click();
-      
-      // Cleanup
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
+  e.preventDefault();
+  setIsDownloading(true);
+  setError(null);
 
-      setTimeout(() => {
-        setIsDownloading(false);
-      }, 1000);
-
-    } catch (err) { 
-      console.error("Download failed, falling back to new tab:", err);
-      // Fallback: If blob fetch fails (CORS), try opening in new tab
-      window.open(url, "_blank");
-      setIsDownloading(false);
-    }
-  }, [url, title]);
+  try {
+    // 1. Fetch the file data
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to fetch file");
+    
+    // 2. Convert to a blob
+    const blob = await response.blob();
+    
+    // 3. Create a local temporary URL for the downloaded data
+    const blobUrl = window.URL.createObjectURL(blob);
+    
+    // 4. Create a temporary link to trigger the save
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = title || "document"; // Sets the file name
+    
+    document.body.appendChild(link);
+    link.click();
+    
+    // 5. Cleanup
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
+    
+    setIsDownloading(false);
+  } catch (err) {
+    console.error("Download failed:", err);
+    setError("Download failed. Opening in new tab...");
+    window.open(url, "_blank"); // Fallback: open URL directly
+    setIsDownloading(false);
+  }
+}, [url, title]);
 
   return (
     <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
