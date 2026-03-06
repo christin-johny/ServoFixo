@@ -405,21 +405,7 @@ const FinancialsTab: React.FC<{ tech: TechnicianProfileFull }> = ({ tech }) => {
 
     return (
         <div className="space-y-8">
-            {/* Wallet Balances Card */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
-                     <div className="absolute right-0 top-0 w-32 h-32 bg-green-50 rounded-full blur-3xl -mr-10 -mt-10"></div>
-                     <p className="text-gray-500 text-xs font-bold uppercase tracking-wider relative z-10">Withdrawable Balance</p>
-                     <h2 className="text-4xl font-black text-gray-900 mt-2 relative z-10">₹{tech.walletBalance?.currentBalance || 0}</h2>
-                     <p className="text-xs text-gray-400 mt-2 relative z-10">Available for next payout batch</p>
-                 </div>
-                 <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
-                     <div className="absolute right-0 top-0 w-32 h-32 bg-orange-50 rounded-full blur-3xl -mr-10 -mt-10"></div>
-                     <p className="text-gray-500 text-xs font-bold uppercase tracking-wider relative z-10">Pending / Frozen</p>
-                     <h2 className="text-4xl font-black text-gray-900 mt-2 relative z-10">₹{tech.walletBalance?.frozenAmount || 0}</h2>
-                     <p className="text-xs text-gray-400 mt-2 relative z-10">Currently locked in processing</p>
-                 </div>
-            </div>
+        
 
             {/* Transactions Ledger */}
             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">

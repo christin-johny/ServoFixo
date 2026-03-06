@@ -140,5 +140,11 @@ export const getTechnicianTransactionsAdmin = async (
     const res = await api.get(ADMIN_TECHNICIAN_ENDPOINTS.TRANSACTIONS(technicianId), { 
         params: { page } 
     });
-    return res.data.data;
+ 
+    const apiResult = res.data.data;
+
+    return {
+        transactions: apiResult.data,  
+        total: apiResult.total         
+    };
 };
