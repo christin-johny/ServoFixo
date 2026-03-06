@@ -1,18 +1,16 @@
 services:
   redis:
     restart: always
-    # We remove ports here for security; only Nginx/Backend talk to Redis
 
   backend:
+    image: christinjohny/servofixo-backend:latest
     restart: always
     environment:
       - NODE_ENV=production
       - FRONTEND_URL=https://servofixo.cloud
-    # Map your server-side .env file here
     env_file:
-      - ./backend/.env.prod 
+      - ./backend/.env 
 
   frontend:
+    image: christinjohny/servofixo-frontend:latest
     restart: always
-    ports:
-      - "80:80"

@@ -3,7 +3,7 @@ import type { AxiosError, InternalAxiosRequestConfig } from "axios";
 import store from "../store/store";
 import { setAccessToken, logout } from "../store/authSlice";
 
-const API_BASE = import.meta.env.VITE_API_BASE;
+const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
 const api = axios.create({
   baseURL: API_BASE,
