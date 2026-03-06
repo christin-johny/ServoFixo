@@ -62,7 +62,7 @@ return (
       -mx-4 px-4 md:mx-0 md:px-0
     ">
       {loading 
-        ? [1, 2, 3, 4, 5].map(i => (
+        ? [1, 2, 3].map(i => (
             <div key={i} className="min-w-[200px] md:min-w-[240px] h-[320px] bg-gray-100 animate-pulse rounded-2xl" />
           ))
         : services.map((service) => (
