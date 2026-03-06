@@ -14,3 +14,8 @@ services:
   frontend:
     image: christinjohny/servofixo-frontend:latest
     restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
