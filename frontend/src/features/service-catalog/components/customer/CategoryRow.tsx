@@ -33,42 +33,33 @@ const CategoryRow: React.FC<CategoryRowProps> = ({ category }) => {
  
   if (!loading && services.length === 0) return null;
 
-  // CategoryRow.tsx
-
 // CategoryRow.tsx
 
 return (
-  <section id={category.id} className="w-full scroll-mt-28 mb-10">
+  <section id={category.id} className="w-full scroll-mt-28 mb-12">
     {/* Header Section */}
-    <div className="flex justify-between items-center mb-4 px-1">
-      <h3 className="text-lg md:text-2xl font-black text-gray-900 tracking-tight">
+    <div className="flex justify-between items-center mb-6 px-1">
+      <h3 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">
         {category.name}
       </h3>
       
       <button 
-        className="text-xs sm:text-sm font-bold text-blue-600 flex items-center gap-1 hover:pr-2 transition-all"
+        className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1 group"
         onClick={() => { navigate(`/services?categoryId=${category.id}`) }}
       >
-        View All <ArrowRight size={14} />
+        View All 
+        <ArrowRight size={16} className="transform group-hover:translate-x-1 transition-transform" />
       </button>
     </div>
 
-    {/* Scroll Container */}
-    <div className="
-      flex flex-nowrap gap-4 
-      overflow-x-auto pb-6 pt-1 
-      snap-x snap-mandatory 
-      scrollbar-hide 
-      -mx-4 px-4 md:mx-0 md:px-0
-    ">
+    {/* Responsive Grid: 2 columns on mobile, 3 on small desktop, 4 on large desktop */}
+    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
       {loading 
-        ? [1, 2, 3].map(i => (
-            <div key={i} className="min-w-[200px] md:min-w-[240px] h-[320px] bg-gray-100 animate-pulse rounded-2xl" />
+        ? [1, 2, 3, 4].map(i => (
+            <div key={i} className="w-full h-64 bg-gray-100 animate-pulse rounded-2xl" />
           ))
-        : services.map((service) => (
-            <div key={service.id} className="snap-start">
-              <ServiceCard service={service} />
-            </div>
+        : services.slice(0, 4).map((service) => (
+            <ServiceCard key={service.id} service={service} />
           ))
       }
     </div>
