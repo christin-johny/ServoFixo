@@ -17,9 +17,8 @@ export class S3UrlHelper {
     if (key.startsWith("http")) return key;
     return `${this.BASE_URL}/${key}`;
   }
-  
-
-static async getPrivateUrl(key: string | undefined | null): Promise<string> {
+   
+static async getPrivateUrl(key: string | undefined | null, isDownload: boolean = false): Promise<string> {
   if (!key) return "";
   if (key.startsWith("http")) return key;
 
@@ -27,8 +26,10 @@ static async getPrivateUrl(key: string | undefined | null): Promise<string> {
 
   const command = new GetObjectCommand({
     Bucket: process.env.AWS_BUCKET_NAME,
-    Key: key, 
-    ResponseContentDisposition: 'attachment'
+    Key: key,  
+    ResponseContentDisposition: isDownload 
+      ? `attachment; filename="${key.split('/').pop()}"` 
+      : 'inline',
   });
 
   return await getSignedUrl(this._s3Client, command, { expiresIn });

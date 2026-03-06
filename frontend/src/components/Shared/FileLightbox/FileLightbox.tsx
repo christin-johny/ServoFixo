@@ -14,28 +14,37 @@ export const FileLightbox: React.FC<FileLightboxProps> = ({ url, title = "Docume
   
   const isPdf = url.toLowerCase().includes(".pdf") || type === "application/pdf";
 
-  const handleDownload = useCallback((e: React.MouseEvent) => {
+  const handleDownload = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDownloading(true);
     setError(null);
  
     try {
+      // Fetch the file as a blob to bypass "inline" headers and force a true download
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Network response was not ok");
+      
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
       const link = document.createElement("a");
-      link.href = url;
-       
+      link.href = blobUrl;
       link.setAttribute("download", title || "service-file");
-      link.setAttribute("target", "_self");  
       
       document.body.appendChild(link);
       link.click();
+      
+      // Cleanup
       document.body.removeChild(link);
- 
+      window.URL.revokeObjectURL(blobUrl);
+
       setTimeout(() => {
         setIsDownloading(false);
       }, 1000);
 
     } catch (err) { 
-      console.error("Download trigger failed:", err);
+      console.error("Download failed, falling back to new tab:", err);
+      // Fallback: If blob fetch fails (CORS), try opening in new tab
       window.open(url, "_blank");
       setIsDownloading(false);
     }
