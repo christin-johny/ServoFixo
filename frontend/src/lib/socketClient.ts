@@ -124,7 +124,8 @@ class SocketService {
 
     this.socket = io(SOCKET_URL, {
       query: queryParams,
-      transports: ["websocket"],
+      transports: ["websocket", "polling"],  
+      secure: true,
       reconnection: true,
     });
 
