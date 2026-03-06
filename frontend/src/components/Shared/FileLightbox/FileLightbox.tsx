@@ -14,54 +14,32 @@ export const FileLightbox: React.FC<FileLightboxProps> = ({ url, title = "Docume
   
   const isPdf = url.toLowerCase().includes(".pdf") || type === "application/pdf";
 
-  const handleDownload = useCallback(async (e: React.MouseEvent) => {
+  const handleDownload = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setIsDownloading(true);
     setError(null);
-
+ 
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        mode: 'cors', 
-      });
-
-      if (!response.ok) throw new Error("Could not fetch file from server");
-      
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      
       const link = document.createElement("a");
-      link.href = blobUrl;
+      link.href = url;
+       
+      link.setAttribute("download", title || "service-file");
+      link.setAttribute("target", "_self");  
       
-      const contentDisposition = response.headers.get('content-disposition');
-      let fileName = "";
-      
-      if (contentDisposition && contentDisposition.includes('filename=')) {
-        fileName = contentDisposition.split('filename=')[1].replace(/["']/g, '');
-      } else {
-        const urlPath = new URL(url).pathname;
-        fileName = urlPath.split("/").pop() || (isPdf ? "document.pdf" : "file.dat");
-      }
-      
-      link.setAttribute("download", fileName);
       document.body.appendChild(link);
       link.click();
-      
-      // 3. Cleanup
       document.body.removeChild(link);
-      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
-      
-    } catch (err) {
-      console.error("Download failed:", err);
-      setError("Download failed. Opening in new tab instead...");
-      
+ 
       setTimeout(() => {
-        window.open(url, "_blank", "noopener,noreferrer");
-      }, 1500);
-    } finally {
+        setIsDownloading(false);
+      }, 1000);
+
+    } catch (err) { 
+      console.error("Download trigger failed:", err);
+      window.open(url, "_blank");
       setIsDownloading(false);
     }
-  }, [url, isPdf]);
+  }, [url, title]);
 
   return (
     <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
