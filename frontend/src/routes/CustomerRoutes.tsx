@@ -5,7 +5,7 @@ import GuestOnlyGuard from "./GuestOnlyGuard";
 import CustomerHome from "../features/dashboard/pages/customer/CustomerHome";
 import CustomerDataLoader from "../features/auth/components/CustomerDataLoader";
 import RoleProtectedRoute from "./RoleProtectedRoute";
-import ActiveBookingFooter from "../features/booking/components/customer/ActiveBookingFooter";
+import ActiveBookingFooter from "../features/booking/components/customer/ActiveBookingFooter"; 
 
 const CustomerLogin = lazy(() => import("../features/auth/pages/customer/CustomerLogin"));
 const CustomerRegister = lazy(() => import("../features/auth/pages/customer/Register"));
@@ -23,6 +23,7 @@ const PaymentFailedPage = lazy(() => import("../features/booking/pages/customer/
 const BookingHistoryPage = lazy(() => import("../features/booking/pages/customer/BookingHistoryPage"));
 const BookingDetailsPage = lazy(() => import("../features/booking/pages/customer/BookingDetailsPage"));
 const ChatAssistantPage = lazy(() => import("../features/chat/pages/ChatAssistantPage"));
+const AboutPage = lazy(() => import("../features/dashboard/pages/customer/AboutPage"));
 
 const CustomerRoutes: React.FC = () => (
   <Suspense fallback={<LoaderFallback />}>
@@ -31,6 +32,7 @@ const CustomerRoutes: React.FC = () => (
         <Route index element={<CustomerHome />} />
         <Route path="services" element={<ServiceListing />} />
         <Route path="services/:id" element={<ServiceDetails />} />
+        <Route path="/about" element={<AboutPage />}/>
         <Route 
           path="profile" 
           element={
