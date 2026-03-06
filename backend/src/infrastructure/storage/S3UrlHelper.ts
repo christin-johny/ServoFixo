@@ -17,18 +17,20 @@ export class S3UrlHelper {
     if (key.startsWith("http")) return key;
     return `${this.BASE_URL}/${key}`;
   }
- 
-  static async getPrivateUrl(key: string | undefined | null): Promise<string> {
-    if (!key) return "";
-    if (key.startsWith("http")) return key;
- 
-    const expiresIn = parseInt(process.env.S3_SIGNED_URL_EXPIRES_IN || "3600", 10);
+  
 
-    const command = new GetObjectCommand({
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: key,
-    });
+static async getPrivateUrl(key: string | undefined | null): Promise<string> {
+  if (!key) return "";
+  if (key.startsWith("http")) return key;
 
-    return await getSignedUrl(this._s3Client, command, { expiresIn });
-  }
+  const expiresIn = parseInt(process.env.S3_SIGNED_URL_EXPIRES_IN || "3600", 10);
+
+  const command = new GetObjectCommand({
+    Bucket: process.env.AWS_BUCKET_NAME,
+    Key: key, 
+    ResponseContentDisposition: 'attachment'
+  });
+
+  return await getSignedUrl(this._s3Client, command, { expiresIn });
+}
 }
