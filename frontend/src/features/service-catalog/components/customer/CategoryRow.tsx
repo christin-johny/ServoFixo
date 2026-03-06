@@ -33,40 +33,47 @@ const CategoryRow: React.FC<CategoryRowProps> = ({ category }) => {
  
   if (!loading && services.length === 0) return null;
 
-  return (
-    <section id={category.id} className="w-full scroll-mt-28 mb-8">
-      {/* Header Section */}
-      <div className="flex justify-between items-center mb-4 px-1">
-        <h3 className="text-lg md:text-xl font-extrabold text-gray-900 tracking-tight">
-          {category.name}
-        </h3>
-        
-        <button 
-          className="text-xs sm:text-sm font-bold text-blue-600 flex items-center gap-1 hover:pr-2 transition-all"
-          onClick={() => { navigate(`/services?categoryId=${category.id}`) }}
-        >
-          View All <ArrowRight size={14} />
-        </button>
-      </div>
- 
-      <div className="
-        flex gap-3 sm:gap-4 overflow-x-auto pb-4 pt-1 
-        snap-x snap-mandatory scrollbar-hide 
-        -mx-4 px-4 md:mx-0 md:px-0
-      ">
-        {loading 
-          ? [1,2,3,4,5].map(i => (
-              <div key={i} className="min-w-[160px] sm:min-w-[200px] h-[220px] bg-gray-100 animate-pulse rounded-xl" />
-            ))
-          : services.map((service) => (
-              <div key={service.id} className="snap-start">
-                <ServiceCard service={service} />
-              </div>
-            ))
-        }
-      </div>
-    </section>
-  );
+  // CategoryRow.tsx
+
+return (
+  <section id={category.id} className="w-full scroll-mt-28 mb-10">
+    {/* Header Section */}
+    <div className="flex justify-between items-center mb-4 px-1">
+      <h3 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">
+        {category.name}
+      </h3>
+      
+      <button 
+        className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1"
+        onClick={() => { navigate(`/services?categoryId=${category.id}`) }}
+      >
+        View All <ArrowRight size={16} />
+      </button>
+    </div>
+
+    {/* The Scroll Container */}
+    <div className="
+      relative w-full 
+      flex flex-nowrap gap-4 
+      overflow-x-auto 
+      pb-6 pt-2
+      snap-x snap-mandatory 
+      scrollbar-hide 
+      -mx-4 px-4 md:mx-0 md:px-0
+    ">
+      {loading 
+        ? [1, 2, 3, 4, 5].map(i => (
+            <div key={i} className="min-w-[200px] md:min-w-[260px] h-[300px] bg-gray-100 animate-pulse rounded-2xl" />
+          ))
+        : services.map((service) => (
+            <div key={service.id} className="snap-start">
+              <ServiceCard service={service} />
+            </div>
+          ))
+      }
+    </div>
+  </section>
+);
 };
 
 export default CategoryRow;
