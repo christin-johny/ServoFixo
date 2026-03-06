@@ -1,25 +1,31 @@
 import React, { useState, useCallback } from "react";
-import { X, FileText, Eye, Download, Loader2 } from "lucide-react";
+import { X, FileText, Eye, Download, Loader2, AlertCircle } from "lucide-react";
 
 interface FileLightboxProps {
   url: string;
   title?: string;
-  type?: string; 
+  type?: string;
   onClose: () => void;
 }
 
 export const FileLightbox: React.FC<FileLightboxProps> = ({ url, title = "Document Preview", type, onClose }) => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const isPdf = url.toLowerCase().includes(".pdf") || type === "application/pdf";
 
   const handleDownload = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDownloading(true);
+    setError(null);
 
     try {
-      // Fetch the file as a blob to bypass origin restrictions for the 'download' attribute
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Network response was not ok");
+      const response = await fetch(url, {
+        method: 'GET',
+        mode: 'cors', 
+      });
+
+      if (!response.ok) throw new Error("Could not fetch file from server");
       
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
@@ -27,20 +33,31 @@ export const FileLightbox: React.FC<FileLightboxProps> = ({ url, title = "Docume
       const link = document.createElement("a");
       link.href = blobUrl;
       
-      // Attempt to preserve the original filename or use the title
-      const fileName = url.split("/").pop() || (isPdf ? "document.pdf" : "image.jpg");
-      link.download = fileName;
+      const contentDisposition = response.headers.get('content-disposition');
+      let fileName = "";
       
+      if (contentDisposition && contentDisposition.includes('filename=')) {
+        fileName = contentDisposition.split('filename=')[1].replace(/["']/g, '');
+      } else {
+        const urlPath = new URL(url).pathname;
+        fileName = urlPath.split("/").pop() || (isPdf ? "document.pdf" : "file.dat");
+      }
+      
+      link.setAttribute("download", fileName);
       document.body.appendChild(link);
       link.click();
       
-      // Cleanup
+      // 3. Cleanup
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      console.error("Download failed, falling back to direct link:", error);
-      // Fallback: Open in new tab if Fetch/CORS fails
-      window.open(url, "_blank", "noopener,noreferrer");
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+      
+    } catch (err) {
+      console.error("Download failed:", err);
+      setError("Download failed. Opening in new tab instead...");
+      
+      setTimeout(() => {
+        window.open(url, "_blank", "noopener,noreferrer");
+      }, 1500);
     } finally {
       setIsDownloading(false);
     }
@@ -52,7 +69,7 @@ export const FileLightbox: React.FC<FileLightboxProps> = ({ url, title = "Docume
       {/* Close Button */}
       <button 
         onClick={onClose} 
-        className="absolute top-4 right-4 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full transition-all"
+        className="absolute top-4 right-4 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full transition-all z-10"
         aria-label="Close preview"
       >
         <X className="w-6 h-6" />
@@ -61,22 +78,29 @@ export const FileLightbox: React.FC<FileLightboxProps> = ({ url, title = "Docume
       <div className="w-full max-w-5xl h-[90vh] flex flex-col bg-transparent">
         {/* Header Bar */}
         <div className="flex justify-between items-center text-white mb-4 px-2">
-           <h3 className="font-bold text-lg flex items-center gap-2">
-             {isPdf ? <FileText className="w-5 h-5 text-blue-400" /> : <Eye className="w-5 h-5 text-green-400" />} 
-             {title}
-           </h3>
+           <div className="flex flex-col">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                {isPdf ? <FileText className="w-5 h-5 text-blue-400" /> : <Eye className="w-5 h-5 text-green-400" />} 
+                {title}
+              </h3>
+              {error && (
+                <span className="text-red-400 text-xs flex items-center gap-1 mt-1">
+                  <AlertCircle size={12} /> {error}
+                </span>
+              )}
+           </div>
            
            <button 
              onClick={handleDownload}
              disabled={isDownloading}
-             className="flex items-center gap-2 text-sm font-medium bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-lg transition-colors text-white"
+             className="flex items-center gap-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 rounded-lg transition-colors text-white shadow-lg"
            >
              {isDownloading ? (
                <Loader2 className="w-4 h-4 animate-spin" />
              ) : (
                <Download className="w-4 h-4" />
              )}
-             {isDownloading ? "Processing..." : "Download"}
+             {isDownloading ? "Downloading..." : "Download File"}
            </button>
         </div>
 
@@ -84,7 +108,7 @@ export const FileLightbox: React.FC<FileLightboxProps> = ({ url, title = "Docume
         <div className="flex-1 bg-gray-900/50 rounded-xl overflow-hidden border border-white/10 flex items-center justify-center relative shadow-2xl">
           {isPdf ? (
             <iframe 
-                src={url} 
+                src={`${url}#toolbar=0`} // Hides iframe toolbar for cleaner look
                 className="w-full h-full border-none" 
                 title="PDF Preview" 
             />
@@ -92,7 +116,7 @@ export const FileLightbox: React.FC<FileLightboxProps> = ({ url, title = "Docume
             <img 
                 src={url} 
                 alt="Preview" 
-                className="max-w-full max-h-full object-contain" 
+                className="max-w-full max-h-full object-contain p-2" 
             />
           )}
         </div>

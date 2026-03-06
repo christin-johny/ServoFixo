@@ -32,35 +32,36 @@ const CategoryRow: React.FC<CategoryRowProps> = ({ category }) => {
   }, [category.id]);
  
   if (!loading && services.length === 0) return null;
-
+ 
   return (
-    <section  
-      id={category.id}  
-      className="w-full scroll-mt-32"
-    >
-      <div className="flex justify-between items-end mb-5 px-1">
-        <div className="flex items-center gap-3">
-            <h3 className="text-xl md:text-2xl font-bold text-gray-900">{category.name}</h3>
+    <section id={category.id} className="w-full scroll-mt-24 mb-6">
+      <div className="flex justify-between items-center mb-3 px-1">
+        <div className="flex items-center gap-2">
+            <h3 className="text-lg md:text-xl font-extrabold text-gray-900 tracking-tight">
+              {category.name}
+            </h3>
         </div>
         
-        <button className="text-sm font-semibold text-blue-600 flex items-center gap-1 hover:gap-2 transition-all"onClick={()=>{navigate(`/services?categoryId=${category.id}`)}}>
-          See All <ArrowRight size={16} />
+        <button 
+          className="text-xs font-bold text-blue-600 flex items-center gap-1 hover:pr-2 transition-all"
+          onClick={() => { navigate(`/services?categoryId=${category.id}`) }}
+        >
+          See All <ArrowRight size={14} />
         </button>
       </div>
 
       <div className="
-        flex gap-4 overflow-x-auto pb-6 pt-2 
-        snap-x snap-mandatory 
-        scrollbar-hide 
+        flex gap-3 overflow-x-auto pb-4 pt-1 
+        snap-x snap-mandatory scrollbar-hide 
         -mx-4 px-4 md:mx-0 md:px-0
       ">
         {loading 
-          ? [1,2,3,4].map(i => (
-              <div key={i} className="min-w-[200px] w-[200px] md:min-w-[240px] md:w-[240px] h-64 bg-gray-100 rounded-xl animate-pulse shrink-0 snap-start"/>
+          ? [1,2,3,4,5].map(i => (
+              <div key={i} className="min-w-[160px] w-[160px] md:min-w-[210px] h-[224px] bg-gray-100 animate-pulse rounded-xl" />
             ))
-          : services.map(s => (
-              <div key={s.id} className="snap-start shrink-0">
-                 <ServiceCard service={s} />
+          : services.map((service) => (
+              <div key={service.id} className="snap-start">
+                <ServiceCard service={service} />
               </div>
             ))
         }
